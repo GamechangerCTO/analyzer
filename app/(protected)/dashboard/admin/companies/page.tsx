@@ -12,7 +12,11 @@ interface Company {
   sector?: string | null;
   product_info?: string | null;
   avg_product_cost?: string | null;
+  product_types?: string[] | null;
   audience?: string | null;
+  differentiators?: string[] | null;
+  customer_benefits?: string[] | null;
+  company_benefits?: string[] | null;
   uploads_professional_materials?: boolean;
   status?: string;
   users_count?: number;
@@ -145,10 +149,13 @@ export default function AdminCompaniesPage() {
                     תחום עיסוק
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    תאריך הצטרפות
+                    סוג מוצר
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    סטטוס
+                    קהל יעד
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    שאלון מלא
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     משתמשים
@@ -161,25 +168,47 @@ export default function AdminCompaniesPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {companies.map((company) => (
                   <tr key={company.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {company.name}
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      <div>
+                        <div className="font-medium">{company.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(company.created_at).toLocaleDateString('he-IL')}
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-gray-500">
                       {company.sector || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(company.created_at).toLocaleDateString('he-IL')}
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {company.product_types && company.product_types.length > 0 
+                        ? company.product_types[0] 
+                        : '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        {company.status || 'פעיל'}
-                      </span>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {company.audience || '-'}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      {company.differentiators && company.customer_benefits && company.company_benefits ? (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          ✓ הושלם
+                        </span>
+                      ) : (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                          חלקי
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {company.users_count || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3 text-center">
-                      <button className="text-indigo-600 hover:text-indigo-900">עריכה</button>
+                      <button 
+                        className="text-indigo-600 hover:text-indigo-900"
+                        title="צפה בפרטי השאלון המלא"
+                      >
+                        צפה
+                      </button>
+                      <button className="text-blue-600 hover:text-blue-900">עריכה</button>
                       <button className="text-red-600 hover:text-red-900">מחיקה</button>
                     </td>
                   </tr>
