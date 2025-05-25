@@ -3,7 +3,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { Database } from '@/types/database.types';
 import OpenAI from 'openai';
-import { addCallLog } from '../call-logs/[id]/route';
+import { addCallLog } from '@/lib/addCallLog';
 
 // אתחול OpenAI API
 const openai = new OpenAI({
