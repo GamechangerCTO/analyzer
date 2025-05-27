@@ -14,6 +14,7 @@ interface CallData {
   processing_status: string
   red_flag: boolean | null
   agent_notes: string | null
+  analysis_notes: string | null
   audio_duration_seconds: number | null
   analysis_type: string
   error_message: string | null
@@ -748,6 +749,40 @@ export default function CallAnalysis({ call, audioUrl }: CallAnalysisProps) {
             <h3 className="text-lg font-semibold mb-4 text-gray-800">📝 הערות נציג</h3>
             <div className="bg-blue-50 p-4 rounded-lg border-r-4 border-blue-400">
               <p className="text-gray-700">{call.agent_notes}</p>
+            </div>
+          </div>
+                 )}
+
+        {/* פרמטרים מיוחדים לניתוח */}
+        {call.analysis_notes && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 text-orange-800 flex items-center">
+              <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-md text-xs font-semibold mr-2">
+                השפיע על הניתוח
+              </span>
+              🎯 פרמטרים מיוחדים לניתוח זה
+            </h3>
+            <div className="bg-orange-50 p-4 rounded-lg border-r-4 border-orange-400">
+              <p className="text-orange-800 font-medium mb-2">
+                💡 הניתוח התמקד במיוחד בפרמטרים הבאים:
+              </p>
+              <p className="text-gray-700">{call.analysis_notes}</p>
+            </div>
+          </div>
+        )}
+        {call.analysis_notes && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 text-orange-800 flex items-center">
+              <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-md text-xs font-semibold mr-2">
+                השפיע על הניתוח
+              </span>
+              🎯 פרמטרים מיוחדים לניתוח זה
+            </h3>
+            <div className="bg-orange-50 p-4 rounded-lg border-r-4 border-orange-400">
+              <p className="text-orange-800 font-medium mb-2">
+                💡 הניתוח התמקד במיוחד בפרמטרים הבאים:
+              </p>
+              <p className="text-gray-700">{call.analysis_notes}</p>
             </div>
           </div>
         )}

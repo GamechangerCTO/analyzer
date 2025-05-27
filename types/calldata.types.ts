@@ -13,6 +13,7 @@ export interface CallData {
   overall_score: number | null;
   red_flag: boolean | null;
   agent_notes: string | null;
+  analysis_notes: string | null;
   audio_duration_seconds: number | null;
   analysis_type: 'full' | 'tone';
   analyzed_at: string | null;

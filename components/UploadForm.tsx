@@ -51,6 +51,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   const [callType, setCallType] = useState('')
   const [agentNotes, setAgentNotes] = useState('')
   const [analysisType, setAnalysisType] = useState('full')
+  const [analysisNotes, setAnalysisNotes] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -206,6 +207,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
         call_type: callType,
         audio_file_path: filePath,
         agent_notes: agentNotes || null,
+        analysis_notes: analysisNotes || null,
         analysis_type: analysisType,
         processing_status: 'pending'
       };
@@ -223,10 +225,11 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
           const { data: funcData, error: funcError } = await freshSupabase
             .rpc('insert_call', {
               p_user_id: selectedAgent,
-              p_company_id: userData?.companies?.id || null,
               p_call_type: callType,
               p_audio_file_path: filePath,
+              p_company_id: userData?.companies?.id || null,
               p_agent_notes: agentNotes || null,
+              p_analysis_notes: analysisNotes || null,
               p_analysis_type: analysisType
             });
           
@@ -262,7 +265,11 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
       setSuccess('השיחה הועלתה בהצלחה! הניתוח מתבצע ברקע ותקבל התראה כשיושלם.')
       
       setTimeout(() => {
-        router.push('/dashboard');
+        if (uploadedCallId) {
+          router.push(`/dashboard/calls/${uploadedCallId}`);
+        } else {
+          router.push('/dashboard');
+        }
         router.refresh();
       }, 3000);
       
@@ -297,7 +304,12 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   };
 
   const continueToDashboard = () => {
-    router.push('/dashboard');
+    // לאחר שליחה מעבירים לדף השיחה במקום לדשבורד
+    if (uploadedCallId) {
+      router.push(`/dashboard/calls/${uploadedCallId}`);
+    } else {
+      router.push('/dashboard');
+    }
     router.refresh();
   };
   
@@ -345,7 +357,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-full hover:from-gray-600 hover:to-gray-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-medium flex items-center justify-center"
             >
               <Clock className="w-5 h-5 ml-2" />
-              המשך לדשבורד
+              עבור לדף השיחה
             </button>
           </div>
           <p className="text-sm text-green-600 mt-4">
@@ -484,6 +496,34 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 disabled={isLoading}
               />
             </div>
+            
+            {/* פרמטרים לניתוח */}
+            <div className="space-y-2">
+              <label htmlFor="analysisNotes" className="flex items-center text-sm font-medium text-gray-700">
+                <MessageCircle className="w-4 h-4 ml-1.5 text-orange-500" />
+                <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-md text-xs font-semibold mr-2">
+                  חשוב לניתוח!
+                </span>
+                הערות / דגשים מיוחדים / בקשות / אתגרים לטובת שיחה זו
+              </label>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-2">
+                <p className="text-orange-700 text-sm font-medium">
+                  💡 פרמטרים אלו ישפיעו ישירות על הניתוח:
+                </p>
+                <p className="text-orange-600 text-xs mt-1">
+                  המערכת תתאים את הניתוח בהתאם להערות שתכתוב כאן
+                </p>
+              </div>
+              <textarea
+                id="analysisNotes"
+                value={analysisNotes}
+                onChange={(e) => setAnalysisNotes(e.target.value)}
+                className="block w-full rounded-md border-orange-300 shadow-sm py-2.5 px-3 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                rows={3}
+                placeholder="לדוגמה: התמקד בטכניקות סגירה, בדוק האם הנציג התמודד טוב עם התנגדויות, שים דגש על טון ומקצועיות..."
+                disabled={isLoading}
+              />
+            </div>
           </div>
           
           <div className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
@@ -520,9 +560,9 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                         <button
                           type="button"
                           onClick={clearSelectedFile}
-                          className="mt-3 px-3 py-1.5 bg-red-100 text-red-700 rounded-full text-xs font-medium hover:bg-red-200 transition-colors"
+                          className="mt-3 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium hover:bg-gray-200 transition-colors"
                         >
-                          הסר קובץ ובחר מחדש
+                          החלף קובץ
                         </button>
                       </div>
                     </div>
@@ -637,7 +677,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 ) : (
                   <>
                     <Upload className="w-5 h-5 ml-2" />
-                    העלה שיחה לניתוח ברקע
+                    שלח לניתוח מתקדם
                   </>
                 )}
               </button>

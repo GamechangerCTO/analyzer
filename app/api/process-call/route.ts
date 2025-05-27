@@ -403,10 +403,16 @@ export async function POST(request: Request) {
               ${userData ? `תפקיד המשתמש: ${userData.role}` : ''}
               ${callData.agent_notes ? `הערות נציג: ${callData.agent_notes}` : ''}
               
+              ${callData.analysis_notes ? `🎯 פרמטרים מיוחדים לניתוח זה:
+              ${callData.analysis_notes}
+              
+              ⚠️ חשוב: התמקד במיוחד בפרמטרים הנ"ל בעת הניתוח, ותן להם משקל גבוה יותר בהערכה הכללית.` : ''}
+              
               הנחיות נוספות:
               1. כלול בניתוח ציטוטים רלוונטיים מהשיחה תחת שדה 'ציטוטים' או 'קטעים_רלוונטיים' 
               2. עבור כל פרמטר שבו נמצאו בעיות, הוסף ציטוטים ספציפיים מהשיחה המדגימים את הבעיה
               3. הצע חלופות מילוליות לכל ציטוט בעייתי
+              ${callData.analysis_notes ? '4. וודא שהניתוח מתייחס לפרמטרים המיוחדים שצוינו למעלה' : ''}
               
               ניתוח טונציה: ${JSON.stringify(toneAnalysisReport)}
               הקפד להחזיר את התשובה בפורמט JSON.`

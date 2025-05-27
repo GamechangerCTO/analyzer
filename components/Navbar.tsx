@@ -101,6 +101,12 @@ export default function Navbar({ user, userData }: NavbarProps) {
             >
               העלאת שיחה
             </Link>
+            <Link 
+              href="/simulations" 
+              className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/simulations')}`}
+            >
+              חדר כושר 🏋️‍♂️
+            </Link>
             
             {/* כפתור לדף ניהול מערכת (מנהלי מערכת בלבד) */}
             {userData.role === 'admin' && (
@@ -189,6 +195,13 @@ export default function Navbar({ user, userData }: NavbarProps) {
               onClick={() => setIsMenuOpen(false)}
             >
               העלאת שיחה
+            </Link>
+            <Link
+              href="/simulations"
+              className={`block px-3 py-2 rounded-md text-base font-medium ${isActive('/simulations')}`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              חדר כושר 🏋️‍♂️
             </Link>
             
             {/* כפתור לדף ניהול מערכת (מנהלי מערכת בלבד) */}
