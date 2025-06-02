@@ -29,6 +29,13 @@ export default function ManagerDashboardPage() {
           return
         }
 
+        // בדיקה שיש אימייל למשתמש
+        if (!user.email) {
+          setError("לא נמצא כתובת אימייל למשתמש")
+          setLoading(false)
+          return
+        }
+
         // בדיקה האם זה מנהל המערכת
         const isAdmin = user.email === 'ido.segev23@gmail.com'
         console.log('👑 Is admin?', isAdmin)
@@ -48,7 +55,7 @@ export default function ManagerDashboardPage() {
         const { data: userData, error: emailCheckError } = await supabase
           .from('users')
           .select('role, company_id, is_approved')
-          .eq('email', user.email)
+          .eq('email', user.email!)
           .maybeSingle()
         
         console.log('📧 User data by email:', userData)
