@@ -62,6 +62,8 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
     name: string | null
     product_info: string | null
   } | null>(null)
+  const [isQuestionnaireComplete, setIsQuestionnaireComplete] = useState<boolean>(true)
+  const [isCheckingQuestionnaire, setIsCheckingQuestionnaire] = useState<boolean>(true)
   const [startDate, setStartDate] = useState<Date>(() => {
     const today = new Date()
     const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, today.getDate())
@@ -99,6 +101,44 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
     setStartDate(start)
     setEndDate(end)
   }, [])
+  
+  // פונקציה לבדיקת שלמות השאלון
+  const checkQuestionnaireComplete = useCallback(async () => {
+    if (!companyId) return
+    
+    setIsCheckingQuestionnaire(true)
+    try {
+      const { data: companyData, error } = await supabase
+        .from('companies')
+        .select('product_info, sector, avg_product_cost, product_types, audience, differentiators, customer_benefits, company_benefits')
+        .eq('id', companyId)
+        .single()
+      
+      if (error) {
+        console.error('❌ Error checking questionnaire:', error)
+        setIsQuestionnaireComplete(false)
+        return
+      }
+      
+      // בדיקה אם השאלון מלא
+      const isComplete = companyData && 
+        companyData.product_info && 
+        companyData.sector && 
+        companyData.avg_product_cost && 
+        companyData.product_types && Array.isArray(companyData.product_types) && companyData.product_types.length > 0 &&
+        companyData.audience &&
+        companyData.differentiators && Array.isArray(companyData.differentiators) && companyData.differentiators.length > 0 &&
+        companyData.customer_benefits && Array.isArray(companyData.customer_benefits) && companyData.customer_benefits.length > 0 &&
+        companyData.company_benefits && Array.isArray(companyData.company_benefits) && companyData.company_benefits.length > 0
+      
+      setIsQuestionnaireComplete(isComplete)
+    } catch (error) {
+      console.error('❌ Unexpected error checking questionnaire:', error)
+      setIsQuestionnaireComplete(false)
+    } finally {
+      setIsCheckingQuestionnaire(false)
+    }
+  }, [companyId, supabase])
   
   // פונקציה לטיפול בנתונים עם useMemo למניעת יצירה מחדש
   const dateKey = useMemo(() => {
@@ -232,6 +272,9 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
       return;
     }
 
+    // בדיקת השאלון
+    checkQuestionnaireComplete()
+
     // בדיקה אם כבר מבצעים קריאה זהה
     if (isFetching || lastFetchParamsRef.current === dateKey) {
       console.log('⚠️ Already fetching data or same params, skipping...', { isFetching, lastKey: lastFetchParamsRef.current, currentKey: dateKey });
@@ -328,7 +371,7 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
 
     // ביצוע מיידי ללא עיכוב
     fetchData();
-  }, [dateKey, userId, companyId, processAgentsData, processTeamSummary, generateProgressData])
+  }, [dateKey, userId, companyId, processAgentsData, processTeamSummary, generateProgressData, checkQuestionnaireComplete])
   
   if (isLoading) {
     return (
@@ -388,6 +431,42 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
             initialEndDate={endDate}
           />
         </div>
+
+        {/* הודעה על שאלון חסר */}
+        {!isCheckingQuestionnaire && !isQuestionnaireComplete && (
+          <div className="bg-gradient-to-r from-orange-400 to-red-500 border border-orange-300 text-white p-6 rounded-xl shadow-lg mb-6">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-grow">
+                <h3 className="text-xl font-bold mb-2">⚠️ שאלון החברה טרם הושלם</h3>
+                <p className="text-lg mb-4">
+                  כדי שהמערכת תוכל לספק ניתוח מדויק ומותאם לצרכי החברה שלכם, חובה להשלים את שאלון החברה. 
+                  ללא מילוי השאלון, הנציגים לא יוכלו להעלות שיחות לניתוח.
+                  <br /><br />
+                  <strong>יש לפנות למנהל המערכת כדי להשלים את השאלון.</strong>
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <a
+                    href="mailto:ido.segev23@gmail.com?subject=השלמת שאלון חברה&body=שלום, אנא עזרו לי להשלים את שאלון החברה במערכת."
+                    className="bg-white text-orange-600 px-6 py-3 rounded-lg font-bold hover:bg-orange-50 transition-colors border-2 border-white text-center"
+                  >
+                    📧 פנה למנהל המערכת
+                  </a>
+                  <button
+                    onClick={() => checkQuestionnaireComplete()}
+                    className="bg-transparent border-2 border-white text-white px-6 py-3 rounded-lg font-bold hover:bg-white hover:text-orange-600 transition-colors"
+                  >
+                    🔄 בדוק שוב
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* סיכום צוותי */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">

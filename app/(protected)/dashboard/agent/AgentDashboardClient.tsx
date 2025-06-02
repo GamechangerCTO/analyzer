@@ -37,11 +37,12 @@ interface CallTypeSummary {
 
 interface AgentDashboardClientProps {
   userId: string
+  companyId: string | null
 }
 
 type FilterType = 'all' | 'successful' | 'needImprovement'
 
-export default function AgentDashboardClient({ userId }: AgentDashboardClientProps) {
+export default function AgentDashboardClient({ userId, companyId }: AgentDashboardClientProps) {
   console.log('AgentDashboardClient rendered/re-rendered');
   const [calls, setCalls] = useState<Call[]>([])
   // הסרת שורות State של תאריכים

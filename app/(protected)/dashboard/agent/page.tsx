@@ -13,6 +13,7 @@ export default function AgentDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [isAuthorized, setIsAuthorized] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [companyId, setCompanyId] = useState<string | null>(null)
   const [targetUserInfo, setTargetUserInfo] = useState<{full_name: string | null, email: string} | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -116,6 +117,7 @@ export default function AgentDashboardPage() {
 
           setTargetUserInfo({ full_name: targetUser.full_name, email: targetUser.email || '' })
           setUserId(targetUserId) // נציג את הנציג המבוקש
+          setCompanyId(targetUser.company_id) // מזהה החברה של הנציג המבוקש
           setIsAuthorized(true)
           setLoading(false)
           return
@@ -126,6 +128,7 @@ export default function AgentDashboardPage() {
           // מנהל מערכת תמיד רשאי לצפות כנציג (בעצמו)
           setIsAuthorized(true)
           setUserId(user.id)
+          setCompanyId(userData.company_id) // מזהה החברה של הנציג המחובר
           setLoading(false)
           return
         }
@@ -139,6 +142,7 @@ export default function AgentDashboardPage() {
         // אישור גישה לנציג אמיתי
         setIsAuthorized(true)
         setUserId(user.id)
+        setCompanyId(userData.company_id) // מזהה החברה של הנציג המחובר
         setLoading(false)
       } catch (err) {
         if (!isMounted) return;
@@ -221,7 +225,7 @@ export default function AgentDashboardPage() {
             </div>
           )}
           
-          <AgentDashboardClient key={userId} userId={userId} />
+          <AgentDashboardClient key={userId} userId={userId} companyId={companyId} />
         </>
       )}
     </div>
