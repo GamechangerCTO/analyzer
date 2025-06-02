@@ -35,6 +35,13 @@ export default function DashboardPage({ searchParams }: DashboardPageProps) {
         setUserEmail(user.email || null)
         console.log("בדיקת משתמש:", user.email, "עם מזהה:", user.id)
         
+        // בדיקה שיש אימייל למשתמש
+        if (!user.email) {
+          setError("לא נמצא כתובת אימייל למשתמש")
+          setLoading(false)
+          return
+        }
+        
         // מנהל מערכת לפי אימייל (ido.segev23@gmail.com)
         if (user.email === 'ido.segev23@gmail.com') {
           console.log("זוהה כמנהל מערכת לפי אימייל")
@@ -43,7 +50,7 @@ export default function DashboardPage({ searchParams }: DashboardPageProps) {
           const { data: existingUser, error: checkError } = await supabase
             .from('users')
             .select('*')
-            .eq('email', user.email)
+            .eq('email', user.email!)
             .maybeSingle()
           
           if (checkError) {
@@ -87,7 +94,7 @@ export default function DashboardPage({ searchParams }: DashboardPageProps) {
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('role, company_id, is_approved')
-          .eq('email', user.email)
+          .eq('email', user.email!)
           .single()
         
         if (userError) {
