@@ -295,15 +295,6 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
       setUploadStep('completed');
       setSuccess('השיחה הועלתה בהצלחה! הניתוח מתבצע ברקע ותקבל התראה כשיושלם.')
       
-      setTimeout(() => {
-        if (uploadedCallId) {
-          router.push(`/dashboard/calls/${uploadedCallId}`);
-        } else {
-          router.push('/dashboard');
-        }
-        router.refresh();
-      }, 3000);
-      
     } catch (error: any) {
       console.error('Error:', error)
       setError(error.message || 'שגיאה לא ידועה בעת העלאת השיחה')
@@ -335,11 +326,9 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   };
 
   const continueToDashboard = () => {
-    // לאחר שליחה מעבירים לדף השיחה במקום לדשבורד
+    // תמיד נעביר לדף השיחה לאחר שליחה מוצלחת
     if (uploadedCallId) {
       router.push(`/dashboard/calls/${uploadedCallId}`);
-    } else {
-      router.push('/dashboard');
     }
     router.refresh();
   };
@@ -394,15 +383,15 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-medium flex items-center justify-center"
             >
               <ArrowRight className="w-5 h-5 ml-2" />
-              צפה בדף השיחה
+              עבור לדף השיחה
             </button>
             <button
               type="button"
-              onClick={continueToDashboard}
+              onClick={() => router.push('/dashboard')}
               className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-full hover:from-gray-600 hover:to-gray-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-medium flex items-center justify-center"
             >
               <Clock className="w-5 h-5 ml-2" />
-              עבור לדף השיחה
+              חזור לדשבורד
             </button>
           </div>
           <p className="text-sm text-green-600 mt-4">
@@ -591,155 +580,84 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 onClick={triggerFileInput}
               >
                 <div className="text-center">
-                  {file ? (
-                    <div className="flex flex-col items-center">
-                      <CheckCircle2 className="mx-auto h-12 w-12 text-green-600" />
-                      <div className="mt-4 flex flex-col items-center">
-                        <span className="font-medium text-green-800">
-                          קובץ נבחר: {fileName || file.name}
-                        </span>
-                        <span className="text-sm text-green-600 mt-1">
+                  {!file ? (
+                    <>
+                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="mt-4">
+                        <label htmlFor="file-upload" className="cursor-pointer">
+                          <span className="mt-2 block text-sm font-medium text-gray-900">
+                            העלה קובץ אודיו
+                          </span>
+                          <p className="mt-1 block text-xs text-gray-500">
+                            או גרור ושחרר כאן
+                          </p>
+                        </label>
+                        <input
+                          ref={fileInputRef}
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
+                          className="sr-only"
+                          accept="audio/*"
+                          onChange={handleFileChange}
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        MP3, WAV, M4A, AAC עד 100MB
+                      </p>
+                    </>
+                  ) : (
+                    <div className="text-center">
+                      <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-gray-900 break-all">
+                          {fileName || file.name}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
                           {(file.size / (1024 * 1024)).toFixed(2)} MB
-                        </span>
-                        
+                        </p>
+                      </div>
+                      <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
                         <button
                           type="button"
                           onClick={clearSelectedFile}
-                          className="mt-3 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-xs font-medium hover:bg-gray-200 transition-colors"
+                          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          disabled={isLoading}
                         >
                           החלף קובץ
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    <>
-                      <FileAudio className={`mx-auto h-12 w-12 ${dragActive ? 'text-blue-600' : error ? 'text-red-400' : 'text-gray-400'}`} />
-                      <div className="mt-4 flex flex-col items-center">
-                        <span className={`font-medium ${error ? 'text-red-600' : 'text-gray-900'}`}>
-                          {error ? 'יש שגיאה בבחירת הקובץ' : 'גרור קובץ לכאן או לחץ לבחירה'}
-                        </span>
-                        <span className="text-xs text-gray-500 mt-1">
-                          MP3, WAV, M4A, AAC או כל קובץ אודיו אחר עד 100MB
-                        </span>
-                        
-                        {error && (
-                          <button
-                            type="button"
-                            onClick={forceTriggerFileInput}
-                            className="mt-3 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium hover:bg-blue-200 transition-colors"
-                          >
-                            נסה בחירת קובץ שוב
-                          </button>
-                        )}
-                      </div>
-                    </>
                   )}
                 </div>
-                <input
-                  type="file"
-                  id="audioFile"
-                  name="audioFile"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.mp4,.webm,.aiff,.wma"
-                  className="hidden"
-                  disabled={isLoading}
-                />
               </div>
-            </div>
-            
-            <div className="mt-2 text-xs text-gray-500 flex justify-center">
-              סטטוס קובץ: {file 
-                ? <span className="text-green-600 font-medium">✓ נבחר בהצלחה</span> 
-                : <span className="text-gray-500">לא נבחר</span>}
-              {uploadCount > 0 && !file && (
-                <span className="text-yellow-600 mr-2">
-                  {uploadCount} ניסיונות בחירה ללא הצלחה
-                </span>
-              )}
-            </div>
-            
-            {isLoading && uploadStep === 'upload' && (
-              <div className="mt-6">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center">
-                    <span className={`text-sm font-semibold inline-flex items-center py-1 px-2.5 rounded-full ${progress < 100 ? 'text-blue-600 bg-blue-100' : 'text-green-600 bg-green-100'}`}>
-                      {progress < 30 ? (
-                        <>
-                          <Upload className="w-3.5 h-3.5 ml-1.5" />
-                          מעלה קובץ
-                        </>
-                      ) : progress < 70 ? (
-                        <>
-                          <Save className="w-3.5 h-3.5 ml-1.5" />
-                          שומר נתונים
-                        </>
-                      ) : progress < 100 ? (
-                        <>
-                          <Clock className="w-3.5 h-3.5 ml-1.5" />
-                          מכין לניתוח
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 ml-1.5" />
-                          הושלם
-                        </>
-                      )}
-                    </span>
-                  </div>
-                  <div className="text-left">
-                    <span className="text-sm font-semibold inline-block text-blue-600">
-                      {progress}%
-                    </span>
-                  </div>
-                </div>
-                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-blue-100">
-                  <div 
-                    style={{ width: `${progress}%` }} 
-                    className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-300 ${progress < 100 ? 'bg-blue-500' : 'bg-green-500'}`}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  {progress < 30 ? 'מעלה את הקובץ לשרת...' : 
-                   progress < 70 ? 'שומר את נתוני השיחה...' : 
-                   progress < 100 ? 'מכין את השיחה לניתוח ברקע...' : 
-                   'השיחה נשמרה והניתוח יתחיל ברקע...'}
-                </p>
-              </div>
-            )}
-            
-            <div className="flex justify-end mt-6">
-              <button
-                type="submit"
-                className={`py-2.5 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:ring-blue-500 focus:ring-offset-blue-200 text-white w-full transition ease-in duration-200 text-center text-base font-medium shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-lg flex items-center justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 ml-2 animate-spin" />
-                    מעלה...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="w-5 h-5 ml-2" />
-                    שלח לניתוח מתקדם
-                  </>
-                )}
-              </button>
             </div>
           </div>
         </div>
       )}
-      
-      {!isLoading && uploadStep === 'upload' && (
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-blue-700 text-sm flex items-start mt-4">
-          <Info className="w-5 h-5 ml-2 mt-0.5 flex-shrink-0 text-blue-500" />
-          <div>
-            <p className="font-medium">טיפ לניתוח ברקע:</p>
-            <p>השיחה תועלה מיד ותוכל להמשיך לעבוד בזמן שהמערכת מנתחת אותה ברקע. תקבל התראה כשהניתוח יושלם.</p>
-          </div>
+
+      {uploadStep === 'upload' && (
+        <div className="flex justify-end pt-6">
+          <button
+            type="submit"
+            disabled={isLoading || !file || !callType}
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
+                מעלה...
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5 ml-2" />
+                שלח לניתוח מתקדם
+              </>
+            )}
+          </button>
         </div>
       )}
     </form>
   )
-} 
+}
