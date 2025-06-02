@@ -158,6 +158,20 @@ export default function CompanyQuestionnaireForm({ companyId, companyData }: Com
         return
       }
 
+      console.log('✅ Validation passed. Valid data:', {
+        validDifferentiators,
+        validCustomerBenefits,
+        validCompanyBenefits,
+        formData: {
+          name: formData.name,
+          sector: formData.sector,
+          product_info: formData.product_info,
+          avg_product_cost: formData.avg_product_cost,
+          product_types: formData.product_types,
+          audience: formData.audience
+        }
+      })
+
       // העלאת קבצים לStorage אם קיימים
       let uploadedFiles: string[] = []
       if (files.length > 0) {
@@ -178,7 +192,20 @@ export default function CompanyQuestionnaireForm({ companyId, companyData }: Com
       }
 
       // עדכון החברה הקיימת
-      const { error: updateError } = await supabase
+      console.log('🔄 Starting company update with data:', {
+        name: formData.name.trim(),
+        sector: formData.sector.trim(),
+        product_info: formData.product_info.trim(),
+        avg_product_cost: formData.avg_product_cost.trim(),
+        product_types: [formData.product_types],
+        audience: formData.audience,
+        differentiators: JSON.stringify(validDifferentiators),
+        customer_benefits: JSON.stringify(validCustomerBenefits),
+        company_benefits: JSON.stringify(validCompanyBenefits),
+        uploads_professional_materials: formData.uploads_professional_materials,
+      })
+
+      const { data: updateData, error: updateError } = await supabase
         .from('companies')
         .update({
           name: formData.name.trim(),
@@ -187,16 +214,29 @@ export default function CompanyQuestionnaireForm({ companyId, companyData }: Com
           avg_product_cost: formData.avg_product_cost.trim(),
           product_types: [formData.product_types],
           audience: formData.audience,
-          differentiators: validDifferentiators,
-          customer_benefits: validCustomerBenefits,
-          company_benefits: validCompanyBenefits,
+          differentiators: JSON.stringify(validDifferentiators),
+          customer_benefits: JSON.stringify(validCustomerBenefits),
+          company_benefits: JSON.stringify(validCompanyBenefits),
           uploads_professional_materials: formData.uploads_professional_materials,
         })
         .eq('id', companyId)
+        .select()
+
+      console.log('✅ Company update result:', { updateData, updateError })
 
       if (updateError) {
+        console.error('❌ Update error details:', updateError)
         throw new Error(updateError.message)
       }
+
+      // בדיקה מיידית של הנתונים שנשמרו
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('id', companyId)
+        .single()
+
+      console.log('🔍 Verification of saved data:', { verifyData, verifyError })
       
       setSuccessMessage(`שאלון החברה "${formData.name}" עודכן בהצלחה!`)
       
