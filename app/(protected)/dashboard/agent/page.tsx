@@ -30,6 +30,13 @@ export default function AgentDashboardPage() {
           return
         }
 
+        // בדיקה שיש אימייל למשתמש
+        if (!user.email) {
+          setError("לא נמצא כתובת אימייל למשתמש")
+          setLoading(false)
+          return
+        }
+
         // בדיקה האם זה מנהל המערכת
         const isAdmin = user.email === 'ido.segev23@gmail.com'
         
@@ -37,7 +44,7 @@ export default function AgentDashboardPage() {
         let { data: userData, error: emailCheckError } = await supabase
           .from('users')
           .select('role, is_approved, company_id')
-          .eq('email', user.email)
+          .eq('email', user.email!)
           .maybeSingle()
         
         if (!isMounted) return;
@@ -107,7 +114,7 @@ export default function AgentDashboardPage() {
             return
           }
 
-          setTargetUserInfo({ full_name: targetUser.full_name, email: targetUser.email })
+          setTargetUserInfo({ full_name: targetUser.full_name, email: targetUser.email || '' })
           setUserId(targetUserId) // נציג את הנציג המבוקש
           setIsAuthorized(true)
           setLoading(false)
