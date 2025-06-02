@@ -201,7 +201,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
         companyData.company_benefits && Array.isArray(companyData.company_benefits) && companyData.company_benefits.length > 0;
       
       if (!isQuestionnaireComplete) {
-        setError('לא ניתן להעלות שיחה - שאלון החברה לא מולא במלואו. אנא פנה למנהל המערכת להשלמת השאלון.');
+        setError('לא ניתן להעלות שיחה - שאלון החברה לא מולא במלואו. אנא השלם את השאלון בעמוד השאלון.');
         return;
       }
     }
@@ -349,9 +349,23 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 flex items-start">
-          <AlertCircle className="w-5 h-5 ml-2 mt-0.5 flex-shrink-0" />
-          <div>{error}</div>
+        <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4">
+          <div className="flex items-start">
+            <AlertCircle className="w-5 h-5 ml-2 mt-0.5 flex-shrink-0" />
+            <div className="flex-grow">
+              {error}
+              {error.includes('שאלון החברה') && (userData?.role === 'manager' || userData?.role === 'admin') && (
+                <div className="mt-3">
+                  <a
+                    href="/company-questionnaire"
+                    className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    📝 השלם את השאלון כעת
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
       

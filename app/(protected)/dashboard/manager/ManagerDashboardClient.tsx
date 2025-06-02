@@ -447,14 +447,14 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
                   כדי שהמערכת תוכל לספק ניתוח מדויק ומותאם לצרכי החברה שלכם, חובה להשלים את שאלון החברה. 
                   ללא מילוי השאלון, הנציגים לא יוכלו להעלות שיחות לניתוח.
                   <br /><br />
-                  <strong>יש לפנות למנהל המערכת כדי להשלים את השאלון.</strong>
+                  <strong>השלם את השאלון כדי להמשיך להשתמש במערכת.</strong>
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <a
-                    href="mailto:ido.segev23@gmail.com?subject=השלמת שאלון חברה&body=שלום, אנא עזרו לי להשלים את שאלון החברה במערכת."
+                    href="/company-questionnaire"
                     className="bg-white text-orange-600 px-6 py-3 rounded-lg font-bold hover:bg-orange-50 transition-colors border-2 border-white text-center"
                   >
-                    📧 פנה למנהל המערכת
+                    📝 השלם את השאלון
                   </a>
                   <button
                     onClick={() => checkQuestionnaireComplete()}
