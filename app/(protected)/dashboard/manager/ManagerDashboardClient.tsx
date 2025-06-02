@@ -140,6 +140,24 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
     }
   }, [companyId, supabase])
   
+  // useEffect נפרד לבדיקת השאלון - ירוץ כאשר הקומפוננט נטען וכאשר companyId משתנה
+  useEffect(() => {
+    checkQuestionnaireComplete()
+  }, [checkQuestionnaireComplete])
+  
+  // useEffect לבדיקת השאלון כאשר המשתמש חוזר לדף
+  useEffect(() => {
+    const handleFocus = () => {
+      checkQuestionnaireComplete()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [checkQuestionnaireComplete])
+  
   // פונקציה לטיפול בנתונים עם useMemo למניעת יצירה מחדש
   const dateKey = useMemo(() => {
     return `${companyId}-${startDate.toISOString().split('T')[0]}-${endDate.toISOString().split('T')[0]}`;
@@ -265,20 +283,17 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
     })
   }, [setProgressData])
   
-  // קבלת נתוני השיחות והמשתמשים בטווח התאריכים
+  // useEffect נפרד לטיפול בנתונים ולא כולל את checkQuestionnaireComplete
   useEffect(() => {
     if (!companyId) {
-      console.log('⚠️ No companyId provided, skipping data fetch');
-      return;
+      console.log('⚠️ No companyId provided, skipping data fetch')
+      return
     }
-
-    // בדיקת השאלון
-    checkQuestionnaireComplete()
 
     // בדיקה אם כבר מבצעים קריאה זהה
     if (isFetching || lastFetchParamsRef.current === dateKey) {
-      console.log('⚠️ Already fetching data or same params, skipping...', { isFetching, lastKey: lastFetchParamsRef.current, currentKey: dateKey });
-      return;
+      console.log('⚠️ Already fetching data or same params, skipping...', { isFetching, lastKey: lastFetchParamsRef.current, currentKey: dateKey })
+      return
     }
 
     const fetchData = async () => {
@@ -371,7 +386,7 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
 
     // ביצוע מיידי ללא עיכוב
     fetchData();
-  }, [dateKey, userId, companyId, processAgentsData, processTeamSummary, generateProgressData, checkQuestionnaireComplete])
+  }, [dateKey, userId, companyId, processAgentsData, processTeamSummary, generateProgressData, supabase])
   
   if (isLoading) {
     return (
