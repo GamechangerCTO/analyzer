@@ -29,6 +29,11 @@ export default async function TeamPage() {
     redirect('/dashboard')
   }
   
+  // בדיקה שיש company_id
+  if (!userData.company_id) {
+    notFound()
+  }
+  
   // קבלת פרטי החברה
   const { data: companyData } = await supabase
     .from('companies')

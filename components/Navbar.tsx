@@ -11,7 +11,7 @@ import Avatar from './Avatar'
 interface UserData {
   id: string
   role: string
-  is_approved: boolean
+  is_approved: boolean | null
   company_id: string | null
 }
 
@@ -43,7 +43,10 @@ export default function Navbar({ user, userData }: NavbarProps) {
         .maybeSingle()
       
       if (data && !error) {
-        setUserProfile(data)
+        setUserProfile({
+          full_name: data.full_name || undefined,
+          avatar_url: data.avatar_url || undefined
+        })
       }
     }
     

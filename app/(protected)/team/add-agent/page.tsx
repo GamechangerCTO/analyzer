@@ -30,6 +30,11 @@ export default async function AddAgentPage() {
     redirect('/dashboard')
   }
   
+  // בדיקה שיש company_id
+  if (!userData.company_id) {
+    notFound()
+  }
+  
   // בדיקת פרטי החברה
   const { data: companyData } = await supabase
     .from('companies')
@@ -66,7 +71,7 @@ export default async function AddAgentPage() {
   let limitMessage = null
   
   // מספר הנציגים המרבי - במידה וקיים
-  const maxAgents = subscriptionData?.subscription_plans?.[0]?.max_agents;
+  const maxAgents = subscriptionData?.subscription_plans?.max_agents;
   
   if (!subscriptionData || !subscriptionData.is_active) {
     limitMessage = 'המנוי שלך אינו פעיל. אנא שדרג את המנוי כדי להוסיף נציגים.'
