@@ -371,29 +371,8 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
           </div>
         </div>
 
-        {/* גרפים - מוצגים רק כאשר לא מסננים */}
-        {currentFilter === 'all' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">התפלגות שיחות</h2>
-                <div className="w-3 h-3 bg-primary rounded-full"></div>
-              </div>
-              <CallsBarChart data={getChartData()} title="כמות שיחות לפי סוג" height={300} />
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">מגמת שיפור</h2>
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              </div>
-              <ProgressLineChart data={progressData} title="התפתחות הציון לאורך זמן" height={300} />
-            </div>
-          </div>
-        )}
-
-        {/* שיחות */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        {/* שיחות - מועבר למעלה */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -538,6 +517,25 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
               </div>
             </div>
           )}
+        </div>
+
+        {/* גרפים - מועבר למטה ומוצג תמיד (לא רק כשהסינון הוא 'all') */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">התפלגות שיחות לפי קטגוריה</h2>
+              <div className="w-3 h-3 bg-primary rounded-full"></div>
+            </div>
+            <CallsBarChart data={getChartData()} title="כמות שיחות לפי סוג" height={300} />
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">מגמת התקדמות</h2>
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            </div>
+            <ProgressLineChart data={progressData} title="התפתחות הציון לאורך זמן" height={300} />
+          </div>
         </div>
       </div>
     </div>

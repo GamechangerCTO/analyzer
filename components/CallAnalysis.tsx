@@ -311,7 +311,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         {/* Navigation Tabs */}
         <div className="mb-8">
           <nav className="flex space-x-8 rtl:space-x-reverse">
-            {['summary', 'tone', 'content', 'quotes', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
+            {['summary', 'tone', 'content', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -323,8 +323,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               >
                 {tab === 'summary' ? '📊 סיכום כללי' :
                  tab === 'tone' ? '🎭 ניתוח טונציה' :
-                 tab === 'content' ? '📝 ניתוח תוכן' :
-                 tab === 'quotes' ? '💬 ציטוטים' :
+                 tab === 'content' ? '📝 ניתוח מפורט' :
                  '📄 תמליל'}
               </button>
             ))}
@@ -445,6 +444,22 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 </audio>
               </div>
             )}
+
+            {/* פרמטרים מיוחדים לניתוח */}
+            {call.analysis_notes && (
+              <div className="bg-orange-50 border border-orange-200 rounded-xl shadow-lg p-6">
+                <h3 className="text-lg font-semibold mb-4 text-orange-800 flex items-center">
+                  <span className="mr-2">📋</span>
+                  פרמטרים מיוחדים שהתבקשו לניתוח
+                </h3>
+                <div className="bg-white p-4 rounded-lg border border-orange-100">
+                  <p className="text-gray-700 leading-relaxed">{call.analysis_notes}</p>
+                </div>
+                <p className="text-sm text-orange-600 mt-3 italic">
+                  🔍 הפרמטרים הללו הועברו למערכת הניתוח והשפיעו על התוצאות המוצגות
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -546,40 +561,117 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
         {activeTab === 'content' && call.analysis_type === 'full' && (
           <div className="space-y-6">
-            {/* נקודות חוזק ושיפור */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {strengths_and_preservation_points && strengths_and_preservation_points.length > 0 && (
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h3 className="text-xl font-semibold mb-4 text-green-700">✅ נקודות חוזק לשימור</h3>
-                  <div className="space-y-3">
-                    {strengths_and_preservation_points.map((point: any, index: number) => (
-                      <div key={index} className="flex items-start space-x-3 rtl:space-x-reverse bg-green-50 p-3 rounded-lg">
-                        <span className="text-green-500 text-xl">💪</span>
-                        <p className="text-gray-700 flex-1">
-                          {typeof point === 'string' ? point : JSON.stringify(point)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {improvement_points && improvement_points.length > 0 && (
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h3 className="text-xl font-semibold mb-4 text-orange-700">🎯 נקודות לשיפור</h3>
-                  <div className="space-y-3">
-                    {improvement_points.map((point: any, index: number) => (
-                      <div key={index} className="flex items-start space-x-3 rtl:space-x-reverse bg-orange-50 p-3 rounded-lg">
-                        <span className="text-orange-500 text-xl">📈</span>
-                        <p className="text-gray-700 flex-1">
-                          {typeof point === 'string' ? point : JSON.stringify(point)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+            {/* הערה על אילוץ הציטוטים */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <span className="text-blue-500 text-lg mr-2">💡</span>
+                <p className="text-blue-800 text-sm">
+                  <strong>ניתוח מפורט:</strong> כל פרמטר מציג את הציון, הערות והציטוטים הרלוונטיים יחד במקום נפרד
+                </p>
+              </div>
             </div>
+
+            {/* ניתוח מפורט עם כל הפרמטרים וציטוטים משולבים */}
+            {detailed_scores && Object.keys(detailed_scores).length > 0 && (
+              <div className="space-y-6">
+                {Object.entries(detailed_scores).map(([category, score], idx) => {
+                  const scoreValue = typeof score === 'object' && score !== null 
+                    ? ((score as Record<string, any>).ציון || (score as Record<string, any>).score || 0) 
+                    : Number(score);
+                  
+                  const displayCategory = category.replace(/_/g, ' ');
+                  const categoryData = (score as Record<string, any>);
+                  
+                  // חיפוש ציטוטים רלוונטיים לקטגוריה זו
+                  const relevantQuotes = segment_quotes ? segment_quotes.filter((quote: any) => {
+                    if (!quote || typeof quote !== 'object') return false;
+                    const quoteCategory = quote.category || quote.קטגוריה || quote.title || '';
+                    return quoteCategory.toLowerCase().includes(category.toLowerCase()) || 
+                           category.toLowerCase().includes(quoteCategory.toLowerCase());
+                  }) : [];
+
+                  return (
+                    <div key={idx} className="bg-white rounded-xl shadow-lg p-6 border-l-4" 
+                         style={{ borderLeftColor: scoreValue >= 8 ? '#10b981' : scoreValue >= 6 ? '#f59e0b' : '#ef4444' }}>
+                      
+                      {/* כותרת הפרמטר עם ציון */}
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-xl font-semibold text-gray-800">{displayCategory}</h3>
+                        <div className="text-left">
+                          <span className={`text-3xl font-bold ${getScoreColor(scoreValue)}`}>
+                            {scoreValue}
+                          </span>
+                          <span className="text-gray-500 text-sm">/10</span>
+                        </div>
+                      </div>
+
+                      {/* מד התקדמות */}
+                      <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+                        <div 
+                          className={`h-3 rounded-full transition-all duration-300 ${
+                            scoreValue >= 8 ? 'bg-green-500' :
+                            scoreValue >= 6 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${(scoreValue / 10) * 100}%` }}
+                        />
+                      </div>
+
+                      {/* הערות והערכה */}
+                      {categoryData && categoryData.הערה && (
+                        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                          <h4 className="font-medium text-gray-700 mb-2">📝 הערכה מפורטת:</h4>
+                          <p className="text-gray-700 leading-relaxed">
+                            {String(categoryData.הערה)}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* ציטוטים רלוונטיים */}
+                      {relevantQuotes.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-gray-700 flex items-center">
+                            <span className="mr-2">💬</span>
+                            ציטוטים רלוונטיים:
+                          </h4>
+                          {relevantQuotes.map((quote: any, quoteIdx: number) => {
+                            const quoteText = quote.text || quote.quote || quote.ציטוט || quote.content || '';
+                            const comment = quote.comment || quote.הערה || '';
+                            
+                            return (
+                              <div key={quoteIdx} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div className="flex-1">
+                                    <p className="text-gray-700 italic mb-2">
+                                      "{typeof quoteText === 'string' ? quoteText : JSON.stringify(quoteText)}"
+                                    </p>
+                                    {comment && (
+                                      <p className="text-sm text-blue-700">
+                                        💭 {typeof comment === 'string' ? comment : JSON.stringify(comment)}
+                                      </p>
+                                    )}
+                                  </div>
+                                  {quote.timestamp_seconds && audioUrl && (
+                                    <button 
+                                      onClick={() => playQuote(quote.timestamp_seconds)}
+                                      className="mr-3 flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors text-xs"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                      </svg>
+                                      {formatTime(quote.timestamp_seconds)}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* דגלים אדומים */}
             {red_flags && red_flags.length > 0 && (
@@ -638,84 +730,95 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               </div>
             )}
 
-            {/* המלצות פרקטיות */}
-            {practical_recommendations && practical_recommendations.length > 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold mb-4 text-blue-700">💡 המלצות פרקטיות לשיפור</h3>
-                <div className="space-y-3">
-                  {practical_recommendations.map((rec: any, index: number) => (
-                    <div key={index} className="flex items-start space-x-3 rtl:space-x-reverse bg-blue-50 p-4 rounded-lg">
-                      <span className="text-blue-500 text-xl">💡</span>
-                      <p className="text-gray-700 flex-1">
-                        {typeof rec === 'string' ? rec : JSON.stringify(rec)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'quotes' && (
-          <div className="space-y-6">
-            {segment_quotes && segment_quotes.length > 0 ? (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold mb-6 text-gray-800">💬 ציטוטים רלוונטיים מהשיחה</h3>
-                <div className="space-y-6">
-                  {segment_quotes.map((quoteObj: any, index: number) => {
-                    if (!quoteObj || typeof quoteObj !== 'object') {
-                      return null;
-                    }
-                    
-                    const quoteText = typeof quoteObj === 'string' 
-                      ? quoteObj 
-                      : (quoteObj.text || quoteObj.quote || quoteObj.ציטוט || quoteObj.content || JSON.stringify(quoteObj));
-                    
-                    const quoteTitle = quoteObj.title || quoteObj.category || quoteObj.קטגוריה || quoteObj.סוג || `ציטוט ${index + 1}`;
-                    const comment = quoteObj.comment || quoteObj.הערה || '';
-                    
-                    return (
-                      <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-3">
-                          <h4 className="font-semibold text-blue-700 text-lg">{String(quoteTitle)}</h4>
-                          {quoteObj.timestamp_seconds && (
-                            <button 
-                              onClick={() => playQuote(quoteObj.timestamp_seconds)}
-                              className="flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
-                              disabled={!audioUrl}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                              </svg>
-                              {formatTime(quoteObj.timestamp_seconds)}
-                            </button>
-                          )}
-                        </div>
-                        <div className="bg-gray-50 border-r-4 border-blue-400 p-4 rounded quote-highlight">
-                          <p className="text-gray-700 italic text-lg leading-relaxed">
-                            "{typeof quoteText === 'string' ? quoteText : JSON.stringify(quoteText)}"
-                          </p>
-                        </div>
-                        {comment && (
-                          <div className="mt-3 p-3 bg-yellow-50 rounded">
-                            <p className="text-gray-600 text-sm">
-                              💭 {typeof comment === 'string' ? comment : JSON.stringify(comment)}
-                            </p>
-                          </div>
-                        )}
+            {/* סיכום כללי עם המלצות פרקטיות */}
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl shadow-lg p-6 border border-blue-200">
+              <h3 className="text-xl font-semibold mb-4 text-blue-800 flex items-center">
+                <span className="mr-2">🎯</span>
+                סיכום כללי והמלצות פרקטיות
+              </h3>
+              
+              {/* נקודות חוזק לשימור */}
+              {strengths_and_preservation_points && strengths_and_preservation_points.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="font-semibold text-green-700 mb-3 flex items-center">
+                    <span className="mr-2">✅</span>
+                    נקודות חוזק לשימור:
+                  </h4>
+                  <div className="space-y-2">
+                    {strengths_and_preservation_points.map((point: any, index: number) => (
+                      <div key={index} className="flex items-start bg-green-50 p-3 rounded-lg border border-green-200">
+                        <span className="text-green-500 text-lg mr-2 mt-0.5">💪</span>
+                        <p className="text-gray-700 flex-1">
+                          {typeof point === 'string' ? point : JSON.stringify(point)}
+                        </p>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                <div className="text-gray-400 text-6xl mb-4">💬</div>
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">אין ציטוטים זמינים</h3>
-                <p className="text-gray-500">לא נמצאו ציטוטים רלוונטיים עבור השיחה הזו</p>
-              </div>
-            )}
+              )}
+
+              {/* נקודות לשיפור */}
+              {improvement_points && improvement_points.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="font-semibold text-orange-700 mb-3 flex items-center">
+                    <span className="mr-2">🎯</span>
+                    נקודות עיקריות לשיפור:
+                  </h4>
+                  <div className="space-y-2">
+                    {improvement_points.map((point: any, index: number) => (
+                      <div key={index} className="flex items-start bg-orange-50 p-3 rounded-lg border border-orange-200">
+                        <span className="text-orange-500 text-lg mr-2 mt-0.5">📈</span>
+                        <p className="text-gray-700 flex-1">
+                          {typeof point === 'string' ? point : JSON.stringify(point)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* המלצות פרקטיות */}
+              {practical_recommendations && practical_recommendations.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-blue-700 mb-3 flex items-center">
+                    <span className="mr-2">💡</span>
+                    המלצות פרקטיות ליישום מיידי:
+                  </h4>
+                  <div className="space-y-2">
+                    {practical_recommendations.map((rec: any, index: number) => (
+                      <div key={index} className="flex items-start bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <span className="text-blue-500 text-lg mr-2 mt-0.5">💡</span>
+                        <p className="text-gray-700 flex-1 font-medium">
+                          {typeof rec === 'string' ? rec : JSON.stringify(rec)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* הוספת המלצה לתרגול אם הציון נמוך */}
+              {finalOverallScore < 7 && (
+                <div className="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <h4 className="font-semibold text-purple-700 mb-2 flex items-center">
+                    <span className="mr-2">🏋️‍♂️</span>
+                    המלצה לתרגול נוסף:
+                  </h4>
+                  <p className="text-purple-700">
+                    בהתבסס על הציון שקיבלת, מומלץ לעבור לחדר הכושר ולבצע סימולציות תרגול 
+                    כדי לשפר את הביצועים באזורים שזוהו לשיפור.
+                  </p>
+                  <div className="mt-3">
+                    <a 
+                      href="/simulations" 
+                      className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                    >
+                      🏋️‍♂️ עבור לחדר הכושר
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -746,28 +849,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
         {/* הערות נציג */}
         {call.agent_notes && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">📝 הערות נציג</h3>
-            <div className="bg-blue-50 p-4 rounded-lg border-r-4 border-blue-400">
-              <p className="text-gray-700">{call.agent_notes}</p>
-            </div>
-          </div>
-                 )}
-
-        {/* פרמטרים מיוחדים לניתוח */}
-        {call.analysis_notes && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-4 text-orange-800 flex items-center">
-              <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-md text-xs font-semibold mr-2">
-                השפיע על הניתוח
-              </span>
-              🎯 פרמטרים מיוחדים לניתוח זה
+          <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold mb-4 text-yellow-800 flex items-center">
+              <span className="mr-2">📝</span>
+              הערות הנציג
             </h3>
-            <div className="bg-orange-50 p-4 rounded-lg border-r-4 border-orange-400">
-              <p className="text-orange-800 font-medium mb-2">
-                💡 הניתוח התמקד במיוחד בפרמטרים הבאים:
-              </p>
-              <p className="text-gray-700">{call.analysis_notes}</p>
+            <div className="bg-white p-4 rounded-lg border border-yellow-100">
+              <p className="text-gray-700 leading-relaxed">{call.agent_notes}</p>
             </div>
           </div>
         )}
