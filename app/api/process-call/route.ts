@@ -8,13 +8,41 @@ import { addCallLog } from '@/lib/addCallLog';
 // הגדרת max duration לוורסל (5 דקות למשתמשי Pro)
 export const maxDuration = 300;
 
-// אתחול OpenAI API
+// בדיקת מפתח OpenAI API עם לוגים מפורטים
+const apiKey = process.env.OPENAI_API_KEY;
+console.log('🔍 OpenAI API Key check:', {
+  hasKey: !!apiKey,
+  keyLength: apiKey?.length || 0,
+  keyPrefix: apiKey?.substring(0, 10) + '...' || 'N/A',
+  environment: process.env.NODE_ENV,
+  vercelEnv: process.env.VERCEL_ENV
+});
+
+// אתחול OpenAI API עם בדיקה משופרת
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || '',
 });
 
 export async function POST(request: Request) {
   try {
+    // בדיקת זמינות מפתח OpenAI עם לוגים מפורטים
+    const apiKey = process.env.OPENAI_API_KEY;
+    console.log('🔍 OpenAI API Key check:', {
+      hasKey: !!apiKey,
+      keyLength: apiKey?.length || 0,
+      keyPrefix: apiKey?.substring(0, 10) + '...' || 'N/A',
+      environment: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL_ENV
+    });
+
+    if (!apiKey) {
+      console.error('❌ OPENAI_API_KEY לא מוגדר בפונקציה');
+      return NextResponse.json(
+        { error: 'מפתח OpenAI API לא מוגדר. אנא בדוק את משתני הסביבה ב-Vercel.' }, 
+        { status: 500 }
+      );
+    }
+
     // יצירת לקוח סופהבייס בצד השרת עם הרשאות מלאות
     const supabase = createRouteHandlerClient<Database>({ cookies });
     
@@ -67,6 +95,16 @@ export async function POST(request: Request) {
     await addCallLog(call_id, `ℹ️ סוג ניתוח: ${isFullAnalysis ? 'מלא (כולל תמלול)' : 'טונציה בלבד'}`);
 
     // קבלת URL להורדת הקובץ
+    if (!callData.audio_file_path) {
+      await addCallLog(call_id, '❌ נתיב קובץ האודיו חסר', { 
+        audio_path: callData.audio_file_path
+      });
+      return NextResponse.json(
+        { error: 'נתיב קובץ האודיו חסר' }, 
+        { status: 400 }
+      );
+    }
+
     const { data, error: getUrlError } = await supabase
       .storage
       .from('audio_files')
@@ -151,9 +189,16 @@ export async function POST(request: Request) {
             transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY || ''}`
               },
               body: formData
+            });
+            
+            await addCallLog(call_id, '📡 תשובת Whisper API התקבלה', { 
+              status: transcriptionResponse.status,
+              statusText: transcriptionResponse.statusText,
+              ok: transcriptionResponse.ok,
+              attempt: retryCount + 1
             });
             
             if (transcriptionResponse.ok) {
@@ -361,6 +406,16 @@ export async function POST(request: Request) {
         }
 
         // קבלת פרטי החברה והמשתמש
+        if (!callData.user_id) {
+          await addCallLog(call_id, '❌ מזהה משתמש חסר', { 
+            user_id: callData.user_id
+          });
+          return NextResponse.json(
+            { error: 'מזהה משתמש חסר' }, 
+            { status: 400 }
+          );
+        }
+
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select(`

@@ -68,13 +68,13 @@ export default async function CallPage({ params }: CallPageProps) {
         <h1 className="text-3xl font-bold">ניתוח שיחה</h1>
         <a 
           href="/dashboard"
-          className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg"
+          className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
         >
           חזרה לדשבורד
         </a>
       </div>
       
-      <CallAnalysis call={callData} audioUrl={audioUrl} />
+      <CallAnalysis call={callData} audioUrl={audioUrl} userRole={userData?.role} />
     </div>
   )
 } 

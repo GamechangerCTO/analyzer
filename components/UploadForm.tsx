@@ -29,7 +29,7 @@ interface UploadFormProps {
 
 interface Agent {
   id: string
-  full_name: string
+  full_name: string | null
 }
 
 const CALL_TYPE_OPTIONS = [
@@ -175,6 +175,37 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
       return;
     }
     
+    // בדיקה אם לחברה יש שאלון מלא
+    if (userData?.companies?.id) {
+      const freshSupabase = createClient();
+      const { data: companyData, error: companyError } = await freshSupabase
+        .from('companies')
+        .select('product_info, sector, avg_product_cost, product_types, audience, differentiators, customer_benefits, company_benefits')
+        .eq('id', userData.companies.id)
+        .single();
+      
+      if (companyError) {
+        setError('שגיאה בבדיקת נתוני החברה');
+        return;
+      }
+      
+      // בדיקה אם השאלון מלא
+      const isQuestionnaireComplete = companyData && 
+        companyData.product_info && 
+        companyData.sector && 
+        companyData.avg_product_cost && 
+        companyData.product_types && Array.isArray(companyData.product_types) && companyData.product_types.length > 0 &&
+        companyData.audience &&
+        companyData.differentiators && Array.isArray(companyData.differentiators) && companyData.differentiators.length > 0 &&
+        companyData.customer_benefits && Array.isArray(companyData.customer_benefits) && companyData.customer_benefits.length > 0 &&
+        companyData.company_benefits && Array.isArray(companyData.company_benefits) && companyData.company_benefits.length > 0;
+      
+      if (!isQuestionnaireComplete) {
+        setError('לא ניתן להעלות שיחה - שאלון החברה לא מולא במלואו. אנא פנה למנהל המערכת להשלמת השאלון.');
+        return;
+      }
+    }
+    
     setError(null);
     setIsLoading(true);
     setUploadStep('upload');
@@ -228,8 +259,8 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               p_call_type: callType,
               p_audio_file_path: filePath,
               p_company_id: userData?.companies?.id || null,
-              p_agent_notes: agentNotes || null,
-              p_analysis_notes: analysisNotes || null,
+              p_agent_notes: agentNotes || undefined,
+              p_analysis_notes: analysisNotes || undefined,
               p_analysis_type: analysisType
             });
           

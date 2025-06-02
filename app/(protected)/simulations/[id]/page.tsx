@@ -8,11 +8,12 @@ import { Mic, MicOff, Square, Play, Volume2, VolumeX } from 'lucide-react';
 
 interface Simulation {
   id: string;
-  customer_type: string;
+  customer_persona: string;
   difficulty_level: string;
   scenario_description: string;
   status: string;
   created_at: string;
+  simulation_type: string;
 }
 
 interface DialogueItem {
@@ -105,7 +106,7 @@ export default function SimulationPage() {
           type: 'welcome',
           simulation: {
             id: simulationId,
-            customerType: simulation?.customer_type,
+            customerType: simulation?.customer_persona,
             difficulty: simulation?.difficulty_level,
             scenario: simulation?.scenario_description
           }
@@ -362,7 +363,7 @@ export default function SimulationPage() {
               <div className="space-y-3">
                 <div>
                   <span className="font-semibold text-gray-600">סוג לקוח:</span>
-                  <div className="text-lg">{getCustomerTypeLabel(simulation.customer_type)}</div>
+                  <div className="text-lg">{getCustomerTypeLabel(simulation.customer_persona)}</div>
                 </div>
                 
                 <div>

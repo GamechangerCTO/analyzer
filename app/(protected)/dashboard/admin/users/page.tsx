@@ -25,7 +25,7 @@ interface UserRaw {
   full_name: string | null;
   role: string | null;
   company_id: string | null;
-  is_approved: boolean;
+  is_approved: boolean | null;
   companies?: any; // נתונים גולמיים מהשרת
 }
 
@@ -95,6 +95,7 @@ export default function AdminUsersPage() {
           
           return {
             ...u,
+            is_approved: u.is_approved ?? false,
             company_name: companyName || undefined,
           };
         }); 

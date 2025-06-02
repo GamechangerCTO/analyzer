@@ -12,12 +12,12 @@ interface Company {
   sector?: string | null;
   product_info?: string | null;
   avg_product_cost?: string | null;
-  product_types?: string[] | null;
+  product_types?: any | null;
   audience?: string | null;
-  differentiators?: string[] | null;
-  customer_benefits?: string[] | null;
-  company_benefits?: string[] | null;
-  uploads_professional_materials?: boolean;
+  differentiators?: any | null;
+  customer_benefits?: any | null;
+  company_benefits?: any | null;
+  uploads_professional_materials?: boolean | null;
   status?: string;
   users_count?: number;
 }
@@ -180,7 +180,7 @@ export default function AdminCompaniesPage() {
                       {company.sector || '-'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {company.product_types && company.product_types.length > 0 
+                      {company.product_types && Array.isArray(company.product_types) && company.product_types.length > 0 
                         ? company.product_types[0] 
                         : '-'}
                     </td>

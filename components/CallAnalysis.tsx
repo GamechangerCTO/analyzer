@@ -11,18 +11,18 @@ interface CallData {
   analysis_report: any
   transcript: string | null
   overall_score: number | null
-  processing_status: string
+  processing_status: string | null
   red_flag: boolean | null
   agent_notes: string | null
   analysis_notes: string | null
   audio_duration_seconds: number | null
-  analysis_type: string
+  analysis_type: string | null
   error_message: string | null
   analyzed_at: string | null
   users: {
     id: string
     full_name: string | null
-    email: string
+    email: string | null
   } | null
   companies: {
     id: string
@@ -34,9 +34,10 @@ interface CallData {
 interface CallAnalysisProps {
   call: CallData
   audioUrl: string | null
+  userRole?: string | null
 }
 
-export default function CallAnalysis({ call, audioUrl }: CallAnalysisProps) {
+export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisProps) {
   const [activeTab, setActiveTab] = useState('summary')
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -310,7 +311,7 @@ export default function CallAnalysis({ call, audioUrl }: CallAnalysisProps) {
         {/* Navigation Tabs */}
         <div className="mb-8">
           <nav className="flex space-x-8 rtl:space-x-reverse">
-            {['summary', 'tone', 'content', 'quotes', 'transcript'].map((tab) => (
+            {['summary', 'tone', 'content', 'quotes', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -754,22 +755,6 @@ export default function CallAnalysis({ call, audioUrl }: CallAnalysisProps) {
                  )}
 
         {/* פרמטרים מיוחדים לניתוח */}
-        {call.analysis_notes && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold mb-4 text-orange-800 flex items-center">
-              <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-md text-xs font-semibold mr-2">
-                השפיע על הניתוח
-              </span>
-              🎯 פרמטרים מיוחדים לניתוח זה
-            </h3>
-            <div className="bg-orange-50 p-4 rounded-lg border-r-4 border-orange-400">
-              <p className="text-orange-800 font-medium mb-2">
-                💡 הניתוח התמקד במיוחד בפרמטרים הבאים:
-              </p>
-              <p className="text-gray-700">{call.analysis_notes}</p>
-            </div>
-          </div>
-        )}
         {call.analysis_notes && (
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="text-lg font-semibold mb-4 text-orange-800 flex items-center">
