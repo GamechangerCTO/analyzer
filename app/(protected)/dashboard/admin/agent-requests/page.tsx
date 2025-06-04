@@ -2,9 +2,9 @@ import React from 'react'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
-import TeamManagementClient from '@/components/TeamManagementClient'
+import AgentRequestsClient from '@/components/admin/AgentRequestsClient'
 
-export default async function TeamPage() {
+export default async function AgentRequestsPage() {
   const cookieStore = cookies()
   const supabase = createClient(cookieStore)
   
@@ -14,10 +14,10 @@ export default async function TeamPage() {
     redirect('/login')
   }
   
-  // בדיקה שהמשתמש הוא מנהל או בעל חברה
+  // בדיקה שהמשתמש הוא מנהל מערכת
   const { data: userData, error: userError } = await supabase
     .from('users')
-    .select('id, role, company_id, full_name')
+    .select('id, role, full_name')
     .eq('id', user.id)
     .single()
   
@@ -25,21 +25,14 @@ export default async function TeamPage() {
     notFound()
   }
   
-  if (userData.role !== 'manager' && userData.role !== 'owner') {
+  if (userData.role !== 'admin') {
     redirect('/dashboard')
   }
-  
-  // בדיקה שיש company_id
-  if (!userData.company_id) {
-    notFound()
-  }
-  
+
   return (
-    <TeamManagementClient 
-      userId={user.id}
-      companyId={userData.company_id}
-      userRole={userData.role}
-      userFullName={userData.full_name}
+    <AgentRequestsClient 
+      adminId={user.id}
+      adminName={userData.full_name}
     />
   )
 } 

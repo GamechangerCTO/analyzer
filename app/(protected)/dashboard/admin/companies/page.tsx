@@ -37,6 +37,14 @@ export default function AdminCompaniesPage() {
       setError(null);
       const supabase = createClient();
       
+      // ודא שהמשתמש מחובר לפני שנמשיך
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        console.error('שגיאה בזיהוי המשתמש:', userError);
+        setError('שגיאה בזיהוי המשתמש');
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('companies')
         .select('*')
@@ -53,23 +61,38 @@ export default function AdminCompaniesPage() {
             .select('id')
             .eq('company_id', company.id);
           
-          // בדיקת מצב השאלון מהטבלה החדשה
-          const { data: questionnaireData, error: questionnaireError } = await supabase
-            .from('company_questionnaires')
-            .select('is_complete, completion_score, sector, audience, product_types')
-            .eq('company_id', company.id)
-            .single();
+          // ציון ערכי ברירת מחדל
+          let questionnaireComplete = false;
+          let questionnaireScore = 0;
+          let sectorFromQuestionnaire = null;
+          let audienceFromQuestionnaire = null;
+          
+          // ניסיון זהיר לשלוף נתונים מטבלת השאלון
+          try {
+            // במקום לקרוא ישירות מהטבלה, נשתמש ב-API route
+            const response = await fetch(`/api/companies/${company.id}/questionnaire`);
+            if (response.ok) {
+              const questionnaireData = await response.json();
+              questionnaireComplete = questionnaireData.is_complete || false;
+              questionnaireScore = questionnaireData.completion_score || 0;
+              sectorFromQuestionnaire = questionnaireData.sector;
+              audienceFromQuestionnaire = questionnaireData.audience;
+            }
+          } catch (err) {
+            // אם יש שגיאה, נשתמש בערכי ברירת מחדל
+            console.warn(`לא ניתן לטעון שאלון עבור חברה ${company.name}:`, err);
+          }
           
           return {
             ...company,
-            status: 'פעיל', // לדוגמה בלבד
+            status: 'פעיל',
             users_count: usersError ? 0 : (usersData?.length || 0),
-            questionnaire_complete: questionnaireData?.is_complete || false,
-            questionnaire_score: questionnaireData?.completion_score || 0,
-            // נתונים מהשאלון החדש
-            sector: questionnaireData?.sector || company.sector || '-',
-            audience: questionnaireData?.audience || company.audience || '-',
-            product_types: questionnaireData?.product_types || company.product_types || []
+            questionnaire_complete: questionnaireComplete,
+            questionnaire_score: questionnaireScore,
+            // נתונים מהשאלון החדש או מהטבלה הישנה
+            sector: sectorFromQuestionnaire || company.sector || '-',
+            audience: audienceFromQuestionnaire || company.audience || '-',
+            product_types: company.product_types || []
           };
         })
       );
@@ -218,13 +241,20 @@ export default function AdminCompaniesPage() {
                       {company.users_count || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3 text-center">
-                      <button 
-                        className="text-indigo-600 hover:text-indigo-900"
+                      <Link
+                        href={`/dashboard/admin/companies/${company.id}/view-questionnaire`}
+                        className="text-indigo-600 hover:text-indigo-900 inline-block"
                         title="צפה בפרטי השאלון המלא"
                       >
-                        צפה
-                      </button>
-                      <button className="text-blue-600 hover:text-blue-900">עריכה</button>
+                        צפה בשאלון
+                      </Link>
+                      <Link
+                        href={`/dashboard/admin/companies/${company.id}/edit-questionnaire`}
+                        className="text-blue-600 hover:text-blue-900 inline-block"
+                        title="ערוך את שאלון החברה"
+                      >
+                        ערוך שאלון
+                      </Link>
                       <button className="text-red-600 hover:text-red-900">מחיקה</button>
                     </td>
                   </tr>

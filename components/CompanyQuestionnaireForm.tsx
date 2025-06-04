@@ -7,9 +7,10 @@ import { useRouter } from 'next/navigation'
 interface CompanyQuestionnaireFormProps {
   companyId: string
   companyData: any
+  isAdminEdit?: boolean
 }
 
-export default function CompanyQuestionnaireForm({ companyId, companyData }: CompanyQuestionnaireFormProps) {
+export default function CompanyQuestionnaireForm({ companyId, companyData, isAdminEdit = false }: CompanyQuestionnaireFormProps) {
   const supabase = createClientComponentClient()
   const router = useRouter()
   
@@ -292,7 +293,11 @@ export default function CompanyQuestionnaireForm({ companyId, companyData }: Com
       
       // חזרה לדשבורד לאחר 2 שניות
       setTimeout(() => {
-        router.push('/dashboard/manager')
+        if (isAdminEdit) {
+          router.push('/dashboard/admin/companies')
+        } else {
+          router.push('/dashboard/manager')
+        }
       }, 2000)
 
     } catch (err) {
@@ -543,11 +548,17 @@ export default function CompanyQuestionnaireForm({ companyId, companyData }: Com
           
           <button 
             type="button" 
-            onClick={() => router.push('/dashboard/manager')} 
+            onClick={() => {
+              if (isAdminEdit) {
+                router.push('/dashboard/admin/companies')
+              } else {
+                router.push('/dashboard/manager')
+              }
+            }} 
             disabled={saving} 
             className="w-full mt-3 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            חזור לדשבורד
+            {isAdminEdit ? 'חזור לרשימת החברות' : 'חזור לדשבורד'}
           </button>
         </div>
       </form>

@@ -59,7 +59,7 @@ export default function DashboardPage() {
             }
           }
           
-          setLoading(false)
+          router.push('/dashboard/admin')
           return
         }
         
@@ -88,7 +88,8 @@ export default function DashboardPage() {
           }
           
           if (userDataById.role === 'admin') {
-            setLoading(false)
+            router.push('/dashboard/admin')
+            return
           } else if (userDataById.role === 'manager' || userDataById.role === 'owner') {
             router.push('/dashboard/manager')
           } else if (userDataById.role === 'agent') {
@@ -112,7 +113,8 @@ export default function DashboardPage() {
         }
         
         if (userData.role === 'admin') {
-          setLoading(false)
+          router.push('/dashboard/admin')
+          return
         } else if (userData.role === 'manager' || userData.role === 'owner') {
           router.push('/dashboard/manager')
         } else if (userData.role === 'agent') {
