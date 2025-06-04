@@ -25,6 +25,9 @@ const openai = new OpenAI({
 
 export async function POST(request: Request) {
   try {
+    console.log('🚀 Starting process-call function');
+    const startTime = Date.now();
+    
     // בדיקת זמינות מפתח OpenAI עם לוגים מפורטים
     const apiKey = process.env.OPENAI_API_KEY;
     console.log('🔍 OpenAI API Key check:', {
@@ -32,7 +35,8 @@ export async function POST(request: Request) {
       keyLength: apiKey?.length || 0,
       keyPrefix: apiKey?.substring(0, 10) + '...' || 'N/A',
       environment: process.env.NODE_ENV,
-      vercelEnv: process.env.VERCEL_ENV
+      vercelEnv: process.env.VERCEL_ENV,
+      region: process.env.VERCEL_REGION || 'unknown'
     });
 
     if (!apiKey) {
@@ -56,9 +60,15 @@ export async function POST(request: Request) {
       );
     }
 
-    await addCallLog(call_id, '🚀 התחלת תהליך ניתוח שיחה', { timestamp: new Date().toISOString() });
+    console.log(`📞 Processing call: ${call_id}`);
+    await addCallLog(call_id, '🚀 התחלת תהליך ניתוח שיחה', { 
+      timestamp: new Date().toISOString(),
+      function_region: process.env.VERCEL_REGION || 'unknown',
+      execution_start: startTime
+    });
 
     // קבלת פרטי השיחה
+    console.log('📊 Fetching call data from Supabase');
     const { data: callData, error: callError } = await supabase
       .from('calls')
       .select('*')
@@ -66,6 +76,7 @@ export async function POST(request: Request) {
       .single();
 
     if (callError || !callData) {
+      console.error('❌ Call not found:', callError);
       await addCallLog(call_id, '❌ שגיאה בטעינת השיחה', { 
         error: callError, 
         error_message: callError?.message || 'שגיאה לא ידועה' 
@@ -75,6 +86,12 @@ export async function POST(request: Request) {
         { status: 404 }
       );
     }
+
+    console.log('✅ Call data loaded:', {
+      call_type: callData.call_type,
+      analysis_type: callData.analysis_type,
+      audio_path: callData.audio_file_path
+    });
 
     await addCallLog(call_id, '✅ נתוני שיחה נטענו בהצלחה', { 
       call_type: callData.call_type,
@@ -96,6 +113,7 @@ export async function POST(request: Request) {
 
     // קבלת URL להורדת הקובץ
     if (!callData.audio_file_path) {
+      console.error('❌ Missing audio file path');
       await addCallLog(call_id, '❌ נתיב קובץ האודיו חסר', { 
         audio_path: callData.audio_file_path
       });
@@ -105,6 +123,7 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log('🔗 Creating signed URL for audio file');
     const { data, error: getUrlError } = await supabase
       .storage
       .from('audio_files')
@@ -113,6 +132,7 @@ export async function POST(request: Request) {
     const signedUrl = data?.signedUrl;
     
     if (getUrlError || !signedUrl) {
+      console.error('❌ Failed to get signed URL:', getUrlError);
       await addCallLog(call_id, '❌ שגיאה בקבלת קישור לקובץ האודיו', { 
         error: getUrlError,
         error_message: getUrlError?.message || 'unknown',
@@ -132,6 +152,7 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log('✅ Signed URL created successfully');
     await addCallLog(call_id, '✅ קישור האודיו נוצר בהצלחה', {
       url_expiry_minutes: 5,
       audio_path: callData.audio_file_path
@@ -144,17 +165,30 @@ export async function POST(request: Request) {
     
     if (isFullAnalysis) {
       try {
+        console.log('📝 Starting transcription process');
         await addCallLog(call_id, '📝 מתחיל תהליך תמלול שיחה', { model: 'whisper-1', language: 'he' });
         
         // הורדת קובץ האודיו
+        console.log('⬇️ Downloading audio file');
         await addCallLog(call_id, '⬇️ מוריד קובץ אודיו מהשרת');
-        const audioResponse = await fetch(signedUrl);
+        
+        const audioResponse = await fetch(signedUrl, {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'OpenAI-Whisper-Client/1.0'
+          }
+        });
         
         if (!audioResponse.ok) {
           throw new Error(`שגיאה בהורדת קובץ אודיו: ${audioResponse.status} ${audioResponse.statusText}`);
         }
         
         const audioBlob = await audioResponse.blob();
+        
+        console.log('✅ Audio file downloaded:', {
+          size_mb: (audioBlob.size / (1024 * 1024)).toFixed(2),
+          type: audioBlob.type
+        });
         
         await addCallLog(call_id, '✅ קובץ אודיו הורד בהצלחה', { 
           size_bytes: audioBlob.size,
@@ -164,13 +198,14 @@ export async function POST(request: Request) {
         
         // המרת ה-blob לקובץ שאפשר לשלוח ל-OpenAI API
         const formData = new FormData();
-        formData.append('file', audioBlob);
+        formData.append('file', audioBlob, 'audio.wav');
         formData.append('model', 'whisper-1');
         formData.append('language', 'he');
         formData.append('response_format', 'verbose_json');
         formData.append('timestamp_granularities[]', 'word');
         formData.append('timestamp_granularities[]', 'segment');
         
+        console.log('🔄 Sending transcription request to Whisper API');
         await addCallLog(call_id, '🔄 שולח בקשת תמלול ל-Whisper API', { 
           request_time: new Date().toISOString(),
           file_size_mb: (audioBlob.size / (1024 * 1024)).toFixed(2)
@@ -187,6 +222,7 @@ export async function POST(request: Request) {
             if (retryCount > 0) {
               // השהייה אקספוננציאלית בין הניסיונות (1s, 2s, 4s)
               const delayMs = Math.pow(2, retryCount - 1) * 1000;
+              console.log(`⏱️ Waiting ${delayMs/1000}s before retry ${retryCount + 1}/${maxRetries}`);
               await addCallLog(call_id, `⏱️ ממתין ${delayMs/1000} שניות לפני ניסיון חוזר ${retryCount + 1}/${maxRetries}`);
               await new Promise(resolve => setTimeout(resolve, delayMs));
             }
@@ -194,9 +230,17 @@ export async function POST(request: Request) {
             transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY || ''}`
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY || ''}`,
+                'User-Agent': 'OpenAI-Whisper-Client/1.0'
               },
               body: formData
+            });
+            
+            console.log('📡 Whisper API response received:', {
+              status: transcriptionResponse.status,
+              statusText: transcriptionResponse.statusText,
+              ok: transcriptionResponse.ok,
+              attempt: retryCount + 1
             });
             
             await addCallLog(call_id, '📡 תשובת Whisper API התקבלה', { 
@@ -209,10 +253,15 @@ export async function POST(request: Request) {
             if (transcriptionResponse.ok) {
               transcriptionSuccess = true;
               if (retryCount > 0) {
+                console.log(`✅ Retry attempt ${retryCount + 1} succeeded!`);
                 await addCallLog(call_id, `✅ ניסיון חוזר מספר ${retryCount + 1} הצליח!`);
               }
             } else {
               const errorText = await transcriptionResponse.text();
+              console.error(`❌ Whisper API error on attempt ${retryCount + 1}:`, {
+                status: transcriptionResponse.status,
+                error_text: errorText
+              });
               await addCallLog(call_id, `❌ שגיאת Whisper API בניסיון ${retryCount + 1}`, { 
                 status: transcriptionResponse.status,
                 error_text: errorText
@@ -224,6 +273,7 @@ export async function POST(request: Request) {
               }
             }
           } catch (fetchError: any) {
+            console.error(`❌ Network error on attempt ${retryCount + 1}:`, fetchError.message);
             await addCallLog(call_id, `❌ שגיאת תקשורת בניסיון ${retryCount + 1}`, { error: fetchError.message });
             // אם זהו ניסיון אחרון, זרוק שגיאה
             if (retryCount === maxRetries - 1) {
@@ -241,17 +291,25 @@ export async function POST(request: Request) {
           throw new Error(`כל ${maxRetries} הניסיונות לתקשר עם Whisper API נכשלו`);
         }
         
+        console.log('📝 Processing transcription response');
         const transcriptionData = await transcriptionResponse.json();
         transcript = transcriptionData.text;
         transcriptSegments = transcriptionData.segments || [];
         transcriptWords = transcriptionData.words || [];
+        
+        console.log('✅ Transcription completed:', {
+          transcript_length: transcript.length,
+          transcript_words: transcript.split(' ').length,
+          segments_count: transcriptSegments.length,
+          words_with_timestamps: transcriptWords.length
+        });
         
         await addCallLog(call_id, '✅ תמלול הושלם בהצלחה', { 
           transcript_length: transcript.length,
           transcript_words: transcript.split(' ').length,
           segments_count: transcriptSegments.length,
           words_with_timestamps: transcriptWords.length,
-          time_taken_ms: new Date().getTime() - new Date(transcriptionData.created_at || Date.now()).getTime()
+          time_taken_ms: Date.now() - startTime
         });
         
         // עדכון התמליל בטבלה (כולל מידע מפורט)
@@ -270,6 +328,7 @@ export async function POST(request: Request) {
         });
           
       } catch (transcribeError: any) {
+        console.error('❌ Transcription error:', transcribeError);
         await addCallLog(call_id, '❌ שגיאה בתמלול', { 
           error: transcribeError.message,
           error_name: transcribeError.name,
@@ -307,11 +366,13 @@ export async function POST(request: Request) {
 
     // שלב 2: ניתוח טון ישיר מהאודיו עם GPT-4o
     try {
+      console.log('🎭 Starting tone analysis');
       await addCallLog(call_id, '🎭 מתחיל ניתוח טונציה', { model: 'gpt-4o' });
       
       // הכנת הבקשה לניתוח טונציה
       await addCallLog(call_id, '🔄 מכין בקשה לניתוח טונציה עם GPT-4o');
       
+      console.log('🔄 Sending tone analysis request to OpenAI');
       const toneAnalysisResponse = await openai.chat.completions.create({
         model: 'gpt-4o',
         messages: [
@@ -362,6 +423,7 @@ export async function POST(request: Request) {
         response_format: { type: 'json_object' }
       });
 
+      console.log('✅ Tone analysis response received from OpenAI');
       await addCallLog(call_id, '✅ תשובת OpenAI התקבלה לניתוח טונציה', { 
         token_usage: toneAnalysisResponse.usage,
         model: toneAnalysisResponse.model,
@@ -370,9 +432,10 @@ export async function POST(request: Request) {
 
       const toneAnalysisReport = JSON.parse(toneAnalysisResponse.choices[0].message.content || '{}');
       
+      console.log('✅ Tone analysis completed');
       await addCallLog(call_id, '✅ ניתוח טונציה הושלם', { 
         report_keys: Object.keys(toneAnalysisReport),
-        identified_red_flags: toneAnalysisReport.red_flags ? Object.keys(toneAnalysisReport.red_flags).filter(flag => toneAnalysisReport.red_flags[flag]) : []
+        identified_red_flags: toneAnalysisReport.דגלים_אדומים ? Object.keys(toneAnalysisReport.דגלים_אדומים).filter(flag => toneAnalysisReport.דגלים_אדומים[flag]) : []
       });
 
       // ניתוח מלא דורש שלב נוסף
@@ -386,7 +449,8 @@ export async function POST(request: Request) {
           .eq('id', call_id);
 
         await addCallLog(call_id, '🔄 עדכון סטטוס לניתוח תוכן', { new_status: 'analyzing_content' });
-        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן', { model: 'gpt-4.1-2025-04-14' });
+        console.log('📊 Starting content analysis');
+        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן', { model: 'gpt-4-turbo' });
 
         // שלב 3: ניתוח תוכן מקצועי עם GPT-4 Turbo
         // קבלת הפרומפט המתאים לסוג השיחה
@@ -398,84 +462,50 @@ export async function POST(request: Request) {
 
         let systemPrompt = '';
         if (promptError || !promptData) {
-          // פרומפט ברירת מחדל אם אין התאמה ספציפית
-          systemPrompt = `אתה מומחה בניתוח שיחות מכירה ושירות בעברית. נתח את השיחה המצורפת והערך אותה במגוון פרמטרים מקצועיים.
-          תן ציון כללי לשיחה (בין 3-10), וציונים נפרדים לקטגוריות ופרמטרים שונים.
-          זהה נקודות חוזק לשימור ונקודות לשיפור.
-          הצע המלצות פרקטיות לשיפור המכירה או השירות.
-          אם הציון בפרמטר נמוך מ-7, סמן אותו כדגל אדום לטיפול מיידי.`;
-          await addCallLog(call_id, 'ℹ️ משתמש בפרומפט ברירת מחדל (לא נמצא פרומפט ספציפי לסוג השיחה)', {
-            call_type: callData.call_type,
-            prompt_error: promptError?.message
+          console.log('⚠️ Using default prompt (prompt not found for call type)');
+          await addCallLog(call_id, '⚠️ משתמש בפרומפט ברירת מחדל', { 
+            call_type: callData.call_type, 
+            prompt_error: promptError?.message 
           });
+          
+          systemPrompt = `אתה מומחה בניתוח שיחות מכירה ושירות לקוחות בעברית.
+          תפקידך לנתח שיחות באופן מעמיק ולספק משוב מקצועי.
+          
+          אנא נתח את השיחה הבאה ותן ציון כללי (1-10), זהה נקודות חוזק וחולשה,
+          וספק המלצות מעשיות לשיפור.
+          
+          החזר את התוצאות בפורמט JSON עם השדות הבאים:
+          {
+            "overall_score": number,
+            "red_flag": boolean,
+            "executive_summary": "סיכום מנהלים קצר",
+            "strengths_and_preservation_points": ["נקודות חוזק"],
+            "improvement_points": ["נקודות לשיפור"],
+            "practical_recommendations": ["המלצות מעשיות"],
+            "segment_quotes": [{"text": "ציטוט", "comment": "הערה", "category": "קטגוריה"}]
+          }`;
         } else {
           systemPrompt = promptData.system_prompt;
-          await addCallLog(call_id, '✅ פרומפט מותאם לסוג השיחה נטען בהצלחה', { 
-            call_type: callData.call_type,
-            prompt_length: systemPrompt.length
+          await addCallLog(call_id, '✅ פרומפט מותאם נטען בהצלחה', { 
+            call_type: callData.call_type
           });
         }
 
-        // קבלת פרטי החברה והמשתמש
-        if (!callData.user_id) {
-          await addCallLog(call_id, '❌ מזהה משתמש חסר', { 
-            user_id: callData.user_id
-          });
-          return NextResponse.json(
-            { error: 'מזהה משתמש חסר' }, 
-            { status: 400 }
-          );
-        }
-
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select(`
-            id, full_name, email, role,
-            companies:company_id (*)
-          `)
-          .eq('id', callData.user_id)
-          .single();
-
-        const companyName = userData?.companies && 'name' in userData.companies ? userData.companies.name : '';
-        
-        await addCallLog(call_id, '✅ מידע משתמש וחברה נטען', { 
-          user_id: userData?.id,
-          user_role: userData?.role,
-          company_name: companyName || 'לא ידוע'
-        });
-
-        // ניתוח התוכן עם GPT-4 Turbo
-        await addCallLog(call_id, '🔄 שולח בקשה לניתוח תוכן ל-GPT-4 Turbo', {
-          transcript_length: transcript?.length || 0,
-          prompt_length: systemPrompt.length,
-          request_time: new Date().toISOString()
-        });
-        
+        console.log('🔄 Sending content analysis request to OpenAI');
         const contentAnalysisResponse = await openai.chat.completions.create({
-          model: 'gpt-4.1-2025-04-14',
+          model: 'gpt-4-turbo',
           messages: [
             {
               role: 'system',
-              content: systemPrompt.includes('JSON') ? systemPrompt : systemPrompt + '\nהחזר תמיד JSON.'
+              content: systemPrompt
             },
             {
               role: 'user',
               content: `נתח את השיחה הבאה:
-              סוג שיחה: ${callData.call_type}
-              תמליל השיחה: ${transcript}
               
-              מידע נוסף:
-              ${companyName ? `חברה: ${companyName}` : ''}
-              ${userData ? `תפקיד המשתמש: ${userData.role}` : ''}
-              ${callData.agent_notes ? `הערות נציג: ${callData.agent_notes}` : ''}
-              
-              ${callData.analysis_notes ? `🎯 פרמטרים מיוחדים לניתוח זה:
-              ${callData.analysis_notes}
-              
-              ⚠️ חשוב: התמקד במיוחד בפרמטרים הנ"ל בעת הניתוח, ותן להם משקל גבוה יותר בהערכה הכללית.` : ''}
-              
-              מידע זמנים מהתמליל (למיקום מדויק של ציטוטים):
-              ${transcriptSegments.length > 0 ? `רגעי זמן מפורטים: ${JSON.stringify(transcriptSegments.slice(0, 10))}` : 'לא זמין מידע זמנים'}
+              סוג השיחה: ${callData.call_type}
+              תמליל: ${transcript || 'לא זמין'}
+              ${callData.analysis_notes ? `פרמטרים מיוחדים לניתוח: ${callData.analysis_notes}` : ''}
               
               הנחיות נוספות:
               1. כלול בניתוח ציטוטים רלוונטיים מהשיחה תחת שדה 'ציטוטים' או 'קטעים_רלוונטיים' 
@@ -492,6 +522,7 @@ export async function POST(request: Request) {
           response_format: { type: 'json_object' }
         });
 
+        console.log('✅ Content analysis response received from OpenAI');
         await addCallLog(call_id, '✅ תשובת OpenAI התקבלה לניתוח תוכן', { 
           token_usage: contentAnalysisResponse.usage,
           model: contentAnalysisResponse.model,
@@ -501,6 +532,7 @@ export async function POST(request: Request) {
 
         const contentAnalysisReport = JSON.parse(contentAnalysisResponse.choices[0].message.content || '{}');
         
+        console.log('✅ Content analysis completed');
         await addCallLog(call_id, '✅ ניתוח תוכן הושלם', { 
           overall_score: contentAnalysisReport.overall_score,
           report_sections: Object.keys(contentAnalysisReport),
@@ -528,11 +560,12 @@ export async function POST(request: Request) {
           })
           .eq('id', call_id);
           
+        console.log('🏁 Full analysis completed');
         await addCallLog(call_id, '🏁 ניתוח שיחה הושלם', { 
           overall_score: contentAnalysisReport.overall_score,
           red_flag: contentAnalysisReport.red_flag || false,
           completion_time: new Date().toISOString(),
-          time_taken_seconds: Math.round((new Date().getTime() - new Date(callData.created_at).getTime()) / 1000)
+          time_taken_seconds: Math.round((Date.now() - startTime) / 1000)
         });
           
       } else {
@@ -561,15 +594,17 @@ export async function POST(request: Request) {
           })
           .eq('id', call_id);
           
+        console.log('🏁 Tone-only analysis completed');
         await addCallLog(call_id, '🏁 ניתוח טונציה הושלם (סוג ניתוח: טונציה בלבד)', { 
           overall_score: finalReport.overall_score,
           red_flag: finalReport.red_flag || false,
           completion_time: new Date().toISOString(),
-          time_taken_seconds: Math.round((new Date().getTime() - new Date(callData.created_at).getTime()) / 1000)
+          time_taken_seconds: Math.round((Date.now() - startTime) / 1000)
         });
       }
 
     } catch (analysisError: any) {
+      console.error('❌ Analysis error:', analysisError);
       await addCallLog(call_id, '❌ שגיאה בניתוח', { 
         error: analysisError.message,
         error_name: analysisError.name,
@@ -591,14 +626,18 @@ export async function POST(request: Request) {
       );
     }
 
+    const totalTime = Math.round((Date.now() - startTime) / 1000);
+    console.log(`✅ Process completed successfully in ${totalTime} seconds`);
+    
     return NextResponse.json({
       success: true,
       call_id,
-      message: 'ניתוח השיחה הושלם בהצלחה'
+      message: 'ניתוח השיחה הושלם בהצלחה',
+      execution_time_seconds: totalTime
     });
 
   } catch (error: any) {
-    console.error('שגיאה כללית:', error);
+    console.error('❌ General error:', error);
     
     return NextResponse.json(
       { error: error.message },
