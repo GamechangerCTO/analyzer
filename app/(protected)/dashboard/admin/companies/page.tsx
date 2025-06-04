@@ -20,6 +20,8 @@ interface Company {
   uploads_professional_materials?: boolean | null;
   status?: string;
   users_count?: number;
+  questionnaire_complete: boolean;
+  questionnaire_score: number;
 }
 
 export default function AdminCompaniesPage() {
@@ -42,18 +44,32 @@ export default function AdminCompaniesPage() {
 
       if (error) throw new Error(error.message);
       
-      // הוספת מספר המשתמשים בכל חברה
+      // הוספת מספר המשתמשים ומצב השאלון לכל חברה
       const companiesWithMeta = await Promise.all(
         data.map(async (company) => {
+          // ספירת משתמשים
           const { data: usersData, error: usersError } = await supabase
             .from('users')
             .select('id')
             .eq('company_id', company.id);
           
+          // בדיקת מצב השאלון מהטבלה החדשה
+          const { data: questionnaireData, error: questionnaireError } = await supabase
+            .from('company_questionnaires' as any)
+            .select('is_complete, completion_score, sector, audience, product_types')
+            .eq('company_id', company.id)
+            .single();
+          
           return {
             ...company,
             status: 'פעיל', // לדוגמה בלבד
-            users_count: usersError ? 0 : (usersData?.length || 0)
+            users_count: usersError ? 0 : (usersData?.length || 0),
+            questionnaire_complete: (questionnaireData as any)?.is_complete || false,
+            questionnaire_score: (questionnaireData as any)?.completion_score || 0,
+            // נתונים מהשאלון החדש
+            sector: (questionnaireData as any)?.sector || company.sector || '-',
+            audience: (questionnaireData as any)?.audience || company.audience || '-',
+            product_types: (questionnaireData as any)?.product_types || company.product_types || []
           };
         })
       );
@@ -188,13 +204,13 @@ export default function AdminCompaniesPage() {
                       {company.audience || '-'}
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      {company.differentiators && company.customer_benefits && company.company_benefits ? (
+                      {company.questionnaire_complete ? (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          ✓ הושלם
+                          ✓ הושלם ({company.questionnaire_score}%)
                         </span>
                       ) : (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                          חלקי
+                          חלקי ({company.questionnaire_score}%)
                         </span>
                       )}
                     </td>

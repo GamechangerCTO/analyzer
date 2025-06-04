@@ -108,28 +108,21 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
     
     setIsCheckingQuestionnaire(true)
     try {
-      const { data: companyData, error } = await supabase
-        .from('companies')
-        .select('product_info, sector, avg_product_cost, product_types, audience, differentiators, customer_benefits, company_benefits')
-        .eq('id', companyId)
+      // בדיקה באמצעות הטבלה החדשה company_questionnaires
+      const { data: questionnaireData, error } = await supabase
+        .from('company_questionnaires' as any)
+        .select('is_complete, completion_score')
+        .eq('company_id', companyId)
         .single()
-      
-      if (error) {
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
         console.error('❌ Error checking questionnaire:', error)
         setIsQuestionnaireComplete(false)
         return
       }
       
-      // בדיקה אם השאלון מלא
-      const isComplete = companyData && 
-        companyData.product_info && 
-        companyData.sector && 
-        companyData.avg_product_cost && 
-        companyData.product_types && Array.isArray(companyData.product_types) && companyData.product_types.length > 0 &&
-        companyData.audience &&
-        companyData.differentiators && Array.isArray(companyData.differentiators) && companyData.differentiators.length > 0 &&
-        companyData.customer_benefits && Array.isArray(companyData.customer_benefits) && companyData.customer_benefits.length > 0 &&
-        companyData.company_benefits && Array.isArray(companyData.company_benefits) && companyData.company_benefits.length > 0
+      // בדיקה אם השאלון מושלם
+      const isComplete = (questionnaireData as any)?.is_complete || false
       
       setIsQuestionnaireComplete(isComplete)
     } catch (error) {
