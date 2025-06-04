@@ -47,27 +47,54 @@ export default function CompanyQuestionnaireForm({ companyId, companyData }: Com
 
   // טעינת נתוני החברה הקיימים
   useEffect(() => {
-    if (companyData) {
-      setFormData({
-        name: companyData.name || '',
-        sector: companyData.sector || '',
-        product_info: companyData.product_info || '',
-        avg_product_cost: companyData.avg_product_cost || '',
-        product_types: Array.isArray(companyData.product_types) ? companyData.product_types[0] || '' : companyData.product_types || '',
-        audience: companyData.audience || '',
-        differentiators: Array.isArray(companyData.differentiators) ? 
-          [...companyData.differentiators, '', '', ''].slice(0, 3) : 
-          ['', '', ''],
-        customer_benefits: Array.isArray(companyData.customer_benefits) ? 
-          [...companyData.customer_benefits, '', '', ''].slice(0, 3) : 
-          ['', '', ''],
-        company_benefits: Array.isArray(companyData.company_benefits) ? 
-          [...companyData.company_benefits, '', '', ''].slice(0, 3) : 
-          ['', '', ''],
-        uploads_professional_materials: companyData.uploads_professional_materials || false,
-      })
-    }
-  }, [companyData])
+    const loadQuestionnaireData = async () => {
+      try {
+        // טעינת נתוני השאלון מהטבלה החדשה
+        const { data: questionnaireData, error } = await supabase
+          .from('company_questionnaires' as any)
+          .select('*')
+          .eq('company_id', companyId)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+          console.error('Error loading questionnaire data:', error);
+          return;
+        }
+
+        if (questionnaireData) {
+          // עדכון הטופס עם הנתונים הקיימים
+          setFormData({
+            name: questionnaireData.name || '',
+            sector: questionnaireData.sector || '',
+            product_info: questionnaireData.product_info || '',
+            avg_product_cost: questionnaireData.avg_product_cost || '',
+            product_types: questionnaireData.product_types?.[0] || '',
+            audience: questionnaireData.audience || '',
+            differentiators: Array.isArray(questionnaireData.differentiators) 
+              ? questionnaireData.differentiators.slice(0, 3).concat(['', '', '']).slice(0, 3)
+              : ['', '', ''],
+            customer_benefits: Array.isArray(questionnaireData.customer_benefits)
+              ? questionnaireData.customer_benefits.slice(0, 3).concat(['', '', '']).slice(0, 3)
+              : ['', '', ''],
+            company_benefits: Array.isArray(questionnaireData.company_benefits)
+              ? questionnaireData.company_benefits.slice(0, 3).concat(['', '', '']).slice(0, 3)
+              : ['', '', ''],
+            uploads_professional_materials: questionnaireData.uploads_professional_materials || false
+          });
+        } else {
+          // אם אין נתונים, נטען נתונים בסיסיים מטבלת החברות
+          setFormData(prev => ({
+            ...prev,
+            name: companyData?.name || ''
+          }));
+        }
+      } catch (err) {
+        console.error('Error in loadQuestionnaireData:', err);
+      }
+    };
+
+    loadQuestionnaireData();
+  }, [companyId, companyData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
@@ -192,51 +219,74 @@ export default function CompanyQuestionnaireForm({ companyId, companyData }: Com
       }
 
       // עדכון החברה הקיימת
-      console.log('🔄 Starting company update with data:', {
+      console.log('🔄 Starting company questionnaire save with data:', {
+        company_id: companyId,
         name: formData.name.trim(),
         sector: formData.sector.trim(),
         product_info: formData.product_info.trim(),
         avg_product_cost: formData.avg_product_cost.trim(),
         product_types: [formData.product_types],
         audience: formData.audience,
-        differentiators: JSON.stringify(validDifferentiators),
-        customer_benefits: JSON.stringify(validCustomerBenefits),
-        company_benefits: JSON.stringify(validCompanyBenefits),
+        differentiators: validDifferentiators,
+        customer_benefits: validCustomerBenefits,
+        company_benefits: validCompanyBenefits,
         uploads_professional_materials: formData.uploads_professional_materials,
+        professional_materials_files: uploadedFiles
       })
 
-      const { data: updateData, error: updateError } = await supabase
-        .from('companies')
-        .update({
+      // שמירה בטבלה החדשה company_questionnaires
+      const { data: questionnaireData, error: questionnaireError } = await supabase
+        .from('company_questionnaires' as any)
+        .upsert({
+          company_id: companyId,
           name: formData.name.trim(),
           sector: formData.sector.trim(),
           product_info: formData.product_info.trim(),
           avg_product_cost: formData.avg_product_cost.trim(),
           product_types: [formData.product_types],
           audience: formData.audience,
-          differentiators: JSON.stringify(validDifferentiators),
-          customer_benefits: JSON.stringify(validCustomerBenefits),
-          company_benefits: JSON.stringify(validCompanyBenefits),
+          differentiators: validDifferentiators,
+          customer_benefits: validCustomerBenefits,
+          company_benefits: validCompanyBenefits,
           uploads_professional_materials: formData.uploads_professional_materials,
+          professional_materials_files: uploadedFiles,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'company_id'
+        })
+        .select()
+
+      console.log('✅ Questionnaire save result:', { questionnaireData, questionnaireError })
+
+      if (questionnaireError) {
+        console.error('❌ Questionnaire save error:', questionnaireError)
+        throw new Error(questionnaireError.message)
+      }
+
+      // גם נעדכן את השם בטבלת החברות (רק השם, כי השאר עבר לטבלה החדשה)
+      const { data: companyUpdateData, error: companyUpdateError } = await supabase
+        .from('companies')
+        .update({
+          name: formData.name.trim()
         })
         .eq('id', companyId)
         .select()
 
-      console.log('✅ Company update result:', { updateData, updateError })
+      console.log('✅ Company name update result:', { companyUpdateData, companyUpdateError })
 
-      if (updateError) {
-        console.error('❌ Update error details:', updateError)
-        throw new Error(updateError.message)
+      if (companyUpdateError) {
+        console.warn('⚠️ Company name update warning:', companyUpdateError)
+        // לא נעצור את התהליך אם רק השם לא התעדכן
       }
 
       // בדיקה מיידית של הנתונים שנשמרו
       const { data: verifyData, error: verifyError } = await supabase
-        .from('companies')
+        .from('company_questionnaires' as any)
         .select('*')
-        .eq('id', companyId)
+        .eq('company_id', companyId)
         .single()
 
-      console.log('🔍 Verification of saved data:', { verifyData, verifyError })
+      console.log('🔍 Verification of saved questionnaire data:', { verifyData, verifyError })
       
       setSuccessMessage(`שאלון החברה "${formData.name}" עודכן בהצלחה!`)
       
