@@ -53,6 +53,9 @@ interface ManagerDashboardClientProps {
 export default function ManagerDashboardClient({ userId, companyId }: ManagerDashboardClientProps) {
   const [calls, setCalls] = useState<Call[]>([])
   const [users, setUsers] = useState<User[]>([])
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [scoreFilter, setScoreFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
   const [managerInfo, setManagerInfo] = useState<{
     full_name: string | null
     email: string
@@ -110,7 +113,7 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
     try {
       // בדיקה באמצעות הטבלה החדשה company_questionnaires
       const { data: questionnaireData, error } = await supabase
-        .from('company_questionnaires' as any)
+        .from('company_questionnaires')
         .select('is_complete, completion_score')
         .eq('company_id', companyId)
         .single()
@@ -122,7 +125,7 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
       }
       
       // בדיקה אם השאלון מושלם
-      const isComplete = (questionnaireData as any)?.is_complete || false
+      const isComplete = questionnaireData?.is_complete || false
       
       setIsQuestionnaireComplete(isComplete)
     } catch (error) {
@@ -275,6 +278,31 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
       ]
     })
   }, [setProgressData])
+  
+  // useEffect לסינון הנציגים
+  useEffect(() => {
+    let filtered = users
+
+    // סינון לפי טקסט חיפוש
+    if (searchTerm) {
+      filtered = filtered.filter(user => 
+        (user.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // סינון לפי ציון
+    if (scoreFilter !== 'all') {
+      filtered = filtered.filter(user => {
+        if (scoreFilter === 'high') return user.avgScore >= 8
+        if (scoreFilter === 'medium') return user.avgScore >= 6 && user.avgScore < 8
+        if (scoreFilter === 'low') return user.avgScore < 6
+        return true
+      })
+    }
+
+    setFilteredUsers(filtered)
+  }, [users, searchTerm, scoreFilter])
   
   // useEffect נפרד לטיפול בנתונים ולא כולל את checkQuestionnaireComplete
   useEffect(() => {
@@ -476,14 +504,42 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
           </div>
         )}
 
-        {/* סיכום צוותי */}
+        {/* כרטיסיות סטטיסטיקה */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-            <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            סיכום צוותי
-          </h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+              </svg>
+              סיכום צוותי {`(${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')})`}
+            </h2>
+            
+            {/* כפתורי פעולה */}
+            <div className="flex gap-3">
+              {/* כפתור עריכת שאלון */}
+              <Link 
+                href="/company-questionnaire"
+                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                עריכת שאלון
+              </Link>
+              
+              {/* כפתור רענון */}
+              <button
+                onClick={() => window.location.reload()}
+                disabled={isFetching}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2 disabled:opacity-50"
+              >
+                <svg className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {isFetching ? 'מעדכן...' : 'רענון נתונים'}
+              </button>
+            </div>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
@@ -569,14 +625,206 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
           <ProgressLineChart data={progressData} title="ציון ממוצע לאורך זמן" height={300} />
         </div>
 
-        {/* טבלת נציגים */}
+        {/* התראות ומעקב מתקדם */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-            <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
+            <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
-            פירוט ביצועי נציגים
+            לוח בקרה ומעקב
           </h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* נציגים הזקוקים לתשומת לב */}
+            <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-lg p-4 border border-red-200">
+              <h3 className="text-lg font-semibold text-red-800 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                דרושה תשומת לב
+              </h3>
+              <div className="space-y-2">
+                {filteredUsers
+                  .filter(user => user.avgScore < 6 || user.redFlagsCount > 2)
+                  .slice(0, 3)
+                  .map(user => (
+                    <div key={user.id} className="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                          {user.full_name?.charAt(0) || 'א'}
+                        </div>
+                        <span className="text-sm font-medium">{user.full_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-bold">
+                          {user.avgScore.toFixed(1)}
+                        </span>
+                        {user.redFlagsCount > 0 && (
+                          <span className="text-xs bg-red-200 text-red-900 px-2 py-1 rounded-full font-bold">
+                            🚩 {user.redFlagsCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                {filteredUsers.filter(user => user.avgScore < 6 || user.redFlagsCount > 2).length === 0 && (
+                  <p className="text-sm text-gray-600 text-center py-4">
+                    🎉 כל הנציגים בביצועים טובים!
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* נציגים מצטיינים */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                נציגים מצטיינים
+              </h3>
+              <div className="space-y-2">
+                {filteredUsers
+                  .filter(user => user.avgScore >= 8)
+                  .slice(0, 3)
+                  .map(user => (
+                    <div key={user.id} className="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                          {user.full_name?.charAt(0) || 'א'}
+                        </div>
+                        <span className="text-sm font-medium">{user.full_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-bold">
+                          {user.avgScore.toFixed(1)}
+                        </span>
+                        <span className="text-xs bg-green-200 text-green-900 px-2 py-1 rounded-full font-bold">
+                          ✅ {user.successfulCallsCount}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                {filteredUsers.filter(user => user.avgScore >= 8).length === 0 && (
+                  <p className="text-sm text-gray-600 text-center py-4">
+                    אין עדיין נציגים מצטיינים
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* סטטיסטיקות מהירות */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+              <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                </svg>
+                סטטיסטיקות מהירות
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">שיחות השבוע:</span>
+                  <span className="text-sm font-bold text-blue-800">
+                    {calls.filter(call => {
+                      const weekAgo = new Date()
+                      weekAgo.setDate(weekAgo.getDate() - 7)
+                      return new Date(call.created_at) >= weekAgo
+                    }).length}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">ממוצע יומי:</span>
+                  <span className="text-sm font-bold text-blue-800">
+                    {calls.length > 0 ? Math.round(calls.length / Math.max(1, Math.ceil((new Date().getTime() - new Date(calls[calls.length - 1]?.created_at || new Date()).getTime()) / (1000 * 60 * 60 * 24)))) : 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">שיחות לשיפור:</span>
+                  <span className="text-sm font-bold text-orange-800">
+                    {calls.filter(call => call.overall_score !== null && call.overall_score < 6).length}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">אחוז הצלחה:</span>
+                  <span className="text-sm font-bold text-green-800">
+                    {calls.length > 0 ? Math.round((teamSummary.successfulCallsCount / calls.length) * 100) : 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* טבלת נציגים */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
+              </svg>
+              פירוט ביצועי נציגים ({filteredUsers.length} מתוך {users.length})
+            </h2>
+          </div>
+
+          {/* שדות חיפוש וסינון */}
+          <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* שדה חיפוש */}
+              <div>
+                <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+                  חיפוש נציג
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="חפש לפי שם או אימייל..."
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* סינון לפי ציון */}
+              <div>
+                <label htmlFor="scoreFilter" className="block text-sm font-medium text-gray-700 mb-2">
+                  סינון לפי ציון ממוצע
+                </label>
+                <select
+                  id="scoreFilter"
+                  value={scoreFilter}
+                  onChange={(e) => setScoreFilter(e.target.value as 'all' | 'high' | 'medium' | 'low')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">כל הנציגים</option>
+                  <option value="high">ציון גבוה (8+)</option>
+                  <option value="medium">ציון בינוני (6-8)</option>
+                  <option value="low">ציון נמוך (מתחת ל-6)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* כפתורי איפוס */}
+            {(searchTerm || scoreFilter !== 'all') && (
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => {
+                    setSearchTerm('')
+                    setScoreFilter('all')
+                  }}
+                  className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  איפוס מסננים
+                </button>
+              </div>
+            )}
+          </div>
           
           <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="min-w-full divide-y divide-gray-200">
@@ -630,7 +878,7 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
-                {users.map((user, index) => (
+                {filteredUsers.map((user, index) => (
                   <tr key={user.id} 
                       className={`cursor-pointer transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:shadow-md ${
                         index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
@@ -641,17 +889,31 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
                         <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
                           {user.full_name?.charAt(0) || 'א'}
                         </div>
-                        <Link href={`/dashboard/agent?user=${user.id}`} 
-                              className="text-blue-600 hover:text-blue-900 font-semibold hover:underline"
-                              onClick={(e) => e.stopPropagation()}>
-                          {user.full_name}
-                        </Link>
+                        <div className="flex flex-col">
+                          <Link href={`/dashboard/agent?user=${user.id}`} 
+                                className="text-blue-600 hover:text-blue-900 font-semibold hover:underline"
+                                onClick={(e) => e.stopPropagation()}>
+                            {user.full_name}
+                          </Link>
+                          <span className="text-xs text-gray-500">{user.email}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="px-3 py-4 text-center whitespace-nowrap">
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-bold">
-                        {user.callsCount}
-                      </span>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-bold">
+                          {user.callsCount}
+                        </span>
+                        {user.callsCount > 0 && (
+                          <Link 
+                            href={`/dashboard/calls?agent=${user.id}`}
+                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            צפה בהכל
+                          </Link>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-4 text-center whitespace-nowrap font-semibold">
                       {user.callsByType['מכירה טלפונית'] || 0}
@@ -716,7 +978,7 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
                     </td>
                   </tr>
                 ))}
-                {users.length === 0 && (
+                {filteredUsers.length === 0 && (
                   <tr>
                     <td colSpan={15} className="px-4 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center">
@@ -735,23 +997,50 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
         </div>
         
         {/* גרף השוואה בין נציגים */}
-        {users.length > 0 && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-              <svg className="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-              </svg>
-              ביצועי נציגים - השוואה
-            </h2>
-            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg">
-              <CallsBarChart 
-                data={{
-                  labels: users.map(user => user.full_name || 'ללא שם'),
-                  values: users.map(user => user.avgScore)
-                }} 
-                title="ציון ממוצע לנציג" 
-                height={300} 
-              />
+        {filteredUsers.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* גרף השוואת נציגים */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                <svg className="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                </svg>
+                השוואת ביצועי נציגים
+              </h2>
+              <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg">
+                <CallsBarChart 
+                  data={{
+                    labels: filteredUsers.map(user => user.full_name || 'ללא שם'),
+                    values: filteredUsers.map(user => user.avgScore)
+                  }} 
+                  title="ציון ממוצע לנציג" 
+                  height={300} 
+                />
+              </div>
+            </div>
+
+            {/* גרף התפלגות ציונים */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+                <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                התפלגות ציונים
+              </h2>
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg">
+                <CallsBarChart 
+                  data={{
+                    labels: ['נמוך (0-6)', 'בינוני (6-8)', 'גבוה (8-10)'],
+                    values: [
+                      calls.filter(call => call.overall_score !== null && call.overall_score < 6).length,
+                      calls.filter(call => call.overall_score !== null && call.overall_score >= 6 && call.overall_score < 8).length,
+                      calls.filter(call => call.overall_score !== null && call.overall_score >= 8).length
+                    ]
+                  }} 
+                  title="מספר שיחות לפי טווח ציונים" 
+                  height={300} 
+                />
+              </div>
             </div>
           </div>
         )}

@@ -27,6 +27,7 @@ import {
   Cloud,
   Shield
 } from 'lucide-react'
+import { Database } from '@/types/database.types'
 
 interface UploadFormProps {
   user: User
@@ -187,7 +188,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
       
       // בדיקה באמצעות הטבלה המיוחדת לשאלון
       const { data: questionnaireData, error: checkError } = await freshSupabase
-        .from('company_questionnaires' as any)
+        .from('company_questionnaires')
         .select('is_complete, completion_score')
         .eq('company_id', userData.companies.id)
         .single();
@@ -197,7 +198,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
         return;
       }
       
-      const isComplete = (questionnaireData as any)?.is_complete || false;
+      const isComplete = questionnaireData?.is_complete || false;
       
       if (!isComplete) {
         setError('לא ניתן להעלות שיחה - שאלון החברה לא מולא במלואו. אנא השלם את השאלון בעמוד השאלון.');

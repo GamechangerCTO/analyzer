@@ -182,7 +182,7 @@ export default function AdminUsersPage() {
     if (searchTerm) {
       const lowerSearchTerm = searchTerm.toLowerCase();
       filteredData = filteredData.filter(user =>
-        (user.full_name && user.full_name.toLowerCase().includes(lowerSearchTerm)) ||
+        ((user.full_name || '').toLowerCase().includes(lowerSearchTerm)) ||
         (user.email && user.email.toLowerCase().includes(lowerSearchTerm))
       );
     }

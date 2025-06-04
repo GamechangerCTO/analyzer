@@ -51,7 +51,7 @@ export default function CompanyQuestionnaireForm({ companyId, companyData }: Com
       try {
         // טעינת נתוני השאלון מהטבלה החדשה
         const { data: questionnaireData, error } = await supabase
-          .from('company_questionnaires' as any)
+          .from('company_questionnaires')
           .select('*')
           .eq('company_id', companyId)
           .single();
@@ -236,7 +236,7 @@ export default function CompanyQuestionnaireForm({ companyId, companyData }: Com
 
       // שמירה בטבלה החדשה company_questionnaires
       const { data: questionnaireData, error: questionnaireError } = await supabase
-        .from('company_questionnaires' as any)
+        .from('company_questionnaires')
         .upsert({
           company_id: companyId,
           name: formData.name.trim(),
@@ -281,7 +281,7 @@ export default function CompanyQuestionnaireForm({ companyId, companyData }: Com
 
       // בדיקה מיידית של הנתונים שנשמרו
       const { data: verifyData, error: verifyError } = await supabase
-        .from('company_questionnaires' as any)
+        .from('company_questionnaires')
         .select('*')
         .eq('company_id', companyId)
         .single()

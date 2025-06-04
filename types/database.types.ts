@@ -65,6 +65,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agent_approval_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_questionnaire_status"
+            referencedColumns: ["company_id"]
+          },
+          {
             foreignKeyName: "agent_approval_requests_manager_id_fkey"
             columns: ["manager_id"]
             isOneToOne: false
@@ -121,6 +128,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_coins_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_questionnaire_status"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "agent_coins_user_id_fkey"
@@ -186,6 +200,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agent_notifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_questionnaire_status"
+            referencedColumns: ["company_id"]
+          },
+          {
             foreignKeyName: "agent_notifications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -245,6 +266,8 @@ export type Database = {
           red_flag: boolean | null
           tone_analysis_report: Json | null
           transcript: string | null
+          transcript_segments: Json | null
+          transcript_words: Json | null
           user_id: string | null
         }
         Insert: {
@@ -265,6 +288,8 @@ export type Database = {
           red_flag?: boolean | null
           tone_analysis_report?: Json | null
           transcript?: string | null
+          transcript_segments?: Json | null
+          transcript_words?: Json | null
           user_id?: string | null
         }
         Update: {
@@ -285,6 +310,8 @@ export type Database = {
           red_flag?: boolean | null
           tone_analysis_report?: Json | null
           transcript?: string | null
+          transcript_segments?: Json | null
+          transcript_words?: Json | null
           user_id?: string | null
         }
         Relationships: [
@@ -294,6 +321,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calls_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_questionnaire_status"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "calls_user_id_fkey"
@@ -357,6 +391,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "coin_transactions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_questionnaire_status"
+            referencedColumns: ["company_id"]
+          },
+          {
             foreignKeyName: "coin_transactions_simulation_id_fkey"
             columns: ["simulation_id"]
             isOneToOne: false
@@ -417,6 +458,84 @@ export type Database = {
         }
         Relationships: []
       }
+      company_questionnaires: {
+        Row: {
+          audience: string
+          avg_product_cost: string
+          company_benefits: string[]
+          company_id: string
+          completed_at: string | null
+          completion_score: number | null
+          created_at: string
+          customer_benefits: string[]
+          differentiators: string[]
+          id: string
+          is_complete: boolean | null
+          name: string
+          product_info: string
+          product_types: string[]
+          professional_materials_files: string[] | null
+          sector: string
+          updated_at: string
+          uploads_professional_materials: boolean | null
+        }
+        Insert: {
+          audience: string
+          avg_product_cost: string
+          company_benefits?: string[]
+          company_id: string
+          completed_at?: string | null
+          completion_score?: number | null
+          created_at?: string
+          customer_benefits?: string[]
+          differentiators?: string[]
+          id?: string
+          is_complete?: boolean | null
+          name: string
+          product_info: string
+          product_types?: string[]
+          professional_materials_files?: string[] | null
+          sector: string
+          updated_at?: string
+          uploads_professional_materials?: boolean | null
+        }
+        Update: {
+          audience?: string
+          avg_product_cost?: string
+          company_benefits?: string[]
+          company_id?: string
+          completed_at?: string | null
+          completion_score?: number | null
+          created_at?: string
+          customer_benefits?: string[]
+          differentiators?: string[]
+          id?: string
+          is_complete?: boolean | null
+          name?: string
+          product_info?: string
+          product_types?: string[]
+          professional_materials_files?: string[] | null
+          sector?: string
+          updated_at?: string
+          uploads_professional_materials?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_questionnaires_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_questionnaires_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_questionnaire_status"
+            referencedColumns: ["company_id"]
+          },
+        ]
+      }
       company_subscriptions: {
         Row: {
           agents_count: number
@@ -458,6 +577,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_questionnaire_status"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "company_subscriptions_plan_id_fkey"
@@ -625,6 +751,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "simulations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_questionnaire_status"
+            referencedColumns: ["company_id"]
+          },
+          {
             foreignKeyName: "simulations_triggered_by_call_id_fkey"
             columns: ["triggered_by_call_id"]
             isOneToOne: false
@@ -732,6 +865,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "users_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_questionnaire_status"
+            referencedColumns: ["company_id"]
+          },
+          {
             foreignKeyName: "users_manager_id_fkey"
             columns: ["manager_id"]
             isOneToOne: false
@@ -742,9 +882,28 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      company_questionnaire_status: {
+        Row: {
+          company_id: string | null
+          company_name: string | null
+          completed_at: string | null
+          is_questionnaire_complete: boolean | null
+          questionnaire_completion_score: number | null
+          questionnaire_status: string | null
+          questionnaire_updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_company_questionnaire_missing_fields: {
+        Args: { p_company_id: string }
+        Returns: Json
+      }
+      get_company_questionnaire_score: {
+        Args: { p_company_id: string }
+        Returns: number
+      }
       insert_call: {
         Args:
           | {
@@ -782,8 +941,14 @@ export type Database = {
           red_flag: boolean | null
           tone_analysis_report: Json | null
           transcript: string | null
+          transcript_segments: Json | null
+          transcript_words: Json | null
           user_id: string | null
         }[]
+      }
+      is_company_questionnaire_complete: {
+        Args: { p_company_id: string }
+        Returns: boolean
       }
       update_user_role: {
         Args: { user_id: string; new_role: string }

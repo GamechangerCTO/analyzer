@@ -74,7 +74,7 @@ export default async function CallPage({ params }: CallPageProps) {
         </a>
       </div>
       
-      <CallAnalysis call={callData} audioUrl={audioUrl} userRole={userData?.role} />
+      <CallAnalysis call={callData as any} audioUrl={audioUrl} userRole={userData?.role} />
     </div>
   )
 } 

@@ -55,7 +55,7 @@ export default function AdminCompaniesPage() {
           
           // בדיקת מצב השאלון מהטבלה החדשה
           const { data: questionnaireData, error: questionnaireError } = await supabase
-            .from('company_questionnaires' as any)
+            .from('company_questionnaires')
             .select('is_complete, completion_score, sector, audience, product_types')
             .eq('company_id', company.id)
             .single();
@@ -64,12 +64,12 @@ export default function AdminCompaniesPage() {
             ...company,
             status: 'פעיל', // לדוגמה בלבד
             users_count: usersError ? 0 : (usersData?.length || 0),
-            questionnaire_complete: (questionnaireData as any)?.is_complete || false,
-            questionnaire_score: (questionnaireData as any)?.completion_score || 0,
+            questionnaire_complete: questionnaireData?.is_complete || false,
+            questionnaire_score: questionnaireData?.completion_score || 0,
             // נתונים מהשאלון החדש
-            sector: (questionnaireData as any)?.sector || company.sector || '-',
-            audience: (questionnaireData as any)?.audience || company.audience || '-',
-            product_types: (questionnaireData as any)?.product_types || company.product_types || []
+            sector: questionnaireData?.sector || company.sector || '-',
+            audience: questionnaireData?.audience || company.audience || '-',
+            product_types: questionnaireData?.product_types || company.product_types || []
           };
         })
       );
