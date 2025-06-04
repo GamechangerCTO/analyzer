@@ -29,6 +29,8 @@ interface CallData {
     name: string
   } | null
   tone_analysis_report: any
+  transcript_segments?: Array<{ text: string; start: number }> | null
+  transcript_words?: Array<{ word: string; start: number }> | null
 }
 
 interface CallAnalysisProps {
@@ -45,6 +47,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   const [errorMessage, setErrorMessage] = useState<string | null>(call.error_message || null)
   const [isPolling, setIsPolling] = useState(false)
   const [callLogs, setCallLogs] = useState<Array<{timestamp: string; message: string; data?: any}>>([])
+  const [currentPlayingQuote, setCurrentPlayingQuote] = useState<string | null>(null)
   
   const audioRef = useRef<HTMLAudioElement>(null)
   
@@ -56,15 +59,124 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   }
   
   // טיפול בלחיצה על ציטוט כדי לנגן את החלק הרלוונטי בשמע
-  const playQuote = (timeInSeconds: number) => {
+  const playQuote = (timeInSeconds: number, quoteText: string = '') => {
     if (audioRef.current && audioUrl) {
       audioRef.current.currentTime = timeInSeconds
       audioRef.current.play()
       setIsPlaying(true)
+      setCurrentPlayingQuote(quoteText)
+      
+      // הוספת אפקט ויזואלי קצר
+      const quoteBtns = document.querySelectorAll(`[data-quote="${quoteText}"]`)
+      quoteBtns.forEach(btn => {
+        btn.classList.add('animate-pulse')
+        setTimeout(() => btn.classList.remove('animate-pulse'), 2000)
+      })
     }
   }
   
-  // עדכון זמן הניגון הנוכחי
+  // עצירת ניגון הציטוט הנוכחי
+  const stopQuote = () => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      setIsPlaying(false)
+      setCurrentPlayingQuote(null)
+    }
+  }
+  
+  // בדיקה אם ציטוט מסוים מנגן כרגע
+  const isQuotePlaying = (quoteText: string) => {
+    return isPlaying && currentPlayingQuote === quoteText
+  }
+  
+  // פונקציה חכמה משופרת למציאת timestamp מדויק לציטוט
+  const findTimestampForQuote = (quoteText: string): number | null => {
+    if (!call.transcript_segments || !quoteText) return null;
+    
+    // ניקוי הציטוט מסימני פיסוק וטקסט מיותר
+    const cleanQuote = quoteText.replace(/[.,!?;"'()[\]{}]/g, '').toLowerCase().trim();
+    const quoteWords = cleanQuote.split(/\s+/).filter(word => word.length > 2);
+    
+    if (quoteWords.length === 0) return null;
+    
+    let bestMatch: { segment: any; score: number; timestamp: number | null } = { segment: null, score: 0, timestamp: null };
+    
+    // חיפוש מתקדם בsegments
+    for (const segment of call.transcript_segments) {
+      if (!segment.text || !segment.start) continue;
+      
+      const segmentText = segment.text.replace(/[.,!?;"'()[\]{}]/g, '').toLowerCase();
+      let matchScore = 0;
+      
+      // בדיקה מדויקת - הציטוט המלא מופיע בsegment
+      if (segmentText.includes(cleanQuote)) {
+        return segment.start;
+      }
+      
+      // בדיקת התאמה חלקית עם ניקוד
+      const segmentWords = segmentText.split(/\s+/);
+      const matchedWords = quoteWords.filter(word => 
+        segmentWords.some(segWord => 
+          segWord.includes(word) || word.includes(segWord) || 
+          (word.length > 3 && segWord.length > 3 && levenshteinDistance(word, segWord) <= 1)
+        )
+      );
+      
+      matchScore = matchedWords.length / quoteWords.length;
+      
+      // אם זה ההתאמה הטובה ביותר עד כה
+      if (matchScore > bestMatch.score && matchScore >= 0.6) {
+        bestMatch = { segment: segment, score: matchScore, timestamp: segment.start };
+      }
+    }
+    
+    // אם מצאנו התאמה סבירה
+    if (bestMatch.timestamp && bestMatch.score >= 0.6) {
+      return bestMatch.timestamp;
+    }
+    
+    // גיבוי - חיפוש במילים בודדות
+    if (call.transcript_words && call.transcript_words.length > 0) {
+      const firstQuoteWord = quoteWords[0];
+      const matchingWord = call.transcript_words.find((word: any) => 
+        word.word && (
+          word.word.toLowerCase().includes(firstQuoteWord) ||
+          firstQuoteWord.includes(word.word.toLowerCase()) ||
+          (firstQuoteWord.length > 3 && word.word.length > 3 && 
+           levenshteinDistance(firstQuoteWord, word.word.toLowerCase()) <= 1)
+        )
+      );
+      
+      if (matchingWord && matchingWord.start !== undefined) {
+        return matchingWord.start;
+      }
+    }
+    
+    return null;
+  }
+  
+  // פונקציה עזר לחישוב מרחק Levenshtein (דמיון בין מילים)
+  const levenshteinDistance = (str1: string, str2: string): number => {
+    const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    
+    for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+    for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+    
+    for (let j = 1; j <= str2.length; j++) {
+      for (let i = 1; i <= str1.length; i++) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[j][i] = Math.min(
+          matrix[j][i - 1] + 1,
+          matrix[j - 1][i] + 1,
+          matrix[j - 1][i - 1] + indicator,
+        );
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }
+  
+  // עדכון זמן הניגון הנוכחי ומעקב אחר אירועי אודיו
   useEffect(() => {
     const audioElement = audioRef.current
     if (!audioElement) return
@@ -73,12 +185,37 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       setCurrentTime(audioElement.currentTime)
     }
     
+    const handlePause = () => {
+      setIsPlaying(false)
+      setCurrentPlayingQuote(null)
+    }
+    
+    const handleEnded = () => {
+      setIsPlaying(false)
+      setCurrentPlayingQuote(null)
+    }
+    
+    const handlePlay = () => {
+      setIsPlaying(true)
+    }
+    
     audioElement.addEventListener('timeupdate', updateTime)
+    audioElement.addEventListener('pause', handlePause)
+    audioElement.addEventListener('ended', handleEnded)
+    audioElement.addEventListener('play', handlePlay)
     
     return () => {
       audioElement.removeEventListener('timeupdate', updateTime)
+      audioElement.removeEventListener('pause', handlePause)
+      audioElement.removeEventListener('ended', handleEnded)
+      audioElement.removeEventListener('play', handlePlay)
     }
   }, [])
+  
+  // ניקוי הציטוט הנוכחי כשמשנים טאב
+  useEffect(() => {
+    setCurrentPlayingQuote(null)
+  }, [activeTab])
   
   // פולינג לבדיקת סטטוס העיבוד
   useEffect(() => {
@@ -256,7 +393,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   const strengths_and_preservation_points = getFieldValue(analysisReport, ['נקודות חוזק לשימור', 'נקודות_חוזק', 'strengths_and_preservation_points', 'strengths']) || [];
   const detailed_scores = getFieldValue(analysisReport, ['ציונים מפורטים', 'ציונים_לפי_קטגוריות', 'פרמטרים', 'פירוט_ציונים', 'detailed_scores', 'category_scores']) || {};
   const practical_recommendations = getFieldValue(analysisReport, ['המלצות פרקטיות לשיפור', 'המלצות_פרקטיות_לשיפור', 'המלצות_פרקטיות', 'המלצות_מעשיות', 'practical_recommendations']) || [];
-  const segment_quotes = getFieldValue(analysisReport, ['ציטוטים', 'קטעים_רלוונטיים', 'ציטוטים_או_קטעים_רלוונטיים', 'key_segments', 'segment_quotes']) || [];
+  const segment_quotes = getFieldValue(analysisReport, ['ציטוטים_רלוונטיים', 'ציטוטים', 'קטעים_רלוונטיים', 'ציטוטים_או_קטעים_רלוונטיים', 'key_segments', 'segment_quotes']) || [];
   
   const finalOverallScore = overall_score_from_report || call.overall_score || 0;
   const finalRedFlag = typeof red_flag_from_report === 'boolean' ? red_flag_from_report : call.red_flag;
@@ -264,13 +401,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   // פונקציה לקביעת צבע הציון
   const getScoreColor = (score: number) => {
     if (score >= 8) return 'text-green-600'
-    if (score >= 6) return 'text-yellow-600'
+    if (score >= 7) return 'text-orange-600'
     return 'text-red-600'
   }
   
   const getScoreBg = (score: number) => {
     if (score >= 8) return 'bg-green-50 border-green-200'
-    if (score >= 6) return 'bg-yellow-50 border-yellow-200'
+    if (score >= 7) return 'bg-orange-50 border-orange-200'
     return 'bg-red-50 border-red-200'
   }
 
@@ -346,9 +483,14 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   <div className={`mt-4 p-3 rounded-lg ${getScoreBg(finalOverallScore)}`}>
                     <span className={`text-sm font-medium ${getScoreColor(finalOverallScore)}`}>
                       {finalOverallScore >= 8 ? 'ביצועים מעולים!' :
-                       finalOverallScore >= 6 ? 'ביצועים טובים' :
-                       'יש מקום לשיפור'}
+                       finalOverallScore >= 7 ? 'ביצועים סבירים - יש מקום לשיפור' :
+                       'דרוש שיפור משמעותי'}
                     </span>
+                    {finalOverallScore < 8 && (
+                      <div className="mt-2 text-xs text-gray-600">
+                        💡 <strong>זכור:</strong> הסטנדרטים שלנו גבוהים - רק 8+ נחשב מעולה
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -389,49 +531,175 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
             {/* ציונים מפורטים */}
             {detailed_scores && Object.keys(detailed_scores).length > 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold mb-6 text-gray-800">ציונים לפי קטגוריות</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(detailed_scores).map(([category, score], idx) => {
-                    const scoreValue = typeof score === 'object' && score !== null 
-                      ? ((score as Record<string, any>).ציון || (score as Record<string, any>).score || 0) 
-                      : Number(score);
-                    
-                    const displayCategory = category.replace(/_/g, ' ');
-                    
-                    return (
-                      <div key={idx} className={`p-4 rounded-lg border-2 ${getScoreBg(scoreValue)}`}>
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium text-gray-800">{displayCategory}</h4>
-                          <span className={`text-2xl font-bold ${getScoreColor(scoreValue)}`}>
+              <div className="space-y-6">
+                {Object.entries(detailed_scores).map(([category, score], idx) => {
+                  const scoreValue = typeof score === 'object' && score !== null 
+                    ? ((score as Record<string, any>).ציון || (score as Record<string, any>).score || 0) 
+                    : Number(score);
+                  
+                  const displayCategory = category.replace(/_/g, ' ');
+                  const categoryData = (score as Record<string, any>);
+                  
+                  // חיפוש ציטוטים רלוונטיים לקטגוריה זו
+                  const relevantQuotes = segment_quotes ? segment_quotes.filter((quote: any) => {
+                    if (!quote || typeof quote !== 'object') return false;
+                    const quoteCategory = quote.category || quote.קטגוריה || quote.title || '';
+                    return quoteCategory.toLowerCase().includes(category.toLowerCase()) || 
+                           category.toLowerCase().includes(quoteCategory.toLowerCase());
+                  }) : [];
+
+                  return (
+                    <div key={idx} className="bg-white rounded-xl shadow-lg p-6 border-l-4" 
+                         style={{ borderLeftColor: scoreValue >= 8 ? '#10b981' : scoreValue >= 7 ? '#f59e0b' : '#ef4444' }}>
+                      
+                      {/* כותרת הפרמטר עם ציון */}
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-xl font-semibold text-gray-800">{displayCategory}</h3>
+                        <div className="text-left">
+                          <span className={`text-3xl font-bold ${getScoreColor(scoreValue)}`}>
                             {scoreValue}
                           </span>
+                          <span className="text-gray-500 text-sm">/10</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              scoreValue >= 8 ? 'bg-green-500' :
-                              scoreValue >= 6 ? 'bg-yellow-500' : 'bg-red-500'
-                            }`}
-                            style={{ width: `${(scoreValue / 10) * 100}%` }}
-                          />
-                        </div>
-                        {typeof score === 'object' && score !== null && (score as Record<string, any>).הערה && (
-                          <p className="mt-2 text-sm text-gray-600">
-                            {String((score as Record<string, any>).הערה)}
-                          </p>
-                        )}
                       </div>
-                    );
-                  })}
-                </div>
+
+                      {/* מד התקדמות */}
+                      <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+                        <div 
+                          className={`h-3 rounded-full transition-all duration-300 ${
+                            scoreValue >= 8 ? 'bg-green-500' :
+                            scoreValue >= 7 ? 'bg-orange-500' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${(scoreValue / 10) * 100}%` }}
+                        />
+                      </div>
+
+                      {/* הערות והערכה */}
+                      {categoryData && categoryData.הערה && (
+                        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                          <h4 className="font-medium text-gray-700 mb-2">📝 הערכה מפורטת:</h4>
+                          <p className="text-gray-700 leading-relaxed">
+                            {String(categoryData.הערה)}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* ציטוטים רלוונטיים לקטגוריה */}
+                      {relevantQuotes.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-gray-700 flex items-center">
+                            <span className="mr-2">💬</span>
+                            ציטוטים רלוונטיים ({relevantQuotes.length}):
+                          </h4>
+                          {relevantQuotes.map((quote: any, quoteIdx: number) => {
+                            const quoteText = quote.text || quote.quote || quote.ציטוט || quote.content || '';
+                            const comment = quote.comment || quote.הערה || '';
+                            
+                            // חיפוש timestamp - קודם מהדוח, אחר כך מהפונקציה החכמה
+                            let timestampSeconds = quote.timestamp_seconds;
+                            if (!timestampSeconds && quoteText) {
+                              timestampSeconds = findTimestampForQuote(quoteText);
+                            }
+                            
+                            const isCurrentlyPlaying = isQuotePlaying(quoteText);
+                            
+                            return (
+                              <div 
+                                key={quoteIdx} 
+                                className={`transition-all duration-300 border rounded-lg p-3 ${
+                                  isCurrentlyPlaying 
+                                    ? 'bg-blue-100 border-blue-400 shadow-lg ring-2 ring-blue-300' 
+                                    : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                                }`}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1">
+                                    <p className={`italic mb-2 transition-colors ${
+                                      isCurrentlyPlaying ? 'text-blue-800 font-medium' : 'text-gray-700'
+                                    }`}>
+                                      "{quoteText}"
+                                    </p>
+                                    {comment && (
+                                      <p className="text-sm text-blue-700">
+                                        💭 {comment}
+                                      </p>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-center space-x-2 rtl:space-x-reverse mr-3">
+                                    {timestampSeconds !== undefined && timestampSeconds !== null && audioUrl && (
+                                      <>
+                                        {isCurrentlyPlaying ? (
+                                          <button 
+                                            onClick={stopQuote}
+                                            className="flex items-center px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-xs font-medium"
+                                            title="עצור השמעה"
+                                          >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+                                            </svg>
+                                            עצור
+                                          </button>
+                                        ) : (
+                                          <button 
+                                            onClick={() => playQuote(timestampSeconds, quoteText)}
+                                            className="flex items-center px-2 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs font-medium"
+                                            title="השמע את הציטוט באודיו"
+                                          >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                            </svg>
+                                            {formatTime(timestampSeconds)}
+                                          </button>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
             {/* נגן אודיו */}
             {audioUrl && (
               <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">🎧 הקלטת השיחה</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">🎧 הקלטת השיחה</h3>
+                  {currentPlayingQuote && (
+                    <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                      <div className="flex items-center text-blue-600 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                        <svg className="w-4 h-4 mr-2 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.817L4.906 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.906l3.477-2.817z" clipRule="evenodd"/>
+                          <path fillRule="evenodd" d="M12.146 6.146a.5.5 0 01.708 0 4 4 0 010 5.708.5.5 0 01-.708-.708 3 3 0 000-4.292.5.5 0 010-.708z" clipRule="evenodd"/>
+                        </svg>
+                        <div className="text-sm">
+                          <div className="font-medium">מנגן ציטוט:</div>
+                          <div className="text-xs text-blue-700 max-w-xs truncate">
+                            "{currentPlayingQuote.substring(0, 50)}{currentPlayingQuote.length > 50 ? '...' : ''}"
+                          </div>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={stopQuote}
+                        className="flex items-center px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                        title="עצור השמעת הציטוט"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+                        </svg>
+                        עצור ציטוט
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
                 <audio 
                   ref={audioRef}
                   controls 
@@ -442,6 +710,20 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   <source src={audioUrl} />
                   הדפדפן שלך אינו תומך בנגן האודיו.
                 </audio>
+                
+                {currentPlayingQuote && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start space-x-2 rtl:space-x-reverse">
+                      <svg className="w-5 h-5 text-blue-600 mt-0.5 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd"/>
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-blue-800 mb-1">ציטוט שמנגן כעת:</p>
+                        <p className="text-sm text-blue-700 italic">"{currentPlayingQuote}"</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -571,105 +853,120 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               </div>
             </div>
 
-            {/* ניתוח מפורט עם כל הפרמטרים וציטוטים משולבים */}
-            {detailed_scores && Object.keys(detailed_scores).length > 0 && (
-              <div className="space-y-6">
-                {Object.entries(detailed_scores).map(([category, score], idx) => {
-                  const scoreValue = typeof score === 'object' && score !== null 
-                    ? ((score as Record<string, any>).ציון || (score as Record<string, any>).score || 0) 
-                    : Number(score);
-                  
-                  const displayCategory = category.replace(/_/g, ' ');
-                  const categoryData = (score as Record<string, any>);
-                  
-                  // חיפוש ציטוטים רלוונטיים לקטגוריה זו
-                  const relevantQuotes = segment_quotes ? segment_quotes.filter((quote: any) => {
-                    if (!quote || typeof quote !== 'object') return false;
-                    const quoteCategory = quote.category || quote.קטגוריה || quote.title || '';
-                    return quoteCategory.toLowerCase().includes(category.toLowerCase()) || 
-                           category.toLowerCase().includes(quoteCategory.toLowerCase());
-                  }) : [];
-
-                  return (
-                    <div key={idx} className="bg-white rounded-xl shadow-lg p-6 border-l-4" 
-                         style={{ borderLeftColor: scoreValue >= 8 ? '#10b981' : scoreValue >= 6 ? '#f59e0b' : '#ef4444' }}>
-                      
-                      {/* כותרת הפרמטר עם ציון */}
-                      <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-xl font-semibold text-gray-800">{displayCategory}</h3>
-                        <div className="text-left">
-                          <span className={`text-3xl font-bold ${getScoreColor(scoreValue)}`}>
-                            {scoreValue}
-                          </span>
-                          <span className="text-gray-500 text-sm">/10</span>
-                        </div>
-                      </div>
-
-                      {/* מד התקדמות */}
-                      <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
-                        <div 
-                          className={`h-3 rounded-full transition-all duration-300 ${
-                            scoreValue >= 8 ? 'bg-green-500' :
-                            scoreValue >= 6 ? 'bg-yellow-500' : 'bg-red-500'
-                          }`}
-                          style={{ width: `${(scoreValue / 10) * 100}%` }}
-                        />
-                      </div>
-
-                      {/* הערות והערכה */}
-                      {categoryData && categoryData.הערה && (
-                        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                          <h4 className="font-medium text-gray-700 mb-2">📝 הערכה מפורטת:</h4>
-                          <p className="text-gray-700 leading-relaxed">
-                            {String(categoryData.הערה)}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* ציטוטים רלוונטיים */}
-                      {relevantQuotes.length > 0 && (
-                        <div className="space-y-3">
-                          <h4 className="font-medium text-gray-700 flex items-center">
-                            <span className="mr-2">💬</span>
-                            ציטוטים רלוונטיים:
-                          </h4>
-                          {relevantQuotes.map((quote: any, quoteIdx: number) => {
-                            const quoteText = quote.text || quote.quote || quote.ציטוט || quote.content || '';
-                            const comment = quote.comment || quote.הערה || '';
+            {/* ציטוטים רלוונטיים - סקירה כללית */}
+            {segment_quotes && segment_quotes.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                  <span className="mr-2">🎬</span>
+                  כל הציטוטים הרלוונטיים ({segment_quotes.length})
+                </h3>
+                <div className="space-y-4">
+                  {segment_quotes.map((quote: any, idx: number) => {
+                    const quoteText = quote.text || quote.quote || quote.ציטוט || quote.content || '';
+                    const comment = quote.comment || quote.הערה || '';
+                    const category = quote.category || quote.קטגוריה || 'כללי';
+                    
+                    // חיפוש timestamp - קודם מהדוח, אחר כך מהפונקציה החכמה
+                    let timestampSeconds = quote.timestamp_seconds;
+                    if (!timestampSeconds && quoteText) {
+                      timestampSeconds = findTimestampForQuote(quoteText);
+                    }
+                    
+                    const isCurrentlyPlaying = isQuotePlaying(quoteText);
+                    
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`transition-all duration-300 border rounded-lg p-4 ${
+                          isCurrentlyPlaying 
+                            ? 'bg-gradient-to-r from-blue-100 to-blue-50 border-blue-400 shadow-lg ring-2 ring-blue-300' 
+                            : 'bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center mb-2">
+                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium mr-2">
+                                {category}
+                              </span>
+                              {isCurrentlyPlaying && (
+                                <div className="flex items-center text-blue-600 animate-pulse">
+                                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.817L4.906 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.906l3.477-2.817z" clipRule="evenodd"/>
+                                  </svg>
+                                  <span className="text-sm font-medium">מנגן כעת</span>
+                                </div>
+                              )}
+                            </div>
                             
-                            return (
-                              <div key={quoteIdx} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                <div className="flex justify-between items-start mb-2">
-                                  <div className="flex-1">
-                                    <p className="text-gray-700 italic mb-2">
-                                      "{typeof quoteText === 'string' ? quoteText : JSON.stringify(quoteText)}"
-                                    </p>
-                                    {comment && (
-                                      <p className="text-sm text-blue-700">
-                                        💭 {typeof comment === 'string' ? comment : JSON.stringify(comment)}
-                                      </p>
-                                    )}
-                                  </div>
-                                  {quote.timestamp_seconds && audioUrl && (
-                                    <button 
-                                      onClick={() => playQuote(quote.timestamp_seconds)}
-                                      className="mr-3 flex items-center px-2 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors text-xs"
-                                    >
-                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                      </svg>
-                                      {formatTime(quote.timestamp_seconds)}
-                                    </button>
+                            <p className={`italic mb-2 text-lg transition-colors ${
+                              isCurrentlyPlaying ? 'text-blue-800 font-medium' : 'text-gray-700'
+                            }`}>
+                              "{quoteText}"
+                            </p>
+                            
+                            {comment && (
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                                <p className="text-sm text-blue-800">
+                                  💭 <strong>הערה:</strong> {comment}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center space-x-2 rtl:space-x-reverse mr-4">
+                            {timestampSeconds !== undefined && timestampSeconds !== null && audioUrl && (
+                              <>
+                                {isCurrentlyPlaying ? (
+                                  <button 
+                                    onClick={stopQuote}
+                                    className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium shadow-md"
+                                    title="עצור השמעה"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+                                    </svg>
+                                    עצור
+                                  </button>
+                                ) : (
+                                  <button 
+                                    onClick={() => playQuote(timestampSeconds, quoteText)}
+                                    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-md"
+                                    title="השמע את הציטוט באודיו"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                    </svg>
+                                    השמע ב-{formatTime(timestampSeconds)}
+                                  </button>
+                                )}
+                                
+                                {/* אינדיקטור דיוק הזיהוי */}
+                                <div className="flex items-center text-xs">
+                                  {quote.timestamp_seconds ? (
+                                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium" title="זמן מדויק מהדוח">
+                                      🎯 מדויק
+                                    </span>
+                                  ) : (
+                                    <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium" title="זמן משוערך בטכנולוגיה חכמה">
+                                      🔍 חכם
+                                    </span>
                                   )}
                                 </div>
+                              </>
+                            )}
+                            
+                            {(!timestampSeconds || !audioUrl) && (
+                              <div className="flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                <span>⏱️ ללא זמן</span>
                               </div>
-                            );
-                          })}
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -693,11 +990,67 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                               {flag.ציטוטים && flag.ציטוטים.length > 0 && (
                                 <div className="mt-3">
                                   <h5 className="font-medium text-red-800 mb-2">ציטוטים:</h5>
-                                  {flag.ציטוטים.map((quote: string, idx: number) => (
-                                    <div key={idx} className="bg-white p-2 rounded border-r-4 border-red-400 mb-2">
-                                      <p className="text-gray-700 text-sm">"{quote}"</p>
-                                    </div>
-                                  ))}
+                                  {flag.ציטוטים.map((quote: string, idx: number) => {
+                                    const timestampSeconds = findTimestampForQuote(quote);
+                                    const isCurrentlyPlaying = isQuotePlaying(quote);
+                                    
+                                    return (
+                                      <div 
+                                        key={idx} 
+                                        className={`p-3 rounded border-r-4 border-red-400 mb-2 transition-all ${
+                                          isCurrentlyPlaying 
+                                            ? 'bg-red-100 shadow-md ring-2 ring-red-300' 
+                                            : 'bg-white hover:bg-red-50'
+                                        }`}
+                                        data-quote={quote}
+                                      >
+                                        <div className="flex justify-between items-start">
+                                          <div className="flex-1">
+                                            {isCurrentlyPlaying && (
+                                              <div className="flex items-center text-red-600 animate-pulse mb-1">
+                                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                  <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.817L4.906 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.906l3.477-2.817z" clipRule="evenodd"/>
+                                                </svg>
+                                                <span className="text-xs font-medium">מנגן</span>
+                                              </div>
+                                            )}
+                                            <p className={`text-sm transition-colors ${
+                                              isCurrentlyPlaying ? 'text-red-800 font-medium' : 'text-gray-700'
+                                            }`}>
+                                              "{quote}"
+                                            </p>
+                                          </div>
+                                          
+                                          {timestampSeconds !== undefined && timestampSeconds !== null && audioUrl && (
+                                            <div className="mr-2 flex items-center space-x-1">
+                                              {isCurrentlyPlaying ? (
+                                                <button 
+                                                  onClick={stopQuote}
+                                                  className="flex items-center px-2 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-xs"
+                                                  title="עצור השמעה"
+                                                >
+                                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+                                                  </svg>
+                                                </button>
+                                              ) : (
+                                                <button 
+                                                  onClick={() => playQuote(timestampSeconds, quote)}
+                                                  className="flex items-center px-2 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-xs"
+                                                  title="השמע ציטוט זה"
+                                                  data-quote={quote}
+                                                >
+                                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                                  </svg>
+                                                </button>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               )}
                               {flag.חלופות_מילוליות && flag.חלופות_מילוליות.length > 0 && (
@@ -798,15 +1151,17 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               )}
 
               {/* הוספת המלצה לתרגול אם הציון נמוך */}
-              {finalOverallScore < 7 && (
+              {finalOverallScore < 8 && (
                 <div className="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
                   <h4 className="font-semibold text-purple-700 mb-2 flex items-center">
                     <span className="mr-2">🏋️‍♂️</span>
                     המלצה לתרגול נוסף:
                   </h4>
                   <p className="text-purple-700">
-                    בהתבסס על הציון שקיבלת, מומלץ לעבור לחדר הכושר ולבצע סימולציות תרגול 
-                    כדי לשפר את הביצועים באזורים שזוהו לשיפור.
+                    {finalOverallScore >= 7 
+                      ? 'הביצועים סבירים, אך עדיין יש מקום לשיפור. מומלץ לעבור לחדר הכושר ולבצע סימולציות תרגול כדי להגיע לרמה מעולה.'
+                      : 'בהתבסס על הציון שקיבלת, דרוש שיפור משמעותי. מומלץ בחום לעבור לחדר הכושר ולבצע סימולציות תרגול מרובות כדי לשפר את הביצועים באזורים שזוהו לשיפור.'
+                    }
                   </p>
                   <div className="mt-3">
                     <a 

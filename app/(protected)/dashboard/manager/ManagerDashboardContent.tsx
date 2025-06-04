@@ -1,157 +1,127 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-export default function DashboardPage() {
+interface ManagerDashboardContentProps {
+  userId: string
+  companyId: string | null
+}
+
+interface DashboardStats {
+  totalAgents: number
+  totalCalls: number
+  avgScore: number
+  successfulCalls: number
+  pendingCalls: number
+}
+
+export default function ManagerDashboardContent({ userId, companyId }: ManagerDashboardContentProps) {
   const router = useRouter()
   const supabase = createClient()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [stats, setStats] = useState<DashboardStats>({
+    totalAgents: 0,
+    totalCalls: 0,
+    avgScore: 0,
+    successfulCalls: 0,
+    pendingCalls: 0
+  })
   const [isSideMenuOpen, setIsSideMenuOpen] = useState(false)
   const [isNotificationsMenuOpen, setIsNotificationsMenuOpen] = useState(false)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+  const [managerInfo, setManagerInfo] = useState<{
+    full_name: string | null
+    email: string | null
+  } | null>(null)
 
   useEffect(() => {
-    async function checkAuth() {
+    const fetchDashboardData = async () => {
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser()
-        
-        if (authError || !user) {
-          router.push('/login')
-          return
-        }
-        
-        setUserEmail(user.email || null)
-        
-        if (!user.email) {
-          setError("לא נמצא כתובת אימייל למשתמש")
-          setLoading(false)
-          return
-        }
-        
-        if (user.email === 'ido.segev23@gmail.com') {
-          const { data: existingUser, error: checkError } = await supabase
+        // שליפת נתוני המנהל
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user && user.email) {
+          const { data: userData } = await supabase
             .from('users')
-            .select('*')
-            .eq('email', user.email!)
-            .maybeSingle()
-          
-          if (!existingUser) {
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert({
-                id: user.id,
-                email: user.email,
-                role: 'admin',
-                full_name: 'מנהל מערכת',
-                company_id: '11111111-1111-1111-1111-111111111111',
-                is_approved: true
-              })
-            
-            if (insertError) {
-              setError(`שגיאה ביצירת משתמש: ${insertError.message}`)
-              setLoading(false)
-              return
-            }
-          }
-          
-          setLoading(false)
-          return
-        }
-        
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('role, company_id, is_approved')
-          .eq('email', user.email!)
-          .single()
-        
-        if (userError) {
-          const { data: userDataById, error: userByIdError } = await supabase
-            .from('users')
-            .select('role, company_id, is_approved')
-            .eq('id', user.id)
+            .select('full_name, email')
+            .eq('id', userId)
             .single()
           
-          if (userByIdError || !userDataById) {
-            setError(`לא ניתן למצוא את המשתמש במערכת. אנא פנה למנהל.`)
-            setLoading(false)
-            return
-          }
-          
-          if (!userDataById.is_approved) {
-            router.push('/not-approved?reason=pending')
-            return
-          }
-          
-          if (userDataById.role === 'admin') {
-            setLoading(false)
-          } else if (userDataById.role === 'manager' || userDataById.role === 'owner') {
-            router.push('/dashboard/manager')
-          } else if (userDataById.role === 'agent') {
-            router.push('/dashboard/agent')
-          } else {
-            setError(`תפקיד לא מוכר: ${userDataById.role}`)
-            setLoading(false)
-          }
-          
-          return
+          setManagerInfo(userData)
         }
-        
-        if (!userData) {
-          router.push('/not-approved?reason=not-found')
-          return
-        }
-        
-        if (!userData.is_approved) {
-          router.push('/not-approved?reason=pending')
-          return
-        }
-        
-        if (userData.role === 'admin') {
+
+        // שליפת נתוני הנציגים
+        if (!companyId) {
           setLoading(false)
-        } else if (userData.role === 'manager' || userData.role === 'owner') {
-          router.push('/dashboard/manager')
-        } else if (userData.role === 'agent') {
-          router.push('/dashboard/agent')
-        } else {
-          setError(`תפקיד לא מוכר: ${userData.role}`)
-          setLoading(false)
+          return
         }
-      } catch (err) {
-        setError(`שגיאה לא צפויה: ${err instanceof Error ? err.message : String(err)}`)
+
+        const { data: agents, error: agentsError } = await supabase
+          .from('users')
+          .select('id, full_name')
+          .eq('company_id', companyId)
+          .eq('role', 'agent')
+
+        if (agentsError) {
+          console.error('Error fetching agents:', agentsError)
+          return
+        }
+
+        // שליפת נתוני השיחות
+        const agentIds = agents?.map(agent => agent.id) || []
+        if (agentIds.length === 0) {
+          setLoading(false)
+          return
+        }
+
+        const { data: calls, error: callsError } = await supabase
+          .from('calls')
+          .select('id, user_id, overall_score, processing_status, created_at')
+          .in('user_id', agentIds)
+
+        if (callsError) {
+          console.error('Error fetching calls:', callsError)
+          return
+        }
+
+        // חישוב סטטיסטיקות
+        const totalAgents = agents?.length || 0
+        const totalCalls = calls?.length || 0
+        const callsWithScore = calls?.filter(call => call.overall_score !== null) || []
+        const avgScore = callsWithScore.length > 0 
+          ? callsWithScore.reduce((sum, call) => sum + (call.overall_score || 0), 0) / callsWithScore.length
+          : 0
+        const successfulCalls = callsWithScore.filter(call => (call.overall_score || 0) >= 8).length
+        const pendingCalls = calls?.filter(call => call.processing_status === 'pending').length || 0
+
+        setStats({
+          totalAgents,
+          totalCalls,
+          avgScore,
+          successfulCalls,
+          pendingCalls
+        })
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
         setLoading(false)
       }
     }
-    
-    checkAuth()
-  }, [router, supabase])
+
+    if (companyId) {
+      fetchDashboardData()
+    }
+  }, [userId, companyId, supabase])
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-lg">טוען...</div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">שגיאה</h2>
-          <p className="text-gray-700">{error}</p>
-          <div className="mt-6">
-            <button 
-              onClick={() => router.push('/login')}
-              className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              חזרה לדף התחברות
-            </button>
-          </div>
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">טוען נתונים...</p>
         </div>
       </div>
     )
@@ -171,17 +141,19 @@ export default function DashboardPage() {
             </div>
             <div className="flex justify-center py-6">
               <div className="">
-                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center border-4 border-blue-200">
+                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center border-4 border-green-200">
                   <span className="text-white text-2xl font-bold">מנ</span>
                 </div>
-                <p className="font-bold text-base text-gray-600 pt-2 text-center w-24">מנהל מערכת</p>
+                <p className="font-bold text-base text-gray-600 pt-2 text-center w-24">
+                  {managerInfo?.full_name || 'מנהל'}
+                </p>
               </div>
             </div>
             <div>
               <ul className="mt-6 leading-10">
                 <li className="relative px-2 py-1">
                   <Link className="inline-flex items-center w-full text-sm font-semibold text-gray-700 transition-colors duration-150 cursor-pointer hover:text-blue-600 bg-blue-50 rounded-md px-3 py-2" 
-                        href="/dashboard">
+                        href="/dashboard/manager">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
                          viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
@@ -192,24 +164,13 @@ export default function DashboardPage() {
                 </li>
                 <li className="relative px-2 py-1">
                   <Link className="inline-flex items-center w-full text-sm font-semibold text-gray-700 transition-colors duration-150 cursor-pointer hover:text-blue-600 px-3 py-2" 
-                        href="/dashboard/admin/users">
+                        href="/team">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
                          viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span className="ml-4">ניהול משתמשים</span>
-                  </Link>
-                </li>
-                <li className="relative px-2 py-1">
-                  <Link className="inline-flex items-center w-full text-sm font-semibold text-gray-700 transition-colors duration-150 cursor-pointer hover:text-blue-600 px-3 py-2" 
-                        href="/dashboard/admin/companies">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
-                         viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    <span className="ml-4">ניהול חברות</span>
+                    <span className="ml-4">הצוות שלי</span>
                   </Link>
                 </li>
                 <li className="relative px-2 py-1">
@@ -221,6 +182,17 @@ export default function DashboardPage() {
                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                     <span className="ml-4">העלאת שיחה</span>
+                  </Link>
+                </li>
+                <li className="relative px-2 py-1">
+                  <Link className="inline-flex items-center w-full text-sm font-semibold text-gray-700 transition-colors duration-150 cursor-pointer hover:text-blue-600 px-3 py-2" 
+                        href="/simulations">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
+                         viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    <span className="ml-4">סימולציות</span>
                   </Link>
                 </li>
               </ul>
@@ -252,7 +224,7 @@ export default function DashboardPage() {
                 <ul className="mt-6 leading-10">
                   <li className="relative px-2 py-1">
                     <Link className="inline-flex items-center w-full text-sm font-semibold text-gray-700 transition-colors duration-150 cursor-pointer hover:text-blue-600"
-                          href="/dashboard">
+                          href="/dashboard/manager">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
                            viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
@@ -263,25 +235,14 @@ export default function DashboardPage() {
                   </li>
                   <li className="relative px-2 py-1">
                     <Link className="inline-flex items-center w-full text-sm font-semibold text-gray-700 transition-colors duration-150 cursor-pointer hover:text-blue-600"
-                          href="/dashboard/admin/users">
+                          href="/team">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
                            viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      <span className="ml-4">ניהול משתמשים</span>
+                      <span className="ml-4">הצוות שלי</span>
                     </Link>
-                  </li>
-                  <li className="relative px-2 py-1">
-                    <Link className="inline-flex items-center w-full text-sm font-semibold text-gray-700 transition-colors duration-150 cursor-pointer hover:text-blue-600"
-                          href="/dashboard/admin/companies">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
-                           viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    <span className="ml-4">ניהול חברות</span>
-                  </Link>
                   </li>
                 </ul>
               </div>
@@ -340,7 +301,7 @@ export default function DashboardPage() {
                          href="#">
                         <span>הודעות</span>
                         <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-600 bg-red-100 rounded-full">
-                          13
+                          {stats.pendingCalls}
                         </span>
                       </a>
                     </li>
@@ -404,127 +365,143 @@ export default function DashboardPage() {
               <div className="grid grid-cols-12 col-span-12 gap-6">
                 <div className="col-span-12 mt-8">
                   <div className="flex items-center h-10 intro-y">
-                    <h2 className="mr-5 text-lg font-medium truncate text-gray-800">דשבורד מנהל מערכת</h2>
+                    <h2 className="mr-5 text-lg font-medium truncate text-gray-800">דשבורד מנהל</h2>
                   </div>
-                  {userEmail && (
-                    <div className="mb-6 p-3 bg-blue-50 rounded-md border border-blue-200">
-                      <p className="text-blue-800">מחובר כ: {userEmail}</p>
+                  {managerInfo && (
+                    <div className="mb-6 p-3 bg-green-50 rounded-md border border-green-200">
+                      <p className="text-green-800">ברוך הבא, {managerInfo.full_name || managerInfo.email}</p>
                     </div>
                   )}
                   
                   <div className="grid grid-cols-12 gap-6 mt-5">
-                    <Link href="/dashboard/admin/users" className="transform hover:scale-105 transition duration-300 shadow-xl rounded-lg col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white border border-gray-200">
+                    <div className="transform hover:scale-105 transition duration-300 shadow-xl rounded-lg col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white border border-gray-200">
                       <div className="p-5">
                         <div className="flex justify-between">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                           </svg>
                           <div className="bg-blue-100 text-blue-600 rounded-full h-6 px-2 flex justify-items-center font-semibold text-sm">
-                            <span className="flex items-center">חדש</span>
-                          </div>
-                        </div>
-                        <div className="ml-2 w-full flex-1">
-                          <div>
-                            <div className="mt-3 text-3xl font-bold leading-8 text-gray-800">ניהול</div>
-                            <div className="mt-1 text-base text-gray-600">משתמשים</div>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                    
-                    <Link href="/dashboard/admin/companies" className="transform hover:scale-105 transition duration-300 shadow-xl rounded-lg col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white border border-gray-200">
-                      <div className="p-5">
-                        <div className="flex justify-between">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                          <div className="bg-green-100 text-green-600 rounded-full h-6 px-2 flex justify-items-center font-semibold text-sm">
                             <span className="flex items-center">פעיל</span>
                           </div>
                         </div>
                         <div className="ml-2 w-full flex-1">
                           <div>
-                            <div className="mt-3 text-3xl font-bold leading-8 text-gray-800">ניהול</div>
-                            <div className="mt-1 text-base text-gray-600">חברות</div>
+                            <div className="mt-3 text-3xl font-bold leading-8 text-gray-800">{stats.totalAgents}</div>
+                            <div className="mt-1 text-base text-gray-600">נציגים בצוות</div>
                           </div>
                         </div>
                       </div>
-                    </Link>
+                    </div>
                     
-                    <Link href="/upload" className="transform hover:scale-105 transition duration-300 shadow-xl rounded-lg col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white border border-gray-200">
+                    <div className="transform hover:scale-105 transition duration-300 shadow-xl rounded-lg col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white border border-gray-200">
+                      <div className="p-5">
+                        <div className="flex justify-between">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          <div className="bg-green-100 text-green-600 rounded-full h-6 px-2 flex justify-items-center font-semibold text-sm">
+                            <span className="flex items-center">סה"כ</span>
+                          </div>
+                        </div>
+                        <div className="ml-2 w-full flex-1">
+                          <div>
+                            <div className="mt-3 text-3xl font-bold leading-8 text-gray-800">{stats.totalCalls}</div>
+                            <div className="mt-1 text-base text-gray-600">שיחות נותחו</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="transform hover:scale-105 transition duration-300 shadow-xl rounded-lg col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white border border-gray-200">
                       <div className="p-5">
                         <div className="flex justify-between">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                           </svg>
                           <div className="bg-purple-100 text-purple-600 rounded-full h-6 px-2 flex justify-items-center font-semibold text-sm">
-                            <span className="flex items-center">חדש</span>
+                            <span className="flex items-center">{Math.round(stats.avgScore * 10) / 10}</span>
                           </div>
                         </div>
                         <div className="ml-2 w-full flex-1">
                           <div>
-                            <div className="mt-3 text-3xl font-bold leading-8 text-gray-800">העלאת</div>
-                            <div className="mt-1 text-base text-gray-600">שיחה לניתוח</div>
+                            <div className="mt-3 text-3xl font-bold leading-8 text-gray-800">{Math.round(stats.avgScore * 10) / 10}</div>
+                            <div className="mt-1 text-base text-gray-600">ציון ממוצע צוותי</div>
                           </div>
                         </div>
                       </div>
-                    </Link>
+                    </div>
                     
-                    <Link href="/simulations" className="transform hover:scale-105 transition duration-300 shadow-xl rounded-lg col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white border border-gray-200">
+                    <div className="transform hover:scale-105 transition duration-300 shadow-xl rounded-lg col-span-12 sm:col-span-6 xl:col-span-3 intro-y bg-white border border-gray-200">
                       <div className="p-5">
                         <div className="flex justify-between">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <div className="bg-orange-100 text-orange-600 rounded-full h-6 px-2 flex justify-items-center font-semibold text-sm">
-                            <span className="flex items-center">חם</span>
+                            <span className="flex items-center">מצוין</span>
                           </div>
                         </div>
                         <div className="ml-2 w-full flex-1">
                           <div>
-                            <div className="mt-3 text-3xl font-bold leading-8 text-gray-800">סימולציות</div>
-                            <div className="mt-1 text-base text-gray-600">אימון קולי</div>
+                            <div className="mt-3 text-3xl font-bold leading-8 text-gray-800">{stats.successfulCalls}</div>
+                            <div className="mt-1 text-base text-gray-600">שיחות מוצלחות</div>
                           </div>
                         </div>
                       </div>
-                    </Link>
+                    </div>
                   </div>
                 </div>
                 
                 <div className="col-span-12 mt-5">
                   <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
                     <div className="bg-white shadow-lg border border-gray-200 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">סטטיסטיקות מערכת</h3>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">פעולות מהירות</h3>
                       <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">משתמשים רשומים</span>
-                          <span className="font-semibold text-gray-800">247</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">חברות פעילות</span>
-                          <span className="font-semibold text-gray-800">34</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">שיחות נותחו</span>
-                          <span className="font-semibold text-gray-800">1,842</span>
-                        </div>
+                        <Link href="/team" className="block p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200">
+                          <div className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span className="font-medium text-gray-800">צפייה בצוות</span>
+                          </div>
+                        </Link>
+                        <Link href="/upload" className="block p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200">
+                          <div className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <span className="font-medium text-gray-800">העלאת שיחה חדשה</span>
+                          </div>
+                        </Link>
+                        <Link href="/simulations" className="block p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors duration-200">
+                          <div className="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                            <span className="font-medium text-gray-800">סימולציות</span>
+                          </div>
+                        </Link>
                       </div>
                     </div>
                     
                     <div className="bg-white shadow-lg border border-gray-200 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">פעילות אחרונה</h3>
-                      <div className="space-y-3">
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                          <span className="text-sm text-gray-600">משתמש חדש נרשם</span>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">סיכום מצב הצוות</h3>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">נציגים פעילים</span>
+                          <span className="text-green-600 font-semibold">{stats.totalAgents}</span>
                         </div>
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                          <span className="text-sm text-gray-600">שיחה חדשה נותחה</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">שיחות מוצלחות</span>
+                          <span className="text-blue-600 font-semibold">{stats.successfulCalls}</span>
                         </div>
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                          <span className="text-sm text-gray-600">חברה חדשה נוספה</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">ציון ממוצע</span>
+                          <span className="text-purple-600 font-semibold">{Math.round(stats.avgScore * 10) / 10}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">שיחות בטיפול</span>
+                          <span className="text-orange-600 font-semibold">{stats.pendingCalls}</span>
                         </div>
                       </div>
                     </div>

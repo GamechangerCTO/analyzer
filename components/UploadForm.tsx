@@ -16,9 +16,16 @@ import {
   CheckCircle2,
   Loader2,
   File,
-  Save,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Sparkles,
+  Zap,
+  Heart,
+  Star,
+  Mic,
+  Play,
+  Cloud,
+  Shield
 } from 'lucide-react'
 
 interface UploadFormProps {
@@ -50,7 +57,6 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   const [progress, setProgress] = useState(0)
   const [callType, setCallType] = useState('')
   const [agentNotes, setAgentNotes] = useState('')
-  const [analysisType, setAnalysisType] = useState('full')
   const [analysisNotes, setAnalysisNotes] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -239,7 +245,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
         audio_file_path: filePath,
         agent_notes: agentNotes || null,
         analysis_notes: analysisNotes || null,
-        analysis_type: analysisType,
+        analysis_type: 'full',
         processing_status: 'pending'
       };
       
@@ -261,7 +267,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               p_company_id: userData?.companies?.id || null,
               p_agent_notes: agentNotes || undefined,
               p_analysis_notes: analysisNotes || undefined,
-              p_analysis_type: analysisType
+              p_analysis_type: 'full'
             });
           
           if (funcError) {
@@ -295,6 +301,13 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
       setUploadStep('completed');
       setSuccess('השיחה הועלתה בהצלחה! הניתוח מתבצע ברקע ותקבל התראה כשיושלם.')
       
+      // מעבר אוטומטי לדף השיחה לאחר 2 שניות
+      setTimeout(() => {
+        if (callId) {
+          router.push(`/dashboard/calls/${callId}`);
+        }
+      }, 2000);
+      
     } catch (error: any) {
       console.error('Error:', error)
       setError(error.message || 'שגיאה לא ידועה בעת העלאת השיחה')
@@ -312,352 +325,478 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     setUploadStep('upload');
   };
   
-  const forceTriggerFileInput = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
   const goToCallAnalysis = () => {
     if (uploadedCallId) {
       router.push(`/dashboard/calls/${uploadedCallId}`);
     }
   };
 
-  const continueToDashboard = () => {
-    // תמיד נעביר לדף השיחה לאחר שליחה מוצלחת
-    if (uploadedCallId) {
-      router.push(`/dashboard/calls/${uploadedCallId}`);
-    }
-    router.refresh();
-  };
-  
   const isManager = userData?.role === 'manager' || userData?.role === 'owner';
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4">
-          <div className="flex items-start">
-            <AlertCircle className="w-5 h-5 ml-2 mt-0.5 flex-shrink-0" />
-            <div className="flex-grow">
-              {error}
-              {error.includes('שאלון החברה') && (userData?.role === 'manager' || userData?.role === 'admin') && (
-                <div className="mt-3">
-                  <a
-                    href="/company-questionnaire"
-                    className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors"
-                  >
-                    📝 השלם את השאלון כעת
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {success && (
-        <div className="bg-green-50 border border-green-200 text-green-800 rounded-lg p-4 flex items-start">
-          <CheckCircle2 className="w-5 h-5 ml-2 mt-0.5 flex-shrink-0" />
-          <div>{success}</div>
-        </div>
-      )}
-
-      {uploadStep === 'completed' && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-8 text-center animate-fade-in">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      {/* Header section */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 px-6 py-12 sm:px-12">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        }}></div>
+        
+        <div className="relative max-w-4xl mx-auto text-center">
           <div className="flex justify-center mb-6">
-            <div className="bg-green-100 rounded-full p-4">
-              <CheckCircle2 className="w-12 h-12 text-green-600" />
-            </div>
-          </div>
-          <h3 className="text-2xl font-bold text-green-800 mb-4">העלאה הושלמה בהצלחה!</h3>
-          <p className="text-green-700 mb-6 text-lg">
-            השיחה הועלתה ונשמרה במערכת. הניתוח מתבצע כעת ברקע ויושלם בקרוב.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              type="button"
-              onClick={goToCallAnalysis}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-medium flex items-center justify-center"
-            >
-              <ArrowRight className="w-5 h-5 ml-2" />
-              עבור לדף השיחה
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push('/dashboard')}
-              className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-full hover:from-gray-600 hover:to-gray-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-medium flex items-center justify-center"
-            >
-              <Clock className="w-5 h-5 ml-2" />
-              חזור לדשבורד
-            </button>
-          </div>
-          <p className="text-sm text-green-600 mt-4">
-            תקבל התראה כשהניתוח יושלם או שתוכל לבדוק את הסטטוס בדשבורד
-          </p>
-        </div>
-      )}
-
-      {uploadStep === 'processing' && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8 text-center animate-fade-in">
-          <div className="flex justify-center mb-6">
-            <div className="bg-blue-100 rounded-full p-4">
-              <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-            </div>
-          </div>
-          <h3 className="text-2xl font-bold text-blue-800 mb-4">מתחיל ניתוח ברקע...</h3>
-          <p className="text-blue-700 mb-4 text-lg">
-            השיחה הועלתה בהצלחה והניתוח מתחיל ברקע. תוכל להמשיך לעבוד בזמן שהמערכת מבצעת את הניתוח.
-          </p>
-          <div className="bg-blue-100 rounded-full h-2 w-full overflow-hidden">
-            <div 
-              style={{ width: `${progress}%` }} 
-              className="bg-blue-500 h-full rounded-full transition-all duration-300"
-            />
-          </div>
-        </div>
-      )}
-
-      {uploadStep === 'upload' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <div className="flex items-center border-b pb-4 mb-4">
-              <MessageCircle className="w-5 h-5 ml-2 text-blue-600" />
-              <h2 className="text-lg font-medium">פרטי שיחה</h2>
-            </div>
-            
-            {isManager && (
-              <div className="space-y-2">
-                <label htmlFor="agentSelect" className="flex items-center text-sm font-medium text-gray-700">
-                  <UserCheck className="w-4 h-4 ml-1.5 text-gray-500" />
-                  בחר נציג *
-                </label>
-                <select
-                  id="agentSelect"
-                  value={selectedAgent}
-                  onChange={(e) => setSelectedAgent(e.target.value)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm py-2.5 px-3 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                  disabled={isLoading}
-                  required
-                >
-                  <option value="">בחר נציג</option>
-                  {agents.map((agent) => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.full_name || agent.id}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 flex items-center">
-                  <Info className="w-3.5 h-3.5 ml-1 text-blue-500" />
-                  למנהלים: באפשרותך לנתח שיחות של כל נציג בחברה
-                </p>
+            <div className="relative">
+              <div className="absolute inset-0 animate-ping bg-white/30 rounded-full"></div>
+              <div className="relative bg-white/20 backdrop-blur-sm rounded-full p-4">
+                <Mic className="w-12 h-12 text-white" />
               </div>
-            )}
-            
-            <div className="space-y-2">
-              <label htmlFor="callType" className="flex items-center text-sm font-medium text-gray-700">
-                <Calendar className="w-4 h-4 ml-1.5 text-gray-500" />
-                סוג שיחה *
-              </label>
-              <select
-                id="callType"
-                value={callType}
-                onChange={(e) => setCallType(e.target.value)}
-                className="block w-full rounded-md border-gray-300 shadow-sm py-2.5 px-3 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                disabled={isLoading}
-                required
-              >
-                <option value="">בחר סוג שיחה</option>
-                {CALL_TYPE_OPTIONS.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="space-y-2">
-              <span className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                <FileAudio className="w-4 h-4 ml-1.5 text-gray-500" />
-                סוג ניתוח
-              </span>
-              <div className="flex flex-col space-y-2">
-                <label className="inline-flex items-center p-3 border rounded-md border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                  <input
-                    type="radio"
-                    className="ml-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    value="full"
-                    checked={analysisType === 'full'}
-                    onChange={() => setAnalysisType('full')}
-                    disabled={isLoading}
-                  />
-                  <div>
-                    <span className="font-medium">ניתוח מלא</span>
-                    <p className="text-xs text-gray-500 mr-6">תמלול + טונציה + ניתוח תוכן מקצועי (מקיף)</p>
-                  </div>
-                </label>
-                <label className="inline-flex items-center p-3 border rounded-md border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                  <input
-                    type="radio"
-                    className="ml-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    value="tone"
-                    checked={analysisType === 'tone'}
-                    onChange={() => setAnalysisType('tone')}
-                    disabled={isLoading}
-                  />
-                  <div>
-                    <span className="font-medium">ניתוח טונציה בלבד</span>
-                    <p className="text-xs text-gray-500 mr-6">בדיקת טון, אנרגיה וזיהוי דגלים אדומים (מהיר)</p>
-                  </div>
-                </label>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="agentNotes" className="flex items-center text-sm font-medium text-gray-700">
-                <MessageCircle className="w-4 h-4 ml-1.5 text-gray-500" />
-                הערות נציג (אופציונלי)
-              </label>
-              <textarea
-                id="agentNotes"
-                value={agentNotes}
-                onChange={(e) => setAgentNotes(e.target.value)}
-                className="block w-full rounded-md border-gray-300 shadow-sm py-2.5 px-3 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                rows={4}
-                placeholder="הוסף הערות, דגשים מיוחדים או אתגרים ספציפיים לשיחה זו"
-                disabled={isLoading}
-              />
-            </div>
-            
-            {/* פרמטרים לניתוח */}
-            <div className="space-y-2">
-              <label htmlFor="analysisNotes" className="flex items-center text-sm font-medium text-gray-700">
-                <MessageCircle className="w-4 h-4 ml-1.5 text-orange-500" />
-                <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-md text-xs font-semibold mr-2">
-                  חשוב לניתוח!
-                </span>
-                הערות / דגשים מיוחדים / בקשות / אתגרים לטובת שיחה זו
-              </label>
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-2">
-                <p className="text-orange-700 text-sm font-medium">
-                  💡 פרמטרים אלו ישפיעו ישירות על הניתוח:
-                </p>
-                <p className="text-orange-600 text-xs mt-1">
-                  המערכת תתאים את הניתוח בהתאם להערות שתכתוב כאן
-                </p>
-              </div>
-              <textarea
-                id="analysisNotes"
-                value={analysisNotes}
-                onChange={(e) => setAnalysisNotes(e.target.value)}
-                className="block w-full rounded-md border-orange-300 shadow-sm py-2.5 px-3 focus:ring-orange-500 focus:border-orange-500 transition-all"
-                rows={3}
-                placeholder="לדוגמה: התמקד בטכניקות סגירה, בדוק האם הנציג התמודד טוב עם התנגדויות, שים דגש על טון ומקצועיות..."
-                disabled={isLoading}
-              />
             </div>
           </div>
           
-          <div className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <div className="flex items-center border-b pb-4 mb-4">
-              <Upload className="w-5 h-5 ml-2 text-blue-600" />
-              <h2 className="text-lg font-medium">העלאת קובץ</h2>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+            העלאת שיחה לניתוח
+            <span className="inline-block mr-3">
+              <Sparkles className="w-8 h-8 text-yellow-300 animate-pulse" />
+            </span>
+          </h1>
+          
+          <p className="text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed">
+            המערכת המתקדמת לניתוח איכות שיחות מכירה ושירות לקוחות
+          </p>
+          
+          <div className="flex justify-center mt-8 space-x-8">
+            <div className="flex items-center text-blue-100">
+              <Shield className="w-5 h-5 ml-2" />
+              <span className="text-sm">אבטחה מתקדמת</span>
             </div>
-            
-            <div className="space-y-2">
-              <span className="flex items-center text-sm font-medium text-gray-700">
-                <FileAudio className="w-4 h-4 ml-1.5 text-gray-500" />
-                קובץ אודיו *
-              </span>
-              
-              <div 
-                className={`mt-2 flex justify-center rounded-lg border-2 ${dragActive ? 'border-blue-500 bg-blue-50' : file ? 'border-green-500 bg-green-50' : error ? 'border-red-300' : 'border-gray-300 border-dashed'} px-6 py-10 transition-all cursor-pointer hover:bg-gray-50`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={triggerFileInput}
-              >
-                <div className="text-center">
-                  {!file ? (
-                    <>
-                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                      <div className="mt-4">
-                        <label htmlFor="file-upload" className="cursor-pointer">
-                          <span className="mt-2 block text-sm font-medium text-gray-900">
-                            העלה קובץ אודיו
-                          </span>
-                          <p className="mt-1 block text-xs text-gray-500">
-                            או גרור ושחרר כאן
-                          </p>
-                        </label>
-                        <input
-                          ref={fileInputRef}
-                          id="file-upload"
-                          name="file-upload"
-                          type="file"
-                          className="sr-only"
-                          accept="audio/*"
-                          onChange={handleFileChange}
-                          disabled={isLoading}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        MP3, WAV, M4A, AAC עד 100MB
-                      </p>
-                    </>
-                  ) : (
-                    <div className="text-center">
-                      <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-gray-900 break-all">
-                          {fileName || file.name}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {(file.size / (1024 * 1024)).toFixed(2)} MB
-                        </p>
-                      </div>
-                      <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
-                        <button
-                          type="button"
-                          onClick={clearSelectedFile}
-                          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          disabled={isLoading}
-                        >
-                          החלף קובץ
-                        </button>
-                      </div>
+            <div className="flex items-center text-blue-100">
+              <Zap className="w-5 h-5 ml-2" />
+              <span className="text-sm">ניתוח מהיר</span>
+            </div>
+            <div className="flex items-center text-blue-100">
+              <Star className="w-5 h-5 ml-2" />
+              <span className="text-sm">דיוק מקסימלי</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main form container */}
+      <div className="relative -mt-8 px-4 pb-12">
+        <form onSubmit={handleSubmit} className="max-w-6xl mx-auto" noValidate>
+          
+          {/* Error/Success messages */}
+          {error && (
+            <div className="mb-8 bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-500 rounded-xl p-6 shadow-lg animate-fadeIn">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <div className="bg-red-100 rounded-full p-2">
+                    <AlertCircle className="w-6 h-6 text-red-600" />
+                  </div>
+                </div>
+                <div className="mr-4">
+                  <h3 className="text-red-800 font-semibold mb-2">שגיאה בתהליך</h3>
+                  <p className="text-red-700">{error}</p>
+                  {error.includes('שאלון החברה') && (userData?.role === 'manager' || userData?.role === 'admin') && (
+                    <div className="mt-4">
+                      <a
+                        href="/company-questionnaire"
+                        className="inline-flex items-center px-6 py-3 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                      >
+                        <File className="w-4 h-4 ml-2" />
+                        השלם את השאלון כעת
+                      </a>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+          
+          {success && (
+            <div className="mb-8 bg-gradient-to-r from-green-50 to-emerald-100 border-l-4 border-green-500 rounded-xl p-6 shadow-lg animate-fadeIn">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <div className="bg-green-100 rounded-full p-2">
+                    <CheckCircle2 className="w-6 h-6 text-green-600" />
+                  </div>
+                </div>
+                <div className="mr-4">
+                  <h3 className="text-green-800 font-semibold mb-2">הצלחה!</h3>
+                  <p className="text-green-700">{success}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
-      {uploadStep === 'upload' && (
-        <div className="flex justify-end pt-6">
-          <button
-            type="submit"
-            disabled={isLoading || !file || !callType}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                מעלה...
-              </>
-            ) : (
-              <>
-                <Save className="w-5 h-5 ml-2" />
-                שלח לניתוח מתקדם
-              </>
-            )}
-          </button>
-        </div>
-      )}
-    </form>
+          {/* Completed state */}
+          {uploadStep === 'completed' && (
+            <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-100 border border-green-200 rounded-3xl p-12 text-center shadow-2xl animate-slideUp mb-8">
+              <div className="flex justify-center mb-8">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-green-200 rounded-full animate-ping"></div>
+                  <div className="relative bg-gradient-to-r from-green-400 to-emerald-500 rounded-full p-6 shadow-lg">
+                    <CheckCircle2 className="w-16 h-16 text-white" />
+                  </div>
+                </div>
+              </div>
+              
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-6">
+                🎉 העלאה הושלמה בהצלחה!
+              </h3>
+              
+              <p className="text-green-700 mb-4 text-xl leading-relaxed">
+                השיחה הועלתה ונשמרה במערכת. הניתוח מתבצע כעת ברקע ויושלם בקרוב.
+              </p>
+              
+              <div className="bg-green-100 rounded-2xl p-4 mb-8">
+                <p className="text-green-700 text-lg font-medium flex items-center justify-center">
+                  <Cloud className="w-5 h-5 ml-2 animate-bounce" />
+                  🔄 מעביר אותך לדף השיחה בעוד רגעים קלים...
+                </p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <button
+                  type="button"
+                  onClick={goToCallAnalysis}
+                  className="group px-8 py-4 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 font-semibold text-lg flex items-center justify-center"
+                >
+                  <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform duration-200" />
+                  עבור עכשיו לדף השיחה
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push('/dashboard')}
+                  className="group px-8 py-4 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-2xl hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-105 font-semibold text-lg flex items-center justify-center"
+                >
+                  <Clock className="w-6 h-6 ml-3 group-hover:rotate-12 transition-transform duration-200" />
+                  חזור לדשבורד
+                </button>
+              </div>
+              
+              <p className="text-sm text-green-600 mt-6 bg-green-50 rounded-xl p-3">
+                💡 תקבל התראה כשהניתוח יושלם או שתוכל לבדוק את הסטטוס בדף השיחה
+              </p>
+            </div>
+          )}
+
+          {/* Processing state */}
+          {uploadStep === 'processing' && (
+            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 border border-blue-200 rounded-3xl p-12 text-center shadow-2xl animate-slideUp mb-8">
+              <div className="flex justify-center mb-8">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-blue-200 rounded-full animate-spin"></div>
+                  <div className="relative bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full p-6 shadow-lg">
+                    <Loader2 className="w-16 h-16 text-white animate-spin" />
+                  </div>
+                </div>
+              </div>
+              
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
+                🚀 מתחיל ניתוח ברקע...
+              </h3>
+              
+              <p className="text-blue-700 mb-6 text-xl leading-relaxed">
+                השיחה הועלתה בהצלחה והניתוח מתחיל ברקע. תוכל להמשיך לעבוד בזמן שהמערכת מבצעת את הניתוח.
+              </p>
+              
+              <div className="bg-blue-100 rounded-2xl p-6 mb-6">
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full h-3 w-full overflow-hidden shadow-inner">
+                  <div 
+                    style={{ width: `${progress}%` }} 
+                    className="bg-gradient-to-r from-white to-blue-100 h-full rounded-full transition-all duration-500 ease-out shadow-sm"
+                  />
+                </div>
+                <p className="text-blue-700 mt-3 font-medium">{progress}% הושלם</p>
+              </div>
+            </div>
+          )}
+
+          {/* Upload state */}
+          {uploadStep === 'upload' && (
+            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                
+                {/* Left Panel - Form Details */}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 lg:p-12">
+                  <div className="space-y-8">
+                    <div className="flex items-center pb-6 border-b border-blue-200">
+                      <div className="bg-blue-600 rounded-xl p-3 ml-4">
+                        <MessageCircle className="w-6 h-6 text-white" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-800">פרטי השיחה</h2>
+                    </div>
+                    
+                    {isManager && (
+                      <div className="space-y-3">
+                        <label htmlFor="agentSelect" className="flex items-center text-sm font-semibold text-gray-700">
+                          <div className="bg-purple-100 rounded-lg p-2 ml-3">
+                            <UserCheck className="w-4 h-4 text-purple-600" />
+                          </div>
+                          בחר נציג *
+                        </label>
+                        <select
+                          id="agentSelect"
+                          value={selectedAgent}
+                          onChange={(e) => setSelectedAgent(e.target.value)}
+                          className="block w-full rounded-xl border-gray-300 shadow-sm py-4 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white hover:shadow-lg"
+                          disabled={isLoading}
+                          required
+                        >
+                          <option value="">בחר נציג</option>
+                          {agents.map((agent) => (
+                            <option key={agent.id} value={agent.id}>
+                              {agent.full_name || agent.id}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="bg-purple-50 rounded-xl p-4">
+                          <p className="text-sm text-purple-700 flex items-center">
+                            <Info className="w-4 h-4 ml-2 text-purple-500" />
+                            למנהלים: באפשרותך לנתח שיחות של כל נציג בחברה
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="space-y-3">
+                      <label htmlFor="callType" className="flex items-center text-sm font-semibold text-gray-700">
+                        <div className="bg-green-100 rounded-lg p-2 ml-3">
+                          <Calendar className="w-4 h-4 text-green-600" />
+                        </div>
+                        סוג שיחה *
+                      </label>
+                      <select
+                        id="callType"
+                        value={callType}
+                        onChange={(e) => setCallType(e.target.value)}
+                        className="block w-full rounded-xl border-gray-300 shadow-sm py-4 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white hover:shadow-lg"
+                        disabled={isLoading}
+                        required
+                      >
+                        <option value="">בחר סוג שיחה</option>
+                        {CALL_TYPE_OPTIONS.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <label htmlFor="agentNotes" className="flex items-center text-sm font-semibold text-gray-700">
+                        <div className="bg-orange-100 rounded-lg p-2 ml-3">
+                          <MessageCircle className="w-4 h-4 text-orange-600" />
+                        </div>
+                        הערות נציג (אופציונלי)
+                      </label>
+                      <textarea
+                        id="agentNotes"
+                        value={agentNotes}
+                        onChange={(e) => setAgentNotes(e.target.value)}
+                        className="block w-full rounded-xl border-gray-300 shadow-sm py-4 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white hover:shadow-lg resize-none"
+                        rows={4}
+                        placeholder="הוסף הערות, דגשים מיוחדים או אתגרים ספציפיים לשיחה זו"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    
+                    {/* פרמטרים לניתוח */}
+                    <div className="space-y-3">
+                      <label htmlFor="analysisNotes" className="flex items-center text-sm font-semibold text-gray-700">
+                        <div className="bg-yellow-100 rounded-lg p-2 ml-3 animate-pulse">
+                          <Sparkles className="w-4 h-4 text-yellow-600" />
+                        </div>
+                        <span className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-xs font-bold ml-2 shadow-lg">
+                          חשוב לניתוח!
+                        </span>
+                        הערות מיוחדים לטובת שיחה זו
+                      </label>
+                      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 rounded-xl p-4 mb-3">
+                        <div className="flex items-start space-x-3">
+                          <Heart className="w-5 h-5 text-yellow-500 mt-1 animate-pulse" />
+                          <div>
+                            <p className="text-yellow-800 text-sm font-semibold">
+                              💡 פרמטרים אלו ישפיעו ישירות על הניתוח:
+                            </p>
+                            <p className="text-yellow-700 text-xs mt-1">
+                              המערכת תתאים את הניתוח בהתאם להערות שתכתוב כאן
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <textarea
+                        id="analysisNotes"
+                        value={analysisNotes}
+                        onChange={(e) => setAnalysisNotes(e.target.value)}
+                        className="block w-full rounded-xl border-yellow-300 shadow-sm py-4 px-4 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 bg-white hover:shadow-lg resize-none"
+                        rows={3}
+                        placeholder="לדוגמה: התמקד בטכניקות סגירה, בדוק האם הנציג התמודד טוב עם התנגדויות, שים דגש על טון ומקצועיות..."
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Right Panel - File Upload */}
+                <div className="bg-white p-8 lg:p-12">
+                  <div className="space-y-6">
+                    <div className="flex items-center pb-6 border-b border-gray-200">
+                      <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-3 ml-4">
+                        <Upload className="w-6 h-6 text-white" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-800">העלאת קובץ</h2>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center text-sm font-semibold text-gray-700 mb-4">
+                        <div className="bg-indigo-100 rounded-lg p-2 ml-3">
+                          <FileAudio className="w-4 h-4 text-indigo-600" />
+                        </div>
+                        קובץ אודיו *
+                      </div>
+                      
+                      <div 
+                        className={`relative group transition-all duration-300 ${dragActive 
+                          ? 'scale-105 shadow-2xl border-4 border-blue-400 bg-gradient-to-br from-blue-50 to-indigo-100' 
+                          : file 
+                            ? 'border-4 border-green-400 bg-gradient-to-br from-green-50 to-emerald-100 shadow-xl' 
+                            : error 
+                              ? 'border-4 border-red-300 bg-red-50' 
+                              : 'border-4 border-dashed border-gray-300 hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 hover:shadow-lg'
+                        } rounded-2xl px-8 py-12 cursor-pointer text-center`}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        onClick={triggerFileInput}
+                      >
+                        <div className="text-center">
+                          {!file ? (
+                            <>
+                              <div className="flex justify-center mb-6">
+                                <div className="relative">
+                                  <div className="absolute inset-0 bg-blue-200 rounded-full animate-ping opacity-20"></div>
+                                  <div className="relative bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full p-6 shadow-lg">
+                                    <Upload className="w-12 h-12 text-white" />
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="mb-4">
+                                <label htmlFor="file-upload" className="cursor-pointer">
+                                  <span className="block text-xl font-bold text-gray-900 mb-2">
+                                    העלה קובץ אודיו
+                                  </span>
+                                  <p className="block text-lg text-gray-600 mb-4">
+                                    או גרור ושחרר כאן
+                                  </p>
+                                </label>
+                                <input
+                                  ref={fileInputRef}
+                                  id="file-upload"
+                                  name="file-upload"
+                                  type="file"
+                                  className="sr-only"
+                                  accept="audio/*"
+                                  onChange={handleFileChange}
+                                  disabled={isLoading}
+                                />
+                              </div>
+                              <div className="bg-gray-100 rounded-xl p-4">
+                                <p className="text-sm text-gray-600 font-medium">
+                                  📁 פורמטים נתמכים: MP3, WAV, M4A, AAC
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  גודל מקסימלי: 100MB
+                                </p>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-center">
+                              <div className="flex justify-center mb-6">
+                                <div className="relative">
+                                  <div className="absolute inset-0 bg-green-200 rounded-full animate-pulse"></div>
+                                  <div className="relative bg-gradient-to-r from-green-400 to-emerald-500 rounded-full p-6 shadow-lg">
+                                    <CheckCircle2 className="w-12 h-12 text-white" />
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="mb-6">
+                                <p className="text-xl font-bold text-gray-900 mb-2 break-all">
+                                  {fileName || file.name}
+                                </p>
+                                <div className="flex items-center justify-center space-x-4">
+                                  <div className="bg-green-100 rounded-lg px-3 py-1">
+                                    <p className="text-sm text-green-700 font-medium">
+                                      📊 {(file.size / (1024 * 1024)).toFixed(2)} MB
+                                    </p>
+                                  </div>
+                                  <div className="bg-blue-100 rounded-lg px-3 py-1">
+                                    <p className="text-sm text-blue-700 font-medium">
+                                      ✅ מוכן לניתוח
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={clearSelectedFile}
+                                className="group inline-flex items-center px-6 py-3 border-2 border-gray-300 shadow-sm text-sm font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105"
+                                disabled={isLoading}
+                              >
+                                <Upload className="w-4 h-4 ml-2 group-hover:rotate-180 transition-transform duration-300" />
+                                החלף קובץ
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Submit Section */}
+              <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-8 lg:px-12 py-8 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="text-sm text-gray-600">
+                    <div className="flex items-center space-x-2">
+                      <Shield className="w-4 h-4 text-green-500" />
+                      <span>הנתונים מוגנים באבטחה מתקדמת</span>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    disabled={isLoading || !file || !callType}
+                    className={`group relative overflow-hidden px-10 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 text-white font-bold text-lg rounded-2xl shadow-xl transition-all duration-300 transform ${
+                      isLoading || !file || !callType 
+                        ? 'opacity-50 cursor-not-allowed' 
+                        : 'hover:scale-105 hover:shadow-2xl hover:from-blue-700 hover:to-indigo-800'
+                    }`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="animate-spin -ml-1 mr-3 h-6 w-6 inline" />
+                        מעלה ומעבד...
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center">
+                          <Sparkles className="w-6 h-6 ml-3 group-hover:rotate-180 transition-transform duration-300" />
+                          שלח לניתוח מתקדם
+                          <Play className="w-6 h-6 mr-3 group-hover:translate-x-1 transition-transform duration-200" />
+                        </div>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
   )
 }

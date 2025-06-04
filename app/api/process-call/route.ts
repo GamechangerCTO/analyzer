@@ -139,6 +139,9 @@ export async function POST(request: Request) {
 
     // שלב 1: תמלול השיחה (רק עבור ניתוח מלא)
     let transcript = null;
+    let transcriptSegments: any[] = [];
+    let transcriptWords: any[] = [];
+    
     if (isFullAnalysis) {
       try {
         await addCallLog(call_id, '📝 מתחיל תהליך תמלול שיחה', { model: 'whisper-1', language: 'he' });
@@ -164,7 +167,9 @@ export async function POST(request: Request) {
         formData.append('file', audioBlob);
         formData.append('model', 'whisper-1');
         formData.append('language', 'he');
-        formData.append('response_format', 'json');
+        formData.append('response_format', 'verbose_json');
+        formData.append('timestamp_granularities[]', 'word');
+        formData.append('timestamp_granularities[]', 'segment');
         
         await addCallLog(call_id, '🔄 שולח בקשת תמלול ל-Whisper API', { 
           request_time: new Date().toISOString(),
@@ -238,18 +243,24 @@ export async function POST(request: Request) {
         
         const transcriptionData = await transcriptionResponse.json();
         transcript = transcriptionData.text;
+        transcriptSegments = transcriptionData.segments || [];
+        transcriptWords = transcriptionData.words || [];
         
         await addCallLog(call_id, '✅ תמלול הושלם בהצלחה', { 
           transcript_length: transcript.length,
           transcript_words: transcript.split(' ').length,
+          segments_count: transcriptSegments.length,
+          words_with_timestamps: transcriptWords.length,
           time_taken_ms: new Date().getTime() - new Date(transcriptionData.created_at || Date.now()).getTime()
         });
         
-        // עדכון התמליל בטבלה
+        // עדכון התמליל בטבלה (כולל מידע מפורט)
         await supabase
           .from('calls')
           .update({
             transcript,
+            transcript_segments: transcriptSegments,
+            transcript_words: transcriptWords,
             processing_status: 'analyzing_tone'
           })
           .eq('id', call_id);
@@ -463,11 +474,16 @@ export async function POST(request: Request) {
               
               ⚠️ חשוב: התמקד במיוחד בפרמטרים הנ"ל בעת הניתוח, ותן להם משקל גבוה יותר בהערכה הכללית.` : ''}
               
+              מידע זמנים מהתמליל (למיקום מדויק של ציטוטים):
+              ${transcriptSegments.length > 0 ? `רגעי זמן מפורטים: ${JSON.stringify(transcriptSegments.slice(0, 10))}` : 'לא זמין מידע זמנים'}
+              
               הנחיות נוספות:
               1. כלול בניתוח ציטוטים רלוונטיים מהשיחה תחת שדה 'ציטוטים' או 'קטעים_רלוונטיים' 
               2. עבור כל פרמטר שבו נמצאו בעיות, הוסף ציטוטים ספציפיים מהשיחה המדגימים את הבעיה
-              3. הצע חלופות מילוליות לכל ציטוט בעייתי
-              ${callData.analysis_notes ? '4. וודא שהניתוח מתייחס לפרמטרים המיוחדים שצוינו למעלה' : ''}
+              3. לכל ציטוט, נסה לספק גם timestamp_seconds מדויק בהתבסס על מידע הזמנים שסופק
+              4. הצע חלופות מילוליות לכל ציטוט בעייתי
+              5. פורמט הציטוט: {"text": "הציטוט", "timestamp_seconds": מספר, "comment": "הערה", "category": "קטגוריה"}
+              ${callData.analysis_notes ? '6. וודא שהניתוח מתייחס לפרמטרים המיוחדים שצוינו למעלה' : ''}
               
               ניתוח טונציה: ${JSON.stringify(toneAnalysisReport)}
               הקפד להחזיר את התשובה בפורמט JSON.`
