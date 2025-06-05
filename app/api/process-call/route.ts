@@ -441,7 +441,7 @@ export async function POST(request: Request) {
                 type: 'input_audio',
                 input_audio: {
                   data: audioBase64,
-                  format: ['wav', 'm4a', 'mp4', 'webm'].includes(fileExtension) ? fileExtension as any : 'mp3'
+                  format: fileExtension === 'wav' ? 'wav' : 'mp3'
                 }
               } as any
             ]
@@ -667,9 +667,9 @@ export async function POST(request: Request) {
       // בדיקה אם השגיאה נובעת מפורמט אודיו לא נתמך
       if (analysisError.message.includes('input_audio') && analysisError.message.includes('format')) {
         const fileExtension = callData.audio_file_path?.split('.').pop()?.toLowerCase() || 'unknown';
-        const supportedFormats = ['mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'wav', 'webm'];
+        const supportedFormats = ['wav', 'mp3']; // פורמטים שבאמת נתמכים ב-GPT-4o-audio-preview
         
-        await addCallLog(call_id, '⚠️ שגיאת פורמט אודיו בניתוח טונאלי', { 
+        await addCallLog(call_id, '⚠️ פורמט אודיו לא נתמך לניתוח טונאלי', { 
           file_extension: fileExtension,
           supported_formats: supportedFormats,
           error_message: analysisError.message,
@@ -680,14 +680,14 @@ export async function POST(request: Request) {
           .from('calls')
           .update({
             processing_status: 'failed',
-            error_message: `שגיאת פורמט אודיו: ${analysisError.message}`
+            error_message: `פורמט ${fileExtension} לא נתמך לניתוח טונאלי. נתמכים: wav, mp3`
           })
           .eq('id', call_id);
 
         return NextResponse.json(
           { 
             error: 'הניתוח נכשל', 
-            details: `שגיאת פורמט אודיו בניתוח טונאלי: ${analysisError.message}`
+            details: `פורמט ${fileExtension} לא נתמך לניתוח טונאלי של OpenAI. רק פורמטים wav ו-mp3 נתמכים. במידת הצורך, העלה שוב את הקובץ והמערכת תבצע המרה אוטומטית.`
           },
           { status: 400 }
         );

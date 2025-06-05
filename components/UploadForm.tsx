@@ -36,6 +36,7 @@ import {
   ChevronDown
 } from 'lucide-react'
 import { Database } from '@/types/database.types'
+import { convertAudioToMp3, needsConversion, getSupportedFormats } from '@/lib/audioConverter'
 
 interface UploadFormProps {
   user: User
@@ -119,6 +120,8 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   const [uploadCount, setUploadCount] = useState(0)
   const [uploadedCallId, setUploadedCallId] = useState<string | null>(null)
   const [isCallTypeDropdownOpen, setIsCallTypeDropdownOpen] = useState(false)
+  const [isConverting, setIsConverting] = useState(false)
+  const [conversionStatus, setConversionStatus] = useState<string>('')
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -186,28 +189,54 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     e.target.value = '';
   }
   
-  const validateAndSetFile = (selectedFile: File) => {
+  const validateAndSetFile = async (selectedFile: File) => {
     const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase();
-    const validAudioExtensions = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac', 'mp4', 'webm', 'aiff', 'wma', 'aac'];
+    const supportedFormats = getSupportedFormats();
     
     const isAudioByMimeType = selectedFile.type.includes('audio');
-    const isAudioByExtension = validAudioExtensions.includes(fileExtension || '');
+    const isAudioByExtension = supportedFormats.includes(fileExtension || '');
     
     if (!isAudioByMimeType && !isAudioByExtension) {
-      setError(`אנא העלה קובץ אודיו בפורמט תקין (mp3, wav, etc.). הקובץ שנבחר: ${selectedFile.name} (${selectedFile.type || 'ללא סוג'})`);
+      setError(`אנא העלה קובץ אודיו בפורמט נתמך. פורמטים נתמכים: ${supportedFormats.join(', ')}`);
       setFile(null);
       return;
     }
     
-    if (selectedFile.size > 100 * 1024 * 1024) {
-      setError('הקובץ גדול מדי. הגודל המקסימלי הוא 100MB');
+    if (selectedFile.size > 25 * 1024 * 1024) {
+      setError('הקובץ גדול מדי. הגודל המקסימלי הוא 25MB');
       setFile(null);
       return;
     }
     
-    setFile(selectedFile);
-    setFileName(selectedFile.name);
-    setError(null);
+    // בדיקה אם הקובץ צריך המרה
+    if (needsConversion(selectedFile.name)) {
+      setIsConverting(true);
+      setConversionStatus(`מבצע המרה של ${selectedFile.name} ל-MP3...`);
+      
+      try {
+        const convertedFile = await convertAudioToMp3(selectedFile);
+        setFile(convertedFile);
+        setFileName(convertedFile.name);
+        setConversionStatus(`המרה הושלמה בהצלחה! הקובץ ${selectedFile.name} הומר ל-${convertedFile.name}`);
+        setError(null);
+        
+        // הסתרת הודעת ההמרה אחרי 3 שניות
+        setTimeout(() => {
+          setConversionStatus('');
+          setIsConverting(false);
+        }, 3000);
+        
+      } catch (conversionError) {
+        setError(`שגיאה בהמרת הקובץ: ${conversionError}`);
+        setFile(null);
+        setIsConverting(false);
+        setConversionStatus('');
+      }
+    } else {
+      setFile(selectedFile);
+      setFileName(selectedFile.name);
+      setError(null);
+    }
   }
   
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -782,6 +811,35 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                         קובץ אודיו *
                       </div>
                       
+                      {/* הודעת המרה */}
+                      {(isConverting || conversionStatus) && (
+                        <div className={`mb-4 p-4 rounded-xl border-r-4 ${
+                          isConverting 
+                            ? 'bg-blue-50 border-blue-400' 
+                            : 'bg-green-50 border-green-400'
+                        }`}>
+                          <div className="flex items-center">
+                            {isConverting ? (
+                              <Loader2 className="w-5 h-5 text-blue-500 animate-spin ml-3" />
+                            ) : (
+                              <CheckCircle2 className="w-5 h-5 text-green-500 ml-3" />
+                            )}
+                            <div className="flex-1">
+                              <p className={`text-sm font-medium ${
+                                isConverting ? 'text-blue-800' : 'text-green-800'
+                              }`}>
+                                {isConverting ? '🔄 מבצע המרה...' : '✅ המרה הושלמה!'}
+                              </p>
+                              <p className={`text-xs mt-1 ${
+                                isConverting ? 'text-blue-600' : 'text-green-600'
+                              }`}>
+                                {conversionStatus}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
                       <div 
                         className={`relative group transition-all duration-300 ${dragActive 
                           ? 'scale-105 shadow-2xl border-4 border-blue-400 bg-gradient-to-br from-blue-50 to-indigo-100' 
@@ -829,10 +887,10 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                               </div>
                               <div className="bg-gray-100 rounded-xl p-4">
                                 <p className="text-sm text-gray-600 font-medium">
-                                  📁 פורמטים נתמכים: MP3, WAV, M4A, AAC
+                                  📁 פורמטים נתמכים: MP3, WAV, M4A, MP4, AAC, WebM, OGG
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
-                                  גודל מקסימלי: 100MB
+                                  גודל מקסימלי: 25MB • המרה אוטומטית ל-MP3 במידת הצורך
                                 </p>
                               </div>
                             </>
