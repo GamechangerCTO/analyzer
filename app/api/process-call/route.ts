@@ -648,6 +648,32 @@ export async function POST(request: Request) {
         error_time: new Date().toISOString()
       });
       
+      // בדיקה אם השגיאה נובעת מפורמט אודיו לא נתמך
+      if (analysisError.message.includes('input_audio') && analysisError.message.includes('format')) {
+        const fileExtension = callData.audio_file_path?.split('.').pop()?.toLowerCase() || 'unknown';
+        await addCallLog(call_id, '⚠️ פורמט קובץ לא נתמך לניתוח טונאלי', { 
+          file_extension: fileExtension,
+          supported_formats: ['wav', 'mp3'],
+          error_message: analysisError.message
+        });
+        
+        await supabase
+          .from('calls')
+          .update({
+            processing_status: 'failed',
+            error_message: `פורמט קובץ ${fileExtension} לא נתמך לניתוח טונאלי. נתמכים: wav, mp3`
+          })
+          .eq('id', call_id);
+
+        return NextResponse.json(
+          { 
+            error: 'הניתוח נכשל', 
+            details: `פורמט קובץ ${fileExtension} לא נתמך לניתוח טונאלי. נתמכים: wav, mp3. המלצה: המר את הקובץ לפורמט mp3 ונסה שוב.`
+          },
+          { status: 400 }
+        );
+      }
+      
       await supabase
         .from('calls')
         .update({
