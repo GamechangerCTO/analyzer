@@ -397,7 +397,40 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                            (detailed_analysis.improvement_roadmap ? [detailed_analysis.improvement_roadmap] : []);
   const strengths_and_preservation_points = getFieldValue(analysisReport, ['נקודות חוזק לשימור', 'נקודות_חוזק', 'strengths_and_preservation_points', 'strengths', 'חוזקות']) || 
                                             getFieldValue(analysisReport, ['סיכום והמלצות', 'חוזקות']) || [];
-  const detailed_scores = getFieldValue(analysisReport, ['ציונים מפורטים', 'ציונים_לפי_קטגוריות', 'פרמטרים', 'פירוט_ציונים', 'detailed_scores', 'category_scores', 'ניתוח פרטני לפי פרמטרים']) || {};
+  // מחלץ את הציונים מהמבנה הישן והחדש
+  const getDetailedScores = () => {
+    // ניסיון למבנה הישן
+    const oldFormatScores = getFieldValue(analysisReport, ['ציונים מפורטים', 'ציונים_לפי_קטגוריות', 'פרמטרים', 'פירוט_ציונים', 'detailed_scores', 'category_scores']) || {};
+    
+    // אם יש ציונים במבנה הישן, השתמש בהם
+    if (Object.keys(oldFormatScores).length > 0) {
+      return oldFormatScores;
+    }
+    
+    // ניסיון למבנה החדש - ניתוח פרטני לפי פרמטרים
+    const newFormatData = getFieldValue(analysisReport, ['ניתוח פרטני לפי פרמטרים']) || {};
+    const newFormatScores: any = {};
+    
+    // מעבר על כל הקטגוריות ביותר מהמבנה החדש
+    Object.entries(newFormatData).forEach(([mainCategory, mainCategoryData]: [string, any]) => {
+      if (typeof mainCategoryData === 'object' && mainCategoryData !== null) {
+        Object.entries(mainCategoryData).forEach(([subCategory, subCategoryData]: [string, any]) => {
+          if (typeof subCategoryData === 'object' && subCategoryData !== null && subCategoryData.דירוג) {
+            const categoryName = `${mainCategory} - ${subCategory}`;
+            newFormatScores[categoryName] = {
+              ציון: subCategoryData.דירוג,
+              הערה: subCategoryData['איך היה צריך לנסח'] || '',
+              ציטוט: subCategoryData.ציטוט || null
+            };
+          }
+        });
+      }
+    });
+    
+    return newFormatScores;
+  };
+  
+  const detailed_scores = getDetailedScores();
   const practical_recommendations = getFieldValue(analysisReport, ['המלצות פרקטיות לשיפור', 'המלצות_פרקטיות_לשיפור', 'המלצות_פרקטיות', 'המלצות_מעשיות', 'practical_recommendations', 'המלצות']) || 
                                    getFieldValue(analysisReport, ['סיכום והמלצות', 'המלצות']) || [];
   const segment_quotes = getFieldValue(analysisReport, ['ציטוטים_רלוונטיים', 'ציטוטים', 'קטעים_רלוונטיים', 'ציטוטים_או_קטעים_רלוונטיים', 'key_segments', 'segment_quotes', 'ציטוטים מרכזיים']) || [];
@@ -551,12 +584,17 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   const categoryData = (score as Record<string, any>);
                   
                   // חיפוש ציטוטים רלוונטיים לקטגוריה זו
-                  const relevantQuotes = segment_quotes ? segment_quotes.filter((quote: any) => {
+                  let relevantQuotes = segment_quotes ? segment_quotes.filter((quote: any) => {
                     if (!quote || typeof quote !== 'object') return false;
                     const quoteCategory = quote.category || quote.קטגוריה || quote.title || '';
                     return quoteCategory.toLowerCase().includes(category.toLowerCase()) || 
                            category.toLowerCase().includes(quoteCategory.toLowerCase());
                   }) : [];
+                  
+                  // אם יש ציטוט בקטגוריה במבנה החדש, הוסף אותו
+                  if (categoryData && categoryData.ציטוט) {
+                    relevantQuotes = [...relevantQuotes, categoryData.ציטוט];
+                  }
 
                   return (
                     <div key={idx} className="bg-white rounded-xl shadow-lg p-6 border-l-4" 
@@ -607,6 +645,18 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                             
                             // חיפוש timestamp - קודם מהדוח, אחר כך מהפונקציה החכמה
                             let timestampSeconds = quote.timestamp_seconds;
+                            
+                            // טיפול בפורמט החדש של timestamp
+                            if (!timestampSeconds && quote.timestamp) {
+                              const timestamp = quote.timestamp;
+                              if (timestamp && timestamp.includes(':')) {
+                                const parts = timestamp.split('-')[0].split(':'); // לוקחים את החלק הראשון של הטווח
+                                if (parts.length === 2) {
+                                  timestampSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                                }
+                              }
+                            }
+                            
                             if (!timestampSeconds && quoteText) {
                               timestampSeconds = findTimestampForQuote(quoteText);
                             }
