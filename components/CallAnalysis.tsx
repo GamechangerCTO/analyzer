@@ -384,16 +384,26 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     return undefined;
   };
 
-  // חילוץ שדות מהדוח
-  const overall_score_from_report = getFieldValue(analysisReport, ['ציון כללי', 'ציון_כללי', 'overall_score', 'score_overall']);
+  // חילוץ שדות מהדוח - תמיכה במבנה החדש והישן
+  const detailed_analysis = analysisReport.detailed_analysis || {};
+  
+  const overall_score_from_report = getFieldValue(analysisReport, ['ציון כללי', 'ציון_כללי', 'overall_score', 'score_overall']) || 
+                                   (detailed_analysis.overall_score || detailed_analysis.ציון_כללי);
   const red_flag_from_report = getFieldValue(analysisReport, ['red_flag', 'דגל_אדום']);
   const tone_analysis_report = call.tone_analysis_report || getFieldValue(analysisReport, ['tone_analysis_report']) || {};
   const red_flags = getFieldValue(analysisReport, ['דגלים אדומים', 'דגלים_אדומים', 'red_flags']) || [];
-  const improvement_points = getFieldValue(analysisReport, ['נקודות לשיפור', 'נקודות_לשיפור', 'improvement_points', 'המלצות_שיפור', 'המלצות_פרקטיות']) || [];
-  const strengths_and_preservation_points = getFieldValue(analysisReport, ['נקודות חוזק לשימור', 'נקודות_חוזק', 'strengths_and_preservation_points', 'strengths']) || [];
-  const detailed_scores = getFieldValue(analysisReport, ['ציונים מפורטים', 'ציונים_לפי_קטגוריות', 'פרמטרים', 'פירוט_ציונים', 'detailed_scores', 'category_scores']) || {};
-  const practical_recommendations = getFieldValue(analysisReport, ['המלצות פרקטיות לשיפור', 'המלצות_פרקטיות_לשיפור', 'המלצות_פרקטיות', 'המלצות_מעשיות', 'practical_recommendations']) || [];
-  const segment_quotes = getFieldValue(analysisReport, ['ציטוטים_רלוונטיים', 'ציטוטים', 'קטעים_רלוונטיים', 'ציטוטים_או_קטעים_רלוונטיים', 'key_segments', 'segment_quotes']) || [];
+  const improvement_points = getFieldValue(analysisReport, ['נקודות לשיפור', 'נקודות_לשיפור', 'improvement_points', 'המלצות_שיפור', 'המלצות_פרקטיות']) || 
+                           getFieldValue(analysisReport, ['סיכום והמלצות', 'נקודות לשיפור']) ||
+                           (detailed_analysis.improvement_roadmap ? [detailed_analysis.improvement_roadmap] : []);
+  const strengths_and_preservation_points = getFieldValue(analysisReport, ['נקודות חוזק לשימור', 'נקודות_חוזק', 'strengths_and_preservation_points', 'strengths', 'חוזקות']) || 
+                                            getFieldValue(analysisReport, ['סיכום והמלצות', 'חוזקות']) || [];
+  const detailed_scores = getFieldValue(analysisReport, ['ציונים מפורטים', 'ציונים_לפי_קטגוריות', 'פרמטרים', 'פירוט_ציונים', 'detailed_scores', 'category_scores', 'ניתוח פרטני לפי פרמטרים']) || {};
+  const practical_recommendations = getFieldValue(analysisReport, ['המלצות פרקטיות לשיפור', 'המלצות_פרקטיות_לשיפור', 'המלצות_פרקטיות', 'המלצות_מעשיות', 'practical_recommendations', 'המלצות']) || 
+                                   getFieldValue(analysisReport, ['סיכום והמלצות', 'המלצות']) || [];
+  const segment_quotes = getFieldValue(analysisReport, ['ציטוטים_רלוונטיים', 'ציטוטים', 'קטעים_רלוונטיים', 'ציטוטים_או_קטעים_רלוונטיים', 'key_segments', 'segment_quotes', 'ציטוטים מרכזיים']) || [];
+  
+  // אם יש key_moments במבנה החדש, השתמש בהם גם לציטוטים, או הציטוטים המרכזיים
+  const all_quotes = segment_quotes.length > 0 ? segment_quotes : (detailed_analysis.key_moments || []);
   
   const finalOverallScore = overall_score_from_report || call.overall_score || 0;
   const finalRedFlag = typeof red_flag_from_report === 'boolean' ? red_flag_from_report : call.red_flag;
@@ -853,21 +863,213 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               </div>
             </div>
 
+            {/* ניתוח מפורט חדש */}
+            {detailed_analysis && Object.keys(detailed_analysis).length > 0 && (
+              <div className="space-y-6">
+                {/* סקירה כרונולוגית */}
+                {detailed_analysis.chronological_review && (
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                      <span className="mr-2">📅</span>
+                      סקירה כרונולוגית של השיחה
+                    </h3>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p className="text-gray-700 leading-relaxed">{detailed_analysis.chronological_review}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* רגעי מפתח */}
+                {detailed_analysis.key_moments && detailed_analysis.key_moments.length > 0 && (
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                      <span className="mr-2">🔑</span>
+                      רגעי מפתח בשיחה ({detailed_analysis.key_moments.length})
+                    </h3>
+                    <div className="space-y-4">
+                      {detailed_analysis.key_moments.map((moment: any, index: number) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                                    <div className="flex justify-between items-start mb-3">
+                            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                              {moment.timestamp || `רגע ${index + 1}`}
+                            </span>
+                            {audioUrl && moment.quote && (
+                              <div className="flex items-center space-x-2">
+                                {isQuotePlaying(moment.quote) ? (
+                                  <button
+                                    onClick={stopQuote}
+                                    className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-colors text-xs"
+                                    title="עצור השמעה"
+                                  >
+                                    ⏹️ עצור
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      // המרת timestamp מפורמט mm:ss לשניות
+                                      const timestamp = moment.timestamp;
+                                      let seconds = 0;
+                                      if (timestamp && timestamp.includes(':')) {
+                                        const parts = timestamp.split('-')[0].split(':'); // לוקחים את החלק הראשון של הטווח
+                                        if (parts.length === 2) {
+                                          seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                                        }
+                                      }
+                                      playQuote(seconds, moment.quote);
+                                    }}
+                                    className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-xs"
+                                    title="נגן ציטוט"
+                                  >
+                                    🔊 נגן
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="bg-blue-50 p-3 rounded border-r-4 border-blue-400">
+                              <p className="text-sm font-medium text-blue-800 mb-1">הציטוט:</p>
+                              <p className="text-blue-700 italic">"{moment.quote}"</p>
+                            </div>
+                            
+                            <div className="bg-orange-50 p-3 rounded border-r-4 border-orange-400">
+                              <p className="text-sm font-medium text-orange-800 mb-1">השפעה על הלקוח:</p>
+                              <p className="text-orange-700">{moment.impact}</p>
+                            </div>
+                            
+                            <div className="bg-purple-50 p-3 rounded border-r-4 border-purple-400">
+                              <p className="text-sm font-medium text-purple-800 mb-1">ניתוח:</p>
+                              <p className="text-purple-700">{moment.analysis}</p>
+                            </div>
+                            
+                            {moment.alternative && (
+                              <div className="bg-green-50 p-3 rounded border-r-4 border-green-400">
+                                <p className="text-sm font-medium text-green-800 mb-1">איך צריך היה לנסח:</p>
+                                <p className="text-green-700 font-medium">"{moment.alternative}"</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ניתוח פסיכולוגי */}
+                {detailed_analysis.psychological_analysis && (
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                      <span className="mr-2">🧠</span>
+                      ניתוח פסיכולוגי
+                    </h3>
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <p className="text-gray-700 leading-relaxed">{detailed_analysis.psychological_analysis}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* הזדמנויות שפוספסו */}
+                {detailed_analysis.missed_opportunities && detailed_analysis.missed_opportunities.length > 0 && (
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-xl font-semibold mb-4 text-red-700 flex items-center">
+                      <span className="mr-2">⚠️</span>
+                      הזדמנויות שפוספסו ({detailed_analysis.missed_opportunities.length})
+                    </h3>
+                    <div className="space-y-4">
+                      {detailed_analysis.missed_opportunities.map((opportunity: any, index: number) => (
+                        <div key={index} className="border border-red-200 rounded-lg p-4 bg-red-50">
+                          <div className="flex justify-between items-start mb-3">
+                            <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                              {opportunity.timestamp || `הזדמנות ${index + 1}`}
+                            </span>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-sm font-medium text-red-800 mb-1">מה קרה:</p>
+                              <p className="text-red-700">{opportunity.description}</p>
+                            </div>
+                            
+                            <div className="bg-green-50 p-3 rounded border border-green-200">
+                              <p className="text-sm font-medium text-green-800 mb-1">איך צריך היה לטפל:</p>
+                              <p className="text-green-700 font-medium">{opportunity.proper_handling}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* דפוסי תקשורת */}
+                {detailed_analysis.communication_patterns && (
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                      <span className="mr-2">💬</span>
+                      דפוסי תקשורת
+                    </h3>
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <p className="text-gray-700 leading-relaxed">{detailed_analysis.communication_patterns}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* ניתוח קולי */}
+                {detailed_analysis.vocal_analysis && (
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                      <span className="mr-2">🎤</span>
+                      ניתוח שפת גוף קולית
+                    </h3>
+                    <div className="bg-yellow-50 p-4 rounded-lg">
+                      <p className="text-gray-700 leading-relaxed">{detailed_analysis.vocal_analysis}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* מפת דרכים לשיפור */}
+                {detailed_analysis.improvement_roadmap && (
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-xl font-semibold mb-4 text-green-700 flex items-center">
+                      <span className="mr-2">🗺️</span>
+                      מפת דרכים לשיפור
+                    </h3>
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                      <p className="text-gray-700 leading-relaxed font-medium">{detailed_analysis.improvement_roadmap}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ציטוטים רלוונטיים - סקירה כללית */}
-            {segment_quotes && segment_quotes.length > 0 && (
+            {all_quotes && all_quotes.length > 0 && (
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
                   <span className="mr-2">🎬</span>
-                  כל הציטוטים הרלוונטיים ({segment_quotes.length})
+                  כל הציטוטים הרלוונטיים ({all_quotes.length})
                 </h3>
                 <div className="space-y-4">
-                  {segment_quotes.map((quote: any, idx: number) => {
+                  {all_quotes.map((quote: any, idx: number) => {
                     const quoteText = quote.text || quote.quote || quote.ציטוט || quote.content || '';
-                    const comment = quote.comment || quote.הערה || '';
+                    const comment = quote.comment || quote.הערה || quote.impact || quote.analysis || '';
                     const category = quote.category || quote.קטגוריה || 'כללי';
                     
                     // חיפוש timestamp - קודם מהדוח, אחר כך מהפונקציה החכמה
                     let timestampSeconds = quote.timestamp_seconds;
+                    
+                    // טיפול בפורמט החדש של timestamp מ-detailed_analysis
+                    if (!timestampSeconds && quote.timestamp) {
+                      const timestamp = quote.timestamp;
+                      if (timestamp && timestamp.includes(':')) {
+                        const parts = timestamp.split('-')[0].split(':'); // לוקחים את החלק הראשון של הטווח
+                        if (parts.length === 2) {
+                          timestampSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                        }
+                      }
+                    }
+                    
                     if (!timestampSeconds && quoteText) {
                       timestampSeconds = findTimestampForQuote(quoteText);
                     }
