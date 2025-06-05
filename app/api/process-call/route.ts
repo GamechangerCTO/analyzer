@@ -159,12 +159,42 @@ export async function POST(request: Request) {
         await addCallLog(call_id, '✅ קובץ אודיו הורד בהצלחה', { 
           size_bytes: audioBlob.size,
           size_mb: (audioBlob.size / (1024 * 1024)).toFixed(2),
-          content_type: audioBlob.type
+          content_type: audioBlob.type,
+          file_extension: callData.audio_file_path?.split('.').pop() || 'unknown'
         });
         
+        // זיהוי פורמט הקובץ
+        const fileExtension = callData.audio_file_path?.split('.').pop()?.toLowerCase() || 'unknown';
+        const fileName = `audio.${fileExtension}`;
+        
+        await addCallLog(call_id, '🔍 זוהה פורמט קובץ', { 
+          file_extension: fileExtension,
+          file_name: fileName,
+          content_type: audioBlob.type
+        });
+
+        // תיקון content-type אם נדרש
+        let correctedBlob = audioBlob;
+        if (!audioBlob.type || audioBlob.type === 'application/octet-stream') {
+          const mimeTypes: { [key: string]: string } = {
+            'mp3': 'audio/mpeg',
+            'mp4': 'audio/mp4',
+            'm4a': 'audio/mp4',
+            'wav': 'audio/wav',
+            'webm': 'audio/webm'
+          };
+          const correctMimeType = mimeTypes[fileExtension] || 'audio/mpeg';
+          correctedBlob = new Blob([audioBlob], { type: correctMimeType });
+          
+          await addCallLog(call_id, '🔧 תוקן content-type של הקובץ', { 
+            original_type: audioBlob.type,
+            corrected_type: correctMimeType
+          });
+        }
+
         // המרת ה-blob לקובץ שאפשר לשלוח ל-OpenAI API
         const formData = new FormData();
-        formData.append('file', audioBlob);
+        formData.append('file', correctedBlob, fileName);
         formData.append('model', 'whisper-1');
         formData.append('language', 'he');
         formData.append('response_format', 'verbose_json');
@@ -215,7 +245,14 @@ export async function POST(request: Request) {
               const errorText = await transcriptionResponse.text();
               await addCallLog(call_id, `❌ שגיאת Whisper API בניסיון ${retryCount + 1}`, { 
                 status: transcriptionResponse.status,
-                error_text: errorText
+                status_text: transcriptionResponse.statusText,
+                error_text: errorText,
+                headers: Object.fromEntries(transcriptionResponse.headers.entries()),
+                file_info: {
+                  extension: fileExtension,
+                  size_mb: (audioBlob.size / (1024 * 1024)).toFixed(2),
+                  content_type: audioBlob.type
+                }
               });
               
               // אם זהו ניסיון אחרון, זרוק שגיאה
@@ -309,6 +346,9 @@ export async function POST(request: Request) {
     try {
       await addCallLog(call_id, '🎭 מתחיל ניתוח טונציה', { model: 'gpt-4o-audio-preview' });
       
+      // זיהוי פורמט הקובץ לניתוח טונציה
+      const fileExtension = callData.audio_file_path?.split('.').pop()?.toLowerCase() || 'unknown';
+      
       // הכנת הבקשה לניתוח טונציה
       await addCallLog(call_id, '🔄 מכין בקשה לניתוח טונציה עם GPT-4o-audio');
       
@@ -327,7 +367,9 @@ export async function POST(request: Request) {
       await addCallLog(call_id, '✅ קובץ אודיו הוכן לניתוח טונציה', { 
         size_bytes: audioBlob.size,
         size_mb: (audioBlob.size / (1024 * 1024)).toFixed(2),
-        content_type: audioBlob.type
+        content_type: audioBlob.type,
+        file_extension: fileExtension,
+        audio_format_for_api: fileExtension === 'wav' ? 'wav' : 'mp3'
       });
       
       const toneAnalysisResponse = await openai.chat.completions.create({
@@ -384,7 +426,7 @@ export async function POST(request: Request) {
                 type: 'input_audio',
                 input_audio: {
                   data: audioBase64,
-                  format: 'wav'
+                  format: fileExtension === 'wav' ? 'wav' : 'mp3'
                 }
               }
             ]
