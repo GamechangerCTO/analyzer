@@ -144,7 +144,7 @@ export async function POST(request: Request) {
     
     if (isFullAnalysis) {
       try {
-        await addCallLog(call_id, '📝 מתחיל תהליך תמלול שיחה', { model: 'whisper-1', language: 'he' });
+        await addCallLog(call_id, '📝 מתחיל תהליך תמלול שיחה', { model: 'gpt-4o-transcribe', language: 'he' });
         
         // הורדת קובץ האודיו
         await addCallLog(call_id, '⬇️ מוריד קובץ אודיו מהשרת');
@@ -195,15 +195,14 @@ export async function POST(request: Request) {
         // המרת ה-blob לקובץ שאפשר לשלוח ל-OpenAI API
         const formData = new FormData();
         formData.append('file', correctedBlob, fileName);
-        formData.append('model', 'whisper-1');
+        formData.append('model', 'gpt-4o-transcribe');
         formData.append('language', 'he');
-        formData.append('response_format', 'verbose_json');
-        formData.append('timestamp_granularities[]', 'word');
-        formData.append('timestamp_granularities[]', 'segment');
+        formData.append('response_format', 'json');
         
-        await addCallLog(call_id, '🔄 שולח בקשת תמלול ל-Whisper API', { 
+        await addCallLog(call_id, '🔄 שולח בקשת תמלול ל-GPT-4o Transcribe API', { 
           request_time: new Date().toISOString(),
-          file_size_mb: (audioBlob.size / (1024 * 1024)).toFixed(2)
+          file_size_mb: (audioBlob.size / (1024 * 1024)).toFixed(2),
+          model: 'gpt-4o-transcribe'
         });
         
         // מנגנון ניסיונות חוזרים לקריאה ל-Whisper API
@@ -243,7 +242,7 @@ export async function POST(request: Request) {
               }
             } else {
               const errorText = await transcriptionResponse.text();
-              await addCallLog(call_id, `❌ שגיאת Whisper API בניסיון ${retryCount + 1}`, { 
+              await addCallLog(call_id, `❌ שגיאת GPT-4o Transcribe API בניסיון ${retryCount + 1}`, { 
                 status: transcriptionResponse.status,
                 status_text: transcriptionResponse.statusText,
                 error_text: errorText,
@@ -257,7 +256,7 @@ export async function POST(request: Request) {
               
               // אם זהו ניסיון אחרון, זרוק שגיאה
               if (retryCount === maxRetries - 1) {
-                throw new Error(`Whisper API error: ${transcriptionResponse.status} ${errorText}`);
+                throw new Error(`GPT-4o Transcribe API error: ${transcriptionResponse.status} ${errorText}`);
               }
             }
           } catch (fetchError: any) {
@@ -275,20 +274,20 @@ export async function POST(request: Request) {
         }
         
         if (!transcriptionSuccess || !transcriptionResponse) {
-          throw new Error(`כל ${maxRetries} הניסיונות לתקשר עם Whisper API נכשלו`);
+          throw new Error(`כל ${maxRetries} הניסיונות לתקשר עם GPT-4o Transcribe API נכשלו`);
         }
         
         const transcriptionData = await transcriptionResponse.json();
         transcript = transcriptionData.text;
-        transcriptSegments = transcriptionData.segments || [];
-        transcriptWords = transcriptionData.words || [];
+        // המודל החדש gpt-4o-transcribe לא מחזיר segments ו-words נפרדים בפורמט json הפשוט
+        transcriptSegments = [];
+        transcriptWords = [];
         
         await addCallLog(call_id, '✅ תמלול הושלם בהצלחה', { 
           transcript_length: transcript.length,
           transcript_words: transcript.split(' ').length,
-          segments_count: transcriptSegments.length,
-          words_with_timestamps: transcriptWords.length,
-          time_taken_ms: new Date().getTime() - new Date(transcriptionData.created_at || Date.now()).getTime()
+          model_used: 'gpt-4o-transcribe',
+          response_format: 'json'
         });
         
         // עדכון התמליל בטבלה (כולל מידע מפורט)
