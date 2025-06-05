@@ -25,7 +25,15 @@ import {
   Mic,
   Play,
   Cloud,
-  Shield
+  Shield,
+  Phone,
+  RefreshCw,
+  HandHeart,
+  CalendarCheck,
+  Users,
+  TrendingUp,
+  Headphones,
+  ChevronDown
 } from 'lucide-react'
 import { Database } from '@/types/database.types'
 
@@ -41,13 +49,55 @@ interface Agent {
 }
 
 const CALL_TYPE_OPTIONS = [
-  "מכירה טלפונית",
-  "פולו אפ מכירה טלפונית – לאחר שיחה ראשונית לפניי הצעה",
-  "פולו אפ מכירה טלפונית –לאחר הצעה",
-  "תאום פגישה",
-  "פולו אפ תאום פגישה",
-  "מכירה טלפונית חוזרת/שדרוג",
-  "שירות לקוחות"
+  {
+    value: "מכירה טלפונית",
+    label: "מכירה טלפונית",
+    icon: Phone,
+    color: "bg-blue-500",
+    description: "שיחת מכירה ישירה ללקוח"
+  },
+  {
+    value: "פולו אפ מכירה טלפונית – לאחר שיחה ראשונית לפניי הצעה",
+    label: "פולו אפ לפני הצעה",
+    icon: RefreshCw,
+    color: "bg-green-500",
+    description: "מעקב לאחר שיחה ראשונית"
+  },
+  {
+    value: "פולו אפ מכירה טלפונית –לאחר הצעה",
+    label: "פולו אפ לאחר הצעה",
+    icon: TrendingUp,
+    color: "bg-orange-500",
+    description: "מעקב לאחר הגשת הצעה"
+  },
+  {
+    value: "תאום פגישה",
+    label: "תאום פגישה",
+    icon: CalendarCheck,
+    color: "bg-purple-500",
+    description: "קביעת פגישה עם לקוח"
+  },
+  {
+    value: "פולו אפ תאום פגישה",
+    label: "פולו אפ תאום פגישה",
+    icon: Calendar,
+    color: "bg-indigo-500",
+    description: "מעקב אחרי תאום פגישה"
+  },
+  {
+    value: "מכירה טלפונית חוזרת/שדרוג",
+    label: "מכירה חוזרת/שדרוג",
+    icon: Star,
+    color: "bg-yellow-500",
+    description: "מכירה ללקוח קיים או שדרוג"
+  },
+  {
+    value: "שירות לקוחות",
+    label: "שירות לקוחות",
+    icon: Headphones,
+    color: "bg-pink-500",
+    description: "שיחת תמיכה ושירות"
+  }
 ]
 
 export default function UploadForm({ user, userData, callTypes }: UploadFormProps) {
@@ -68,6 +118,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   const [fileName, setFileName] = useState<string | null>(null)
   const [uploadCount, setUploadCount] = useState(0)
   const [uploadedCallId, setUploadedCallId] = useState<string | null>(null)
+  const [isCallTypeDropdownOpen, setIsCallTypeDropdownOpen] = useState(false)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -102,6 +153,23 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     
     fetchAgents();
   }, [userData, user]);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isCallTypeDropdownOpen) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('[data-dropdown="call-type"]')) {
+          setIsCallTypeDropdownOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCallTypeDropdownOpen]);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadCount(count => count + 1);
@@ -560,21 +628,85 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                         </div>
                         סוג שיחה *
                       </label>
-                      <select
-                        id="callType"
-                        value={callType}
-                        onChange={(e) => setCallType(e.target.value)}
-                        className="block w-full rounded-xl border-gray-300 shadow-sm py-4 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white hover:shadow-lg"
-                        disabled={isLoading}
-                        required
-                      >
-                        <option value="">בחר סוג שיחה</option>
-                        {CALL_TYPE_OPTIONS.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </select>
+                      
+                      {/* Custom Dropdown */}
+                      <div className="relative" data-dropdown="call-type">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCallTypeDropdownOpen(!isCallTypeDropdownOpen);
+                          }}
+                          className="block w-full rounded-xl shadow-sm py-4 px-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white hover:shadow-lg text-right border border-gray-300 group"
+                          disabled={isLoading}
+                        >
+                          <div className="flex items-center justify-between">
+                            {callType ? (
+                              <div className="flex items-center">
+                                {(() => {
+                                  const selectedOption = CALL_TYPE_OPTIONS.find(option => option.value === callType);
+                                  if (selectedOption) {
+                                    const IconComponent = selectedOption.icon;
+                                    return (
+                                      <>
+                                        <div className={`${selectedOption.color} rounded-lg p-2 ml-3 shadow-sm`}>
+                                          <IconComponent className="w-4 h-4 text-white" />
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="font-medium text-gray-900">{selectedOption.label}</div>
+                                          <div className="text-sm text-gray-500">{selectedOption.description}</div>
+                                        </div>
+                                      </>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+                              </div>
+                            ) : (
+                              <div className="flex items-center">
+                                <div className="bg-gray-200 rounded-lg p-2 ml-3">
+                                  <Calendar className="w-4 h-4 text-gray-400" />
+                                </div>
+                                <span className="text-gray-500 font-medium">בחר סוג שיחה</span>
+                              </div>
+                            )}
+                            <ChevronDown className={`w-5 h-5 text-gray-400 transition-all duration-200 group-hover:text-blue-500 ${isCallTypeDropdownOpen ? 'rotate-180 text-blue-500' : ''}`} />
+                          </div>
+                        </button>
+                        
+                        {isCallTypeDropdownOpen && (
+                          <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-xl max-h-96 overflow-auto">
+                            {CALL_TYPE_OPTIONS.map((option, index) => {
+                              const IconComponent = option.icon;
+                              return (
+                                <button
+                                  key={option.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setCallType(option.value);
+                                    setIsCallTypeDropdownOpen(false);
+                                  }}
+                                  className={`w-full text-right px-4 py-3 hover:bg-blue-50 transition-colors duration-200 flex items-center border-b border-gray-100 last:border-b-0 ${
+                                    callType === option.value ? 'bg-blue-100 border-r-4 border-blue-500' : ''
+                                  } ${index === 0 ? 'rounded-t-xl' : ''} ${index === CALL_TYPE_OPTIONS.length - 1 ? 'rounded-b-xl' : ''}`}
+                                >
+                                  <div className={`${option.color} rounded-lg p-2 ml-3 shadow-sm`}>
+                                    <IconComponent className="w-4 h-4 text-white" />
+                                  </div>
+                                  <div className="text-right flex-1">
+                                    <div className="font-medium text-gray-900">{option.label}</div>
+                                    <div className="text-sm text-gray-500">{option.description}</div>
+                                  </div>
+                                  {callType === option.value && (
+                                    <div className="mr-2">
+                                      <CheckCircle2 className="w-5 h-5 text-blue-500" />
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="space-y-3">

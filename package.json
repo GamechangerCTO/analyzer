@@ -13,7 +13,8 @@
     "lint": "next lint",
     "deploy-check": "chmod +x scripts/deploy-check.sh && ./scripts/deploy-check.sh",
     "type-check": "tsc --noEmit",
-    "build-and-start": "npm run build && npm run start"
+    "build-and-start": "npm run build && npm run start",
+    "setup-prompts": "npx tsx scripts/setup-prompts.ts"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.0.4",
