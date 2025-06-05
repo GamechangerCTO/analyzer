@@ -389,8 +389,7 @@ export async function POST(request: Request) {
               }
             ]
           }
-        ],
-        response_format: { type: 'json_object' }
+        ]
       });
 
       await addCallLog(call_id, '✅ תשובת OpenAI התקבלה לניתוח טונציה', { 
