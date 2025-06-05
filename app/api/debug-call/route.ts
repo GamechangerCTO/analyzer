@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database.types';
 
 // הגדרת max duration לוורסל
@@ -17,8 +16,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // יצירת לקוח סופהבייס בצד השרת עם הרשאות מלאות
-    const supabase = createRouteHandlerClient<Database>({ cookies });
+    // יצירת לקוח סופהבייס עם service role key
+    const supabase = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     
     // קבלת פרטי השיחה
     const { data: callData, error: callError } = await supabase
