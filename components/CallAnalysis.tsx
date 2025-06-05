@@ -990,9 +990,14 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                               {flag.ציטוטים && flag.ציטוטים.length > 0 && (
                                 <div className="mt-3">
                                   <h5 className="font-medium text-red-800 mb-2">ציטוטים:</h5>
-                                  {flag.ציטוטים.map((quote: string, idx: number) => {
-                                    const timestampSeconds = findTimestampForQuote(quote);
-                                    const isCurrentlyPlaying = isQuotePlaying(quote);
+                                  {flag.ציטוטים.map((quote: any, idx: number) => {
+                                    // וידוא שהציטוט הוא מחרוזת
+                                    const quoteText = typeof quote === 'string' ? quote : 
+                                                     quote?.text || quote?.ציטוט || 
+                                                     (typeof quote === 'object' ? JSON.stringify(quote) : String(quote));
+                                    
+                                    const timestampSeconds = typeof quoteText === 'string' ? findTimestampForQuote(quoteText) : null;
+                                    const isCurrentlyPlaying = typeof quoteText === 'string' ? isQuotePlaying(quoteText) : false;
                                     
                                     return (
                                       <div 
@@ -1002,7 +1007,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                                             ? 'bg-red-100 shadow-md ring-2 ring-red-300' 
                                             : 'bg-white hover:bg-red-50'
                                         }`}
-                                        data-quote={quote}
+                                        data-quote={quoteText}
                                       >
                                         <div className="flex justify-between items-start">
                                           <div className="flex-1">
@@ -1017,7 +1022,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                                             <p className={`text-sm transition-colors ${
                                               isCurrentlyPlaying ? 'text-red-800 font-medium' : 'text-gray-700'
                                             }`}>
-                                              "{quote}"
+                                              "{quoteText}"
                                             </p>
                                           </div>
                                           
@@ -1035,10 +1040,10 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                                                 </button>
                                               ) : (
                                                 <button 
-                                                  onClick={() => playQuote(timestampSeconds, quote)}
+                                                  onClick={() => playQuote(timestampSeconds, quoteText)}
                                                   className="flex items-center px-2 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-xs"
                                                   title="השמע ציטוט זה"
-                                                  data-quote={quote}
+                                                  data-quote={quoteText}
                                                 >
                                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
