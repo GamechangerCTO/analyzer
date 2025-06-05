@@ -5,6 +5,22 @@ import { Database } from '@/types/database.types';
 import OpenAI from 'openai';
 import { addCallLog } from '@/lib/addCallLog';
 
+// פונקציה לקביעת הפורמט הנכון ל-GPT-4o-audio-preview
+function getAudioFormatForAPI(fileExtension: string): string {
+  // לפי תיעוד OpenAI: mp3, mp4, mpeg, mpga, m4a, wav, webm
+  const formatMap: { [key: string]: string } = {
+    'mp3': 'mp3',
+    'wav': 'wav',
+    'm4a': 'm4a',
+    'mp4': 'mp4',
+    'mpeg': 'mp3', // mpeg -> mp3
+    'mpga': 'mp3', // mpga -> mp3
+    'webm': 'webm'
+  };
+  
+  return formatMap[fileExtension?.toLowerCase()] || 'mp3'; // ברירת מחדל
+}
+
 // הגדרת max duration לוורסל (5 דקות למשתמשי Pro)
 export const maxDuration = 300;
 
@@ -425,9 +441,9 @@ export async function POST(request: Request) {
                 type: 'input_audio',
                 input_audio: {
                   data: audioBase64,
-                  format: fileExtension === 'wav' ? 'wav' : 'mp3'
+                  format: ['wav', 'm4a', 'mp4', 'webm'].includes(fileExtension) ? fileExtension as any : 'mp3'
                 }
-              }
+              } as any
             ]
           }
         ]
@@ -651,24 +667,27 @@ export async function POST(request: Request) {
       // בדיקה אם השגיאה נובעת מפורמט אודיו לא נתמך
       if (analysisError.message.includes('input_audio') && analysisError.message.includes('format')) {
         const fileExtension = callData.audio_file_path?.split('.').pop()?.toLowerCase() || 'unknown';
-        await addCallLog(call_id, '⚠️ פורמט קובץ לא נתמך לניתוח טונאלי', { 
+        const supportedFormats = ['mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'wav', 'webm'];
+        
+        await addCallLog(call_id, '⚠️ שגיאת פורמט אודיו בניתוח טונאלי', { 
           file_extension: fileExtension,
-          supported_formats: ['wav', 'mp3'],
-          error_message: analysisError.message
+          supported_formats: supportedFormats,
+          error_message: analysisError.message,
+          api_format_sent: fileExtension
         });
         
         await supabase
           .from('calls')
           .update({
             processing_status: 'failed',
-            error_message: `פורמט קובץ ${fileExtension} לא נתמך לניתוח טונאלי. נתמכים: wav, mp3`
+            error_message: `שגיאת פורמט אודיו: ${analysisError.message}`
           })
           .eq('id', call_id);
 
         return NextResponse.json(
           { 
             error: 'הניתוח נכשל', 
-            details: `פורמט קובץ ${fileExtension} לא נתמך לניתוח טונאלי. נתמכים: wav, mp3. המלצה: המר את הקובץ לפורמט mp3 ונסה שוב.`
+            details: `שגיאת פורמט אודיו בניתוח טונאלי: ${analysisError.message}`
           },
           { status: 400 }
         );
