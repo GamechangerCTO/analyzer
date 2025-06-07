@@ -43,7 +43,27 @@ export default async function ProtectedLayout({
       </main>
       <footer className="bg-white shadow-md-top py-4">
         <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          חדר כושר למכירות &copy; {new Date().getFullYear()}
+          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-6 mb-2">
+            <a 
+              href="/privacy-policy" 
+              className="text-gray-500 hover:text-gray-700 underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              מדיניות פרטיות
+            </a>
+            <a 
+              href="/terms-of-service" 
+              className="text-gray-500 hover:text-gray-700 underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              תנאי שירות
+            </a>
+          </div>
+          <div>
+            חדר כושר למכירות &copy; {new Date().getFullYear()}
+          </div>
         </div>
       </footer>
     </div>

@@ -53,7 +53,7 @@ export default function LoginForm() {
               console.log("[onAuthStateChange] Super admin email detected (inside if).");
               const { data: adminUserData, error: adminCheckError } = await supabase
                 .from('users')
-                .select('id, role, is_approved')
+                .select('id, role, is_approved, full_name, avatar_url')
                 .eq('email', currentEmail)
                 .maybeSingle();
 
@@ -72,6 +72,7 @@ export default function LoginForm() {
                     email: currentEmail,
                     role: 'admin',
                     full_name: session.user.user_metadata.full_name || session.user.user_metadata.name || null,
+                    avatar_url: session.user.user_metadata.avatar_url || session.user.user_metadata.picture || null,
                     is_approved: true
                   });
 
@@ -98,7 +99,12 @@ export default function LoginForm() {
                   console.log("[onAuthStateChange] Super admin record needs update. Updating role and approval...");
                   const { error: updateUserError } = await supabase
                     .from('users')
-                    .update({ role: 'admin', is_approved: true })
+                    .update({ 
+                      role: 'admin', 
+                      is_approved: true,
+                      full_name: session.user.user_metadata.full_name || session.user.user_metadata.name || adminUserData.full_name,
+                      avatar_url: session.user.user_metadata.avatar_url || session.user.user_metadata.picture || adminUserData.avatar_url
+                    })
                     .eq('id', session.user.id);
                   if (updateUserError) {
                     console.error("[onAuthStateChange] Error updating super admin record:", updateUserError);
@@ -127,7 +133,7 @@ export default function LoginForm() {
               console.log("[onAuthStateChange] Regular user detected (inside else).");
               const { data: userData, error: userCheckError } = await supabase
                 .from('users')
-                .select('id, role, is_approved')
+                .select('id, role, is_approved, full_name, avatar_url')
                 .eq('email', currentEmail) // Check by email for new registrations
                 .maybeSingle();
               
@@ -145,6 +151,7 @@ export default function LoginForm() {
                     email: currentEmail,
                     role: 'agent', 
                     full_name: session.user.user_metadata.full_name || session.user.user_metadata.name || null,
+                    avatar_url: session.user.user_metadata.avatar_url || session.user.user_metadata.picture || null,
                     is_approved: false 
                   });
                 

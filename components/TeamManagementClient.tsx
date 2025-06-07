@@ -159,41 +159,39 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          fullName: formData.fullName,
           email: formData.email,
-          companyId: companyId,
-          requestedBy: userId
+          full_name: formData.fullName
         })
       })
 
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'שגיאה בהוספת הנציג')
+        // אם אין מכסה זמינה - הצג הודעה מפורטת
+        if (result.error === 'No available quota') {
+          alert(`❌ לא ניתן להוסיף נציג חדש\n\n${result.message}`)
+        } else {
+          throw new Error(result.error || 'שגיאה בהוספת הנציג')
+        }
+        return
       }
 
       // אפס טופס וסגור מודל
       setFormData({ fullName: '', email: '', notes: '' })
       setShowAddAgentModal(false)
 
-      if (result.directlyAdded) {
-        // הנציג נוסף ישירות
-        setSuccessMessage(`✅ הנציג ${formData.fullName} נוסף בהצלחה לחברה! סיסמה זמנית: ${result.tempPassword}`)
-      } else if (result.requiresApproval) {
-        // נדרש אישור אדמין
-        setSuccessMessage(`⏳ ${result.message}`)
-      }
-
+      // הנציג נוסף בהצלחה
+      setSuccessMessage(`✅ ${result.message}`)
       setShowSuccessNotification(true)
 
       // רענן נתונים
       await fetchData()
 
-      // הסתר התראת הצלחה אחרי 10 שניות
+      // הסתר התראת הצלחה אחרי 7 שניות
       setTimeout(() => {
         setShowSuccessNotification(false)
         setSuccessMessage('')
-      }, 10000)
+      }, 7000)
 
     } catch (error) {
       console.error('Error submitting agent request:', error)
@@ -265,7 +263,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
   const agentStats = {
     totalAgents: agents.filter(agent => agent.role === 'agent').length,
     totalManagers: agents.filter(agent => agent.role === 'manager').length,
-    pendingRequestsCount: myRequests.filter(req => req.status === 'pending').length
+    totalUsers: agents.length
   }
 
   if (loading) {
@@ -293,6 +291,66 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         </div>
       )}
 
+      {/* התראה על מכסה מלאה או קרובה להיגמר */}
+      {userQuota && userQuota.available_users === 0 && (
+        <div className="bg-red-50 border-r-4 border-red-400 p-4 rounded-lg shadow-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="mr-3 flex-1">
+              <h3 className="text-sm font-medium text-red-800">
+                🚫 מכסת המשתמשים מלאה
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>החברה שלכם הגיעה למכסה המקסימלית של {userQuota.total_users} משתמשים.</p>
+                <p>כדי להוסיף נציגים נוספים, תוכלו:</p>
+                <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                  <Link 
+                    href="/team/purchase-quota"
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                  >
+                    💳 רכוש מכסה נוספת
+                  </Link>
+                  <span className="text-red-600 text-sm self-center">או פנה למנהל המערכת</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {userQuota && userQuota.available_users > 0 && userQuota.available_users <= 2 && (
+        <div className="bg-yellow-50 border-r-4 border-yellow-400 p-4 rounded-lg shadow-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="mr-3 flex-1">
+              <h3 className="text-sm font-medium text-yellow-800">
+                ⚠️ המכסה קרובה להיגמר
+              </h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>נותרו רק {userQuota.available_users} מקומות פנויים למשתמשים חדשים מתוך {userQuota.total_users} סה"כ.</p>
+                <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                  <Link 
+                    href="/team/purchase-quota"
+                    className="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                  >
+                    💳 הגדל מכסה
+                  </Link>
+                  <span className="text-yellow-600 text-sm self-center">מומלץ להגדיל מכסה בקרוב</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* כותרת ופעולות */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold text-gray-800">ניהול צוות</h1>
@@ -303,12 +361,30 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
           >
             ← חזרה לדשבורד
           </Link>
-          <button
-            onClick={() => setShowAddAgentModal(true)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
-          >
-            + הוסף נציג
-          </button>
+          {userQuota?.available_users === 0 ? (
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                disabled
+                className="px-4 py-2 bg-gray-300 text-gray-500 cursor-not-allowed rounded-lg transition-colors duration-200"
+                title="אין מכסה זמינה להוספת נציגים"
+              >
+                + הוסף נציג (מכסה מלאה)
+              </button>
+              <Link
+                href="/team/purchase-quota"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 text-center"
+              >
+                💳 רכוש מכסה
+              </Link>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAddAgentModal(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+            >
+              + הוסף נציג
+            </button>
+          )}
         </div>
       </div>
 
@@ -354,18 +430,39 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         </div>
         
         <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">הבקשות שלי</h2>
-              <p className="text-3xl font-bold text-orange-600">{agentStats.pendingRequestsCount}</p>
-              <p className="mt-2 text-sm text-gray-500">בקשות ממתינות לאישור</p>
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">מכסה זמינה</h2>
+              <p className="text-3xl font-bold text-purple-600">
+                {userQuota ? userQuota.available_users : '?'}
+              </p>
+              <p className="mt-2 text-sm text-gray-500">
+                {userQuota 
+                  ? `משתמשים זמינים להוספה`
+                  : 'טוען מידע על המכסה...'
+                }
+              </p>
             </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+              userQuota && userQuota.available_users > 0 
+                ? 'bg-purple-100' 
+                : 'bg-red-100'
+            }`}>
+              <svg className={`w-6 h-6 ${
+                userQuota && userQuota.available_users > 0 
+                  ? 'text-purple-600' 
+                  : 'text-red-600'
+              }`} fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
               </svg>
             </div>
           </div>
+          <Link
+            href="/team/purchase-quota"
+            className="w-full inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+          >
+            💳 הגדל מכסה
+          </Link>
         </div>
       </div>
 

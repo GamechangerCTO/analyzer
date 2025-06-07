@@ -9,10 +9,6 @@ interface AdminStats {
   pendingUsers: number
   approvedUsers: number
   totalCompanies: number
-  totalAgentRequests: number
-  pendingAgentRequests: number
-  approvedAgentRequests: number
-  rejectedAgentRequests: number
 }
 
 export default function AdminDashboardPage() {
@@ -20,11 +16,7 @@ export default function AdminDashboardPage() {
     totalUsers: 0,
     pendingUsers: 0,
     approvedUsers: 0,
-    totalCompanies: 0,
-    totalAgentRequests: 0,
-    pendingAgentRequests: 0,
-    approvedAgentRequests: 0,
-    rejectedAgentRequests: 0
+    totalCompanies: 0
   })
   const [loading, setLoading] = useState(true)
   const [showUrgentAlert, setShowUrgentAlert] = useState(false)
@@ -34,8 +26,8 @@ export default function AdminDashboardPage() {
   }, [])
 
   useEffect(() => {
-    // הצגת התראה דחופה אם יש בקשות ממתינות
-    if (stats.pendingAgentRequests > 0 || stats.pendingUsers > 0) {
+    // הצגת התראה דחופה אם יש משתמשים ממתינים לאישור
+    if (stats.pendingUsers > 0) {
       setShowUrgentAlert(true)
     }
   }, [stats])
@@ -65,27 +57,11 @@ export default function AdminDashboardPage() {
 
       const totalCompanies = allCompanies?.length || 0
 
-      // סטטיסטיקות בקשות נציגים
-      const { data: allRequests, error: requestsError } = await supabase
-        .from('agent_approval_requests')
-        .select('id, status')
-      
-      if (requestsError) throw requestsError
-
-      const totalAgentRequests = allRequests?.length || 0
-      const pendingAgentRequests = allRequests?.filter(r => r.status === 'pending').length || 0
-      const approvedAgentRequests = allRequests?.filter(r => r.status === 'approved').length || 0
-      const rejectedAgentRequests = allRequests?.filter(r => r.status === 'rejected').length || 0
-
       setStats({
         totalUsers,
         pendingUsers,
         approvedUsers,
-        totalCompanies,
-        totalAgentRequests,
-        pendingAgentRequests,
-        approvedAgentRequests,
-        rejectedAgentRequests
+        totalCompanies
       })
 
     } catch (error) {
@@ -96,7 +72,7 @@ export default function AdminDashboardPage() {
   }
 
   const getTotalPendingItems = () => {
-    return stats.pendingUsers + stats.pendingAgentRequests
+    return stats.pendingUsers
   }
 
   if (loading) {
@@ -111,30 +87,23 @@ export default function AdminDashboardPage() {
     <div className="container mx-auto p-6 space-y-8">
       {/* התראה דחופה */}
       {showUrgentAlert && getTotalPendingItems() > 0 && (
-        <div className="bg-red-50 border-r-4 border-red-400 p-4 rounded-lg shadow-lg">
+        <div className="bg-yellow-50 border-r-4 border-yellow-400 p-4 rounded-lg shadow-lg">
           <div className="flex justify-between items-start">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="mr-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  🚨 יש לך {getTotalPendingItems()} פריטים הממתינים לטיפול דחוף!
+                <h3 className="text-sm font-medium text-yellow-800">
+                  ⚠️ יש לך {getTotalPendingItems()} משתמשים ממתינים לאישור
                 </h3>
-                <div className="mt-2 text-sm text-red-700">
+                <div className="mt-2 text-sm text-yellow-700">
                   <ul className="list-disc list-inside space-y-1">
-                    {stats.pendingAgentRequests > 0 && (
-                      <li>
-                        <Link href="/dashboard/admin/agent-requests" className="underline hover:text-red-900">
-                          {stats.pendingAgentRequests} בקשות נציגים ממתינות לאישור
-                        </Link>
-                      </li>
-                    )}
                     {stats.pendingUsers > 0 && (
                       <li>
-                        <Link href="/dashboard/admin/users" className="underline hover:text-red-900">
+                        <Link href="/dashboard/admin/users" className="underline hover:text-yellow-900">
                           {stats.pendingUsers} משתמשים ממתינים לאישור
                         </Link>
                       </li>
@@ -145,7 +114,7 @@ export default function AdminDashboardPage() {
             </div>
             <button
               onClick={() => setShowUrgentAlert(false)}
-              className="text-red-400 hover:text-red-600"
+              className="text-yellow-400 hover:text-yellow-600"
             >
               <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -166,7 +135,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* סטטיסטיקות כלליות */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
@@ -204,30 +173,15 @@ export default function AdminDashboardPage() {
         <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-1">בקשות נציגים</h3>
-              <p className="text-3xl font-bold text-orange-600">{stats.totalAgentRequests}</p>
+              <h3 className="text-lg font-semibold text-gray-800 mb-1">מכסות משתמשים</h3>
+              <p className="text-3xl font-bold text-purple-600">אוטומטי</p>
               <p className="text-sm text-gray-500">
-                {stats.pendingAgentRequests} ממתינות • {stats.approvedAgentRequests} אושרו
+                ניהול מכסות לפי חברות
               </p>
             </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-1">פריטים ממתינים</h3>
-              <p className="text-3xl font-bold text-red-600">{getTotalPendingItems()}</p>
-              <p className="text-sm text-gray-500">דורשים טיפול דחוף</p>
-            </div>
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
               </svg>
             </div>
           </div>
@@ -276,25 +230,13 @@ export default function AdminDashboardPage() {
             </div>
           </Link>
 
-          <Link href="/dashboard/admin/agent-requests" className={`block p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ${
-            stats.pendingAgentRequests > 0 ? 'bg-red-50 border-2 border-red-300 ring-2 ring-red-200' : 'bg-white'
-          }`}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xl font-semibold">בקשות נציגים</h3>
-              {stats.pendingAgentRequests > 0 && (
-                <span className="px-3 py-1 bg-red-500 text-white text-sm font-bold rounded-full animate-pulse">
-                  {stats.pendingAgentRequests}
-                </span>
-              )}
-            </div>
-            <p className="text-gray-600 mb-4">אישור ודחיית בקשות להוספת נציגים חדשים</p>
+          <Link href="/dashboard/admin/pricing-management" className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            <h3 className="text-xl font-semibold mb-2">💰 ניהול מחירים והנחות</h3>
+            <p className="text-gray-600 mb-4">עדכון מחירי חבילות, יצירת הנחות ושליטה במערכת התמחור</p>
             <div className="text-sm text-gray-500">
-              <div>סה"כ בקשות: {stats.totalAgentRequests}</div>
-              <div>אושרו: {stats.approvedAgentRequests}</div>
-              <div>נדחו: {stats.rejectedAgentRequests}</div>
-              {stats.pendingAgentRequests > 0 && (
-                <div className="text-red-600 font-medium">🚨 ממתינות לטיפול: {stats.pendingAgentRequests}</div>
-              )}
+              <div>עריכת מחירי חבילות</div>
+              <div>יצירת והנהלת הנחות</div>
+              <div>מעקב מחירים והיסטוריה</div>
             </div>
           </Link>
 

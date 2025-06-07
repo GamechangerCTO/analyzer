@@ -22,6 +22,28 @@ export default async function LoginPage() {
         </div>
         
         <LoginForm />
+        
+        <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-gray-500">
+            <a 
+              href="/privacy-policy" 
+              className="hover:text-gray-700 underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              מדיניות פרטיות
+            </a>
+            <span className="hidden sm:inline">•</span>
+            <a 
+              href="/terms-of-service" 
+              className="hover:text-gray-700 underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              תנאי שירות
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   )
