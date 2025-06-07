@@ -596,44 +596,44 @@ export type Database = {
       }
       company_user_quotas: {
         Row: {
-          available_users: number
+          available_users: number | null
           company_id: string
-          created_at: string
+          created_at: string | null
           id: string
           total_users: number
-          updated_at: string
+          updated_at: string | null
           used_users: number
         }
         Insert: {
-          available_users?: never
+          available_users?: number | null
           company_id: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           total_users?: number
-          updated_at?: string
+          updated_at?: string | null
           used_users?: number
         }
         Update: {
-          available_users?: never
+          available_users?: number | null
           company_id?: string
-          created_at?: string
+          created_at?: string | null
           id?: string
           total_users?: number
-          updated_at?: string
+          updated_at?: string | null
           used_users?: number
         }
         Relationships: [
           {
             foreignKeyName: "company_user_quotas_company_id_fkey"
             columns: ["company_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "company_user_quotas_company_id_fkey"
             columns: ["company_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "company_questionnaire_status"
             referencedColumns: ["company_id"]
           },
@@ -941,6 +941,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_add_user_to_company: {
+        Args: { p_company_id: string }
+        Returns: boolean
+      }
       get_company_questionnaire_missing_fields: {
         Args: { p_company_id: string }
         Returns: Json
@@ -948,6 +952,14 @@ export type Database = {
       get_company_questionnaire_score: {
         Args: { p_company_id: string }
         Returns: number
+      }
+      get_company_user_quota: {
+        Args: { p_company_id: string }
+        Returns: {
+          total_users: number
+          used_users: number
+          available_users: number
+        }[]
       }
       insert_call: {
         Args:
@@ -998,18 +1010,6 @@ export type Database = {
       update_user_role: {
         Args: { user_id: string; new_role: string }
         Returns: undefined
-      }
-      can_add_user_to_company: {
-        Args: { p_company_id: string }
-        Returns: boolean
-      }
-      get_company_user_quota: {
-        Args: { p_company_id: string }
-        Returns: {
-          total_users: number
-          used_users: number
-          available_users: number
-        }[]
       }
     }
     Enums: {

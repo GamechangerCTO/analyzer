@@ -310,7 +310,8 @@ export default function LoginForm() {
             },
           },
         }}
-        providers={[]}
+        providers={['google']}
+        redirectTo={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/auth/callback`}
       />
     </div>
   )

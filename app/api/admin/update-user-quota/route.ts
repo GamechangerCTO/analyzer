@@ -17,9 +17,9 @@ export async function POST(request: NextRequest) {
     )
 
     const body = await request.json()
-    const { companyId, totalUsers, adminId } = body
+    const { quotaId, newTotal, adminId } = body
 
-    if (!companyId || !totalUsers || !adminId) {
+    if (!quotaId || !newTotal || !adminId) {
       return NextResponse.json({ error: 'חסרים נתונים נדרשים' }, { status: 400 })
     }
 
@@ -34,41 +34,57 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'אין הרשאה לביצוע פעולה זו' }, { status: 403 })
     }
 
+    // קבלת פרטי המכסה הנוכחיים
+    const { data: currentQuota, error: quotaError } = await supabaseAdmin
+      .from('company_user_quotas')
+      .select('company_id, used_users')
+      .eq('id', quotaId)
+      .single()
+
+    if (quotaError || !currentQuota) {
+      return NextResponse.json({ error: 'לא נמצאה מכסה להעדכן' }, { status: 404 })
+    }
+
+    // בדיקה שהמכסה החדשה לא קטנה ממספר המשתמשים הקיימים
+    if (newTotal < currentQuota.used_users) {
+      return NextResponse.json({ 
+        error: `לא ניתן לקבוע מכסה של ${newTotal} כאשר יש כבר ${currentQuota.used_users} משתמשים בשימוש`
+      }, { status: 400 })
+    }
+
     // עדכון מכסת המשתמשים
     const { data, error } = await supabaseAdmin
       .from('company_user_quotas')
-      .upsert({
-        company_id: companyId,
-        total_users: totalUsers,
+      .update({
+        total_users: newTotal,
         updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'company_id'
       })
-      .select()
+      .eq('id', quotaId)
+      .select('*, companies!inner(name)')
 
     if (error) {
       return NextResponse.json({ error: `שגיאה בעדכון מכסה: ${error.message}` }, { status: 400 })
     }
 
-    // קבלת פרטי החברה להודעה
-    const { data: companyData } = await supabaseAdmin
-      .from('companies')
-      .select('name')
-      .eq('id', companyId)
-      .single()
+    if (!data || data.length === 0) {
+      return NextResponse.json({ error: 'לא נמצאה מכסה להעדכן' }, { status: 404 })
+    }
+
+    const updatedQuota = data[0]
 
     // יצירת התראה למנהלי החברה
     await createCompanyNotification(supabaseAdmin, {
-      companyId,
-      companyName: companyData?.name || 'לא ידוע',
-      newQuota: totalUsers,
+      companyId: currentQuota.company_id,
+      companyName: (updatedQuota as any).companies?.name || 'לא ידוע',
+      newQuota: newTotal,
+      oldQuota: currentQuota.used_users,
       adminId
     })
 
     return NextResponse.json({ 
       success: true, 
-      message: `מכסת המשתמשים עודכנה בהצלחה ל-${totalUsers} משתמשים`,
-      data: data
+      message: `מכסת המשתמשים עודכנה בהצלחה ל-${newTotal} משתמשים`,
+      data: updatedQuota
     })
 
   } catch (error) {
@@ -83,6 +99,7 @@ async function createCompanyNotification(
     companyId: string
     companyName: string
     newQuota: number
+    oldQuota: number
     adminId: string
   }
 ) {
@@ -92,7 +109,7 @@ async function createCompanyNotification(
       .from('users')
       .select('id')
       .eq('company_id', data.companyId)
-      .eq('role', 'manager')
+      .in('role', ['manager', 'owner'])
 
     if (managers && managers.length > 0) {
       // יצירת התראה לכל מנהל בחברה
@@ -100,10 +117,12 @@ async function createCompanyNotification(
         user_id: manager.id,
         company_id: data.companyId,
         title: 'מכסת המשתמשים עודכנה',
-        message: `מנהל המערכת עדכן את מכסת המשתמשים של החברה ל-${data.newQuota} משתמשים`,
-        notification_type: 'quota_updated',
+        message: `מנהל המערכת עדכן את מכסת המשתמשים של החברה ל-${data.newQuota} משתמשים (זמינים עכשיו: ${data.newQuota - data.oldQuota})`,
+        notification_type: 'red_flag_warning', // נשתמש בסוג קיים
+        priority: 'normal',
         metadata: {
           newQuota: data.newQuota,
+          oldQuota: data.oldQuota,
           updatedBy: data.adminId,
           companyName: data.companyName
         }

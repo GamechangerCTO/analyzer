@@ -26,12 +26,10 @@ ON company_user_quotas(company_id);
 CREATE OR REPLACE FUNCTION update_company_user_count()
 RETURNS TRIGGER AS $$
 DECLARE
-  company_quota_id UUID;
+  company_to_update UUID;
   current_user_count INTEGER;
 BEGIN
   -- קבלת מזהה החברה (יכול להיות מ-NEW או OLD בהתאם לפעולה)
-  DECLARE company_to_update UUID;
-  
   IF TG_OP = 'DELETE' THEN
     company_to_update := OLD.company_id;
   ELSE
