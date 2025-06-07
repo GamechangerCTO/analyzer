@@ -173,15 +173,7 @@ export default function CompanyQuestionnaireForm({ companyId, companyData, isAdm
       // בדיקת תועלות לקוח (חובה למלא לפחות אחד)
       const validCustomerBenefits = formData.customer_benefits.filter(b => b.trim())
       if (validCustomerBenefits.length === 0) {
-        setError('יש למלא לפחות תועלת אחת עבור הלקוח.')
-        setSaving(false)
-        return
-      }
-
-      // בדיקת תועלות חברה (חובה למלא לפחות אחד)
-      const validCompanyBenefits = formData.company_benefits.filter(b => b.trim())
-      if (validCompanyBenefits.length === 0) {
-        setError('יש למלא לפחות תועלת אחת עבור החברה.')
+        setError('יש למלא את תועלות הלקוח.')
         setSaving(false)
         return
       }
@@ -189,7 +181,6 @@ export default function CompanyQuestionnaireForm({ companyId, companyData, isAdm
       console.log('✅ Validation passed. Valid data:', {
         validDifferentiators,
         validCustomerBenefits,
-        validCompanyBenefits,
         formData: {
           name: formData.name,
           sector: formData.sector,
@@ -230,7 +221,7 @@ export default function CompanyQuestionnaireForm({ companyId, companyData, isAdm
         audience: formData.audience,
         differentiators: validDifferentiators,
         customer_benefits: validCustomerBenefits,
-        company_benefits: validCompanyBenefits,
+        company_benefits: [],
         uploads_professional_materials: formData.uploads_professional_materials,
         professional_materials_files: uploadedFiles
       })
@@ -248,7 +239,7 @@ export default function CompanyQuestionnaireForm({ companyId, companyData, isAdm
           audience: formData.audience,
           differentiators: validDifferentiators,
           customer_benefits: validCustomerBenefits,
-          company_benefits: validCompanyBenefits,
+          company_benefits: [],
           uploads_professional_materials: formData.uploads_professional_materials,
           professional_materials_files: uploadedFiles,
           updated_at: new Date().toISOString()
@@ -437,77 +428,37 @@ export default function CompanyQuestionnaireForm({ companyId, companyData, isAdm
           </select>
         </div>
 
-        {/* 3 בידולים ויתרונות משמעותיים */}
+        {/* בידול ויתרון משמעותי */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            3 בידולים ויתרונות משמעותיים על פני מתחרים - במשפט אחד <span className="text-red-500">*</span>
+            מה הבידול, היתרון המשמעותי שלכם על פני מתחרים <span className="text-red-500">*</span>
           </label>
-          {[0, 1, 2].map(index => (
-            <div key={index} className="mb-2">
-              <input
-                type="text"
-                value={formData.differentiators[index]}
-                onChange={(e) => handleArrayChange(index, 'differentiators', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder={`בידול ${index + 1}...`}
-                required={index === 0} // רק הראשון חובה
-              />
-            </div>
-          ))}
+          <input
+            type="text"
+            value={formData.differentiators[0]}
+            onChange={(e) => handleArrayChange(0, 'differentiators', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            placeholder="תאר במשפט אחד את הבידול הייחודי שלכם..."
+            required
+          />
         </div>
 
         {/* תועלות המוצר/השירות ייחודיות */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            תועלות המוצר/השירות ייחודיות - עד 3 תועלות עבור הלקוח <span className="text-red-500">*</span>
+            מהם 3 התועלות שהלקוח מקבל משימוש במוצר/שירות שלכם <span className="text-red-500">*</span>
           </label>
-          {[0, 1, 2].map(index => (
-            <div key={index} className="mb-2">
-              <input
-                type="text"
-                value={formData.customer_benefits[index]}
-                onChange={(e) => handleArrayChange(index, 'customer_benefits', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder={`תועלת לקוח ${index + 1}...`}
-                required={index === 0} // רק הראשון חובה
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* תועלות החברה ייחודיות */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            תועלות החברה ייחודיות - עד 3 תועלות <span className="text-red-500">*</span>
-          </label>
-          {[0, 1, 2].map(index => (
-            <div key={index} className="mb-2">
-              <input
-                type="text"
-                value={formData.company_benefits[index]}
-                onChange={(e) => handleArrayChange(index, 'company_benefits', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder={`תועלת חברה ${index + 1}...`}
-                required={index === 0} // רק הראשון חובה
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* מעוניין לטעון חומרים מקצועיים */}
-        <div className="flex items-center">
-          <input 
-            type="checkbox" 
-            name="uploads_professional_materials" 
-            id="uploads_professional_materials" 
-            checked={formData.uploads_professional_materials} 
-            onChange={handleChange} 
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ml-2"
+          <input
+            type="text"
+            value={formData.customer_benefits[0]}
+            onChange={(e) => handleArrayChange(0, 'customer_benefits', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            placeholder="תאר את התועלות שהלקוח מקבל..."
+            required
           />
-          <label htmlFor="uploads_professional_materials" className="block text-sm text-gray-900">
-            מעוניין לטעון חומרים מקצועיים שלכם נוספים שעשויים להיות רלוונטי לטובת תהליך לשיפור ביצועים?
-          </label>
         </div>
+
+
 
         {/* שדה טעינת קבצים */}
         <div>
@@ -515,7 +466,9 @@ export default function CompanyQuestionnaireForm({ companyId, companyData, isAdm
             חומרים מקצועיים שלכם (לא חובה)
           </label>
           <p className="text-sm text-gray-600 mb-2">
-            יש לטעון כל חומר מקצועי שיכול לתת לנו יותר מידע על החברה, המוצר, השירות, האתגרים, אוגדן מכירות/שירות ו/או כל חומר שעשוי להיות רלוונטי לטובת התהליך לשיפור ביצועים
+            יש לטעון כל חומר מקצועי שיכול לתת לנו יותר מידע על החברה, המוצר, השירות להלן פירוט חומרים: 
+            אוגדן מכירות/שירות – כולל תסריטי שיחה, בנק התנגדויות, בנק שאלות בירור צורך, יתרונות וייחודיות של המוצר/שירות מול מתחרים, 
+            ו/או כל חומר שעשוי להיות רלוונטי לטובת התהליך לשיפור ביצועים בתחום המכירות והשירות
           </p>
           <input
             type="file"

@@ -123,7 +123,7 @@ export default async function UploadPage() {
                       <div className="mr-4">
                         <h3 className="text-lg font-semibold text-emerald-800 mb-2">הוראות העלאה</h3>
                         <ul className="text-emerald-700 space-y-1 text-sm leading-relaxed">
-                          <li>• בחר קובץ אודיו באיכות טובה (MP3, WAV, M4A)</li>
+                          <li>• בחר קובץ אודיו באיכות טובה (MP3, WAV, M4A, WMA וכו')</li>
                           <li>• ודא שהשיחה ברורה וללא רעש רקע מוגזם</li>
                           <li>• בחר את סוג השיחה המתאים לניתוח מדויק</li>
                           <li>• הוסף פרטים נוספים לשיפור הניתוח</li>

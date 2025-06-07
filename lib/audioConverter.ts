@@ -26,8 +26,8 @@ export async function convertAudioToMp3(audioFile: File): Promise<File> {
     return audioFile;
   }
   
-  // רק להמיר m4a, mp4, ופורמטים נתמכים אחרים
-  const supportedFormats = ['m4a', 'mp4', 'aac', 'webm', 'ogg'];
+  // רק להמיר פורמטים נתמכים כולל WMA
+  const supportedFormats = ['m4a', 'mp4', 'aac', 'webm', 'ogg', 'wma'];
   if (!supportedFormats.includes(fileExtension || '')) {
     throw new Error(`פורמט לא נתמך להמרה: ${fileExtension}`);
   }
@@ -76,5 +76,5 @@ export function needsConversion(fileName: string): boolean {
 }
 
 export function getSupportedFormats(): string[] {
-  return ['mp3', 'wav', 'm4a', 'mp4', 'aac', 'webm', 'ogg'];
+  return ['mp3', 'wav', 'm4a', 'mp4', 'aac', 'webm', 'ogg', 'wma'];
 } 

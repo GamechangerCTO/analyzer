@@ -47,7 +47,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   const [errorMessage, setErrorMessage] = useState<string | null>(call.error_message || null)
   const [isPolling, setIsPolling] = useState(false)
   const [callLogs, setCallLogs] = useState<Array<{timestamp: string; message: string; data?: any}>>([])
-  const [currentPlayingQuote, setCurrentPlayingQuote] = useState<string | null>(null)
+  const [currentPlayingQuote, setCurrentPlayingQuote] = useState<string>('')
   
   const audioRef = useRef<HTMLAudioElement>(null)
   
@@ -80,7 +80,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     if (audioRef.current) {
       audioRef.current.pause()
       setIsPlaying(false)
-      setCurrentPlayingQuote(null)
+      setCurrentPlayingQuote('')
     }
   }
   
@@ -187,12 +187,12 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     
     const handlePause = () => {
       setIsPlaying(false)
-      setCurrentPlayingQuote(null)
+      setCurrentPlayingQuote('')
     }
     
     const handleEnded = () => {
       setIsPlaying(false)
-      setCurrentPlayingQuote(null)
+      setCurrentPlayingQuote('')
     }
     
     const handlePlay = () => {
@@ -214,7 +214,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   
   // ניקוי הציטוט הנוכחי כשמשנים טאב
   useEffect(() => {
-    setCurrentPlayingQuote(null)
+    setCurrentPlayingQuote('')
   }, [activeTab])
   
   // פולינג לבדיקת סטטוס העיבוד
@@ -337,122 +337,200 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     )
   }
   
-  // רנדור במקרה של שגיאה
-  if (status === 'error') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 p-6">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <div className="mb-6">
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
-                <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <CallStatusBadge status={status} />
-            </div>
-            <h2 className="text-xl font-semibold mb-3 text-red-600">
-              אירעה שגיאה בעיבוד השיחה
-            </h2>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-700 text-sm">
-                {errorMessage || 'לא ניתן היה להשלים את ניתוח השיחה. אנא נסה שוב מאוחר יותר.'}
-              </p>
-            </div>
-            <button 
-              onClick={() => window.location.href = '/upload'}
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-            >
-              העלה שיחה חדשה
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-  
   // רנדור לשיחה שהושלמה
   const analysisReport = call.analysis_report || {};
+  const tone_analysis_report = call.tone_analysis_report || {};
+  const analysis_report = analysisReport; // נוסיף alias לתאימות
   
   // פונקציה להתמודדות עם שמות שדות בפורמטים שונים
   const getFieldValue = (report: any, fieldNames: string[]) => {
-    for (const name of fieldNames) {
-      if (report[name] !== undefined) {
-        return report[name];
+    if (!report) return null;
+    
+    for (const fieldName of fieldNames) {
+      if (fieldName.includes('.')) {
+        const parts = fieldName.split('.');
+        let value: any = report;
+        for (const part of parts) {
+          value = value?.[part];
+          if (!value) break;
+        }
+        if (value) return value;
+      } else if (report[fieldName] !== undefined && report[fieldName] !== null) {
+        return report[fieldName];
       }
     }
-    return undefined;
+    return null;
+  };
+  
+  // פונקציה לחילוץ הניתוח המפורט החדש
+  const getDetailedScores = () => {
+    const categories = [
+      {
+        category: 'פתיחת שיחה ובניית אמון',
+        key: 'פתיחת_שיחה_ובניית_אמון',
+        subcategories: [
+          { name: 'פתיח אנרגטי', key: 'פתיח_אנרגטי' },
+          { name: 'הצגת נציג וחברה', key: 'הצגת_נציג_וחברה' },
+          { name: 'בניית כימיה', key: 'בניית_כימיה' },
+          { name: 'הצגת תועלת מהירה', key: 'הצגת_תועלת_מהירה' },
+          { name: 'בניית אמון', key: 'בניית_אמון' },
+          { name: 'שימוש בשם פרטי', key: 'שימוש_בשם_פרטי' },
+          { name: 'שאלת סיבת הפנייה', key: 'שאלת_סיבת_הפנייה' }
+        ]
+      },
+      {
+        category: 'איתור צרכים וזיהוי כאב',
+        key: 'איתור_צרכים_וזיהוי_כאב',
+        subcategories: [
+          { name: 'שאילת שאלות', key: 'שאילת_שאלות' },
+          { name: 'איתור כאב/צורך', key: 'איתור_כאב_צורך' },
+          { name: 'זיהוי סגנון תקשורת', key: 'זיהוי_סגנון_תקשורת' },
+          { name: 'זיהוי איתותי קנייה', key: 'זיהוי_איתותי_קנייה' }
+        ]
+      },
+      {
+        category: 'הקשבה ואינטראקציה',
+        key: 'הקשבה_ואינטראקציה',
+        subcategories: [
+          { name: 'הקשבה פעילה', key: 'הקשבה_פעילה' },
+          { name: 'דיבור מאוזן', key: 'דיבור_מאוזן' },
+          { name: 'זרימה וסדר', key: 'זרימה_וסדר' },
+          { name: 'הצפת יתר', key: 'הצפת_יתר' }
+        ]
+      },
+      {
+        category: 'הצגת פתרון והדגשת ערך',
+        key: 'הצגת_פתרון_והדגשת_ערך',
+        subcategories: [
+          { name: 'פתרון מותאם', key: 'פתרון_מותאם' },
+          { name: 'תועלות וערכים', key: 'תועלות_וערכים' },
+          { name: 'תועלות רגשיות', key: 'תועלות_רגשיות' },
+          { name: 'עדויות/הוכחות', key: 'עדויות_הוכחות' },
+          { name: 'יתרון על המחיר', key: 'יתרון_על_המחיר' },
+          { name: 'מומחיות מקצועית', key: 'מומחיות_מקצועית' }
+        ]
+      },
+      {
+        category: 'טיפול בהתנגדויות',
+        key: 'טיפול_בהתנגדויות',
+        subcategories: [
+          { name: 'זיהוי אמת/תירוץ', key: 'זיהוי_אמת_תירוץ' },
+          { name: 'צריך לחשוב', key: 'צריך_לחשוב' },
+          { name: 'יקר לי', key: 'יקר_לי' }
+        ]
+      },
+      {
+        category: 'הנעה לפעולה וסגירה',
+        key: 'הנעה_לפעולה_וסגירה',
+        subcategories: [
+          { name: 'הנעה לפעולה', key: 'הנעה_לפעולה' },
+          { name: 'סיכום ברור', key: 'סיכום_ברור' },
+          { name: 'סירוב מכבד', key: 'סירוב_מכבד' }
+        ]
+      },
+      {
+        category: 'שפת תקשורת ודינמיקה קולית',
+        key: 'שפת_תקשורת_ודינמיקה_קולית',
+        subcategories: [
+          { name: 'אינטונציה', key: 'אינטונציה' },
+          { name: 'התלהבות/אנרגיה', key: 'התלהבות_אנרגיה' },
+          { name: 'שפה חיובית ונחרצת', key: 'שפה_חיובית_ונחרצת' }
+        ]
+      },
+      {
+        category: 'סיכום שיחה',
+        key: 'סיכום_שיחה',
+        subcategories: [
+          { name: 'סיכום שיחה ברור', key: 'סיכום_שיחה_ברור' },
+          { name: 'צידה לדרך', key: 'צידה_לדרך' }
+        ]
+      }
+    ];
+
+    return categories.map(category => {
+      const categoryData = analysis_report[category.key] || {};
+      const subcategories = category.subcategories.map(sub => {
+        const subData = categoryData[sub.key] || {};
+        return {
+          name: sub.name,
+          score: subData.ציון || subData.score || 0,
+          insights: subData.תובנות || subData.insights || 'לא זמין',
+          improvements: subData.איך_משפרים || subData.improvements || 'לא זמין'
+        };
+      });
+
+      // חישוב ממוצע הקטגוריה
+      const avgScore = subcategories.length > 0 
+        ? subcategories.reduce((sum, sub) => sum + sub.score, 0) / subcategories.length 
+        : 0;
+
+      return {
+        category: category.category,
+        score: Math.round(avgScore * 10) / 10,
+        subcategories
+      };
+    });
   };
 
-  // חילוץ שדות מהדוח - תמיכה במבנה החדש והישן
-  const detailed_analysis = analysisReport.detailed_analysis || {};
+  // פונקציה לקבלת צבע רקע לפי ציון
+  const getScoreBg = (score: number) => {
+    if (score >= 8) return 'bg-green-100 text-green-800';
+    if (score >= 6) return 'bg-yellow-100 text-yellow-800';
+    if (score >= 4) return 'bg-orange-100 text-orange-800';
+    return 'bg-red-100 text-red-800';
+  };
+
+  // פונקציה לקביעת צבע הציון
+  const getScoreColor = (score: number) => {
+    if (score >= 8) return 'text-green-600';
+    if (score >= 6) return 'text-yellow-600';
+    if (score >= 4) return 'text-orange-600';
+    return 'text-red-600';
+  };
   
+  const detailed_analysis = analysisReport.detailed_analysis || {};
   const overall_score_from_report = getFieldValue(analysisReport, ['ציון כללי', 'ציון_כללי', 'overall_score', 'score_overall']) || 
                                    (detailed_analysis.overall_score || detailed_analysis.ציון_כללי);
   const red_flag_from_report = getFieldValue(analysisReport, ['red_flag', 'דגל_אדום']);
-  const tone_analysis_report = call.tone_analysis_report || getFieldValue(analysisReport, ['tone_analysis_report']) || {};
   const red_flags = getFieldValue(analysisReport, ['דגלים אדומים', 'דגלים_אדומים', 'red_flags']) || [];
-  const improvement_points = getFieldValue(analysisReport, ['נקודות לשיפור', 'נקודות_לשיפור', 'improvement_points', 'המלצות_שיפור', 'המלצות_פרקטיות']) || 
-                           getFieldValue(analysisReport, ['סיכום והמלצות', 'נקודות לשיפור']) ||
-                           (detailed_analysis.improvement_roadmap ? [detailed_analysis.improvement_roadmap] : []);
-  const strengths_and_preservation_points = getFieldValue(analysisReport, ['נקודות חוזק לשימור', 'נקודות_חוזק', 'strengths_and_preservation_points', 'strengths', 'חוזקות']) || 
-                                            getFieldValue(analysisReport, ['סיכום והמלצות', 'חוזקות']) || [];
-  // מחלץ את הציונים מהמבנה הישן והחדש
-  const getDetailedScores = () => {
-    // ניסיון למבנה הישן
-    const oldFormatScores = getFieldValue(analysisReport, ['ציונים מפורטים', 'ציונים_לפי_קטגוריות', 'פרמטרים', 'פירוט_ציונים', 'detailed_scores', 'category_scores']) || {};
-    
-    // אם יש ציונים במבנה הישן, השתמש בהם
-    if (Object.keys(oldFormatScores).length > 0) {
-      return oldFormatScores;
-    }
-    
-    // ניסיון למבנה החדש - ניתוח פרטני לפי פרמטרים
-    const newFormatData = getFieldValue(analysisReport, ['ניתוח פרטני לפי פרמטרים']) || {};
-    const newFormatScores: any = {};
-    
-    // מעבר על כל הקטגוריות ביותר מהמבנה החדש
-    Object.entries(newFormatData).forEach(([mainCategory, mainCategoryData]: [string, any]) => {
-      if (typeof mainCategoryData === 'object' && mainCategoryData !== null) {
-        Object.entries(mainCategoryData).forEach(([subCategory, subCategoryData]: [string, any]) => {
-          if (typeof subCategoryData === 'object' && subCategoryData !== null && subCategoryData.דירוג) {
-            const categoryName = `${mainCategory} - ${subCategory}`;
-            newFormatScores[categoryName] = {
-              ציון: subCategoryData.דירוג,
-              הערה: subCategoryData['איך היה צריך לנסח'] || '',
-              ציטוט: subCategoryData.ציטוט || null
-            };
-          }
-        });
-      }
-    });
-    
-    return newFormatScores;
-  };
+  const improvement_points = getFieldValue(analysisReport, ['נקודות לשיפור', 'נקודות_לשיפור', 'improvement_points', 'המלצות_שיפור', 'המלצות_פרקטיות', 'המלצות_דחופות_ביותר']) || [];
+  const strengths_and_preservation_points = getFieldValue(analysisReport, ['נקודות חוזק לשימור', 'נקודות_חוזק', 'strengths_and_preservation_points', 'strengths', 'חוזקות', 'נקודות_חוזקה']) || [];
   
+  // משתנים נוספים שהקומפוננטה מחפשת
+  const all_quotes = getFieldValue(analysisReport, ['ציטוטים_רלוונטיים', 'ציטוטים', 'quotes', 'all_quotes']) || [];
+  const segment_quotes = all_quotes; // alias
+  const practical_recommendations = getFieldValue(analysisReport, ['המלצות_פרקטיות', 'practical_recommendations']) || [];
   const detailed_scores = getDetailedScores();
-  const practical_recommendations = getFieldValue(analysisReport, ['המלצות פרקטיות לשיפור', 'המלצות_פרקטיות_לשיפור', 'המלצות_פרקטיות', 'המלצות_מעשיות', 'practical_recommendations', 'המלצות']) || 
-                                   getFieldValue(analysisReport, ['סיכום והמלצות', 'המלצות']) || [];
-  const segment_quotes = getFieldValue(analysisReport, ['ציטוטים_רלוונטיים', 'ציטוטים', 'קטעים_רלוונטיים', 'ציטוטים_או_קטעים_רלוונטיים', 'key_segments', 'segment_quotes', 'ציטוטים מרכזיים']) || [];
-  
-  // אם יש key_moments במבנה החדש, השתמש בהם גם לציטוטים, או הציטוטים המרכזיים
-  const all_quotes = segment_quotes.length > 0 ? segment_quotes : (detailed_analysis.key_moments || []);
-  
   const finalOverallScore = overall_score_from_report || call.overall_score || 0;
-  const finalRedFlag = typeof red_flag_from_report === 'boolean' ? red_flag_from_report : call.red_flag;
+  const finalRedFlag = red_flag_from_report || call.red_flag || false;
   
-  // פונקציה לקביעת צבע הציון
-  const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-green-600'
-    if (score >= 7) return 'text-orange-600'
-    return 'text-red-600'
-  }
-  
-  const getScoreBg = (score: number) => {
-    if (score >= 8) return 'bg-green-50 border-green-200'
-    if (score >= 7) return 'bg-orange-50 border-orange-200'
-    return 'bg-red-50 border-red-200'
-  }
+  // הצגת ניתוח מפורט בסגנון טבלאי
+  const renderDetailedParameter = (param: any, name: string) => {
+    if (!param || typeof param !== 'object') return null;
+    
+    const score = param.ציון;
+    const insights = param.תובנות || '';
+    const improvements = param.איך_משפרים || '';
+    
+    return (
+      <tr key={name} className="hover:bg-gray-50">
+        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+          {name.replace(/_/g, ' ')}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-center">
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${getScoreBg(score)}`}>
+            {score}/10
+          </span>
+        </td>
+        <td className="px-6 py-4 text-sm text-gray-700">
+          {insights}
+        </td>
+        <td className="px-6 py-4 text-sm text-gray-700">
+          {improvements}
+        </td>
+      </tr>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -467,7 +545,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 </span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{call.call_type}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">ניתוח שיחה מקצועי - {call.call_type}</h1>
                 <div className="flex items-center space-x-4 rtl:space-x-reverse text-sm text-gray-600">
                   <span>📅 {new Date(call.created_at).toLocaleDateString('he-IL')}</span>
                   <span>👤 {call.users?.full_name || call.users?.email}</span>
@@ -481,6 +559,19 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   🚨 דגל אדום
                 </div>
               )}
+              {/* כפתור שאלון חברה למנהלים */}
+              {userRole === 'manager' && (
+                <a
+                  href="/company-questionnaire"
+                  className="flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors shadow-md"
+                  title="עריכת שאלון החברה"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  שאלון חברה
+                </a>
+              )}
               <CallStatusBadge status={status} />
             </div>
           </div>
@@ -491,7 +582,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         {/* Navigation Tabs */}
         <div className="mb-8">
           <nav className="flex space-x-8 rtl:space-x-reverse">
-            {['summary', 'tone', 'content', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
+            {['summary', 'tone', 'content', 'quotes', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -504,6 +595,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 {tab === 'summary' ? '📊 סיכום כללי' :
                  tab === 'tone' ? '🎭 ניתוח טונציה' :
                  tab === 'content' ? '📝 ניתוח מפורט' :
+                 tab === 'quotes' ? '💬 ציטוטים' :
                  '📄 תמליל'}
               </button>
             ))}
@@ -787,12 +879,12 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               </div>
             )}
 
-            {/* פרמטרים מיוחדים לניתוח */}
+            {/* הערות/דגשים מיוחדים לניתוח */}
             {call.analysis_notes && (
               <div className="bg-orange-50 border border-orange-200 rounded-xl shadow-lg p-6">
                 <h3 className="text-lg font-semibold mb-4 text-orange-800 flex items-center">
                   <span className="mr-2">📋</span>
-                  פרמטרים מיוחדים שהתבקשו לניתוח
+                  הערות/דגשים מיוחדים שהתבקשו לניתוח
                 </h3>
                 <div className="bg-white p-4 rounded-lg border border-orange-100">
                   <p className="text-gray-700 leading-relaxed">{call.analysis_notes}</p>
@@ -903,324 +995,130 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
         {activeTab === 'content' && call.analysis_type === 'full' && (
           <div className="space-y-6">
-            {/* הערה על אילוץ הציטוטים */}
+            {/* הערה על הניתוח המקצועי */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center">
                 <span className="text-blue-500 text-lg mr-2">💡</span>
                 <p className="text-blue-800 text-sm">
-                  <strong>ניתוח מפורט:</strong> כל פרמטר מציג את הציון, הערות והציטוטים הרלוונטיים יחד במקום נפרד
+                  <strong>ניתוח מקצועי מפורט:</strong> 32 פרמטרים מקצועיים בסגנון טבלאי עם ציונים, תובנות והמלצות לשיפור
                 </p>
               </div>
             </div>
 
-            {/* ניתוח מפורט חדש */}
-            {detailed_analysis && Object.keys(detailed_analysis).length > 0 && (
-              <div className="space-y-6">
-                {/* סקירה כרונולוגית */}
-                {detailed_analysis.chronological_review && (
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                      <span className="mr-2">📅</span>
-                      סקירה כרונולוגית של השיחה
-                    </h3>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-gray-700 leading-relaxed">{detailed_analysis.chronological_review}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* רגעי מפתח */}
-                {detailed_analysis.key_moments && detailed_analysis.key_moments.length > 0 && (
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                      <span className="mr-2">🔑</span>
-                      רגעי מפתח בשיחה ({detailed_analysis.key_moments.length})
-                    </h3>
-                    <div className="space-y-4">
-                      {detailed_analysis.key_moments.map((moment: any, index: number) => (
-                        <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                                                    <div className="flex justify-between items-start mb-3">
-                            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                              {moment.timestamp || `רגע ${index + 1}`}
-                            </span>
-                            {audioUrl && moment.quote && (
-                              <div className="flex items-center space-x-2">
-                                {isQuotePlaying(moment.quote) ? (
-                                  <button
-                                    onClick={stopQuote}
-                                    className="bg-red-500 text-white px-3 py-1 rounded-lg hover:bg-red-600 transition-colors text-xs"
-                                    title="עצור השמעה"
-                                  >
-                                    ⏹️ עצור
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      // המרת timestamp מפורמט mm:ss לשניות
-                                      const timestamp = moment.timestamp;
-                                      let seconds = 0;
-                                      if (timestamp && timestamp.includes(':')) {
-                                        const parts = timestamp.split('-')[0].split(':'); // לוקחים את החלק הראשון של הטווח
-                                        if (parts.length === 2) {
-                                          seconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-                                        }
-                                      }
-                                      playQuote(seconds, moment.quote);
-                                    }}
-                                    className="bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600 transition-colors text-xs"
-                                    title="נגן ציטוט"
-                                  >
-                                    🔊 נגן
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="bg-blue-50 p-3 rounded border-r-4 border-blue-400">
-                              <p className="text-sm font-medium text-blue-800 mb-1">הציטוט:</p>
-                              <p className="text-blue-700 italic">"{moment.quote}"</p>
-                            </div>
-                            
-                            <div className="bg-orange-50 p-3 rounded border-r-4 border-orange-400">
-                              <p className="text-sm font-medium text-orange-800 mb-1">השפעה על הלקוח:</p>
-                              <p className="text-orange-700">{moment.impact}</p>
-                            </div>
-                            
-                            <div className="bg-purple-50 p-3 rounded border-r-4 border-purple-400">
-                              <p className="text-sm font-medium text-purple-800 mb-1">ניתוח:</p>
-                              <p className="text-purple-700">{moment.analysis}</p>
-                            </div>
-                            
-                            {moment.alternative && (
-                              <div className="bg-green-50 p-3 rounded border-r-4 border-green-400">
-                                <p className="text-sm font-medium text-green-800 mb-1">איך צריך היה לנסח:</p>
-                                <p className="text-green-700 font-medium">"{moment.alternative}"</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* ניתוח פסיכולוגי */}
-                {detailed_analysis.psychological_analysis && (
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                      <span className="mr-2">🧠</span>
-                      ניתוח פסיכולוגי
-                    </h3>
-                    <div className="bg-purple-50 p-4 rounded-lg">
-                      <p className="text-gray-700 leading-relaxed">{detailed_analysis.psychological_analysis}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* הזדמנויות שפוספסו */}
-                {detailed_analysis.missed_opportunities && detailed_analysis.missed_opportunities.length > 0 && (
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-red-700 flex items-center">
-                      <span className="mr-2">⚠️</span>
-                      הזדמנויות שפוספסו ({detailed_analysis.missed_opportunities.length})
-                    </h3>
-                    <div className="space-y-4">
-                      {detailed_analysis.missed_opportunities.map((opportunity: any, index: number) => (
-                        <div key={index} className="border border-red-200 rounded-lg p-4 bg-red-50">
-                          <div className="flex justify-between items-start mb-3">
-                            <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                              {opportunity.timestamp || `הזדמנות ${index + 1}`}
-                            </span>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div>
-                              <p className="text-sm font-medium text-red-800 mb-1">מה קרה:</p>
-                              <p className="text-red-700">{opportunity.description}</p>
-                            </div>
-                            
-                            <div className="bg-green-50 p-3 rounded border border-green-200">
-                              <p className="text-sm font-medium text-green-800 mb-1">איך צריך היה לטפל:</p>
-                              <p className="text-green-700 font-medium">{opportunity.proper_handling}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* דפוסי תקשורת */}
-                {detailed_analysis.communication_patterns && (
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                      <span className="mr-2">💬</span>
-                      דפוסי תקשורת
-                    </h3>
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <p className="text-gray-700 leading-relaxed">{detailed_analysis.communication_patterns}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* ניתוח קולי */}
-                {detailed_analysis.vocal_analysis && (
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                      <span className="mr-2">🎤</span>
-                      ניתוח שפת גוף קולית
-                    </h3>
-                    <div className="bg-yellow-50 p-4 rounded-lg">
-                      <p className="text-gray-700 leading-relaxed">{detailed_analysis.vocal_analysis}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* מפת דרכים לשיפור */}
-                {detailed_analysis.improvement_roadmap && (
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-green-700 flex items-center">
-                      <span className="mr-2">🗺️</span>
-                      מפת דרכים לשיפור
-                    </h3>
-                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                      <p className="text-gray-700 leading-relaxed font-medium">{detailed_analysis.improvement_roadmap}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ציטוטים רלוונטיים - סקירה כללית */}
-            {all_quotes && all_quotes.length > 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                  <span className="mr-2">🎬</span>
-                  כל הציטוטים הרלוונטיים ({all_quotes.length})
+            {/* נקודות כשל מרכזיות */}
+            {analysis_report.נקודות_כשל_מרכזיות && analysis_report.נקודות_כשל_מרכזיות.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-xl shadow-lg p-6">
+                <h3 className="text-xl font-semibold mb-4 text-red-700 flex items-center">
+                  <span className="mr-2">🚨</span>
+                  נקודות כשל מרכזיות
                 </h3>
-                <div className="space-y-4">
-                  {all_quotes.map((quote: any, idx: number) => {
-                    const quoteText = quote.text || quote.quote || quote.ציטוט || quote.content || '';
-                    const comment = quote.comment || quote.הערה || quote.impact || quote.analysis || '';
-                    const category = quote.category || quote.קטגוריה || 'כללי';
-                    
-                    // חיפוש timestamp - קודם מהדוח, אחר כך מהפונקציה החכמה
-                    let timestampSeconds = quote.timestamp_seconds;
-                    
-                    // טיפול בפורמט החדש של timestamp מ-detailed_analysis
-                    if (!timestampSeconds && quote.timestamp) {
-                      const timestamp = quote.timestamp;
-                      if (timestamp && timestamp.includes(':')) {
-                        const parts = timestamp.split('-')[0].split(':'); // לוקחים את החלק הראשון של הטווח
-                        if (parts.length === 2) {
-                          timestampSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-                        }
-                      }
-                    }
-                    
-                    if (!timestampSeconds && quoteText) {
-                      timestampSeconds = findTimestampForQuote(quoteText);
-                    }
-                    
-                    const isCurrentlyPlaying = isQuotePlaying(quoteText);
-                    
-                    return (
-                      <div 
-                        key={idx} 
-                        className={`transition-all duration-300 border rounded-lg p-4 ${
-                          isCurrentlyPlaying 
-                            ? 'bg-gradient-to-r from-blue-100 to-blue-50 border-blue-400 shadow-lg ring-2 ring-blue-300' 
-                            : 'bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center mb-2">
-                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium mr-2">
-                                {category}
-                              </span>
-                              {isCurrentlyPlaying && (
-                                <div className="flex items-center text-blue-600 animate-pulse">
-                                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.817L4.906 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.906l3.477-2.817z" clipRule="evenodd"/>
-                                  </svg>
-                                  <span className="text-sm font-medium">מנגן כעת</span>
-                                </div>
-                              )}
-                            </div>
-                            
-                            <p className={`italic mb-2 text-lg transition-colors ${
-                              isCurrentlyPlaying ? 'text-blue-800 font-medium' : 'text-gray-700'
-                            }`}>
-                              "{quoteText}"
-                            </p>
-                            
-                            {comment && (
-                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
-                                <p className="text-sm text-blue-800">
-                                  💭 <strong>הערה:</strong> {comment}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center space-x-2 rtl:space-x-reverse mr-4">
-                            {timestampSeconds !== undefined && timestampSeconds !== null && audioUrl && (
-                              <>
-                                {isCurrentlyPlaying ? (
-                                  <button 
-                                    onClick={stopQuote}
-                                    className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium shadow-md"
-                                    title="עצור השמעה"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
-                                    </svg>
-                                    עצור
-                                  </button>
-                                ) : (
-                                  <button 
-                                    onClick={() => playQuote(timestampSeconds, quoteText)}
-                                    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-md"
-                                    title="השמע את הציטוט באודיו"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                    </svg>
-                                    השמע ב-{formatTime(timestampSeconds)}
-                                  </button>
-                                )}
-                                
-                                {/* אינדיקטור דיוק הזיהוי */}
-                                <div className="flex items-center text-xs">
-                                  {quote.timestamp_seconds ? (
-                                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium" title="זמן מדויק מהדוח">
-                                      🎯 מדויק
-                                    </span>
-                                  ) : (
-                                    <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium" title="זמן משוערך בטכנולוגיה חכמה">
-                                      🔍 חכם
-                                    </span>
-                                  )}
-                                </div>
-                              </>
-                            )}
-                            
-                            {(!timestampSeconds || !audioUrl) && (
-                              <div className="flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                <span>⏱️ ללא זמן</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <ul className="space-y-2">
+                  {analysis_report.נקודות_כשל_מרכזיות.map((item: string, index: number) => (
+                    <li key={index} className="flex items-start">
+                      <span className="text-red-500 mr-2">•</span>
+                      <span className="text-red-700">{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
+
+            {/* נקודות חוזק */}
+            {analysis_report.נקודות_חוזקה && analysis_report.נקודות_חוזקה.length > 0 && (
+              <div className="bg-green-50 border border-green-200 rounded-xl shadow-lg p-6">
+                <h3 className="text-xl font-semibold mb-4 text-green-700 flex items-center">
+                  <span className="mr-2">✅</span>
+                  נקודות חוזק
+                </h3>
+                <ul className="space-y-2">
+                  {analysis_report.נקודות_חוזקה.map((item: string, index: number) => (
+                    <li key={index} className="flex items-start">
+                      <span className="text-green-500 mr-2">•</span>
+                      <span className="text-green-700">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* המלצות דחופות ביותר */}
+            {analysis_report.המלצות_דחופות_ביותר && analysis_report.המלצות_דחופות_ביותר.length > 0 && (
+              <div className="bg-orange-50 border border-orange-200 rounded-xl shadow-lg p-6">
+                <h3 className="text-xl font-semibold mb-4 text-orange-700 flex items-center">
+                  <span className="mr-2">🎯</span>
+                  המלצות דחופות ביותר
+                </h3>
+                <ul className="space-y-2">
+                  {analysis_report.המלצות_דחופות_ביותר.map((item: string, index: number) => (
+                    <li key={index} className="flex items-start">
+                      <span className="text-orange-500 mr-2">•</span>
+                      <span className="text-orange-700">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* ניתוח מפורט בטבלאות */}
+            {getDetailedScores().map((categoryData, categoryIndex) => {
+              if (!categoryData.subcategories || categoryData.subcategories.length === 0) return null;
+              
+              return (
+                <div key={categoryIndex} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+                    <h3 className="text-xl font-semibold text-white flex items-center justify-between">
+                      <span>{categoryData.category}</span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreBg(categoryData.score)}`}>
+                        {categoryData.score}/10
+                      </span>
+                    </h3>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            פרמטר
+                          </th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            ציון
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            תובנות
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            איך משפרים
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {categoryData.subcategories.map((param, paramIndex) => (
+                          <tr key={paramIndex} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {param.name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${getScoreBg(param.score)}`}>
+                                {param.score}/10
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
+                              {param.insights}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
+                              {param.improvements}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })}
+
+
 
             {/* דגלים אדומים */}
             {red_flags && red_flags.length > 0 && (
@@ -1428,6 +1326,148 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                       🏋️‍♂️ עבור לחדר הכושר
                     </a>
                   </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'quotes' && (
+          <div className="space-y-6">
+            {/* כותרת הציטוטים */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                  <span className="mr-2">💬</span>
+                  ציטוטים רלוונטיים
+                </h3>
+                <div className="text-sm text-gray-600">
+                  {all_quotes && all_quotes.length > 0 ? `${all_quotes.length} ציטוטים` : 'אין ציטוטים'}
+                </div>
+              </div>
+              
+              {all_quotes && all_quotes.length > 0 ? (
+                <div className="space-y-4">
+                  {all_quotes.map((quote: any, idx: number) => {
+                    const quoteText = quote.text || quote.quote || quote.ציטוט || quote.content || '';
+                    const comment = quote.comment || quote.הערה || quote.impact || quote.analysis || '';
+                    const category = quote.category || quote.קטגוריה || 'כללי';
+                    const alternative = quote.alternative || '';
+                    
+                                         // החלפת שמות לנציג/לקוח - פונקציה משופרת
+                     const anonymizedQuote = quoteText.replace(/([א-ת]+)(\s*:)/g, (match: string, name: string, colon: string) => {
+                       // בדיקה אם זה שם נציג או לקוח לפי הקשר
+                       const lowerName = name.toLowerCase();
+                       if (lowerName.includes('נציג') || lowerName.includes('מוכר') || lowerName.includes('שירות') || 
+                           lowerName.includes('agent') || lowerName.includes('sales')) {
+                         return 'הנציג' + colon;
+                       }
+                       return 'הלקוח' + colon;
+                     });
+                    
+                    // חיפוש timestamp
+                    let timestampSeconds = quote.timestamp_seconds;
+                    if (!timestampSeconds && quote.timestamp) {
+                      const timestamp = quote.timestamp;
+                      if (timestamp && timestamp.includes(':')) {
+                        const parts = timestamp.split('-')[0].split(':');
+                        if (parts.length === 2) {
+                          timestampSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+                        }
+                      }
+                    }
+                    if (!timestampSeconds && quoteText) {
+                      timestampSeconds = findTimestampForQuote(quoteText);
+                    }
+                    
+                    const isCurrentlyPlaying = isQuotePlaying(quoteText);
+                    
+                    return (
+                      <div 
+                        key={idx} 
+                        className={`transition-all duration-300 border rounded-lg p-4 ${
+                          isCurrentlyPlaying 
+                            ? 'bg-gradient-to-r from-blue-100 to-blue-50 border-blue-400 shadow-lg ring-2 ring-blue-300' 
+                            : 'bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center mb-2">
+                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium mr-2">
+                                {category}
+                              </span>
+                              {isCurrentlyPlaying && (
+                                <div className="flex items-center text-blue-600 animate-pulse">
+                                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.817L4.906 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.906l3.477-2.817z" clipRule="evenodd"/>
+                                  </svg>
+                                  <span className="text-sm font-medium">מנגן כעת</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            <p className={`italic mb-2 text-lg transition-colors ${
+                              isCurrentlyPlaying ? 'text-blue-800 font-medium' : 'text-gray-700'
+                            }`}>
+                              "{anonymizedQuote}"
+                            </p>
+                            
+                            {comment && (
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                                <p className="text-sm text-blue-800">
+                                  💭 <strong>הערה:</strong> {comment}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {alternative && (
+                              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
+                                <p className="text-sm text-green-800">
+                                  ✨ <strong>איך צריך היה לנסח:</strong> "{alternative}"
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex items-center space-x-2 rtl:space-x-reverse mr-4">
+                            {timestampSeconds !== undefined && timestampSeconds !== null && audioUrl && (
+                              <>
+                                {isCurrentlyPlaying ? (
+                                  <button 
+                                    onClick={stopQuote}
+                                    className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium shadow-md"
+                                    title="עצור השמעה"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+                                    </svg>
+                                    עצור
+                                  </button>
+                                ) : (
+                                  <button 
+                                    onClick={() => playQuote(timestampSeconds, quoteText)}
+                                    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-md"
+                                    title="השמע את הציטוט באודיו"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                                    </svg>
+                                    השמע ב-{formatTime(timestampSeconds)}
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <span className="text-4xl mb-2 block">📝</span>
+                  <p>לא נמצאו ציטוטים רלוונטיים</p>
                 </div>
               )}
             </div>

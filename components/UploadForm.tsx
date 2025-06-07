@@ -473,6 +473,30 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
 
       {/* Main form container */}
       <div className="relative -mt-8 px-4 pb-12">
+        {/* כפתור העלאה מהיר למעלה */}
+        <div className="max-w-6xl mx-auto mb-6">
+          <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="bg-white/20 rounded-xl p-3 ml-4">
+                  <Upload className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">העלאת שיחה מהירה</h3>
+                  <p className="text-purple-100">גרור קובץ או לחץ להעלאה מיידית</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={triggerFileInput}
+                className="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 backdrop-blur-sm"
+              >
+                בחר קובץ
+              </button>
+            </div>
+          </div>
+        </div>
+        
         <form onSubmit={handleSubmit} className="max-w-6xl mx-auto" noValidate>
           
           {/* Error/Success messages */}
@@ -606,9 +630,73 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
           {/* Upload state */}
           {uploadStep === 'upload' && (
             <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
                 
-                {/* Left Panel - Form Details */}
+                {/* Left Panel - Instructions */}
+                <div className="bg-gradient-to-br from-purple-600 to-indigo-700 p-8 lg:p-12 text-white">
+                  <div className="space-y-6">
+                    <div className="flex items-center pb-6 border-b border-purple-300">
+                      <div className="bg-white/20 rounded-xl p-3 ml-4">
+                        <Info className="w-6 h-6 text-white" />
+                      </div>
+                      <h2 className="text-2xl font-bold">הוראות העלאה</h2>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-start space-x-3">
+                        <div className="bg-white/20 rounded-full p-2 mt-1">
+                          <span className="text-sm font-bold">1</span>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">בחר קובץ אודיו</h3>
+                          <p className="text-purple-100 text-sm">העלה קובץ אודיו של השיחה (MP3, WAV, M4A וכו')</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <div className="bg-white/20 rounded-full p-2 mt-1">
+                          <span className="text-sm font-bold">2</span>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">בחר סוג שיחה</h3>
+                          <p className="text-purple-100 text-sm">קבע את סוג השיחה לניתוח מותאם</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <div className="bg-white/20 rounded-full p-2 mt-1">
+                          <span className="text-sm font-bold">3</span>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">הוסף הערות</h3>
+                          <p className="text-purple-100 text-sm">הוסף הערות ודגשים מיוחדים לניתוח מדויק יותר</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <div className="bg-white/20 rounded-full p-2 mt-1">
+                          <span className="text-sm font-bold">4</span>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold mb-1">שלח לניתוח</h3>
+                          <p className="text-purple-100 text-sm">לחץ על "התחל ניתוח" וקבל תוצאות תוך דקות</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white/10 rounded-xl p-4 mt-6">
+                      <h4 className="font-semibold mb-2 flex items-center">
+                        <Shield className="w-4 h-4 ml-2" />
+                        אבטחה ופרטיות
+                      </h4>
+                      <p className="text-purple-100 text-sm">
+                        כל הקבצים מוצפנים ומאובטחים. הנתונים נשמרים בהתאם לתקני GDPR ומחוקים אוטומטית לאחר הניתוח.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Middle Panel - Form Details */}
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 lg:p-12">
                   <div className="space-y-8">
                     <div className="flex items-center pb-6 border-b border-blue-200">
@@ -765,7 +853,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                         <span className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-xs font-bold ml-2 shadow-lg">
                           חשוב לניתוח!
                         </span>
-                        הערות מיוחדים לטובת שיחה זו
+                        הערות/דגשים מיוחדים/בקשות/אתגרים לטובת שיחה זו?
                       </label>
                       <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 rounded-xl p-4 mb-3">
                         <div className="flex items-start space-x-3">
@@ -887,7 +975,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                               </div>
                               <div className="bg-gray-100 rounded-xl p-4">
                                 <p className="text-sm text-gray-600 font-medium">
-                                  📁 פורמטים נתמכים: MP3, WAV, M4A, MP4, AAC, WebM, OGG
+                                  📁 פורמטים נתמכים: MP3, WAV, M4A, MP4, AAC, WebM, OGG, WMA
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
                                   גודל מקסימלי: 25MB • המרה אוטומטית ל-MP3 במידת הצורך
