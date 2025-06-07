@@ -664,29 +664,70 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               </div>
             </div>
 
+            {/* הסבר על הפרמטרים */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+              <div className="flex items-center mb-4">
+                <span className="text-blue-500 text-2xl mr-3">📊</span>
+                <h3 className="text-xl font-semibold text-blue-800">8 קטגוריות ניתוח מקצועיות</h3>
+              </div>
+              <p className="text-blue-700 mb-4">
+                השיחה נותחה לפי 8 קטגוריות מקצועיות המכילות 32 פרמטרים מפורטים:
+              </p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                <div className="bg-white p-3 rounded border border-blue-200">
+                  <div className="font-medium text-blue-800">1. פתיחת שיחה ובניית אמון</div>
+                  <div className="text-blue-600 text-xs">7 פרמטרים</div>
+                </div>
+                <div className="bg-white p-3 rounded border border-blue-200">
+                  <div className="font-medium text-blue-800">2. איתור צרכים וזיהוי כאב</div>
+                  <div className="text-blue-600 text-xs">4 פרמטרים</div>
+                </div>
+                <div className="bg-white p-3 rounded border border-blue-200">
+                  <div className="font-medium text-blue-800">3. הקשבה ואינטראקציה</div>
+                  <div className="text-blue-600 text-xs">4 פרמטרים</div>
+                </div>
+                <div className="bg-white p-3 rounded border border-blue-200">
+                  <div className="font-medium text-blue-800">4. הצגת פתרון והדגשת ערך</div>
+                  <div className="text-blue-600 text-xs">6 פרמטרים</div>
+                </div>
+                <div className="bg-white p-3 rounded border border-blue-200">
+                  <div className="font-medium text-blue-800">5. טיפול בהתנגדויות</div>
+                  <div className="text-blue-600 text-xs">3 פרמטרים</div>
+                </div>
+                <div className="bg-white p-3 rounded border border-blue-200">
+                  <div className="font-medium text-blue-800">6. הנעה לפעולה וסגירה</div>
+                  <div className="text-blue-600 text-xs">3 פרמטרים</div>
+                </div>
+                <div className="bg-white p-3 rounded border border-blue-200">
+                  <div className="font-medium text-blue-800">7. שפת תקשורת ודינמיקה קולית</div>
+                  <div className="text-blue-600 text-xs">3 פרמטרים</div>
+                </div>
+                <div className="bg-white p-3 rounded border border-blue-200">
+                  <div className="font-medium text-blue-800">8. סיכום שיחה</div>
+                  <div className="text-blue-600 text-xs">2 פרמטרים</div>
+                </div>
+              </div>
+              <div className="mt-4 text-center">
+                <span className="text-blue-700 text-sm font-medium">
+                  💡 לצפייה בפירוט המלא של כל פרמטר עבור לטאב "תוכן"
+                </span>
+              </div>
+            </div>
+
             {/* ציונים מפורטים */}
-            {detailed_scores && Object.keys(detailed_scores).length > 0 && (
+            {detailed_scores && detailed_scores.length > 0 && (
               <div className="space-y-6">
-                {Object.entries(detailed_scores).map(([category, score], idx) => {
-                  const scoreValue = typeof score === 'object' && score !== null 
-                    ? ((score as Record<string, any>).ציון || (score as Record<string, any>).score || 0) 
-                    : Number(score);
-                  
-                  const displayCategory = category.replace(/_/g, ' ');
-                  const categoryData = (score as Record<string, any>);
+                {detailed_scores.map((categoryData, idx) => {
+                  const scoreValue = categoryData.score || 0;
+                  const displayCategory = categoryData.category;
                   
                   // חיפוש ציטוטים רלוונטיים לקטגוריה זו
                   let relevantQuotes = segment_quotes ? segment_quotes.filter((quote: any) => {
                     if (!quote || typeof quote !== 'object') return false;
                     const quoteCategory = quote.category || quote.קטגוריה || quote.title || '';
-                    return quoteCategory.toLowerCase().includes(category.toLowerCase()) || 
-                           category.toLowerCase().includes(quoteCategory.toLowerCase());
+                    return quoteCategory.toLowerCase().includes(displayCategory.toLowerCase()) || 
+                           displayCategory.toLowerCase().includes(quoteCategory.toLowerCase());
                   }) : [];
-                  
-                  // אם יש ציטוט בקטגוריה במבנה החדש, הוסף אותו
-                  if (categoryData && categoryData.ציטוט) {
-                    relevantQuotes = [...relevantQuotes, categoryData.ציטוט];
-                  }
 
                   return (
                     <div key={idx} className="bg-white rounded-xl shadow-lg p-6 border-l-4" 
@@ -714,12 +755,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                         />
                       </div>
 
-                      {/* הערות והערכה */}
-                      {categoryData && categoryData.הערה && (
+                      {/* הערות והערכה - בצורת קצרה אבל שימושית */}
+                      {categoryData.subcategories && categoryData.subcategories.length > 0 && (
                         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                          <h4 className="font-medium text-gray-700 mb-2">📝 הערכה מפורטת:</h4>
-                          <p className="text-gray-700 leading-relaxed">
-                            {String(categoryData.הערה)}
+                          <h4 className="font-medium text-gray-700 mb-2">📝 סיכום מהיר:</h4>
+                          <p className="text-gray-700 leading-relaxed text-sm">
+                            {categoryData.subcategories.length} פרמטרים בקטגוריה זו - 
+                            ציון ממוצע: <span className="font-bold">{scoreValue}/10</span>
                           </p>
                         </div>
                       )}

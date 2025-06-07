@@ -295,6 +295,10 @@
   box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
 }
 
+.glow-purple {
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.4);
+}
+
 /* Hebrew RTL support */
 [dir="rtl"] {
   direction: rtl;

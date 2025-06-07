@@ -34,6 +34,8 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
   const [loading, setLoading] = useState(true)
   const [showAddAgentModal, setShowAddAgentModal] = useState(false)
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [userQuota, setUserQuota] = useState<{total_users: number, used_users: number, available_users: number} | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<'all' | 'agent' | 'manager'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending'>('all')
@@ -130,6 +132,14 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         setMyRequests(requestsData)
       }
 
+      // קבלת נתוני מכסת המשתמשים
+      const { data: quotaData } = await supabase
+        .rpc('get_company_user_quota', { p_company_id: companyId })
+
+      if (quotaData && quotaData.length > 0) {
+        setUserQuota(quotaData[0])
+      }
+
     } catch (error) {
       console.error('Error fetching team data:', error)
     } finally {
@@ -142,36 +152,52 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
     setIsSubmitting(true)
 
     try {
-      // יצירת בקשה למנהל מערכת
-      const { error } = await supabase
-        .from('agent_approval_requests')
-        .insert({
-          company_id: companyId,
-          full_name: formData.fullName,
+      // קריאה ל-API החדש שבודק מכסה
+      const response = await fetch('/api/team/add-agent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
           email: formData.email,
-          requested_by: userId,
-          status: 'pending'
+          companyId: companyId,
+          requestedBy: userId
         })
+      })
 
-      if (error) throw error
+      const result = await response.json()
 
-      // יצירת התראה למנהלי מערכת
-      await createSystemAdminNotification(formData)
+      if (!response.ok) {
+        throw new Error(result.error || 'שגיאה בהוספת הנציג')
+      }
 
       // אפס טופס וסגור מודל
       setFormData({ fullName: '', email: '', notes: '' })
       setShowAddAgentModal(false)
+
+      if (result.directlyAdded) {
+        // הנציג נוסף ישירות
+        setSuccessMessage(`✅ הנציג ${formData.fullName} נוסף בהצלחה לחברה! סיסמה זמנית: ${result.tempPassword}`)
+      } else if (result.requiresApproval) {
+        // נדרש אישור אדמין
+        setSuccessMessage(`⏳ ${result.message}`)
+      }
+
       setShowSuccessNotification(true)
 
       // רענן נתונים
       await fetchData()
 
-      // הסתר התראת הצלחה אחרי 5 שניות
-      setTimeout(() => setShowSuccessNotification(false), 5000)
+      // הסתר התראת הצלחה אחרי 10 שניות
+      setTimeout(() => {
+        setShowSuccessNotification(false)
+        setSuccessMessage('')
+      }, 10000)
 
     } catch (error) {
       console.error('Error submitting agent request:', error)
-      alert('שגיאה בשליחת הבקשה. אנא נסה שוב.')
+      alert('שגיאה בהוספת הנציג: ' + (error as Error).message)
     } finally {
       setIsSubmitting(false)
     }
@@ -256,7 +282,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
       {showSuccessNotification && (
         <div className="fixed top-4 left-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg z-50">
           <div className="flex justify-between items-center">
-            <span>✅ הבקשה נשלחה בהצלחה למנהל המערכת לאישור!</span>
+            <span>{successMessage || '✅ פעולה הושלמה בהצלחה!'}</span>
             <button 
               onClick={() => setShowSuccessNotification(false)}
               className="text-green-700 hover:text-green-900"
@@ -291,16 +317,18 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">נציגים</h2>
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">משתמשים</h2>
               <p className="text-3xl font-bold text-blue-600">
-                {agentStats.totalAgents}
-                {subscription && (
+                {userQuota ? userQuota.used_users : agents.length}
+                {userQuota && (
                   <span className="text-sm font-normal text-gray-500 mr-1">
-                    /{subscription.subscription_plans.max_agents}
+                    /{userQuota.total_users}
                   </span>
                 )}
               </p>
-              <p className="mt-2 text-sm text-gray-500">נציגים פעילים בחברה</p>
+              <p className="mt-2 text-sm text-gray-500">
+                {userQuota ? `זמינים: ${userQuota.available_users}` : 'משתמשים בחברה'}
+              </p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
               <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">

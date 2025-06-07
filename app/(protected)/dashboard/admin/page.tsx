@@ -267,6 +267,15 @@ export default function AdminDashboardPage() {
             </div>
           </Link>
 
+          <Link href="/dashboard/admin/company-quotas" className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            <h3 className="text-xl font-semibold mb-2">ניהול מכסות משתמשים</h3>
+            <p className="text-gray-600 mb-4">קביעת מכסות משתמשים לחברות ובקרת השימוש</p>
+            <div className="text-sm text-gray-500">
+              <div>ניהול מכסות לכל החברות</div>
+              <div>בקרת זמינות משתמשים</div>
+            </div>
+          </Link>
+
           <Link href="/dashboard/admin/agent-requests" className={`block p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ${
             stats.pendingAgentRequests > 0 ? 'bg-red-50 border-2 border-red-300 ring-2 ring-red-200' : 'bg-white'
           }`}>

@@ -33,7 +33,11 @@ import {
   Users,
   TrendingUp,
   Headphones,
-  ChevronDown
+  ChevronDown,
+  X,
+  Plus,
+  FolderOpen,
+  Copy
 } from 'lucide-react'
 import { Database } from '@/types/database.types'
 import { convertAudioToMp3, needsConversion, getSupportedFormats } from '@/lib/audioConverter'
@@ -47,6 +51,15 @@ interface UploadFormProps {
 interface Agent {
   id: string
   full_name: string | null
+}
+
+interface UploadedCall {
+  id: string
+  fileName: string
+  status: 'uploading' | 'processing' | 'completed' | 'error'
+  progress: number
+  error?: string
+  callId?: string
 }
 
 const CALL_TYPE_OPTIONS = [
@@ -105,18 +118,26 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   const router = useRouter()
   const supabase = createClient()
   const [isLoading, setIsLoading] = useState(false)
+  const [uploadMode, setUploadMode] = useState<'single' | 'multiple'>('single')
   const [uploadStep, setUploadStep] = useState<'upload' | 'processing' | 'completed'>('upload')
   const [progress, setProgress] = useState(0)
   const [callType, setCallType] = useState('')
   const [agentNotes, setAgentNotes] = useState('')
   const [analysisNotes, setAnalysisNotes] = useState('')
+  
+  // Single file upload
   const [file, setFile] = useState<File | null>(null)
+  const [fileName, setFileName] = useState<string | null>(null)
+  
+  // Multiple files upload - חדש
+  const [files, setFiles] = useState<File[]>([])
+  const [uploadedCalls, setUploadedCalls] = useState<UploadedCall[]>([])
+  
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [agents, setAgents] = useState<Agent[]>([])
   const [selectedAgent, setSelectedAgent] = useState<string>(user.id)
   const [dragActive, setDragActive] = useState(false)
-  const [fileName, setFileName] = useState<string | null>(null)
   const [uploadCount, setUploadCount] = useState(0)
   const [uploadedCallId, setUploadedCallId] = useState<string | null>(null)
   const [isCallTypeDropdownOpen, setIsCallTypeDropdownOpen] = useState(false)
@@ -177,12 +198,21 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadCount(count => count + 1);
     
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      validateAndSetFile(selectedFile);
+    const selectedFiles = Array.from(e.target.files || []);
+    
+    if (uploadMode === 'single') {
+      const selectedFile = selectedFiles[0];
+      if (selectedFile) {
+        validateAndSetFile(selectedFile);
+      } else {
+        if (uploadCount > 1 && !file) {
+          setError('בעיה בבחירת הקובץ. נסה להשתמש בכפתור "הסר קובץ ובחר מחדש" ולנסות שוב.');
+        }
+      }
     } else {
-      if (uploadCount > 1 && !file) {
-        setError('בעיה בבחירת הקובץ. נסה להשתמש בכפתור "הסר קובץ ובחר מחדש" ולנסות שוב.');
+      // Multiple files mode
+      if (selectedFiles.length > 0) {
+        validateAndSetMultipleFiles(selectedFiles);
       }
     }
     
@@ -198,45 +228,59 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     
     if (!isAudioByMimeType && !isAudioByExtension) {
       setError(`אנא העלה קובץ אודיו בפורמט נתמך. פורמטים נתמכים: ${supportedFormats.join(', ')}`);
-      setFile(null);
       return;
     }
     
-    if (selectedFile.size > 25 * 1024 * 1024) {
-      setError('הקובץ גדול מדי. הגודל המקסימלי הוא 25MB');
-      setFile(null);
-      return;
-    }
+    // Convert file if needed
+    let finalFile = selectedFile;
+         if (needsConversion(selectedFile.name)) {
+       setIsConverting(true);
+       setConversionStatus('מבצע המרה לפורמט MP3...');
+       
+       try {
+         finalFile = await convertAudioToMp3(selectedFile);
+         setConversionStatus('ההמרה הושלמה בהצלחה');
+       } catch (conversionError) {
+         console.error('Conversion error:', conversionError);
+         setError('שגיאה בהמרת קובץ האודיו. נסה להשתמש בקובץ בפורמט MP3 או WAV.');
+         setIsConverting(false);
+         return;
+       } finally {
+         setIsConverting(false);
+         setConversionStatus('');
+       }
+     }
     
-    // בדיקה אם הקובץ צריך המרה
-    if (needsConversion(selectedFile.name)) {
-      setIsConverting(true);
-      setConversionStatus(`מבצע המרה של ${selectedFile.name} ל-MP3...`);
+    setFile(finalFile);
+    setFileName(finalFile.name);
+    setError(null);
+  }
+
+  // חדש: פונקציה לטיפול בקבצים מרובים
+  const validateAndSetMultipleFiles = async (selectedFiles: File[]) => {
+    const supportedFormats = getSupportedFormats();
+    const validFiles: File[] = [];
+    const errors: string[] = [];
+
+    for (const file of selectedFiles) {
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      const isAudioByMimeType = file.type.includes('audio');
+      const isAudioByExtension = supportedFormats.includes(fileExtension || '');
       
-      try {
-        const convertedFile = await convertAudioToMp3(selectedFile);
-        setFile(convertedFile);
-        setFileName(convertedFile.name);
-        setConversionStatus(`המרה הושלמה בהצלחה! הקובץ ${selectedFile.name} הומר ל-${convertedFile.name}`);
-        setError(null);
-        
-        // הסתרת הודעת ההמרה אחרי 3 שניות
-        setTimeout(() => {
-          setConversionStatus('');
-          setIsConverting(false);
-        }, 3000);
-        
-      } catch (conversionError) {
-        setError(`שגיאה בהמרת הקובץ: ${conversionError}`);
-        setFile(null);
-        setIsConverting(false);
-        setConversionStatus('');
+      if (!isAudioByMimeType && !isAudioByExtension) {
+        errors.push(`${file.name}: פורמט לא נתמך`);
+      } else {
+        validFiles.push(file);
       }
-    } else {
-      setFile(selectedFile);
-      setFileName(selectedFile.name);
-      setError(null);
     }
+
+    if (errors.length > 0) {
+      setError(`קבצים לא נתמכים: ${errors.join(', ')}. פורמטים נתמכים: ${supportedFormats.join(', ')}`);
+      return;
+    }
+
+    setFiles(validFiles);
+    setError(null);
   }
   
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -256,8 +300,12 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     e.stopPropagation();
     setDragActive(false);
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      validateAndSetFile(e.dataTransfer.files[0]);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    
+    if (uploadMode === 'single' && droppedFiles.length > 0) {
+      validateAndSetFile(droppedFiles[0]);
+    } else if (uploadMode === 'multiple' && droppedFiles.length > 0) {
+      validateAndSetMultipleFiles(droppedFiles);
     }
   }
   
@@ -269,7 +317,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     e.preventDefault();
     e.stopPropagation();
     
-    if (!file) {
+    if (!file && !files.length) {
       setError('אנא בחר קובץ להעלאה');
       return;
     }
@@ -311,14 +359,14 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     try {
       const freshSupabase = createClient()
       
-      const fileExt = file.name.split('.').pop()
+      const fileExt = file ? file.name.split('.').pop() : files[0].name.split('.').pop()
       const filePath = `${selectedAgent}/${Date.now()}.${fileExt}`
       
       setProgress(20)
       
       const { data: uploadData, error: uploadError } = await freshSupabase.storage
         .from('audio_files')
-        .upload(filePath, file, {
+        .upload(filePath, file ? file : files[0], {
           cacheControl: '3600',
           upsert: false
         })
@@ -408,14 +456,168 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     }
   }
   
+    // פונקציה לטיפול בהעלאת מספר שיחות
+  const handleMultipleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!files.length) {
+      setError('אנא בחר קבצים להעלאה');
+      return;
+    }
+    
+    if (!callType) {
+      setError('אנא בחר סוג שיחה');
+      return;
+    }
+
+    // בדיקת שאלון החברה
+    if (userData?.companies?.id && userData?.role !== 'admin') {
+      const freshSupabase = createClient();
+      
+      const { data: questionnaireData, error: checkError } = await freshSupabase
+        .from('company_questionnaires')
+        .select('is_complete, completion_score')
+        .eq('company_id', userData.companies.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        setError('שגיאה בבדיקת סטטוס השאלון');
+        return;
+      }
+      
+      const isComplete = questionnaireData?.is_complete || false;
+      
+      if (!isComplete) {
+        setError('לא ניתן להעלות שיחות - שאלון החברה לא מולא במלואו. אנא השלם את השאלון בעמוד השאלון.');
+        return;
+      }
+    }
+
+    setError(null);
+    setIsLoading(true);
+    setUploadStep('upload');
+    
+    // אתחול מערך השיחות המועלות
+    const initialCalls: UploadedCall[] = files.map((file, index) => ({
+      id: `temp-${index}-${Date.now()}`,
+      fileName: file.name,
+      status: 'uploading',
+      progress: 0
+    }));
+    
+    setUploadedCalls(initialCalls);
+
+    try {
+      const freshSupabase = createClient();
+      const uploadPromises = files.map(async (file, index) => {
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${selectedAgent}/${Date.now()}-${index}.${fileExt}`;
+        
+        // עדכון סטטוס העלאה
+        setUploadedCalls(prev => prev.map(call => 
+          call.id === initialCalls[index].id 
+            ? { ...call, progress: 20 }
+            : call
+        ));
+
+        // העלאת הקובץ
+        const { data: uploadData, error: uploadError } = await freshSupabase.storage
+          .from('audio_files')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          throw new Error(`שגיאה בהעלאת ${file.name}: ${uploadError.message}`);
+        }
+
+        // עדכון סטטוס
+        setUploadedCalls(prev => prev.map(call => 
+          call.id === initialCalls[index].id 
+            ? { ...call, progress: 60 }
+            : call
+        ));
+
+        // יצירת רשומה בבסיס הנתונים
+        const callRecord = {
+          user_id: selectedAgent,
+          company_id: userData?.companies?.id || null,
+          call_type: callType,
+          audio_file_path: filePath,
+          agent_notes: agentNotes || null,
+          analysis_notes: analysisNotes || null,
+          analysis_type: 'full',
+          processing_status: 'pending'
+        };
+
+        const { data: callData, error: callError } = await freshSupabase
+          .from('calls')
+          .insert(callRecord)
+          .select();
+
+        if (callError || !callData || callData.length === 0) {
+          throw new Error(`שגיאה ביצירת רשומת שיחה עבור ${file.name}`);
+        }
+
+        const callId = callData[0].id;
+
+        // עדכון סטטוס
+        setUploadedCalls(prev => prev.map(call => 
+          call.id === initialCalls[index].id 
+            ? { ...call, progress: 80, callId, status: 'processing' }
+            : call
+        ));
+
+        // התחלת עיבוד השיחה ברקע
+        processCall(callId).catch(processError => {
+          console.error('Background processing error:', processError);
+          setUploadedCalls(prev => prev.map(call => 
+            call.callId === callId 
+              ? { ...call, status: 'error', error: 'שגיאה בעיבוד השיחה' }
+              : call
+          ));
+        });
+
+        // עדכון סטטוס השלמה
+        setUploadedCalls(prev => prev.map(call => 
+          call.id === initialCalls[index].id 
+            ? { ...call, progress: 100, status: 'completed' }
+            : call
+        ));
+
+        return callId;
+      });
+
+      await Promise.all(uploadPromises);
+      setUploadStep('completed');
+      setSuccess(`${files.length} שיחות הועלו בהצלחה! הניתוח מתבצע ברקע ותקבל התראות כשיושלמו.`);
+      
+    } catch (error: any) {
+      console.error('Error:', error);
+      setError(error.message || 'שגיאה לא ידועה בעת העלאת השיחות');
+      setUploadStep('upload');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // הסרת קובץ מהרשימה
+  const removeFileFromList = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  }
+
   const clearSelectedFile = (e: React.MouseEvent) => {
     e.stopPropagation();
     setFile(null);
     setFileName(null);
+    setFiles([]);
+    setUploadedCalls([]);
     setError(null);
     setUploadStep('upload');
   };
-  
+
   const goToCallAnalysis = () => {
     if (uploadedCallId) {
       router.push(`/dashboard/calls/${uploadedCallId}`);
@@ -554,9 +756,89 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
         </div>
       )}
 
+      {/* Upload Mode Selection */}
+      {uploadStep === 'upload' && (
+        <div className="mb-8 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-6 shadow-lg animate-fadeIn">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <div className="bg-indigo-600 rounded-lg p-2 ml-3">
+              <FolderOpen className="w-5 h-5 text-white" />
+            </div>
+            בחר מצב העלאה
+          </h3>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              type="button"
+              onClick={() => {
+                setUploadMode('single');
+                setFiles([]);
+                setUploadedCalls([]);
+                setError(null);
+              }}
+              className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                uploadMode === 'single'
+                  ? 'border-indigo-500 bg-indigo-100 shadow-lg scale-105'
+                  : 'border-gray-300 bg-white hover:border-indigo-300 hover:shadow-md'
+              }`}
+            >
+              <div className="flex items-center mb-3">
+                <div className={`rounded-lg p-2 ml-3 ${
+                  uploadMode === 'single' ? 'bg-indigo-500' : 'bg-gray-400'
+                }`}>
+                  <FileAudio className="w-5 h-5 text-white" />
+                </div>
+                <h4 className={`font-semibold ${
+                  uploadMode === 'single' ? 'text-indigo-800' : 'text-gray-700'
+                }`}>
+                  שיחה בודדת
+                </h4>
+              </div>
+              <p className={`text-sm ${
+                uploadMode === 'single' ? 'text-indigo-600' : 'text-gray-600'
+              }`}>
+                העלה קובץ אחד ונתח אותו
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setUploadMode('multiple');
+                setFile(null);
+                setFileName(null);
+                setError(null);
+              }}
+              className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                uploadMode === 'multiple'
+                  ? 'border-purple-500 bg-purple-100 shadow-lg scale-105'
+                  : 'border-gray-300 bg-white hover:border-purple-300 hover:shadow-md'
+              }`}
+            >
+              <div className="flex items-center mb-3">
+                <div className={`rounded-lg p-2 ml-3 ${
+                  uploadMode === 'multiple' ? 'bg-purple-500' : 'bg-gray-400'
+                }`}>
+                  <Copy className="w-5 h-5 text-white" />
+                </div>
+                <h4 className={`font-semibold ${
+                  uploadMode === 'multiple' ? 'text-purple-800' : 'text-gray-700'
+                }`}>
+                  שיחות מרובות
+                </h4>
+              </div>
+              <p className={`text-sm ${
+                uploadMode === 'multiple' ? 'text-purple-600' : 'text-gray-600'
+              }`}>
+                העלה מספר קבצים יחד וננתח בבת אחת
+              </p>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Upload form */}
       {uploadStep === 'upload' && (
-        <form onSubmit={handleSubmit} className="space-y-8" noValidate>
+        <form onSubmit={uploadMode === 'single' ? handleSubmit : handleMultipleSubmit} className="space-y-8" noValidate>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
@@ -717,10 +999,12 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
             <div className="space-y-6 animate-slideUp">
               <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
                 <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <div className="bg-purple-600 rounded-lg p-2 ml-3">
+                  <div className={`rounded-lg p-2 ml-3 ${
+                    uploadMode === 'multiple' ? 'bg-purple-600' : 'bg-purple-600'
+                  }`}>
                     <Upload className="w-5 h-5 text-white" />
                   </div>
-                  העלאת קובץ אודיו
+                  {uploadMode === 'multiple' ? 'העלאת קבצי אודיו' : 'העלאת קובץ אודיו'}
                 </h2>
                 
                 {/* הודעת המרה */}
@@ -755,8 +1039,8 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 <div 
                   className={`relative transition-all duration-300 ${dragActive 
                     ? 'scale-105 border-4 border-blue-400 bg-blue-50 glow' 
-                    : file 
-                      ? 'border-4 border-green-400 bg-green-50 glow-green' 
+                    : (file || files.length > 0)
+                      ? `border-4 ${uploadMode === 'multiple' ? 'border-purple-400 bg-purple-50 glow-purple' : 'border-green-400 bg-green-50 glow-green'}` 
                       : error 
                         ? 'border-4 border-red-300 bg-red-50 glow-red' 
                         : 'border-4 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:shadow-lg'
@@ -767,7 +1051,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                   onClick={triggerFileInput}
                 >
                   <div className="text-center">
-                    {!file ? (
+                    {!file && !files.length ? (
                       <>
                         <div className="flex justify-center mb-4">
                           <div className="bg-blue-100 rounded-full p-4 animate-float">
@@ -777,10 +1061,10 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                         <div className="mb-4">
                           <label htmlFor="file-upload" className="cursor-pointer">
                             <span className="block text-lg font-semibold text-gray-900 mb-2">
-                              העלה קובץ אודיו
+                              {uploadMode === 'single' ? 'העלה קובץ אודיו' : 'העלה קבצי אודיו'}
                             </span>
                             <p className="block text-gray-600 mb-4">
-                              או גרור ושחרר כאן
+                              {uploadMode === 'single' ? 'או גרור ושחרר כאן' : 'או גרור ושחרר מספר קבצים כאן'}
                             </p>
                           </label>
                           <input
@@ -790,6 +1074,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                             type="file"
                             className="sr-only"
                             accept="audio/*"
+                            multiple={uploadMode === 'multiple'}
                             onChange={handleFileChange}
                             disabled={isLoading}
                           />
@@ -799,11 +1084,11 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                             פורמטים נתמכים: MP3, WAV, M4A, MP4, AAC, WebM, OGG, WMA
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            גודל מקסימלי: 25MB
+                            גודל מקסימלי: 25MB {uploadMode === 'multiple' ? 'לכל קובץ' : ''}
                           </p>
                         </div>
                       </>
-                    ) : (
+                    ) : uploadMode === 'single' && file ? (
                       <div className="text-center">
                         <div className="flex justify-center mb-4">
                           <div className="bg-green-100 rounded-full p-4 animate-float">
@@ -837,7 +1122,81 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                           החלף קובץ
                         </button>
                       </div>
-                    )}
+                    ) : uploadMode === 'multiple' && files.length > 0 ? (
+                      <div className="text-right">
+                        <div className="flex justify-center mb-4">
+                          <div className="bg-purple-100 rounded-full p-4 animate-float">
+                            <CheckCircle2 className="w-8 h-8 text-purple-600" />
+                          </div>
+                        </div>
+                        <div className="mb-4">
+                          <p className="text-lg font-semibold text-gray-900 mb-4">
+                            {files.length} קבצים נבחרו
+                          </p>
+                          
+                          {/* רשימת קבצים */}
+                          <div className="max-h-48 overflow-y-auto space-y-2 mb-4">
+                            {files.map((file, index) => (
+                              <div key={index} className="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm border">
+                                <div className="flex items-center flex-1">
+                                  <FileAudio className="w-5 h-5 text-purple-500 ml-3" />
+                                  <div className="text-right flex-1">
+                                    <p className="text-sm font-medium text-gray-900 truncate">
+                                      {file.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {(file.size / (1024 * 1024)).toFixed(2)} MB
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeFileFromList(index)}
+                                  className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors"
+                                  disabled={isLoading}
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="flex items-center justify-center space-x-4 mb-4">
+                            <div className="bg-purple-100 rounded-lg px-3 py-1">
+                              <p className="text-sm text-purple-700 font-medium">
+                                {(files.reduce((total, f) => total + f.size, 0) / (1024 * 1024)).toFixed(2)} MB סה"כ
+                              </p>
+                            </div>
+                            <div className="bg-blue-100 rounded-lg px-3 py-1">
+                              <p className="text-sm text-blue-700 font-medium">
+                                מוכן לניתוח
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 justify-center">
+                          <button
+                            type="button"
+                            onClick={triggerFileInput}
+                            className="inline-flex items-center px-4 py-2 border border-purple-300 shadow-sm text-sm font-medium rounded-lg text-purple-700 bg-purple-50 hover:bg-purple-100 transition-all duration-200 hover:shadow-md"
+                            disabled={isLoading}
+                          >
+                            <Plus className="w-4 h-4 ml-2" />
+                            הוסף עוד
+                          </button>
+                          <button
+                            type="button"
+                            onClick={clearSelectedFile}
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 hover:shadow-md"
+                            disabled={isLoading}
+                          >
+                            <X className="w-4 h-4 ml-2" />
+                            נקה הכל
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -854,9 +1213,9 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               
               <button
                 type="submit"
-                disabled={isLoading || !file || !callType}
+                disabled={isLoading || (!file && !files.length) || !callType}
                 className={`px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-lg rounded-xl shadow-lg transition-all duration-300 ${
-                  isLoading || !file || !callType 
+                  isLoading || (!file && !files.length) || !callType 
                     ? 'opacity-50 cursor-not-allowed' 
                     : 'hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl transform hover:scale-105'
                 }`}
@@ -864,12 +1223,12 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 {isLoading ? (
                   <>
                     <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 inline" />
-                    מעלה ומעבד...
+                    {uploadMode === 'multiple' ? 'מעלה ומעבד שיחות...' : 'מעלה ומעבד...'}
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5 ml-3 inline" />
-                    התחל ניתוח
+                    {uploadMode === 'multiple' ? `התחל ניתוח ${files.length} שיחות` : 'התחל ניתוח'}
                     <Play className="w-5 h-5 mr-3 inline" />
                   </>
                 )}
@@ -877,6 +1236,104 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
             </div>
           </div>
         </form>
+      )}
+
+      {/* Multiple Upload Progress */}
+      {uploadMode === 'multiple' && uploadedCalls.length > 0 && (
+        <div className="mt-8 bg-white rounded-xl p-6 border border-gray-200 shadow-lg animate-fadeIn">
+          <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+            <div className="bg-purple-600 rounded-lg p-2 ml-3">
+              <Upload className="w-5 h-5 text-white" />
+            </div>
+            התקדמות העלאת השיחות
+          </h3>
+          
+          <div className="space-y-4">
+            {uploadedCalls.map((call, index) => (
+              <div key={call.id} className="bg-gray-50 rounded-lg p-4 border">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center flex-1">
+                    <div className={`rounded-lg p-2 ml-3 ${
+                      call.status === 'completed' ? 'bg-green-500' :
+                      call.status === 'error' ? 'bg-red-500' :
+                      call.status === 'processing' ? 'bg-blue-500' :
+                      'bg-gray-500'
+                    }`}>
+                      {call.status === 'completed' ? (
+                        <CheckCircle2 className="w-4 h-4 text-white" />
+                      ) : call.status === 'error' ? (
+                        <AlertCircle className="w-4 h-4 text-white" />
+                      ) : call.status === 'processing' ? (
+                        <Loader2 className="w-4 h-4 text-white animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+                    <div className="text-right flex-1">
+                      <p className="font-medium text-gray-900 truncate">
+                        {call.fileName}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {call.status === 'uploading' ? 'מעלה...' :
+                         call.status === 'processing' ? 'מעבד...' :
+                         call.status === 'completed' ? 'הושלם' :
+                         call.status === 'error' ? call.error || 'שגיאה' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {call.callId && call.status === 'completed' && (
+                    <button
+                      onClick={() => router.push(`/dashboard/calls/${call.callId}`)}
+                      className="text-blue-600 hover:text-blue-800 font-medium text-sm px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                    >
+                      צפה בניתוח
+                    </button>
+                  )}
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div 
+                    style={{ width: `${call.progress}%` }} 
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      call.status === 'completed' ? 'bg-green-500' :
+                      call.status === 'error' ? 'bg-red-500' :
+                      'bg-blue-500'
+                    }`}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1 text-right">
+                  {call.progress}% הושלם
+                </p>
+              </div>
+            ))}
+          </div>
+          
+          {/* Summary */}
+          <div className="mt-6 bg-purple-50 rounded-lg p-4 border border-purple-200">
+            <div className="flex items-center justify-between">
+              <div className="text-right">
+                <p className="font-medium text-purple-800">
+                  {uploadedCalls.filter(c => c.status === 'completed').length} מתוך {uploadedCalls.length} הושלמו
+                </p>
+                <p className="text-sm text-purple-600">
+                  {uploadedCalls.filter(c => c.status === 'error').length > 0 && 
+                    `${uploadedCalls.filter(c => c.status === 'error').length} שיחות נכשלו`}
+                </p>
+              </div>
+              
+              {uploadedCalls.every(c => c.status === 'completed' || c.status === 'error') && (
+                <button
+                  onClick={() => router.push('/dashboard/calls')}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                >
+                  עבור לרשימת השיחות
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
