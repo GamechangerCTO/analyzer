@@ -36,17 +36,19 @@ export default async function ProtectedLayout({
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-cream-sand-light">
       <Navbar user={user} userData={userData} />
       <main className="flex-grow container mx-auto px-4 py-8">
-        {children}
+        <div className="smooth-appear">
+          {children}
+        </div>
       </main>
-      <footer className="bg-white shadow-md-top py-4">
-        <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-6 mb-2">
+      <footer className="bg-white shadow-soft border-t border-ice-gray py-6">
+        <div className="container mx-auto px-4 text-center text-indigo-night/70 text-sm">
+          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-6 mb-4">
             <a 
               href="/privacy-policy" 
-              className="text-gray-500 hover:text-gray-700 underline"
+              className="text-indigo-night/70 hover:text-indigo-night underline decoration-lemon-mint decoration-2 underline-offset-4 transition-colors duration-200"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -54,15 +56,18 @@ export default async function ProtectedLayout({
             </a>
             <a 
               href="/terms-of-service" 
-              className="text-gray-500 hover:text-gray-700 underline"
+              className="text-indigo-night/70 hover:text-indigo-night underline decoration-lemon-mint decoration-2 underline-offset-4 transition-colors duration-200"
               target="_blank"
               rel="noopener noreferrer"
             >
               תנאי שירות
             </a>
           </div>
-          <div>
-            חדר כושר למכירות &copy; {new Date().getFullYear()}
+          <div className="flex items-center justify-center space-x-2">
+            <span className="text-display font-semibold text-indigo-night">ReplayMe</span>
+            <span>&copy; {new Date().getFullYear()}</span>
+            <span className="text-lemon-mint-dark">•</span>
+            <span>חדר כושר למכירות</span>
           </div>
         </div>
       </footer>

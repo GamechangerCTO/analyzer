@@ -1,9 +1,36 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Database } from '@/types/database.types'
+import { 
+  Users, 
+  UserPlus, 
+  Search, 
+  Filter, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Award, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle, 
+  Mail, 
+  Phone, 
+  Building, 
+  Calendar,
+  Star,
+  TrendingUp,
+  Activity,
+  X,
+  Eye,
+  BarChart3,
+  Target,
+  Crown,
+  Shield
+} from 'lucide-react'
+import Avatar from '@/components/Avatar'
 
 type Agent = Database['public']['Tables']['users']['Row']
 type Subscription = Database['public']['Tables']['company_subscriptions']['Row'] & {
@@ -46,7 +73,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const supabase = createClientComponentClient<Database>()
+  const supabase = getSupabaseClient()
 
   // טעינת נתונים ראשונית
   useEffect(() => {
@@ -201,550 +228,375 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
     }
   }
 
-  const createSystemAdminNotification = async (agentData: AddAgentFormData) => {
-    try {
-      // קבלת כל מנהלי המערכת
-      const { data: admins } = await supabase
-        .from('system_admins')
-        .select('user_id')
-
-      if (admins && admins.length > 0) {
-        // יצירת התראה לכל מנהל מערכת
-        const notifications = admins.map(admin => ({
-          user_id: admin.user_id,
-          company_id: companyId,
-          title: 'בקשת הוספת נציג חדש',
-          message: `המנהל ${userFullName || 'ללא שם'} מבקש להוסיף נציג חדש: ${agentData.fullName} (${agentData.email})`,
-          notification_type: 'agent_request',
-          action_url: `/dashboard/admin/agent-requests`,
-          metadata: {
-            requestedBy: userId,
-            agentName: agentData.fullName,
-            agentEmail: agentData.email,
-            companyId: companyId
-          }
-        }))
-
-        await supabase
-          .from('agent_notifications')
-          .insert(notifications)
-      }
-    } catch (error) {
-      console.error('Error creating admin notifications:', error)
-    }
-  }
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'approved':
-        return 'bg-green-100 text-green-800'
-      case 'rejected':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+      case 'approved': return 'text-success bg-success/10 border-success/20'
+      case 'pending': return 'text-warning bg-warning/10 border-warning/20'
+      case 'rejected': return 'text-error bg-error/10 border-error/20'
+      default: return 'text-indigo-night/60 bg-ice-gray border-ice-gray'
     }
   }
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'ממתין לאישור'
-      case 'approved':
-        return 'אושר'
-      case 'rejected':
-        return 'נדחה'
-      default:
-        return status
+      case 'approved': return 'מאושר'
+      case 'pending': return 'ממתין'
+      case 'rejected': return 'נדחה'
+      default: return 'לא ידוע'
     }
   }
 
-  const agentStats = {
-    totalAgents: agents.filter(agent => agent.role === 'agent').length,
-    totalManagers: agents.filter(agent => agent.role === 'manager').length,
-    totalUsers: agents.length
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'owner': return Crown
+      case 'manager': return Shield
+      case 'agent': return Users
+      default: return Users
+    }
+  }
+
+  const getRoleText = (role: string) => {
+    switch (role) {
+      case 'owner': return 'בעלים'
+      case 'manager': return 'מנהל'
+      case 'agent': return 'נציג'
+      default: return 'לא ידוע'
+    }
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-lemon-mint/20 rounded-2xl flex items-center justify-center mx-auto animate-lemon-pulse">
+            <Users className="w-8 h-8 text-lemon-mint-dark animate-spin" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-indigo-night">טוען נתוני הצוות...</h3>
+            <p className="text-indigo-night/60">אוסף את כל פרטי החברים</p>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-8">
-      {/* הודעת הצלחה */}
-      {showSuccessNotification && (
-        <div className="fixed top-4 left-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg z-50">
-          <div className="flex justify-between items-center">
-            <span>{successMessage || '✅ פעולה הושלמה בהצלחה!'}</span>
-            <button 
-              onClick={() => setShowSuccessNotification(false)}
-              className="text-green-700 hover:text-green-900"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* התראה על מכסה מלאה או קרובה להיגמר */}
-      {userQuota && userQuota.available_users === 0 && (
-        <div className="bg-red-50 border-r-4 border-red-400 p-4 rounded-lg shadow-lg">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
+      {/* כותרת וסטטיסטיקות */}
+      <div className="replayme-card p-8 bg-gradient-to-l from-indigo-night to-indigo-night/80 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <div className="w-20 h-20 bg-lemon-mint/20 rounded-2xl flex items-center justify-center">
+              <Users className="w-10 h-10 text-lemon-mint" />
             </div>
-            <div className="mr-3 flex-1">
-              <h3 className="text-sm font-medium text-red-800">
-                🚫 מכסת המשתמשים מלאה
-              </h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>החברה שלכם הגיעה למכסה המקסימלית של {userQuota.total_users} משתמשים.</p>
-                <p>כדי להוסיף נציגים נוספים, תוכלו:</p>
-                <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                  <Link 
-                    href="/team/purchase-quota"
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-                  >
-                    💳 רכוש מכסה נוספת
-                  </Link>
-                  <span className="text-red-600 text-sm self-center">או פנה למנהל המערכת</span>
-                </div>
-              </div>
+            <div>
+              <h1 className="text-display text-3xl font-bold mb-2">
+                צוות {company?.name || 'החברה'} 👥
+              </h1>
+              <p className="text-white/80 text-lg">
+                ניהול והוספת חברי צוות חדשים
+              </p>
             </div>
           </div>
-        </div>
-      )}
-      
-      {userQuota && userQuota.available_users > 0 && userQuota.available_users <= 2 && (
-        <div className="bg-yellow-50 border-r-4 border-yellow-400 p-4 rounded-lg shadow-lg">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
+          
+          <div className="text-center">
+            <div className="text-3xl font-bold text-lemon-mint mb-1">
+              {agents.length}
             </div>
-            <div className="mr-3 flex-1">
-              <h3 className="text-sm font-medium text-yellow-800">
-                ⚠️ המכסה קרובה להיגמר
-              </h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <p>נותרו רק {userQuota.available_users} מקומות פנויים למשתמשים חדשים מתוך {userQuota.total_users} סה"כ.</p>
-                <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                  <Link 
-                    href="/team/purchase-quota"
-                    className="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-                  >
-                    💳 הגדל מכסה
-                  </Link>
-                  <span className="text-yellow-600 text-sm self-center">מומלץ להגדיל מכסה בקרוב</span>
-                </div>
-              </div>
+            <div className="text-white/60 text-sm">
+              חברי צוות
             </div>
           </div>
-        </div>
-      )}
-
-      {/* כותרת ופעולות */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-bold text-gray-800">ניהול צוות</h1>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Link
-            href="/dashboard"
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors duration-200 text-center"
-          >
-            ← חזרה לדשבורד
-          </Link>
-          {userQuota?.available_users === 0 ? (
-            <div className="flex flex-col sm:flex-row gap-2">
-              <button
-                disabled
-                className="px-4 py-2 bg-gray-300 text-gray-500 cursor-not-allowed rounded-lg transition-colors duration-200"
-                title="אין מכסה זמינה להוספת נציגים"
-              >
-                + הוסף נציג (מכסה מלאה)
-              </button>
-              <Link
-                href="/team/purchase-quota"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 text-center"
-              >
-                💳 רכוש מכסה
-              </Link>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowAddAgentModal(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
-            >
-              + הוסף נציג
-            </button>
-          )}
         </div>
       </div>
 
-      {/* כרטיסיות סיכום */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">משתמשים</h2>
-              <p className="text-3xl font-bold text-blue-600">
-                {userQuota ? userQuota.used_users : agents.length}
-                {userQuota && (
-                  <span className="text-sm font-normal text-gray-500 mr-1">
-                    /{userQuota.total_users}
-                  </span>
-                )}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                {userQuota ? `זמינים: ${userQuota.available_users}` : 'משתמשים בחברה'}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">מנהלים</h2>
-              <p className="text-3xl font-bold text-green-600">{agentStats.totalManagers}</p>
-              <p className="mt-2 text-sm text-gray-500">מנהלים בחברה</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      {/* מכסת משתמשים */}
+      {userQuota && (
+        <div className="replayme-card p-6 border-r-4 border-electric-coral">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">מכסה זמינה</h2>
-              <p className="text-3xl font-bold text-purple-600">
-                {userQuota ? userQuota.available_users : '?'}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                {userQuota 
-                  ? `משתמשים זמינים להוספה`
-                  : 'טוען מידע על המכסה...'
-                }
-              </p>
+            <div className="flex items-center space-x-3">
+              <Target className="w-6 h-6 text-electric-coral" />
+              <h3 className="text-display text-xl font-bold text-indigo-night">
+                מכסת משתמשים
+              </h3>
             </div>
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              userQuota && userQuota.available_users > 0 
-                ? 'bg-purple-100' 
-                : 'bg-red-100'
-            }`}>
-              <svg className={`w-6 h-6 ${
-                userQuota && userQuota.available_users > 0 
-                  ? 'text-purple-600' 
-                  : 'text-red-600'
-              }`} fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
-              </svg>
+            <div className="text-2xl font-bold text-electric-coral">
+              {userQuota.used_users}/{userQuota.total_users}
             </div>
           </div>
-          <Link
-            href="/team/purchase-quota"
-            className="w-full inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-          >
-            💳 הגדל מכסה
-          </Link>
-        </div>
-      </div>
-
-      {/* מידע על המנוי */}
-      {subscription && (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">פרטי מנוי</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-gray-500 mb-1">חבילה</p>
-              <p className="font-medium text-gray-800">{subscription.subscription_plans.name}</p>
+          
+          <div className="space-y-3">
+            <div className="progress-bar">
+              <div 
+                className="progress-bar-fill bg-electric-coral" 
+                style={{ width: `${(userQuota.used_users / userQuota.total_users) * 100}%` }}
+              ></div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">מכסת נציגים</p>
-              <p className="font-medium text-gray-800">{subscription.subscription_plans.max_agents}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">סטטוס</p>
-              <p className="font-medium text-gray-800">
-                {subscription.is_active ? (
-                  <span className="text-green-600">פעיל</span>
-                ) : (
-                  <span className="text-red-600">לא פעיל</span>
-                )}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 mb-1">תוקף</p>
-              <p className="font-medium text-gray-800">
-                {subscription.expires_at 
-                  ? new Date(subscription.expires_at).toLocaleDateString('he-IL')
-                  : 'ללא הגבלה'}
-              </p>
+            
+            <div className="flex justify-between text-sm">
+              <span className="text-indigo-night/60">בשימוש: {userQuota.used_users}</span>
+              <span className="text-success font-medium">זמינים: {userQuota.available_users}</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* מסננים וחיפוש */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">אנשי צוות ({filteredAgents.length})</h2>
-        
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1">
+      {/* סרגל פעולות */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-4 flex-1">
+          {/* חיפוש */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-indigo-night/40 w-5 h-5" />
             <input
               type="text"
               placeholder="חיפוש לפי שם או אימייל..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-4 pr-12 py-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night"
             />
           </div>
-          <div>
+
+          {/* פילטרים */}
+          <div className="flex gap-3">
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value as 'all' | 'agent' | 'manager')}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-4 py-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night bg-white"
             >
               <option value="all">כל התפקידים</option>
               <option value="agent">נציגים</option>
               <option value="manager">מנהלים</option>
             </select>
-          </div>
-          <div>
+
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'all' | 'approved' | 'pending')}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-4 py-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night bg-white"
             >
               <option value="all">כל הסטטוסים</option>
               <option value="approved">מאושרים</option>
-              <option value="pending">ממתינים לאישור</option>
+              <option value="pending">ממתינים</option>
             </select>
           </div>
         </div>
 
-        {/* טבלת נציגים */}
-        {filteredAgents.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">שם מלא</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">אימייל</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תפקיד</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סטטוס</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">הצטרף בתאריך</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAgents.map((agent) => (
-                  <tr key={agent.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {agent.full_name || 'ללא שם'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {agent.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {agent.role === 'owner' ? 'בעל חברה' : 
-                       agent.role === 'manager' ? 'מנהל' : 
-                       agent.role === 'agent' ? 'נציג' : 
-                       agent.role}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span 
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          agent.is_approved 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {agent.is_approved ? 'מאושר' : 'ממתין לאישור'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(agent.created_at).toLocaleDateString('he-IL')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <div className="flex justify-center space-x-3">
-                        <Link 
-                          href={`/team/edit-agent/${agent.id}`} 
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                        >
-                          עריכה
-                        </Link>
-                        {agent.id !== userId && agent.role !== 'owner' && (
-                          <button 
-                            className="text-red-600 hover:text-red-800 text-sm font-medium"
-                            onClick={() => {
-                              if (confirm('האם אתה בטוח שברצונך להסיר את המשתמש?')) {
-                                // TODO: Implement remove user
-                              }
-                            }}
-                          >
-                            הסרה
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* כפתור הוספת נציג */}
+        <button
+          onClick={() => setShowAddAgentModal(true)}
+          className="replayme-button-primary"
+        >
+          <div className="flex items-center space-x-2">
+            <UserPlus className="w-5 h-5" />
+            <span>הוסף חבר צוות</span>
           </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500">לא נמצאו נציגים המתאימים למסננים שנבחרו</p>
-          </div>
-        )}
+        </button>
       </div>
 
-      {/* הבקשות שלי */}
-      {myRequests.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">הבקשות שלי ({myRequests.length})</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">שם נציג</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">אימייל</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תאריך בקשה</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">סטטוס</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תאריך עדכון</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {myRequests.map((request) => (
-                  <tr key={request.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {request.full_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {request.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(request.created_at).toLocaleDateString('he-IL')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
-                        {getStatusText(request.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {request.approved_at 
-                        ? new Date(request.approved_at).toLocaleDateString('he-IL')
-                        : '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {myRequests.filter(req => req.status === 'pending').length > 0 && (
-            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
-                💡 יש לך {myRequests.filter(req => req.status === 'pending').length} בקשות ממתינות לאישור מנהל המערכת.
-              </p>
+      {/* רשימת חברי הצוות */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {filteredAgents.map((agent) => {
+          const RoleIcon = getRoleIcon(agent.role)
+          return (
+            <div key={agent.id} className="replayme-card p-6 card-hover">
+              <div className="space-y-4">
+                {/* כותרת הכרטיס */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                                         <Avatar avatarUrl={`geom${(parseInt(agent.id.slice(-2), 16) % 12) + 1}`} fullName={agent.full_name} className="w-12 h-12" />
+                    <div>
+                      <h3 className="font-semibold text-indigo-night text-lg">
+                        {agent.full_name || 'ללא שם'}
+                      </h3>
+                      <div className="flex items-center space-x-2">
+                        <RoleIcon className="w-4 h-4 text-indigo-night/60" />
+                        <span className="text-sm text-indigo-night/60">
+                          {getRoleText(agent.role)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* סטטוס */}
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(agent.is_approved ? 'approved' : 'pending')}`}>
+                    {agent.is_approved ? (
+                      <div className="flex items-center space-x-1">
+                        <CheckCircle className="w-3 h-3" />
+                        <span>פעיל</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-3 h-3" />
+                        <span>ממתין</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* פרטי קשר */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-3 text-sm text-indigo-night/70">
+                    <Mail className="w-4 h-4" />
+                    <span>{agent.email}</span>
+                  </div>
+                  <div className="flex items-center space-x-3 text-sm text-indigo-night/70">
+                    <Calendar className="w-4 h-4" />
+                    <span>הצטרף ב-{new Date(agent.created_at).toLocaleDateString('he-IL')}</span>
+                  </div>
+                </div>
+
+                {/* פעולות */}
+                <div className="flex gap-2 pt-2">
+                  <Link 
+                    href={`/team/edit-agent/${agent.id}`}
+                    className="flex-1 py-2 px-3 rounded-lg border border-ice-gray hover:bg-lemon-mint/10 transition-colors duration-200 text-center text-sm font-medium text-indigo-night"
+                  >
+                    <div className="flex items-center justify-center space-x-1">
+                      <Edit className="w-4 h-4" />
+                      <span>עריכה</span>
+                    </div>
+                  </Link>
+                  
+                  <Link 
+                    href={`/dashboard/agent?userId=${agent.id}`}
+                    className="flex-1 py-2 px-3 rounded-lg bg-lemon-mint/20 hover:bg-lemon-mint/30 transition-colors duration-200 text-center text-sm font-medium text-lemon-mint-dark"
+                  >
+                    <div className="flex items-center justify-center space-x-1">
+                      <BarChart3 className="w-4 h-4" />
+                      <span>ביצועים</span>
+                    </div>
+                  </Link>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      )}
+          )
+        })}
+      </div>
 
       {/* מודל הוספת נציג */}
       {showAddAgentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-800">הוסף נציג חדש</h3>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="replayme-card max-w-md w-full p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-display text-2xl font-bold text-indigo-night">
+                הוסף חבר צוות חדש
+              </h3>
               <button
                 onClick={() => setShowAddAgentModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="p-2 hover:bg-ice-gray rounded-lg transition-colors duration-200"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5 text-indigo-night/60" />
               </button>
             </div>
 
-            <form onSubmit={handleAddAgent} className="space-y-4">
+            <form onSubmit={handleAddAgent} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">שם מלא</label>
+                <label className="block text-sm font-medium text-indigo-night mb-2">
+                  שם מלא <span className="text-electric-coral">*</span>
+                </label>
                 <input
                   type="text"
-                  required
                   value={formData.fullName}
                   onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                  className="w-full p-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night"
                   placeholder="הכנס שם מלא"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">כתובת אימייל</label>
+                <label className="block text-sm font-medium text-indigo-night mb-2">
+                  כתובת אימייל <span className="text-electric-coral">*</span>
+                </label>
                 <input
                   type="email"
-                  required
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                  className="w-full p-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night"
                   placeholder="הכנס כתובת אימייל"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">הערות (אופציונלי)</label>
+                <label className="block text-sm font-medium text-indigo-night mb-2">
+                  הערות נוספות
+                </label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   rows={3}
-                  placeholder="הערות נוספות לגבי הנציג..."
+                  className="w-full p-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night resize-none"
+                  placeholder="הערות אופציונליות..."
                 />
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  💡 הבקשה תישלח למנהל המערכת לאישור ויטופל בהקדם.
-                </p>
-              </div>
-
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => setShowAddAgentModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="flex-1 replayme-button-secondary"
                 >
                   ביטול
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 replayme-button-primary disabled:opacity-50"
                 >
-                  {isSubmitting ? 'שולח...' : 'שלח בקשה'}
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>שולח...</span>
+                    </div>
+                  ) : (
+                    'הוסף חבר צוות'
+                  )}
                 </button>
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* הודעת הצלחה */}
+      {showSuccessNotification && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="success-indicator p-4 rounded-xl shadow-lg max-w-md">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 flex-shrink-0" />
+              <p className="font-medium">{successMessage}</p>
+              <button
+                onClick={() => setShowSuccessNotification(false)}
+                className="p-1 hover:bg-white/20 rounded"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* הודעה כשאין תוצאות */}
+      {filteredAgents.length === 0 && !loading && (
+        <div className="replayme-card p-12 text-center">
+          <div className="w-16 h-16 bg-indigo-night/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Users className="w-8 h-8 text-indigo-night/60" />
+          </div>
+          <h3 className="text-xl font-semibold text-indigo-night mb-2">
+            לא נמצאו חברי צוות
+          </h3>
+          <p className="text-indigo-night/60 mb-6">
+            {searchTerm || roleFilter !== 'all' || statusFilter !== 'all' 
+              ? 'נסה לשנות את הפילטרים או החיפוש'
+              : 'התחל בהוספת חברי צוות חדשים לחברה'
+            }
+          </p>
+          <button
+            onClick={() => setShowAddAgentModal(true)}
+            className="replayme-button-primary"
+          >
+            הוסף חבר צוות ראשון
+          </button>
         </div>
       )}
     </div>

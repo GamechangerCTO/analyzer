@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 interface CompanyQuestionnaireFormProps {
@@ -11,7 +11,7 @@ interface CompanyQuestionnaireFormProps {
 }
 
 export default function CompanyQuestionnaireForm({ companyId, companyData, isAdminEdit = false }: CompanyQuestionnaireFormProps) {
-  const supabase = createClientComponentClient()
+  const supabase = getSupabaseClient()
   const router = useRouter()
   
   const [formData, setFormData] = useState({

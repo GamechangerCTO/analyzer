@@ -2,20 +2,20 @@
 
 import React from 'react'
 
-// אווטרים גיאומטריים זהים לאלה בפרופיל
+// אווטרים גיאומטריים עם צבעי ReplayMe
 const DEFAULT_AVATARS = [
-  { id: 'geom1', style: 'bg-gradient-to-br from-blue-400 to-blue-600', icon: '👤' },
-  { id: 'geom2', style: 'bg-gradient-to-br from-green-400 to-green-600', icon: '🟢' },
-  { id: 'geom3', style: 'bg-gradient-to-br from-purple-400 to-purple-600', icon: '🔷' },
-  { id: 'geom4', style: 'bg-gradient-to-br from-pink-400 to-pink-600', icon: '💎' },
-  { id: 'geom5', style: 'bg-gradient-to-br from-yellow-400 to-yellow-600', icon: '⭐' },
-  { id: 'geom6', style: 'bg-gradient-to-br from-red-400 to-red-600', icon: '🔴' },
-  { id: 'geom7', style: 'bg-gradient-to-br from-indigo-400 to-indigo-600', icon: '🔵' },
-  { id: 'geom8', style: 'bg-gradient-to-br from-teal-400 to-teal-600', icon: '💠' },
-  { id: 'geom9', style: 'bg-gradient-to-br from-orange-400 to-orange-600', icon: '🧡' },
-  { id: 'geom10', style: 'bg-gradient-to-br from-gray-400 to-gray-600', icon: '⚫' },
-  { id: 'geom11', style: 'bg-gradient-to-br from-cyan-400 to-cyan-600', icon: '🔘' },
-  { id: 'geom12', style: 'bg-gradient-to-br from-lime-400 to-lime-600', icon: '💚' },
+  { id: 'geom1', style: 'bg-gradient-to-br from-lemon-mint to-lemon-mint-dark', icon: '👤' },
+  { id: 'geom2', style: 'bg-gradient-to-br from-success to-success-light', icon: '🟢' },
+  { id: 'geom3', style: 'bg-gradient-to-br from-indigo-night to-indigo-night/80', icon: '🔷' },
+  { id: 'geom4', style: 'bg-gradient-to-br from-electric-coral to-electric-coral-light', icon: '💎' },
+  { id: 'geom5', style: 'bg-gradient-to-br from-warning to-warning-light', icon: '⭐' },
+  { id: 'geom6', style: 'bg-gradient-to-br from-electric-coral-dark to-electric-coral', icon: '🔴' },
+  { id: 'geom7', style: 'bg-gradient-to-br from-indigo-night to-accent-light', icon: '🔵' },
+  { id: 'geom8', style: 'bg-gradient-to-br from-success to-lemon-mint', icon: '💠' },
+  { id: 'geom9', style: 'bg-gradient-to-br from-warning to-electric-coral-light', icon: '🧡' },
+  { id: 'geom10', style: 'bg-gradient-to-br from-cream-sand-dark to-ice-gray', icon: '⚫' },
+  { id: 'geom11', style: 'bg-gradient-to-br from-lemon-mint-light to-success-light', icon: '🔘' },
+  { id: 'geom12', style: 'bg-gradient-to-br from-success-light to-lemon-mint', icon: '💚' },
 ]
 
 interface AvatarProps {
@@ -40,7 +40,7 @@ export default function Avatar({ avatarUrl, fullName, size = 'md', className = '
   if (!avatarUrl) {
     const initial = fullName?.charAt(0)?.toUpperCase() || '?'
     return (
-      <div className={`${sizeClass} rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-semibold ${className}`}>
+      <div className={`${sizeClass} rounded-full bg-cream-sand border-2 border-ice-gray flex items-center justify-center text-indigo-night font-semibold shadow-soft hover:shadow-replayme transition-all duration-200 ${className}`}>
         {initial}
       </div>
     )
@@ -50,8 +50,8 @@ export default function Avatar({ avatarUrl, fullName, size = 'md', className = '
   const geometricAvatar = DEFAULT_AVATARS.find(a => a.id === avatarUrl)
   if (geometricAvatar) {
     return (
-      <div className={`${sizeClass} rounded-full ${geometricAvatar.style} flex items-center justify-center text-white shadow-lg ${className}`}>
-        {geometricAvatar.icon}
+      <div className={`${sizeClass} rounded-full ${geometricAvatar.style} flex items-center justify-center text-white shadow-soft hover:shadow-replayme transition-all duration-200 border-2 border-white/20 ${className}`}>
+        <span className="drop-shadow-sm">{geometricAvatar.icon}</span>
       </div>
     )
   }
@@ -61,7 +61,7 @@ export default function Avatar({ avatarUrl, fullName, size = 'md', className = '
     <img 
       src={avatarUrl} 
       alt={fullName || 'אווטר משתמש'} 
-      className={`${sizeClass} rounded-full object-cover shadow-lg ${className}`}
+      className={`${sizeClass} rounded-full object-cover shadow-soft hover:shadow-replayme transition-all duration-200 border-2 border-white/20 ${className}`}
     />
   )
 }

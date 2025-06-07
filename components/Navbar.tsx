@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Avatar from './Avatar'
+import Image from 'next/image'
 
 interface UserData {
   id: string
@@ -66,7 +67,7 @@ export default function Navbar({ user, userData }: NavbarProps) {
   }
   
   const isActive = (path: string) => {
-    return pathname === path ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'
+    return pathname === path ? 'nav-item-active' : 'nav-item hover:bg-cream-sand'
   }
   
   // בדיקה האם המשתמש הוא מנהל מערכת
@@ -81,43 +82,75 @@ export default function Navbar({ user, userData }: NavbarProps) {
   }
   
   return (
-    <nav className="bg-white shadow-md">
+    <nav className="bg-white shadow-soft border-b border-ice-gray">
       <div className="container mx-auto px-4">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <div className="text-xl font-bold text-primary">
-              חדר כושר למכירות
-            </div>
+            <Link href="/dashboard" className="flex items-center space-x-3">
+              <Image 
+                src="/logo.webp" 
+                alt="ReplayMe Logo" 
+                width={40} 
+                height={40}
+                className="w-10 h-10"
+              />
+              <div className="text-display text-2xl font-bold text-indigo-night">
+                ReplayMe
+              </div>
+            </Link>
           </div>
           
           {/* תפריט מסך רחב */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-6">
             <Link 
               href="/dashboard" 
-              className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/dashboard')}`}
+              className={`${isActive('/dashboard')}`}
             >
-              דשבורד
+              <span className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span>דשבורד</span>
+              </span>
             </Link>
+            
             <Link 
               href="/upload" 
-              className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/upload')}`}
+              className={`${isActive('/upload')}`}
             >
-              העלאת שיחה
+              <span className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <span>העלאת שיחה</span>
+              </span>
             </Link>
+            
             <Link 
               href="/simulations" 
-              className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/simulations')}`}
+              className={`${isActive('/simulations')}`}
             >
-              חדר כושר 🏋️‍♂️
+              <span className="flex items-center space-x-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+                <span>חדר כושר 🏋️‍♂️</span>
+              </span>
             </Link>
             
             {/* כפתור לדף ניהול מערכת (מנהלי מערכת בלבד) */}
             {userData.role === 'admin' && (
               <Link 
                 href="/dashboard/admin" 
-                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/dashboard/admin')}`}
+                className={`${isActive('/dashboard/admin')}`}
               >
-                ניהול מערכת
+                <span className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>ניהול מערכת</span>
+                </span>
               </Link>
             )}
             
@@ -125,16 +158,21 @@ export default function Navbar({ user, userData }: NavbarProps) {
             {(userData.role === 'owner' || userData.role === 'manager') && (
               <Link 
                 href="/team" 
-                className={`px-3 py-2 rounded-md text-sm font-medium ${isActive('/team')}`}
+                className={`${isActive('/team')}`}
               >
-                ניהול צוות
+                <span className="flex items-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span>ניהול צוות</span>
+                </span>
               </Link>
             )}
             
             {/* פרופיל עם אווטר */}
             <Link 
               href="/profile" 
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${isActive('/profile')}`}
+              className={`${isActive('/profile')} flex items-center space-x-2`}
             >
               <Avatar 
                 avatarUrl={userProfile.avatar_url} 
@@ -147,7 +185,7 @@ export default function Navbar({ user, userData }: NavbarProps) {
             <button
               onClick={handleSignOut}
               disabled={isLoading}
-              className="px-3 py-2 rounded-md text-sm font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 mr-4"
+              className="replayme-button-coral text-sm disabled:opacity-50"
             >
               {isLoading ? 'מתנתק...' : 'התנתק'}
             </button>
@@ -157,7 +195,7 @@ export default function Navbar({ user, userData }: NavbarProps) {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-indigo-night hover:text-indigo-night/80 hover:bg-cream-sand focus:outline-none focus:ring-2 focus:ring-lemon-mint"
               aria-expanded="false"
             >
               <span className="sr-only">פתח תפריט</span>
@@ -183,7 +221,7 @@ export default function Navbar({ user, userData }: NavbarProps) {
       
       {/* תפריט מובייל */}
       {isMenuOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden bg-cream-sand border-t border-ice-gray">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link
               href="/dashboard"
@@ -207,7 +245,6 @@ export default function Navbar({ user, userData }: NavbarProps) {
               חדר כושר 🏋️‍♂️
             </Link>
             
-            {/* כפתור לדף ניהול מערכת (מנהלי מערכת בלבד) */}
             {userData.role === 'admin' && (
               <Link
                 href="/dashboard/admin"
@@ -218,7 +255,6 @@ export default function Navbar({ user, userData }: NavbarProps) {
               </Link>
             )}
             
-            {/* תפריט לניהול צוות (למנהלים ובעלי חברות) */}
             {(userData.role === 'owner' || userData.role === 'manager') && (
               <Link
                 href="/team"
@@ -229,7 +265,6 @@ export default function Navbar({ user, userData }: NavbarProps) {
               </Link>
             )}
             
-            {/* פרופיל עם אווטר - מובייל */}
             <Link
               href="/profile"
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${isActive('/profile')}`}
@@ -244,12 +279,9 @@ export default function Navbar({ user, userData }: NavbarProps) {
             </Link>
             
             <button
-              onClick={() => {
-                handleSignOut()
-                setIsMenuOpen(false)
-              }}
+              onClick={handleSignOut}
               disabled={isLoading}
-              className="w-full text-right px-3 py-2 rounded-md text-base font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 mt-4"
+              className="w-full text-right replayme-button-coral text-base disabled:opacity-50 mr-3"
             >
               {isLoading ? 'מתנתק...' : 'התנתק'}
             </button>

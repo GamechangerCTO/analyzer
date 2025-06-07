@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import { he } from 'date-fns/locale'
 
@@ -34,7 +34,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
   const [filterRedFlag, setFilterRedFlag] = useState<string>('all') // all, true, false
   const [searchTerm, setSearchTerm] = useState('')
 
-  const supabase = createClientComponentClient()
+  const supabase = getSupabaseClient()
 
   const fetchCalls = useCallback(async () => {
     try {

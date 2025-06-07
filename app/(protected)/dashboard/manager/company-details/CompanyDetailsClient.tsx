@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import { he } from 'date-fns/locale'
 
@@ -17,15 +17,15 @@ interface CompanyData {
   name: string | null
   product_info: string | null
   created_at: string
-  updated_at: string
+  updated_at?: string
 }
 
 interface QuestionnaireData {
   id: string
-  is_complete: boolean
+  is_complete: boolean | null
   completion_score: number | null
   created_at: string
-  updated_at: string
+  updated_at?: string
 }
 
 interface CompanyStats {
@@ -47,7 +47,7 @@ export default function CompanyDetailsClient({ userId, companyId, userRole }: Co
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClientComponentClient()
+  const supabase = getSupabaseClient()
 
   useEffect(() => {
     const fetchCompanyDetails = async () => {

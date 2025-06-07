@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import LoginForm from '@/components/LoginForm'
+import Image from 'next/image'
 
 export default async function LoginPage() {
   const cookieStore = cookies()
@@ -14,34 +15,65 @@ export default async function LoginPage() {
   }
   
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-r from-blue-50 to-blue-100 p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2">חדר כושר למכירות</h1>
-          <p className="text-gray-600">התחבר כדי להתחיל להתאמן</p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-cream-sand-light via-white to-lemon-mint/10 p-4">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cream-sand-light/50 to-transparent"></div>
+      
+      <div className="relative w-full max-w-md">
+        {/* Logo Card */}
+        <div className="replayme-card p-8 mb-6">
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-3 mb-4">
+              <Image 
+                src="/logo.webp" 
+                alt="ReplayMe Logo" 
+                width={60} 
+                height={60}
+                className="w-15 h-15"
+              />
+              <div>
+                <h1 className="text-display text-3xl font-bold text-indigo-night">ReplayMe</h1>
+                <div className="text-sm text-indigo-night/60 font-medium">חדר כושר למכירות</div>
+              </div>
+            </div>
+            <p className="text-indigo-night/70 text-sm leading-relaxed">
+              התחבר כדי להתחיל את האימון הדיגיטלי שלך
+            </p>
+          </div>
         </div>
         
-        <LoginForm />
+        {/* Login Form Card */}
+        <div className="replayme-card p-8">
+          <LoginForm />
+        </div>
         
-        <div className="mt-6 pt-6 border-t border-gray-200 text-center">
-          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-gray-500">
+        {/* Footer Links */}
+        <div className="mt-8 text-center">
+          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm">
             <a 
               href="/privacy-policy" 
-              className="hover:text-gray-700 underline"
+              className="text-indigo-night/60 hover:text-indigo-night underline decoration-lemon-mint decoration-2 underline-offset-4 transition-colors duration-200"
               target="_blank"
               rel="noopener noreferrer"
             >
               מדיניות פרטיות
             </a>
-            <span className="hidden sm:inline">•</span>
+            <span className="hidden sm:inline text-lemon-mint-dark">•</span>
             <a 
               href="/terms-of-service" 
-              className="hover:text-gray-700 underline"
+              className="text-indigo-night/60 hover:text-indigo-night underline decoration-lemon-mint decoration-2 underline-offset-4 transition-colors duration-200"
               target="_blank"
               rel="noopener noreferrer"
             >
               תנאי שירות
             </a>
+          </div>
+          
+          {/* Branding */}
+          <div className="mt-4 text-xs text-indigo-night/40">
+            <span>&copy; {new Date().getFullYear()} ReplayMe</span>
+            <span className="mx-2">•</span>
+            <span>פלטפורמת אימון AI מתקדמת</span>
           </div>
         </div>
       </div>

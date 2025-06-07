@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getSupabaseClient } from '@/lib/supabase/client'
 // הסרת ייבוא של DateRangePicker שלא נדרש יותר
 // import DateRangePicker from '@/components/DateRangePicker'
 import CallsBarChart from '@/components/CallsBarChart'
@@ -16,11 +16,12 @@ interface Call {
   created_at: string
   overall_score: number | null
   red_flag: boolean | null
-  processing_status: string
+  processing_status: string | null
   audio_duration_seconds: number | null
-  has_simulation: boolean
-  simulation_improved: boolean
-  tone_analysis_report: any
+  has_simulation?: boolean | null
+  simulation_improved?: boolean | null
+  tone_analysis_report?: any
+  user_id?: string | null
 }
 
 interface CallTypeSummary {
@@ -59,7 +60,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
   })
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all')
   
-  const supabase = useMemo(() => createClientComponentClient(), [])
+  const supabase = useMemo(() => getSupabaseClient(), [])
   
   // הסרת לוגים ו-useMemo של שאילתות תאריכים
 

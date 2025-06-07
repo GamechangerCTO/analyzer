@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Database } from '@/types/database.types'
 
@@ -31,7 +31,7 @@ export default function AgentRequestsPage() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'agents' | 'quota'>('all')
   const [processingId, setProcessingId] = useState<string | null>(null)
 
-  const supabase = createClientComponentClient<Database>()
+  const supabase = getSupabaseClient()
 
   useEffect(() => {
     fetchRequests()

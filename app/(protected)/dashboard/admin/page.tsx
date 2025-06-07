@@ -3,6 +3,27 @@
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { 
+  Users, 
+  Building2, 
+  Settings, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock,
+  Shield,
+  BarChart3,
+  Star,
+  Target,
+  Activity,
+  RefreshCw,
+  TrendingUp,
+  Crown,
+  UserCheck,
+  FileText,
+  CreditCard,
+  X,
+  Bell
+} from 'lucide-react'
 
 interface AdminStats {
   totalUsers: number
@@ -77,174 +98,414 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-lemon-mint/20 rounded-2xl flex items-center justify-center mx-auto animate-lemon-pulse">
+            <Shield className="w-8 h-8 text-lemon-mint-dark animate-spin" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-indigo-night">טוען נתוני מערכת...</h3>
+            <p className="text-indigo-night/60">אוסף נתונים ממערכת ReplayMe</p>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="space-y-8">
+      {/* כותרת מנהל מערכת */}
+      <div className="replayme-card p-8 bg-gradient-to-l from-indigo-night to-indigo-night/80 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <div className="w-20 h-20 bg-lemon-mint/20 rounded-2xl flex items-center justify-center">
+              <Crown className="w-10 h-10 text-lemon-mint" />
+            </div>
+            <div>
+              <h1 className="text-display text-3xl font-bold mb-2">
+                בקרת מערכת ReplayMe 👑
+              </h1>
+              <p className="text-white/80 text-lg">
+                לוח בקרה מתקדם לניהול המערכת
+              </p>
+            </div>
+          </div>
+          
+          <button 
+            onClick={fetchAdminStats}
+            className="px-6 py-3 bg-lemon-mint/20 hover:bg-lemon-mint/30 text-lemon-mint rounded-xl transition-colors duration-200 flex items-center space-x-2"
+          >
+            <RefreshCw className="w-5 h-5" />
+            <span>רענן נתונים</span>
+          </button>
+        </div>
+      </div>
+
       {/* התראה דחופה */}
       {showUrgentAlert && getTotalPendingItems() > 0 && (
-        <div className="bg-yellow-50 border-r-4 border-yellow-400 p-4 rounded-lg shadow-lg">
-          <div className="flex justify-between items-start">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
+        <div className="replayme-card p-6 border-r-4 border-warning bg-warning/5">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-warning/20 rounded-xl flex items-center justify-center animate-coral-pulse">
+                <Bell className="w-6 h-6 text-warning" />
               </div>
-              <div className="mr-3">
-                <h3 className="text-sm font-medium text-yellow-800">
-                  ⚠️ יש לך {getTotalPendingItems()} משתמשים ממתינים לאישור
+              <div>
+                <h3 className="text-lg font-bold text-indigo-night mb-2">
+                  🔔 יש לך {getTotalPendingItems()} פעולות ממתינות!
                 </h3>
-                <div className="mt-2 text-sm text-yellow-700">
-                  <ul className="list-disc list-inside space-y-1">
-                    {stats.pendingUsers > 0 && (
-                      <li>
-                        <Link href="/dashboard/admin/users" className="underline hover:text-yellow-900">
-                          {stats.pendingUsers} משתמשים ממתינים לאישור
-                        </Link>
-                      </li>
-                    )}
-                  </ul>
+                <div className="space-y-2">
+                  {stats.pendingUsers > 0 && (
+                    <div className="flex items-center space-x-3">
+                      <UserCheck className="w-4 h-4 text-warning" />
+                      <Link 
+                        href="/dashboard/admin/users" 
+                        className="text-indigo-night font-medium hover:text-lemon-mint-dark transition-colors underline"
+                      >
+                        {stats.pendingUsers} משתמשים ממתינים לאישור
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
+            
             <button
               onClick={() => setShowUrgentAlert(false)}
-              className="text-yellow-400 hover:text-yellow-600"
+              className="p-2 hover:bg-ice-gray rounded-lg transition-colors duration-200"
             >
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
+              <X className="w-5 h-5 text-indigo-night/60" />
             </button>
           </div>
         </div>
       )}
 
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">לוח בקרה למנהל מערכת</h1>
-        <button 
-          onClick={fetchAdminStats}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          🔄 רענן נתונים
-        </button>
-      </div>
-
       {/* סטטיסטיקות כלליות */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="replayme-card p-6 border-r-4 border-lemon-mint">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-1">משתמשים</h3>
-              <p className="text-3xl font-bold text-blue-600">{stats.totalUsers}</p>
-              <p className="text-sm text-gray-500">
-                {stats.approvedUsers} מאושרים • {stats.pendingUsers} ממתינים
+              <p className="text-indigo-night/60 text-sm font-medium mb-1">סה"כ משתמשים</p>
+              <p className="text-3xl font-bold text-indigo-night animate-score-bounce">{stats.totalUsers}</p>
+              <p className="text-sm text-lemon-mint-dark font-medium mt-1">
+                {stats.approvedUsers} מאושרים
               </p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-              </svg>
+            <div className="w-12 h-12 bg-lemon-mint/20 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-lemon-mint-dark" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+        <div className="replayme-card p-6 border-r-4 border-warning">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-1">חברות</h3>
-              <p className="text-3xl font-bold text-green-600">{stats.totalCompanies}</p>
-              <p className="text-sm text-gray-500">
-                חברות רשומות במערכת
+              <p className="text-indigo-night/60 text-sm font-medium mb-1">ממתינים לאישור</p>
+              <p className="text-3xl font-bold text-indigo-night animate-score-bounce">{stats.pendingUsers}</p>
+              <p className="text-sm text-warning font-medium mt-1">
+                דורש פעולה
               </p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-              </svg>
+            <div className="w-12 h-12 bg-warning/20 rounded-xl flex items-center justify-center">
+              <Clock className="w-6 h-6 text-warning" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+        <div className="replayme-card p-6 border-r-4 border-success">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-1">מכסות משתמשים</h3>
-              <p className="text-3xl font-bold text-purple-600">אוטומטי</p>
-              <p className="text-sm text-gray-500">
-                ניהול מכסות לפי חברות
+              <p className="text-indigo-night/60 text-sm font-medium mb-1">משתמשים מאושרים</p>
+              <p className="text-3xl font-bold text-indigo-night animate-score-bounce">{stats.approvedUsers}</p>
+              <p className="text-sm text-success font-medium mt-1">
+                פעילים במערכת
               </p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
-              </svg>
+            <div className="w-12 h-12 bg-success/20 rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-success" />
+            </div>
+          </div>
+        </div>
+
+        <div className="replayme-card p-6 border-r-4 border-electric-coral">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-indigo-night/60 text-sm font-medium mb-1">חברות במערכת</p>
+              <p className="text-3xl font-bold text-indigo-night animate-score-bounce">{stats.totalCompanies}</p>
+              <p className="text-sm text-electric-coral font-medium mt-1">
+                פעילות
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-electric-coral/20 rounded-xl flex items-center justify-center">
+              <Building2 className="w-6 h-6 text-electric-coral" />
             </div>
           </div>
         </div>
       </div>
 
       {/* תפריט ניהול */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">תפריט ניהול</h2>
+      <div className="space-y-6">
+        <h2 className="text-display text-2xl font-bold text-indigo-night">
+          תפריט ניהול מתקדם ⚙️
+        </h2>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Link href="/dashboard/admin/users" className={`block p-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 ${
-            stats.pendingUsers > 0 ? 'bg-yellow-50 border-2 border-yellow-300 ring-2 ring-yellow-200' : 'bg-white'
-          }`}>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xl font-semibold">ניהול משתמשים</h3>
-              {stats.pendingUsers > 0 && (
-                <span className="px-3 py-1 bg-yellow-500 text-white text-sm font-bold rounded-full animate-pulse">
-                  {stats.pendingUsers}
-                </span>
-              )}
-            </div>
-            <p className="text-gray-600 mb-4">הוספה, עריכה ומחיקה של משתמשים במערכת</p>
-            <div className="text-sm text-gray-500">
-              <div>סה"כ: {stats.totalUsers} משתמשים</div>
-              <div>מאושרים: {stats.approvedUsers}</div>
-              {stats.pendingUsers > 0 && (
-                <div className="text-yellow-600 font-medium">⚠️ ממתינים לאישור: {stats.pendingUsers}</div>
-              )}
-            </div>
-          </Link>
-
-          <Link href="/dashboard/admin/companies" className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <h3 className="text-xl font-semibold mb-2">ניהול חברות</h3>
-            <p className="text-gray-600 mb-4">הוספה, עריכה ומחיקה של חברות במערכת</p>
-            <div className="text-sm text-gray-500">
-              <div>סה"כ: {stats.totalCompanies} חברות</div>
-            </div>
-          </Link>
-
-          <Link href="/dashboard/admin/company-quotas" className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <h3 className="text-xl font-semibold mb-2">ניהול מכסות משתמשים</h3>
-            <p className="text-gray-600 mb-4">קביעת מכסות משתמשים לחברות ובקרת השימוש</p>
-            <div className="text-sm text-gray-500">
-              <div>ניהול מכסות לכל החברות</div>
-              <div>בקרת זמינות משתמשים</div>
+          {/* ניהול משתמשים */}
+          <Link 
+            href="/dashboard/admin/users" 
+            className={`replayme-card p-6 card-hover block ${
+              stats.pendingUsers > 0 ? 'border-r-4 border-warning bg-warning/5' : ''
+            }`}
+          >
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 bg-lemon-mint/20 rounded-xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-lemon-mint-dark" />
+                </div>
+                {stats.pendingUsers > 0 && (
+                  <div className="bg-warning text-white text-xs font-bold px-2 py-1 rounded-full animate-coral-pulse">
+                    {stats.pendingUsers}
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                  ניהול משתמשים
+                </h3>
+                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                  אישור משתמשים חדשים, ניהול הרשאות ועריכת פרטים
+                </p>
+                {stats.pendingUsers > 0 && (
+                  <p className="text-warning text-sm font-medium mt-2">
+                    🔥 {stats.pendingUsers} משתמשים ממתינים לאישור
+                  </p>
+                )}
+              </div>
             </div>
           </Link>
 
-          <Link href="/dashboard/admin/pricing-management" className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            <h3 className="text-xl font-semibold mb-2">💰 ניהול מחירים והנחות</h3>
-            <p className="text-gray-600 mb-4">עדכון מחירי חבילות, יצירת הנחות ושליטה במערכת התמחור</p>
-            <div className="text-sm text-gray-500">
-              <div>עריכת מחירי חבילות</div>
-              <div>יצירת והנהלת הנחות</div>
-              <div>מעקב מחירים והיסטוריה</div>
+          {/* ניהול חברות */}
+          <Link 
+            href="/dashboard/admin/companies" 
+            className="replayme-card p-6 card-hover block"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-electric-coral/20 rounded-xl flex items-center justify-center">
+                <Building2 className="w-6 h-6 text-electric-coral" />
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                  ניהול חברות
+                </h3>
+                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                  הוספה, עריכה ומחיקה של חברות במערכת
+                </p>
+                <p className="text-electric-coral text-sm font-medium mt-2">
+                  {stats.totalCompanies} חברות רשומות
+                </p>
+              </div>
             </div>
           </Link>
 
-          <div className="block p-6 bg-white rounded-lg shadow-md">
-            <h3 className="text-xl font-semibold mb-2">ניהול מנויים</h3>
-            <p className="text-gray-600">בקרוב - ניהול מנויים לחברות</p>
-            <div className="text-sm text-gray-400 mt-4">
-              בפיתוח...
+          {/* מכסות משתמשים */}
+          <Link 
+            href="/dashboard/admin/company-quotas" 
+            className="replayme-card p-6 card-hover block"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-success/20 rounded-xl flex items-center justify-center">
+                <Target className="w-6 h-6 text-success" />
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                  מכסות משתמשים
+                </h3>
+                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                  ניהול מכסות ותוכניות מנוי לחברות שונות
+                </p>
+                <p className="text-success text-sm font-medium mt-2">
+                  ניהול אוטומטי ומתקדם
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          {/* בקשות נציגים */}
+          <Link 
+            href="/dashboard/admin/agent-requests" 
+            className="replayme-card p-6 card-hover block"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-warning/20 rounded-xl flex items-center justify-center">
+                <UserCheck className="w-6 h-6 text-warning" />
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                  בקשות נציגים
+                </h3>
+                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                  אישור בקשות הוספת נציגים חדשים מחברות
+                </p>
+                <p className="text-warning text-sm font-medium mt-2">
+                  מעקב אחר בקשות ממתינות
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          {/* ניהול תמחור */}
+          <Link 
+            href="/dashboard/admin/pricing-management" 
+            className="replayme-card p-6 card-hover block"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-indigo-night/20 rounded-xl flex items-center justify-center">
+                <CreditCard className="w-6 h-6 text-indigo-night" />
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                  ניהול תמחור
+                </h3>
+                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                  הגדרת מחירים ותוכניות מנוי למוצרי המערכת
+                </p>
+                <p className="text-indigo-night text-sm font-medium mt-2">
+                  מחירים ותוכניות
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          {/* הגדרות מערכת */}
+          <Link 
+            href="/dashboard/admin/system-settings" 
+            className="replayme-card p-6 card-hover block"
+          >
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-ice-gray/40 rounded-xl flex items-center justify-center">
+                <Settings className="w-6 h-6 text-indigo-night/80" />
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                  הגדרות מערכת
+                </h3>
+                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                  הגדרות כלליות, הודעות מערכת ותצורות מתקדמות
+                </p>
+                <p className="text-indigo-night/80 text-sm font-medium mt-2">
+                  תצורה מתקדמת
+                </p>
+              </div>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* תובנות מהירות */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="replayme-card p-6">
+          <h3 className="text-display text-xl font-bold text-indigo-night mb-6">
+            תובנות מהירות 📊
+          </h3>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-cream-sand rounded-lg">
+              <div className="flex items-center space-x-3">
+                <TrendingUp className="w-5 h-5 text-success" />
+                <span className="text-sm font-medium text-indigo-night">קצב צמיחה</span>
+              </div>
+              <div className="text-lg font-bold text-success">
+                {stats.totalUsers > 0 ? `+${Math.round((stats.approvedUsers / stats.totalUsers) * 100)}%` : '0%'}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-cream-sand rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Activity className="w-5 h-5 text-electric-coral" />
+                <span className="text-sm font-medium text-indigo-night">יעילות אישור</span>
+              </div>
+              <div className="text-lg font-bold text-electric-coral">
+                {stats.totalUsers > 0 ? `${Math.round((stats.approvedUsers / stats.totalUsers) * 100)}%` : '0%'}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-cream-sand rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Star className="w-5 h-5 text-warning" />
+                <span className="text-sm font-medium text-indigo-night">משתמשים לחברה</span>
+              </div>
+              <div className="text-lg font-bold text-warning">
+                {stats.totalCompanies > 0 ? Math.round(stats.totalUsers / stats.totalCompanies) : 0}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="replayme-card p-6">
+          <h3 className="text-display text-xl font-bold text-indigo-night mb-6">
+            פעולות מומלצות 🎯
+          </h3>
+          
+          <div className="space-y-4">
+            {stats.pendingUsers > 0 && (
+              <div className="p-4 border border-warning/30 rounded-xl bg-warning/5">
+                <div className="flex items-start space-x-3">
+                  <AlertTriangle className="w-5 h-5 text-warning mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-indigo-night">בדוק משתמשים ממתינים</h4>
+                    <p className="text-sm text-indigo-night/70 mt-1">
+                      יש {stats.pendingUsers} משתמשים שממתינים לאישור שלך
+                    </p>
+                    <Link 
+                      href="/dashboard/admin/users"
+                      className="inline-block mt-2 text-sm font-medium text-warning hover:underline"
+                    >
+                      עבור לאישור →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="p-4 border border-success/30 rounded-xl bg-success/5">
+              <div className="flex items-start space-x-3">
+                <BarChart3 className="w-5 h-5 text-success mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-indigo-night">בדוק ביצועים</h4>
+                  <p className="text-sm text-indigo-night/70 mt-1">
+                    עיין בדוחות שימוש ופעילות החברות
+                  </p>
+                  <Link 
+                    href="/dashboard/admin/reports"
+                    className="inline-block mt-2 text-sm font-medium text-success hover:underline"
+                  >
+                    צפה בדוחות →
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border border-electric-coral/30 rounded-xl bg-electric-coral/5">
+              <div className="flex items-start space-x-3">
+                <Settings className="w-5 h-5 text-electric-coral mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-indigo-night">עדכן הגדרות</h4>
+                  <p className="text-sm text-indigo-night/70 mt-1">
+                    וודא שהגדרות המערכת מעודכנות ומתאימות
+                  </p>
+                  <Link 
+                    href="/dashboard/admin/system-settings"
+                    className="inline-block mt-2 text-sm font-medium text-electric-coral hover:underline"
+                  >
+                    הגדרות מערכת →
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>

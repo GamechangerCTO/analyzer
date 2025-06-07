@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import DateRangePicker from '@/components/DateRangePicker'
 import CallsBarChart from '@/components/CallsBarChart'
 import ProgressLineChart from '@/components/ProgressLineChart'
@@ -15,15 +15,15 @@ interface Call {
   created_at: string
   overall_score: number | null
   red_flag: boolean | null
-  processing_status: string
+  processing_status: string | null
   audio_duration_seconds: number | null
-  user_id: string
+  user_id: string | null
 }
 
 interface User {
   id: string
   full_name: string | null
-  email: string
+  email: string | null
   callsCount: number
   avgScore: number
   redFlagsCount: number
@@ -58,7 +58,7 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
   const [scoreFilter, setScoreFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
   const [managerInfo, setManagerInfo] = useState<{
     full_name: string | null
-    email: string
+    email: string | null
     role: string
   } | null>(null)
   const [companyInfo, setCompanyInfo] = useState<{
@@ -95,7 +95,7 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
     ]
   })
   
-  const supabase = createClientComponentClient()
+  const supabase = getSupabaseClient()
   const isFirstRender = useRef(true)
   const lastFetchParamsRef = useRef<string>('')
   
@@ -287,7 +287,7 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
     if (searchTerm) {
       filtered = filtered.filter(user => 
         (user.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (user.email || '').toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 

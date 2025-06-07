@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 interface PaymentPackage {
   id: string
@@ -38,6 +38,7 @@ export default function PaymentModal({ package: pkg, isOpen, onClose, onSuccess 
     cvv: '',
     name: ''
   })
+  const [countdown, setCountdown] = useState(3)
 
   // הנחות זמינות (פיקטיביות)
   const availableDiscounts: Discount[] = [
@@ -99,9 +100,23 @@ export default function PaymentModal({ package: pkg, isOpen, onClose, onSuccess 
     
     if (discount) {
       setAppliedDiscount(discount)
-      alert(`✅ הקוד ${discount.discount_code} הוחל בהצלחה!`)
+      // הודעה זמנית במקום alert
+      const successDiv = document.createElement('div')
+      successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50'
+      successDiv.textContent = `✅ הקוד ${discount.discount_code} הוחל בהצלחה!`
+      document.body.appendChild(successDiv)
+      setTimeout(() => {
+        document.body.removeChild(successDiv)
+      }, 3000)
     } else {
-      alert('❌ קוד הנחה לא תקין או לא זמין עבור חבילה זו')
+      // הודעת שגיאה זמנית במקום alert
+      const errorDiv = document.createElement('div')
+      errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50'
+      errorDiv.textContent = '❌ קוד הנחה לא תקין או לא זמין עבור חבילה זו'
+      document.body.appendChild(errorDiv)
+      setTimeout(() => {
+        document.body.removeChild(errorDiv)
+      }, 3000)
     }
   }
 
@@ -130,10 +145,34 @@ export default function PaymentModal({ package: pkg, isOpen, onClose, onSuccess 
     }
     
     setCurrentStep('success')
-    setTimeout(() => {
-      onSuccess(paymentData)
-    }, 2000)
+    setCountdown(3)
   }
+
+  // Countdown timer for success step
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (currentStep === 'success' && countdown > 0) {
+      timer = setTimeout(() => {
+        setCountdown(countdown - 1)
+      }, 1000)
+    } else if (currentStep === 'success' && countdown === 0) {
+      // סגירה אוטומטית והעברת הנתונים
+      const paymentData = {
+        package_id: pkg.id,
+        package_name: pkg.name,
+        users_count: pkg.users_count,
+        original_price: pkg.base_price,
+        final_price: calculateFinalPrice(),
+        discount_applied: appliedDiscount,
+        savings: getSavingsAmount(),
+        payment_method: paymentMethod,
+        transaction_id: `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        payment_date: new Date().toISOString()
+      }
+      onSuccess(paymentData)
+    }
+    return () => clearTimeout(timer)
+  }, [currentStep, countdown])
 
   const resetModal = () => {
     setCurrentStep('package')
@@ -165,7 +204,7 @@ export default function PaymentModal({ package: pkg, isOpen, onClose, onSuccess 
             {currentStep === 'discount' && '🎁 קוד הנחה'}
             {currentStep === 'payment' && '💳 פרטי תשלום'}
             {currentStep === 'processing' && '⏳ מעבד תשלום...'}
-            {currentStep === 'success' && '✅ תשלום הושלם!'}
+            {currentStep === 'success' && `✅ תשלום הושלם! (${countdown})`}
           </h2>
           {currentStep !== 'processing' && currentStep !== 'success' && (
             <button
@@ -456,7 +495,6 @@ export default function PaymentModal({ package: pkg, isOpen, onClose, onSuccess 
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mx-auto mb-4"></div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">מעבד תשלום...</h3>
-              <p className="text-gray-600 text-sm">אנא המתן, התשלום מתבצע</p>
               <div className="mt-4">
                 <div className="bg-gray-200 rounded-full h-2">
                   <div className="bg-blue-500 h-2 rounded-full w-full animate-pulse"></div>
@@ -467,22 +505,64 @@ export default function PaymentModal({ package: pkg, isOpen, onClose, onSuccess 
 
           {/* שלב 5: הצלחה */}
           {currentStep === 'success' && (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
+            <div className="text-center space-y-6">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-4xl">✅</span>
               </div>
-              <h3 className="text-xl font-bold text-green-800 mb-2">✅ התשלום הושלם בהצלחה!</h3>
-              <p className="text-gray-600 mb-4">המכסה שלך תעודכן תוך מספר דקות</p>
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200 text-sm text-green-700">
-                <div>חבילה: {pkg.name}</div>
-                <div>משתמשים: {pkg.users_count}</div>
-                <div>סכום: ₪{calculateFinalPrice().toLocaleString()}</div>
-                {appliedDiscount && (
-                  <div>הנחה: {appliedDiscount.discount_code}</div>
-                )}
+              
+              <div>
+                <h3 className="text-2xl font-bold text-green-600 mb-2">תשלום הושלם בהצלחה!</h3>
+                <p className="text-gray-600">המכסה שלכם תעודכן בקרוב</p>
               </div>
+
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <h4 className="font-semibold text-green-800 mb-2">פרטי הרכישה:</h4>
+                <div className="text-sm text-green-700 space-y-1">
+                  <div className="flex justify-between">
+                    <span>חבילה:</span>
+                    <span>{pkg.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>משתמשים:</span>
+                    <span>{pkg.users_count}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>סכום שולם:</span>
+                    <span>₪{calculateFinalPrice().toLocaleString()}</span>
+                  </div>
+                  {appliedDiscount && (
+                    <div className="flex justify-between text-green-600">
+                      <span>חיסכון:</span>
+                      <span>₪{getSavingsAmount().toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="text-sm text-gray-500">
+                הפופאפ ייסגר אוטומטית בעוד {countdown} שניות...
+              </div>
+
+              <button
+                onClick={() => {
+                  const paymentData = {
+                    package_id: pkg.id,
+                    package_name: pkg.name,
+                    users_count: pkg.users_count,
+                    original_price: pkg.base_price,
+                    final_price: calculateFinalPrice(),
+                    discount_applied: appliedDiscount,
+                    savings: getSavingsAmount(),
+                    payment_method: paymentMethod,
+                    transaction_id: `TXN_${Date.now()}_${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+                    payment_date: new Date().toISOString()
+                  }
+                  onSuccess(paymentData)
+                }}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                סגור עכשיו
+              </button>
             </div>
           )}
         </div>

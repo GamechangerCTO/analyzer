@@ -5,6 +5,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 import { Database } from '@/types/database.types'
 import PaymentModal from '@/components/PaymentModal'
+import { getSupabaseClient } from '@/lib/supabase/client'
 
 interface QuotaPackage {
   id: string
@@ -64,8 +65,9 @@ export default function PurchaseQuotaPage() {
   const [userInfo, setUserInfo] = useState<{userId: string, companyId: string} | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedPackageForPayment, setSelectedPackageForPayment] = useState<PaymentPackage | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  const supabase = createClientComponentClient<Database>()
+  const supabase = getSupabaseClient()
 
   useEffect(() => {
     fetchUserData()
@@ -76,8 +78,17 @@ export default function PurchaseQuotaPage() {
       // קבלת המשתמש הנוכחי
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       
-      if (userError || !user) {
+      if (userError) {
         console.error('Error getting user:', userError)
+        setSuccessMessage('❌ שגיאה באימות המשתמש')
+        setTimeout(() => setSuccessMessage(null), 3000)
+        return
+      }
+
+      if (!user) {
+        console.error('No user found')
+        setSuccessMessage('❌ משתמש לא מחובר')
+        setTimeout(() => setSuccessMessage(null), 3000)
         return
       }
 
@@ -88,8 +99,17 @@ export default function PurchaseQuotaPage() {
         .eq('id', user.id)
         .single()
 
-      if (userDataError || !userData || !userData.company_id) {
+      if (userDataError) {
         console.error('Error getting user data:', userDataError)
+        setSuccessMessage('❌ שגיאה בקבלת נתוני המשתמש')
+        setTimeout(() => setSuccessMessage(null), 3000)
+        return
+      }
+
+      if (!userData || !userData.company_id) {
+        console.error('User data incomplete:', userData)
+        setSuccessMessage('❌ נתוני המשתמש לא שלמים')
+        setTimeout(() => setSuccessMessage(null), 3000)
         return
       }
 
@@ -98,18 +118,43 @@ export default function PurchaseQuotaPage() {
         companyId: userData.company_id
       })
 
-      // קבלת מכסה נוכחית
-      const { data: quotaData, error: quotaError } = await supabase
-        .rpc('get_company_user_quota', { p_company_id: userData.company_id })
+      // קבלת מכסה נוכחית עם retry mechanism
+      let retryCount = 0
+      const maxRetries = 3
+      
+      while (retryCount < maxRetries) {
+        try {
+          const { data: quotaData, error: quotaError } = await supabase
+            .rpc('get_company_user_quota', { p_company_id: userData.company_id })
 
-      if (quotaError) {
-        console.error('Error getting quota:', quotaError)
-      } else if (quotaData && quotaData.length > 0) {
-        setCurrentQuota(quotaData[0])
+          if (quotaError) {
+            console.error(`Error getting quota (attempt ${retryCount + 1}):`, quotaError)
+            if (retryCount === maxRetries - 1) {
+              setSuccessMessage('❌ שגיאה בקבלת נתוני המכסה')
+              setTimeout(() => setSuccessMessage(null), 3000)
+            }
+            retryCount++
+            await new Promise(resolve => setTimeout(resolve, 1000)) // המתנה של שנייה
+            continue
+          }
+
+          if (quotaData && quotaData.length > 0) {
+            setCurrentQuota(quotaData[0])
+          }
+          break // יציאה מהלולאה אם הצלחנו
+        } catch (error) {
+          console.error(`Quota fetch error (attempt ${retryCount + 1}):`, error)
+          retryCount++
+          if (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+          }
+        }
       }
 
     } catch (error) {
       console.error('Error fetching user data:', error)
+      setSuccessMessage('❌ שגיאה כללית בטעינת הנתונים')
+      setTimeout(() => setSuccessMessage(null), 3000)
     } finally {
       setLoading(false)
     }
@@ -164,16 +209,25 @@ export default function PurchaseQuotaPage() {
       if (response.ok) {
         setShowPaymentModal(false)
         setSelectedPackageForPayment(null)
-        alert('✅ הרכישה הושלמה בהצלחה! המכסה שלכם תעודכן תוך מספר דקות.')
+        setSuccessMessage('✅ הרכישה הושלמה בהצלחה! המכסה שלכם תעודכן תוך מספר דקות.')
         // רענון הנתונים
         fetchUserData()
+        // סגירה אוטומטית לאחר 3 שניות
+        setTimeout(() => {
+          setSuccessMessage(null)
+        }, 3000)
       } else {
         throw new Error(result.error || 'שגיאה בעיבוד הרכישה')
       }
 
     } catch (error) {
       console.error('Error processing purchase:', error)
-      alert('❌ שגיאה בעיבוד הרכישה: ' + (error as Error).message)
+      const errorMessage = '❌ שגיאה בעיבוד הרכישה: ' + (error as Error).message
+      setSuccessMessage(errorMessage)
+      // סגירה אוטומטית לאחר 3 שניות
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 3000)
     }
   }
 
@@ -206,14 +260,23 @@ export default function PurchaseQuotaPage() {
       const result = await response.json()
 
       if (response.ok) {
-        alert('✅ בקשה לרכישת מכסה נשלחה בהצלחה! נחזור אליכם בהקדם עם פרטי התשלום.')
+        setSuccessMessage('✅ בקשה לרכישת מכסה נשלחה בהצלחה! נחזור אליכם בהקדם עם פרטי התשלום.')
+        // סגירה אוטומטית לאחר 3 שניות
+        setTimeout(() => {
+          setSuccessMessage(null)
+        }, 3000)
       } else {
         throw new Error(result.error || 'שגיאה בשליחת הבקשה')
       }
 
     } catch (error) {
       console.error('Error purchasing quota:', error)
-      alert('❌ שגיאה בשליחת הבקשה: ' + (error as Error).message)
+      const errorMessage = '❌ שגיאה בשליחת הבקשה: ' + (error as Error).message
+      setSuccessMessage(errorMessage)
+      // סגירה אוטומטית לאחר 3 שניות
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 3000)
     } finally {
       setPurchasing(false)
       setSelectedPackage(null)
@@ -230,6 +293,23 @@ export default function PurchaseQuotaPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      {/* הודעת הצלחה/שגיאה */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 max-w-md">
+          <div className="flex items-start">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">{successMessage}</p>
+            </div>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="ml-3 text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto px-4">
         {/* כותרת */}
         <div className="text-center mb-8">

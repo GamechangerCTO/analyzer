@@ -198,61 +198,109 @@ export default function LoginForm() {
   }, [supabase, router])
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {/* חלון בחירת תפקיד */}
       {showRoleSelector && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4 text-center">בחר תפקיד להתחברות</h2>
+        <div className="fixed inset-0 flex items-center justify-center bg-indigo-night/60 backdrop-blur-sm z-50">
+          <div className="replayme-card p-8 w-full max-w-md mx-4 animate-scale-in">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-lemon-mint/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-lemon-pulse">
+                <svg className="w-8 h-8 text-lemon-mint-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-indigo-night mb-2 text-display">בחר תפקיד להתחברות</h2>
+              <p className="text-indigo-night/60 text-sm">איזה חדר אימון תרצה להיכנס אליו?</p>
+            </div>
+            
             <div className="space-y-3">
               <button 
                 onClick={() => setSelectedRole('admin')}
-                className={`w-full py-3 px-4 rounded-md ${selectedRole === 'admin' ? 'bg-primary text-white' : 'bg-gray-100'}`}
+                className={`w-full py-4 px-6 rounded-lg text-right transition-all duration-200 flex items-center space-x-3 ${
+                  selectedRole === 'admin' 
+                    ? 'bg-lemon-mint text-indigo-night shadow-replayme border-2 border-lemon-mint-dark' 
+                    : 'bg-cream-sand hover:bg-cream-sand-dark text-indigo-night border-2 border-transparent hover:border-ice-gray'
+                }`}
               >
-                מנהל מערכת
+                <div className="flex-1">
+                  <div className="font-semibold">מנהל מערכת</div>
+                  <div className="text-xs opacity-70">שליטה מלאה במערכת</div>
+                </div>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                </svg>
               </button>
+              
               <button 
                 onClick={() => setSelectedRole('manager')}
-                className={`w-full py-3 px-4 rounded-md ${selectedRole === 'manager' ? 'bg-primary text-white' : 'bg-gray-100'}`}
+                className={`w-full py-4 px-6 rounded-lg text-right transition-all duration-200 flex items-center space-x-3 ${
+                  selectedRole === 'manager' 
+                    ? 'bg-lemon-mint text-indigo-night shadow-replayme border-2 border-lemon-mint-dark' 
+                    : 'bg-cream-sand hover:bg-cream-sand-dark text-indigo-night border-2 border-transparent hover:border-ice-gray'
+                }`}
               >
-                מנהל
+                <div className="flex-1">
+                  <div className="font-semibold">מנהל צוות</div>
+                  <div className="text-xs opacity-70">ניהול נציגים ודוחות</div>
+                </div>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
               </button>
+              
               <button 
                 onClick={() => setSelectedRole('agent')}
-                className={`w-full py-3 px-4 rounded-md ${selectedRole === 'agent' ? 'bg-primary text-white' : 'bg-gray-100'}`}
+                className={`w-full py-4 px-6 rounded-lg text-right transition-all duration-200 flex items-center space-x-3 ${
+                  selectedRole === 'agent' 
+                    ? 'bg-lemon-mint text-indigo-night shadow-replayme border-2 border-lemon-mint-dark' 
+                    : 'bg-cream-sand hover:bg-cream-sand-dark text-indigo-night border-2 border-transparent hover:border-ice-gray'
+                }`}
               >
-                נציג
+                <div className="flex-1">
+                  <div className="font-semibold">נציג מכירות</div>
+                  <div className="text-xs opacity-70">אימון אישי וסימולציות</div>
+                </div>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
               </button>
             </div>
-            <div className="mt-6 flex justify-center">
+            
+            <div className="mt-8 flex justify-center">
               <button 
                 onClick={loginWithRole}
-                className="bg-primary text-white py-2 px-6 rounded-md hover:bg-primary-dark"
+                className="replayme-button-primary px-8 py-3"
               >
-                כניסה
+                <span className="flex items-center space-x-2">
+                  <span>כניסה לחדר הכושר</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                </span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="flex justify-center gap-4 mb-4">
+      {/* כפתורי בחירת מצב */}
+      <div className="flex rounded-lg bg-cream-sand p-1 mb-4">
         <button
           onClick={() => setView('sign_in')}
-          className={`px-4 py-2 rounded-md ${
+          className={`flex-1 px-4 py-3 rounded-md transition-all duration-200 font-medium ${
             view === 'sign_in' 
-              ? 'bg-primary text-white' 
-              : 'bg-gray-100 text-gray-700'
+              ? 'bg-white text-indigo-night shadow-soft' 
+              : 'text-indigo-night/70 hover:text-indigo-night'
           }`}
         >
           התחברות
         </button>
         <button
           onClick={() => setView('sign_up')}
-          className={`px-4 py-2 rounded-md ${
+          className={`flex-1 px-4 py-3 rounded-md transition-all duration-200 font-medium ${
             view === 'sign_up' 
-              ? 'bg-primary text-white' 
-              : 'bg-gray-100 text-gray-700'
+              ? 'bg-white text-indigo-night shadow-soft' 
+              : 'text-indigo-night/70 hover:text-indigo-night'
           }`}
         >
           הרשמה
@@ -267,18 +315,66 @@ export default function LoginForm() {
           variables: {
             default: {
               colors: {
-                brand: 'rgb(59, 130, 246)',
-                brandAccent: 'rgb(37, 99, 235)',
+                brand: '#C6F547', // lemon-mint
+                brandAccent: '#A8D12F', // lemon-mint-dark
+                defaultButtonBackground: '#F5F2EB', // cream-sand
+                defaultButtonBackgroundHover: '#E8E2D6', // cream-sand-dark
+                defaultButtonBorder: '#E1E1E1', // ice-gray
+                defaultButtonText: '#2A2D4A', // indigo-night
+                dividerBackground: '#E1E1E1', // ice-gray
+                inputBackground: 'white',
+                inputBorder: '#E1E1E1', // ice-gray
+                inputBorderHover: '#C6F547', // lemon-mint
+                inputBorderFocus: '#C6F547', // lemon-mint
+                inputText: '#2A2D4A', // indigo-night
+                inputLabelText: '#2A2D4A', // indigo-night
+                inputPlaceholder: '#6B7280', // gray-500
+                messageText: '#2A2D4A', // indigo-night
+                messageTextDanger: '#FF6B6B', // electric-coral
+                anchorTextColor: '#2A2D4A', // indigo-night
+                anchorTextHoverColor: '#C6F547', // lemon-mint
+              },
+              space: {
+                spaceSmall: '4px',
+                spaceMedium: '8px',
+                spaceLarge: '16px',
+                labelBottomMargin: '8px',
+                anchorBottomMargin: '4px',
+                emailInputSpacing: '4px',
+                socialAuthSpacing: '4px',
+                buttonPadding: '12px 16px',
+                inputPadding: '12px 16px',
+              },
+              borderWidths: {
+                buttonBorderWidth: '1px',
+                inputBorderWidth: '1px',
+              },
+              radii: {
+                borderRadiusButton: '8px',
+                buttonBorderRadius: '8px',
+                inputBorderRadius: '8px',
+              },
+              fonts: {
+                bodyFontFamily: 'Inter, sans-serif',
+                buttonFontFamily: 'Inter, sans-serif',
+                inputFontFamily: 'Inter, sans-serif',
+                labelFontFamily: 'Inter, sans-serif',
               },
             },
           },
           style: {
             button: {
-              borderRadius: '0.375rem',
-              height: '2.5rem',
+              borderRadius: '8px',
+              height: '48px',
+              fontSize: '14px',
+              fontWeight: '500',
+              transition: 'all 0.2s ease-in-out',
             },
             input: {
-              borderRadius: '0.375rem',
+              borderRadius: '8px',
+              height: '48px',
+              fontSize: '14px',
+              transition: 'all 0.2s ease-in-out',
             },
             container: {
               direction: 'rtl',
@@ -286,10 +382,22 @@ export default function LoginForm() {
             label: {
               direction: 'rtl',
               textAlign: 'right',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#2A2D4A',
             },
             message: {
               direction: 'rtl',
               textAlign: 'right',
+              fontSize: '13px',
+            },
+            divider: {
+              background: '#E1E1E1',
+              textAlign: 'center',
+            },
+            anchor: {
+              fontWeight: '500',
+              textDecoration: 'none',
             },
           },
         }}
@@ -301,6 +409,7 @@ export default function LoginForm() {
               button_label: 'התחבר',
               social_provider_text: 'התחבר באמצעות {{provider}}',
               link_text: 'כבר יש לך חשבון? התחבר',
+              loading_button_label: 'מתחבר...',
             },
             sign_up: {
               email_label: 'אימייל',
@@ -308,12 +417,14 @@ export default function LoginForm() {
               button_label: 'הירשם',
               social_provider_text: 'הירשם באמצעות {{provider}}',
               link_text: 'אין לך חשבון? הירשם',
+              loading_button_label: 'נרשם...',
             },
             forgotten_password: {
               email_label: 'אימייל',
               password_label: 'סיסמה',
               button_label: 'שלח הוראות איפוס סיסמה',
               link_text: 'שכחת סיסמה?',
+              loading_button_label: 'שולח...',
             },
           },
         }}
