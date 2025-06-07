@@ -295,7 +295,7 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
                         }`}>
                           {index + 1}
                         </div>
-                        <Avatar seed={agent.id} className="w-10 h-10" />
+                        <Avatar fullName={agent.name} className="w-10 h-10" />
                       </div>
                       
                       <div>

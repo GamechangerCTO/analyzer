@@ -321,7 +321,7 @@ export default function CompanyDetailsClient({ userId, companyId, userRole }: Co
                     <div>
                       <p className="text-sm text-gray-600">עודכן לאחרונה: 
                         <span className="font-semibold text-gray-900 mr-1">
-                          {format(new Date(questionnaire.updated_at), 'dd/MM/yyyy HH:mm', { locale: he })}
+                          {questionnaire.updated_at ? format(new Date(questionnaire.updated_at), 'dd/MM/yyyy HH:mm', { locale: he }) : 'לא ידוע'}
                         </span>
                       </p>
                     </div>
