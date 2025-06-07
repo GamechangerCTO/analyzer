@@ -473,9 +473,9 @@ export async function POST(request: Request) {
           .eq('id', call_id);
 
         await addCallLog(call_id, '🔄 עדכון סטטוס לניתוח תוכן', { new_status: 'analyzing_content' });
-        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן', { model: 'o3-2025-04-16' });
+        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן', { model: 'gpt-4.1-2025-04-14' });
 
-        // שלב 3: ניתוח תוכן מקצועי עם o3-2025-04-16
+        // שלב 3: ניתוח תוכן מקצועי עם gpt-4.1-2025-04-14
         // קבלת הפרומפט המתאים לסוג השיחה
         const { data: promptData, error: promptError } = await supabase
           .from('prompts')
@@ -562,15 +562,15 @@ export async function POST(request: Request) {
           company_name: companyName || 'לא ידוע'
         });
 
-        // ניתוח התוכן עם o3-2025-04-16
-        await addCallLog(call_id, '🔄 שולח בקשה לניתוח תוכן ל-o3-2025-04-16', {
+        // ניתוח התוכן עם gpt-4.1-2025-04-14
+        await addCallLog(call_id, '🔄 שולח בקשה לניתוח תוכן ל-gpt-4.1-2025-04-14', {
           transcript_length: transcript?.length || 0,
           prompt_length: systemPrompt.length,
           request_time: new Date().toISOString()
         });
         
         const contentAnalysisResponse = await openai.chat.completions.create({
-          model: 'o3-2025-04-16',
+          model: 'gpt-4.1-2025-04-14',
           messages: [
             {
               role: 'user',
