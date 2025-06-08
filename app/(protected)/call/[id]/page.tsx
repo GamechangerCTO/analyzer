@@ -63,18 +63,32 @@ export default async function CallPage({ params }: CallPageProps) {
   }
   
   return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">ניתוח שיחה</h1>
-        <a 
-          href="/dashboard"
-          className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium"
-        >
-          חזרה לדשבורד
-        </a>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header מעוצב */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">ניתוח שיחה מקצועי</h1>
+              <p className="text-gray-600">תוצאות מפורטות וממוקדות לשיפור הביצועים</p>
+            </div>
+            <a 
+              href="/dashboard"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-md"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              חזרה לדשבורד
+            </a>
+          </div>
+        </div>
       </div>
       
-      <CallAnalysis call={callData as any} audioUrl={audioUrl} userRole={userData?.role} />
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <CallAnalysis call={callData as any} audioUrl={audioUrl} userRole={userData?.role} />
+      </div>
     </div>
   )
 } 

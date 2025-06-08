@@ -602,16 +602,16 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Navigation Tabs */}
-        <div className="mb-8">
-          <nav className="flex space-x-8 rtl:space-x-reverse">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <nav className="flex flex-wrap gap-4">
             {['summary', 'tone', 'content', 'quotes', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
+                className={`py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
                   activeTab === tab
-                    ? 'bg-blue-600 text-white shadow-lg border-2 border-blue-700 hover:bg-blue-700'
-                    : 'text-gray-600 bg-white border-2 border-gray-200 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300'
+                    ? 'bg-blue-600 text-white shadow-lg hover:bg-blue-700'
+                    : 'text-gray-600 bg-gray-50 hover:text-blue-600 hover:bg-blue-50'
                 }`}
               >
                 {tab === 'summary' ? '📊 סיכום כללי' :
