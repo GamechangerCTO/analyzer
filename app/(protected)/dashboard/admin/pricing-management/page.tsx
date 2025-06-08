@@ -33,47 +33,36 @@ export default function PricingManagementPage() {
   const [packages, setPackages] = useState<QuotaPackage[]>([
     {
       id: '1',
-      package_key: 'small',
-      name: 'חבילה קטנה',
-      description: '5 משתמשים נוספים למכסה הקיימת',
-      users_count: 5,
-      base_price: 299,
+      package_key: 'basic',
+      name: 'BASIC',
+      description: 'ניתוחי שיחות, דוחות - מחיר למשתמש לחודש',
+      users_count: 1, // מחיר למשתמש יחיד
+      base_price: 29, // מחיר חודשי
       is_active: true,
       is_popular: false,
       sort_order: 1
     },
     {
       id: '2',
-      package_key: 'medium',
-      name: 'חבילה בינונית',
-      description: '10 משתמשים נוספים למכסה הקיימת',
-      users_count: 10,
-      base_price: 499,
+      package_key: 'professional',
+      name: 'PROFESSIONAL',
+      description: 'ניתוחי שיחות, דוחות, סימולציות - מחיר למשתמש לחודש',
+      users_count: 1, // מחיר למשתמש יחיד
+      base_price: 89, // מחיר חודשי
       is_active: true,
       is_popular: true,
       sort_order: 2
     },
     {
       id: '3',
-      package_key: 'large',
-      name: 'חבילה גדולה',
-      description: '20 משתמשים נוספים למכסה הקיימת',
-      users_count: 20,
-      base_price: 899,
+      package_key: 'premium',
+      name: 'PREMIUM',
+      description: 'ניתוחי שיחות, דוחות, סימולציות, יועץ מלווה שעה בחודש - מחיר למשתמש לחודש',
+      users_count: 1, // מחיר למשתמש יחיד
+      base_price: 109, // מחיר חודשי
       is_active: true,
       is_popular: false,
       sort_order: 3
-    },
-    {
-      id: '4',
-      package_key: 'enterprise',
-      name: 'חבילה ארגונית',
-      description: '50 משתמשים נוספים למכסה הקיימת',
-      users_count: 50,
-      base_price: 1999,
-      is_active: true,
-      is_popular: false,
-      sort_order: 4
     }
   ])
 
@@ -174,7 +163,10 @@ export default function PricingManagementPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">ניהול מחירים ומכסות</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">ניהול מחירים ומכסות</h1>
+          <p className="text-gray-600 mt-2">מודל תמחור חדש: מחיר למשתמש לחודש, מינימום 2 יוזרים, תמחור שנתי עם 15% הנחה</p>
+        </div>
         <Link 
           href="/dashboard/admin"
           className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors"
@@ -195,17 +187,18 @@ export default function PricingManagementPage() {
           <p className="text-xs text-gray-500">פעילות: {discounts.filter(d => d.is_active).length}</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-          <h3 className="text-sm font-medium text-gray-500">מחיר ממוצע</h3>
+          <h3 className="text-sm font-medium text-gray-500">מחיר ממוצע (חודשי)</h3>
           <p className="text-2xl font-bold text-purple-600">
-            ₪{Math.round(packages.reduce((sum, p) => sum + p.base_price, 0) / packages.length).toLocaleString()}
+            ${Math.round(packages.reduce((sum, p) => sum + p.base_price, 0) / packages.length)}
           </p>
+          <p className="text-xs text-gray-500">למשתמש</p>
         </div>
         <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
-          <h3 className="text-sm font-medium text-gray-500">עלות למשתמש</h3>
+          <h3 className="text-sm font-medium text-gray-500">מחיר ממוצע (שנתי)</h3>
           <p className="text-2xl font-bold text-orange-600">
-            ₪{Math.round(packages.reduce((sum, p) => sum + (p.base_price / p.users_count), 0) / packages.length)}
+            ${Math.round(packages.reduce((sum, p) => sum + (p.base_price * 0.85), 0) / packages.length)}
           </p>
-          <p className="text-xs text-gray-500">ממוצע</p>
+          <p className="text-xs text-gray-500">למשתמש (עם 15% הנחה)</p>
         </div>
       </div>
 
@@ -256,9 +249,9 @@ export default function PricingManagementPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">שם החבילה</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">משתמשים</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">מחיר</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">מחיר למשתמש</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">מחיר חודשי</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">מחיר שנתי (15% הנחה)</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">תכונות</th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">סטטוס</th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">פעולות</th>
                     </tr>
@@ -279,14 +272,16 @@ export default function PricingManagementPage() {
                             <div className="text-sm text-gray-500">{pkg.description}</div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {pkg.users_count}
-                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          ₪{pkg.base_price.toLocaleString()}
+                          ${pkg.base_price} למשתמש
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          ₪{calculatePricePerUser(pkg.base_price, pkg.users_count)}
+                          ${Math.round(pkg.base_price * 0.85)} למשתמש
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {pkg.package_key === 'basic' && 'ניתוחי שיחות, דוחות'}
+                          {pkg.package_key === 'professional' && 'ניתוחי שיחות, דוחות, סימולציות'}
+                          {pkg.package_key === 'premium' && 'ניתוחי שיחות, דוחות, סימולציות, יועץ מלווה'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -358,7 +353,7 @@ export default function PricingManagementPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {discount.discount_type === 'percentage' 
                             ? `${discount.discount_value}%` 
-                            : `₪${discount.discount_value}`
+                            : `$${discount.discount_value}`
                           }
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -476,7 +471,7 @@ function PackageModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">מחיר (₪)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">מחיר ($)</label>
               <input
                 type="number"
                 value={formData.base_price}
@@ -599,7 +594,7 @@ function DiscountModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                ערך ({formData.discount_type === 'percentage' ? '%' : '₪'})
+                ערך ({formData.discount_type === 'percentage' ? '%' : '$'})
               </label>
               <input
                 type="number"

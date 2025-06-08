@@ -27,33 +27,26 @@ interface PaymentPackage {
 
 const quotaPackages: QuotaPackage[] = [
   {
-    id: 'small',
-    name: 'חבילה קטנה',
-    users: 5,
-    price: 299,
-    description: '5 משתמשים נוספים למכסה הקיימת'
+    id: 'basic',
+    name: 'BASIC',
+    users: 3, // ממוצע יוזרים בחברה
+    price: 29, // מחיר חודשי למשתמש בדולרים
+    description: 'ניתוחי שיחות, דוחות - מחיר למשתמש לחודש'
   },
   {
-    id: 'medium',
-    name: 'חבילה בינונית',
-    users: 10,
-    price: 499,
-    description: '10 משתמשים נוספים למכסה הקיימת',
+    id: 'professional',
+    name: 'PROFESSIONAL',
+    users: 3, // ממוצע יוזרים בחברה
+    price: 89, // מחיר חודשי למשתמש בדולרים
+    description: 'ניתוחי שיחות, דוחות, סימולציות - מחיר למשתמש לחודש',
     popular: true
   },
   {
-    id: 'large',
-    name: 'חבילה גדולה',
-    users: 20,
-    price: 899,
-    description: '20 משתמשים נוספים למכסה הקיימת'
-  },
-  {
-    id: 'enterprise',
-    name: 'חבילה ארגונית',
-    users: 50,
-    price: 1999,
-    description: '50 משתמשים נוספים למכסה הקיימת'
+    id: 'premium',
+    name: 'PREMIUM',
+    users: 3, // ממוצע יוזרים בחברה
+    price: 109, // מחיר חודשי למשתמש בדולרים
+    description: 'ניתוחי שיחות, דוחות, סימולציות, יועץ מלווה שעה בחודש - מחיר למשתמש לחודש'
   }
 ]
 
@@ -66,8 +59,29 @@ export default function PurchaseQuotaPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedPackageForPayment, setSelectedPackageForPayment] = useState<PaymentPackage | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly') // תמחור חודשי/שנתי
+  const [userCount, setUserCount] = useState(3) // ברירת מחדל 3 משתמשים
 
   const supabase = getSupabaseClient()
+
+  // פונקציה לחישוב מחיר לפי מספר משתמשים וסוג תמחור
+  const calculatePrice = (packagePrice: number, users: number, period: 'monthly' | 'yearly') => {
+    const totalMonthlyPrice = packagePrice * users
+    if (period === 'yearly') {
+      // 15% הנחה על תמחור שנתי
+      const yearlyPrice = totalMonthlyPrice * 12
+      const discountedPrice = yearlyPrice * 0.85 // 15% הנחה
+      return Math.round(discountedPrice)
+    }
+    return totalMonthlyPrice
+  }
+
+  // פונקציה לחישוב חיסכון שנתי
+  const calculateYearlySavings = (packagePrice: number, users: number) => {
+    const monthlyTotal = packagePrice * users * 12
+    const yearlyTotal = calculatePrice(packagePrice, users, 'yearly')
+    return monthlyTotal - yearlyTotal
+  }
 
   useEffect(() => {
     fetchUserData()
@@ -164,12 +178,15 @@ export default function PurchaseQuotaPage() {
     const selectedPkg = quotaPackages.find(pkg => pkg.id === packageId)
     if (!selectedPkg) return
 
+    // חישוב המחיר הסופי
+    const totalPrice = calculatePrice(selectedPkg.price, userCount, billingPeriod)
+
     // המרת הפורמט לפורמט של הפופאפ
     const paymentPackage = {
       id: selectedPkg.id,
-      name: selectedPkg.name,
-      users_count: selectedPkg.users,
-      base_price: selectedPkg.price,
+      name: `${selectedPkg.name} - ${userCount} משתמשים (${billingPeriod === 'monthly' ? 'חודשי' : 'שנתי'})`,
+      users_count: userCount,
+      base_price: totalPrice,
       description: selectedPkg.description,
       is_popular: selectedPkg.popular || false
     }
@@ -313,8 +330,57 @@ export default function PurchaseQuotaPage() {
       <div className="max-w-6xl mx-auto px-4">
         {/* כותרת */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">רכישת מכסת משתמשים</h1>
-          <p className="text-lg text-gray-600 mb-6">הגדילו את מכסת המשתמשים שלכם כדי להוסיף עוד נציגים לחברה</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">בחירת חבילת תמחור</h1>
+          <p className="text-lg text-gray-600 mb-6">בחרו חבילה המתאימה לכם - מינימום 2 משתמשים</p>
+          
+          {/* בורר תמחור */}
+          <div className="bg-white rounded-xl shadow-md p-6 max-w-2xl mx-auto mb-6">
+            <div className="flex items-center justify-center space-x-4 mb-6">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                  billingPeriod === 'monthly'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                תמחור חודשי
+              </button>
+              <button
+                onClick={() => setBillingPeriod('yearly')}
+                className={`px-6 py-3 rounded-lg font-medium transition-colors relative ${
+                  billingPeriod === 'yearly'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                תמחור שנתי
+                <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
+                  15% הנחה
+                </span>
+              </button>
+            </div>
+            
+            {/* בורר מספר משתמשים */}
+            <div className="flex items-center justify-center space-x-4">
+              <label className="font-medium text-gray-700">מספר משתמשים:</label>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setUserCount(Math.max(2, userCount - 1))}
+                  className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center"
+                >
+                  -
+                </button>
+                <span className="w-12 text-center font-bold text-lg">{userCount}</span>
+                <button
+                  onClick={() => setUserCount(userCount + 1)}
+                  className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
           
           {/* מכסה נוכחית */}
           {currentQuota && (
@@ -337,60 +403,95 @@ export default function PurchaseQuotaPage() {
         </div>
 
         {/* חבילות */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {quotaPackages.map((pkg) => (
-            <div 
-              key={pkg.id}
-              className={`bg-white rounded-xl shadow-lg border-2 transition-all duration-300 ${
-                pkg.popular ? 'border-blue-500 scale-105' : 'border-gray-200 hover:border-blue-300'
-              }`}
-            >
-              {pkg.popular && (
-                <div className="bg-blue-500 text-white text-center py-2 text-sm font-medium rounded-t-xl">
-                  🔥 הכי פופולרי
-                </div>
-              )}
-              
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{pkg.name}</h3>
-                <div className="text-3xl font-bold text-blue-600 mb-2">
-                  ₪{pkg.price.toLocaleString()}
-                </div>
-                <div className="text-lg text-gray-600 mb-4">
-                  +{pkg.users} משתמשים
-                </div>
-                <p className="text-sm text-gray-500 mb-6">{pkg.description}</p>
-                
-                {currentQuota && (
-                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                    <p className="text-sm text-gray-600">
-                      מכסה חדשה: <span className="font-semibold">{currentQuota.total_users + pkg.users}</span> משתמשים
-                    </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          {quotaPackages.map((pkg) => {
+            const totalPrice = calculatePrice(pkg.price, userCount, billingPeriod)
+            const yearlySavings = calculateYearlySavings(pkg.price, userCount)
+            
+            return (
+              <div 
+                key={pkg.id}
+                className={`bg-white rounded-xl shadow-lg border-2 transition-all duration-300 ${
+                  pkg.popular ? 'border-blue-500 scale-105' : 'border-gray-200 hover:border-blue-300'
+                }`}
+              >
+                {pkg.popular && (
+                  <div className="bg-blue-500 text-white text-center py-2 text-sm font-medium rounded-t-xl">
+                    🔥 הכי פופולרי
                   </div>
                 )}
+                
+                <div className="p-6">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{pkg.name}</h3>
+                  
+                  {/* מחיר */}
+                  <div className="text-center mb-4">
+                    <div className="text-4xl font-bold text-blue-600 mb-2">
+                      ${totalPrice.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {billingPeriod === 'monthly' ? 'לחודש' : 'לשנה'}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      ${pkg.price} למשתמש {billingPeriod === 'monthly' ? 'לחודש' : 'לשנה ($' + Math.round(pkg.price * 0.85) + ' עם הנחה)'}
+                    </div>
+                    {billingPeriod === 'yearly' && yearlySavings > 0 && (
+                      <div className="text-sm text-green-600 font-medium mt-2">
+                        💰 חוסכים ${yearlySavings.toLocaleString()} בשנה!
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* תכונות */}
+                  <div className="space-y-3 mb-6">
+                    <h4 className="font-semibold text-gray-800">מה כולל:</h4>
+                    {pkg.id === 'basic' && (
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>✅ ניתוחי שיחות</li>
+                        <li>✅ דוחות</li>
+                      </ul>
+                    )}
+                    {pkg.id === 'professional' && (
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>✅ ניתוחי שיחות</li>
+                        <li>✅ דוחות</li>
+                        <li>✅ סימולציות</li>
+                      </ul>
+                    )}
+                    {pkg.id === 'premium' && (
+                      <ul className="text-sm text-gray-600 space-y-1">
+                        <li>✅ ניתוחי שיחות</li>
+                        <li>✅ דוחות</li>
+                        <li>✅ סימולציות</li>
+                        <li>✅ יועץ מלווה שעה בחודש</li>
+                      </ul>
+                    )}
+                  </div>
+                  
+                  {/* פרטי הזמנה */}
+                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-gray-600 text-center">
+                      {userCount} משתמשים × ${pkg.price} = ${(pkg.price * userCount).toLocaleString()} {billingPeriod === 'monthly' ? 'לחודש' : 'לשנה'}
+                      {billingPeriod === 'yearly' && (
+                        <span className="block text-green-600 font-medium">
+                          עם 15% הנחה: ${totalPrice.toLocaleString()}
+                        </span>
+                      )}
+                    </p>
+                  </div>
 
-                <div className="space-y-2">
-                  <button
-                    onClick={() => handlePurchaseClick(pkg.id)}
-                    className="w-full py-3 px-4 rounded-lg font-medium bg-green-600 hover:bg-green-700 text-white transition-colors"
-                  >
-                    💳 רכוש ושלם מיד
-                  </button>
-                  <button
-                    onClick={() => handlePurchase(pkg.id)}
-                    disabled={purchasing}
-                    className={`w-full py-2 px-4 rounded-lg text-sm transition-colors ${
-                      purchasing && selectedPackage === pkg.id
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                    }`}
-                  >
-                    {purchasing && selectedPackage === pkg.id ? 'שולח בקשה...' : '📧 שלח בקשה לאדמין'}
-                  </button>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => handlePurchaseClick(pkg.id)}
+                      className="w-full py-3 px-4 rounded-lg font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                    >
+                      💳 בחר חבילה זו
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* מידע נוסף */}
@@ -398,20 +499,20 @@ export default function PurchaseQuotaPage() {
           <h3 className="text-xl font-bold text-gray-900 mb-4">❓ שאלות נפוצות</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-semibold text-gray-800 mb-2">איך עובד התשלום?</h4>
-              <p className="text-gray-600 text-sm">לאחר בחירת חבילה, נשלח אליכם פרטי תשלום ונחכה לאישור התשלום לפני הפעלת המכסה הנוספת.</p>
+              <h4 className="font-semibold text-gray-800 mb-2">איך עובד התמחור החדש?</h4>
+              <p className="text-gray-600 text-sm">המחיר הוא למשתמש לחודש. מינימום 2 משתמשים. תמחור שנתי כולל 15% הנחה. ממוצע יוזרים בחברה הוא 3.</p>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-800 mb-2">מתי המכסה תתעדכן?</h4>
-              <p className="text-gray-600 text-sm">המכסה הנוספת תתווסף למכסה הקיימת מיד לאחר אישור התשלום, בדרך כלל תוך 24 שעות.</p>
+              <h4 className="font-semibold text-gray-800 mb-2">מה ההבדל בין החבילות?</h4>
+              <p className="text-gray-600 text-sm">BASIC כולל ניתוחי שיחות ודוחות. PROFESSIONAL מוסיף סימולציות. PREMIUM מוסיף יועץ מלווה שעה בחודש.</p>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-800 mb-2">האם יש הנחות לחבילות גדולות?</h4>
-              <p className="text-gray-600 text-sm">כן! ככל שהחבילה גדולה יותר, המחיר למשתמש יוצא זול יותר. לחבילות מעל 50 משתמשים נא לפנות אלינו.</p>
+              <h4 className="font-semibold text-gray-800 mb-2">מה יותר כדאי - חודשי או שנתי?</h4>
+              <p className="text-gray-600 text-sm">תמחור שנתי חוסך 15% הנחה מהמחיר החודשי, ומתאים לחברות שמחויבות לטווח הארוך.</p>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-800 mb-2">אפשר לבטל או להחזיר?</h4>
-              <p className="text-gray-600 text-sm">המכסה רכש חד-פעמי ולא ניתן להחזרה. המכסה תישאר פעילה כל עוד החשבון פעיל.</p>
+              <h4 className="font-semibold text-gray-800 mb-2">איך מוסיפים או מחסירים משתמשים?</h4>
+              <p className="text-gray-600 text-sm">ניתן לשנות את מספר המשתמשים בכל עת בהתאם לצרכי החברה. החיוב יתעדכן בהתאם.</p>
             </div>
           </div>
         </div>
