@@ -62,26 +62,85 @@ function cleanOpenAIResponse(content: string): string {
     cleaned = cleaned.substring(arrayStart);
   }
   
-  // חיפוש סיום JSON אם יש טקסט אחריו
-  const jsonEnd = cleaned.lastIndexOf('}');
-  const arrayEnd = cleaned.lastIndexOf(']');
-  
-  if (jsonEnd !== -1 && jsonEnd > arrayEnd) {
-    cleaned = cleaned.substring(0, jsonEnd + 1);
-  } else if (arrayEnd !== -1) {
-    cleaned = cleaned.substring(0, arrayEnd + 1);
+  // אסטרטגיה מתקדמת לתיקון JSON שבור
+  if (cleaned.startsWith('{')) {
+    // ניסיון לתקן JSON שבור על ידי חיפוש סוגריים מאוזנים
+    let braceCount = 0;
+    let lastValidIndex = -1;
+    
+    for (let i = 0; i < cleaned.length; i++) {
+      const char = cleaned[i];
+      
+      if (char === '{') {
+        braceCount++;
+      } else if (char === '}') {
+        braceCount--;
+        
+        // אם הגענו לאיזון מלא, זה מיקום תקין לסיום
+        if (braceCount === 0) {
+          lastValidIndex = i;
+        }
+      }
+    }
+    
+    // אם מצאנו נקודת סיום תקינה, חתוך שם
+    if (lastValidIndex !== -1) {
+      cleaned = cleaned.substring(0, lastValidIndex + 1);
+    } else {
+      // אם לא מצאנו איזון, נסה להוסיף סוגריים חסרים
+      const openBraces = (cleaned.match(/\{/g) || []).length;
+      const closeBraces = (cleaned.match(/\}/g) || []).length;
+      const missingBraces = openBraces - closeBraces;
+      
+      if (missingBraces > 0) {
+        cleaned += '}'.repeat(missingBraces);
+      }
+    }
   }
   
-  // אם התוכן עדיין לא מתחיל ב-{ או [ אז זה לא JSON תקין
+  // בדיקה אם התוכן מתחיל בצורה תקינה
   if (!cleaned.startsWith('{') && !cleaned.startsWith('[')) {
     console.error('תשובת OpenAI לא מכילה JSON תקין:', cleaned.substring(0, 200));
     return '{}';
   }
   
-  return cleaned;
+  // ניסיון parse מקדים לוודא שה-JSON תקין
+  try {
+    JSON.parse(cleaned);
+    return cleaned;
+  } catch (parseError) {
+    console.error('JSON לא תקין אחרי ניקוי, מנסה תיקונים נוספים:', parseError);
+    
+    // תיקונים נוספים
+    try {
+      // הסרת פסיקים מיותרים לפני סוגריים סוגרים
+      let fixed = cleaned.replace(/,(\s*[}\]])/g, '$1');
+      
+      // תיקון quotes לא מאוזנים
+      fixed = fixed.replace(/([^\\])'/g, '$1"'); // החלפת ' ב-" (למעט escaped quotes)
+      
+      // הסרת newlines בתוך strings שעלולים לשבור את ה-JSON
+      fixed = fixed.replace(/(".*?)\n(.*?")/g, '$1 $2');
+      
+      // ניסיון parse נוסף
+      JSON.parse(fixed);
+      return fixed;
+    } catch (secondParseError) {
+      console.error('גם אחרי תיקונים נוספים JSON לא תקין:', secondParseError);
+      
+      // במקרה קיצון, נחזיר JSON בסיסי
+      return JSON.stringify({
+        error: "Failed to parse OpenAI response",
+        original_content_preview: content.substring(0, 200),
+        cleaned_content_preview: cleaned.substring(0, 200)
+      });
+    }
+  }
 }
 
 export async function POST(request: Request) {
+  let call_id: string | null = null;
+  
   try {
     // בדיקת זמינות מפתח OpenAI עם לוגים מפורטים
     const apiKey = process.env.OPENAI_API_KEY;
@@ -105,7 +164,8 @@ export async function POST(request: Request) {
     const supabase = createRouteHandlerClient<Database>({ cookies });
     
     // קבלת ה-ID של השיחה מגוף הבקשה
-    const { call_id } = await request.json();
+    const requestBody = await request.json();
+    call_id = requestBody.call_id;
 
     if (!call_id) {
       return NextResponse.json(
@@ -511,12 +571,67 @@ export async function POST(request: Request) {
       try {
         toneAnalysisReport = JSON.parse(cleanedToneContent);
       } catch (parseError: any) {
-        await addCallLog(call_id, '❌ שגיאה בניתוח JSON של ניתוח טונציה', { 
+        await addCallLog(call_id, '❌ שגיאה בניתוח JSON של ניתוח טונציה - מנסה תיקון', { 
           error: parseError.message,
+          error_position: parseError.message.includes('position') ? parseError.message.match(/position (\d+)/)?.[1] : null,
           raw_content_preview: rawToneContent.substring(0, 500),
           cleaned_content_preview: cleanedToneContent.substring(0, 500)
         });
-        throw new Error(`שגיאה בניתוח תשובת OpenAI לטונציה: ${parseError.message}`);
+        
+        // ניסיון תיקון נוסף ספציפי לטונציה
+        try {
+          // אם השגיאה מכילה מיקום, ננתח רק את החלק התקין
+          const positionMatch = parseError.message.match(/position (\d+)/);
+          if (positionMatch) {
+            const position = parseInt(positionMatch[1]);
+            const validPart = cleanedToneContent.substring(0, position);
+            const lastOpenBrace = validPart.lastIndexOf('{');
+            if (lastOpenBrace !== -1) {
+              let truncated = validPart.substring(lastOpenBrace);
+              // הוספת סוגריים חסרים
+              const openCount = (truncated.match(/\{/g) || []).length;
+              const closeCount = (truncated.match(/\}/g) || []).length;
+              truncated += '}'.repeat(Math.max(0, openCount - closeCount));
+              
+              toneAnalysisReport = JSON.parse(truncated);
+              await addCallLog(call_id, '✅ תיקון JSON של ניתוח טונציה הצליח', { 
+                original_length: cleanedToneContent.length,
+                fixed_length: truncated.length
+              });
+            } else {
+              throw new Error('לא ניתן לתקן JSON');
+            }
+          } else {
+            throw new Error('לא ניתן לזהות מיקום שגיאה');
+          }
+        } catch (secondParseError: any) {
+          await addCallLog(call_id, '❌ גם תיקון JSON של ניתוח טונציה נכשל - משתמש ברירת מחדל', { 
+            second_error: secondParseError.message
+          });
+          
+          // ברירת מחדל לטונציה
+          toneAnalysisReport = {
+            טון_כללי: "לא ניתן לנתח בשל שגיאת פורמט",
+            רמת_אנרגיה: "לא זמין",
+            מקצועיות: "לא זמין", 
+            חיוביות: "לא זמין",
+            דגלים_אדומים: {
+              צעקות_זוהו: false,
+              לחץ_גבוה: false,
+              חוסר_סבלנות: false,
+              אגרסיביות: false,
+              טון_לא_מקצועי: false
+            },
+            ניתוח_פרוזודי: "לא ניתן לנתח בשל שגיאת פורמט התשובה מ-OpenAI",
+            ציון_טונציה: 5,
+            המלצות_שיפור: ["לא זמין בשל שגיאת פורמט"],
+            נקודות_חוזק_טונליות: ["לא זמין בשל שגיאת פורמט"],
+            error_info: {
+              original_error: parseError.message,
+              content_preview: cleanedToneContent.substring(0, 200)
+            }
+          };
+        }
       }
       
       await addCallLog(call_id, '✅ ניתוח טונציה הושלם', { 
@@ -737,12 +852,58 @@ export async function POST(request: Request) {
         try {
           contentAnalysisReport = JSON.parse(cleanedContentResponse);
         } catch (parseError: any) {
-          await addCallLog(call_id, '❌ שגיאה בניתוח JSON של ניתוח תוכן', { 
+          await addCallLog(call_id, '❌ שגיאה בניתוח JSON של ניתוח תוכן - מנסה תיקון', { 
             error: parseError.message,
+            error_position: parseError.message.includes('position') ? parseError.message.match(/position (\d+)/)?.[1] : null,
             raw_content_preview: rawContentResponse.substring(0, 500),
             cleaned_content_preview: cleanedContentResponse.substring(0, 500)
           });
-          throw new Error(`שגיאה בניתוח תשובת OpenAI לתוכן: ${parseError.message}`);
+          
+          // ניסיון תיקון נוסף ספציפי לניתוח תוכן
+          try {
+            // אם השגיאה מכילה מיקום, ננתח רק את החלק התקין
+            const positionMatch = parseError.message.match(/position (\d+)/);
+            if (positionMatch) {
+              const position = parseInt(positionMatch[1]);
+              const validPart = cleanedContentResponse.substring(0, position);
+              const lastOpenBrace = validPart.lastIndexOf('{');
+              if (lastOpenBrace !== -1) {
+                let truncated = validPart.substring(lastOpenBrace);
+                // הוספת סוגריים חסרים
+                const openCount = (truncated.match(/\{/g) || []).length;
+                const closeCount = (truncated.match(/\}/g) || []).length;
+                truncated += '}'.repeat(Math.max(0, openCount - closeCount));
+                
+                contentAnalysisReport = JSON.parse(truncated);
+                await addCallLog(call_id, '✅ תיקון JSON של ניתוח תוכן הצליח', { 
+                  original_length: cleanedContentResponse.length,
+                  fixed_length: truncated.length
+                });
+              } else {
+                throw new Error('לא ניתן לתקן JSON');
+              }
+            } else {
+              throw new Error('לא ניתן לזהות מיקום שגיאה');
+            }
+          } catch (secondParseError: any) {
+            await addCallLog(call_id, '❌ גם תיקון JSON של ניתוח תוכן נכשל - משתמש ברירת מחדל', { 
+              second_error: secondParseError.message
+            });
+            
+            // ברירת מחדל לניתוח תוכן
+            contentAnalysisReport = {
+              overall_score: 5,
+              red_flag: false,
+              general_key_insights: ["לא ניתן לנתח בשל שגיאת פורמט התשובה מ-OpenAI"],
+              improvement_points: ["לא זמין בשל שגיאת פורמט"],
+              strengths_and_preservation_points: ["לא זמין בשל שגיאת פורמט"],
+              executive_summary: "לא ניתן לבצע ניתוח מפורט בשל שגיאת פורמט התשובה מהמודל",
+              error_info: {
+                original_error: parseError.message,
+                content_preview: cleanedContentResponse.substring(0, 200)
+              }
+            };
+          }
         }
         
         await addCallLog(call_id, '✅ ניתוח תוכן הושלם', { 
@@ -871,10 +1032,36 @@ export async function POST(request: Request) {
     });
 
   } catch (error: any) {
-    console.error('שגיאה כללית:', error);
+    console.error('שגיאה כללית בעיבוד השיחה:', error);
+    
+    // ניסיון לעדכן את הסטטוס בבסיס הנתונים גם במקרה של שגיאה כללית
+    try {
+      if (call_id) {
+        const supabase = createRouteHandlerClient<Database>({ cookies });
+        await supabase
+          .from('calls')
+          .update({
+            processing_status: 'error',
+            error_message: `שגיאה כללית: ${error.message}`
+          })
+          .eq('id', call_id);
+          
+        await addCallLog(call_id, '❌ שגיאה כללית בעיבוד השיחה', { 
+          error: error.message,
+          error_name: error.name,
+          error_stack: error.stack?.substring(0, 500)
+        });
+      }
+    } catch (updateError) {
+      console.error('שגיאה בעדכון סטטוס השגיאה:', updateError);
+    }
     
     return NextResponse.json(
-      { error: error.message },
+      { 
+        error: 'שגיאה כללית בעיבוד השיחה',
+        details: error.message,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }

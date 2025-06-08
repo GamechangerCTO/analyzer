@@ -32,6 +32,15 @@ interface AdminStats {
   totalCompanies: number
 }
 
+interface QuickAnalytics {
+  totalCosts: number
+  totalRequests: number
+  totalTokens: number
+  averageRequestCost: number
+  loading: boolean
+  error: string | null
+}
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -39,11 +48,20 @@ export default function AdminDashboardPage() {
     approvedUsers: 0,
     totalCompanies: 0
   })
+  const [analytics, setAnalytics] = useState<QuickAnalytics>({
+    totalCosts: 0,
+    totalRequests: 0,
+    totalTokens: 0,
+    averageRequestCost: 0,
+    loading: true,
+    error: null
+  })
   const [loading, setLoading] = useState(true)
   const [showUrgentAlert, setShowUrgentAlert] = useState(false)
 
   useEffect(() => {
     fetchAdminStats()
+    fetchQuickAnalytics()
   }, [])
 
   useEffect(() => {
@@ -92,6 +110,42 @@ export default function AdminDashboardPage() {
     }
   }
 
+  const fetchQuickAnalytics = async () => {
+    try {
+      setAnalytics(prev => ({ ...prev, loading: true, error: null }))
+
+      const response = await fetch('/api/admin/analytics?days=30')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      const result = await response.json()
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to fetch analytics')
+      }
+
+      const data = result.data
+      setAnalytics({
+        totalCosts: data.summary.totalCosts,
+        totalRequests: data.summary.totalRequests,
+        totalTokens: data.summary.totalInputTokens + data.summary.totalOutputTokens,
+        averageRequestCost: data.summary.averageRequestCost,
+        loading: false,
+        error: null
+      })
+
+    } catch (error) {
+      console.error('שגיאה בטעינת אנליטיקס:', error)
+      setAnalytics(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }))
+    }
+  }
+
   const getTotalPendingItems = () => {
     return stats.pendingUsers
   }
@@ -131,13 +185,23 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           
-          <button 
-            onClick={fetchAdminStats}
-            className="px-6 py-3 bg-lemon-mint/20 hover:bg-lemon-mint/30 text-lemon-mint rounded-xl transition-colors duration-200 flex items-center space-x-2"
-          >
-            <RefreshCw className="w-5 h-5" />
-            <span>רענן נתונים</span>
-          </button>
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={fetchQuickAnalytics}
+              className="px-4 py-2 bg-indigo-night/20 hover:bg-indigo-night/30 text-indigo-night rounded-lg transition-colors duration-200 flex items-center space-x-2"
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>רענן אנליטיקס</span>
+            </button>
+            
+            <button 
+              onClick={fetchAdminStats}
+              className="px-6 py-3 bg-lemon-mint/20 hover:bg-lemon-mint/30 text-lemon-mint rounded-xl transition-colors duration-200 flex items-center space-x-2"
+            >
+              <RefreshCw className="w-5 h-5" />
+              <span>רענן נתונים</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -237,6 +301,131 @@ export default function AdminDashboardPage() {
             </div>
             <div className="w-12 h-12 bg-electric-coral/20 rounded-xl flex items-center justify-center">
               <Building2 className="w-6 h-6 text-electric-coral" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* אנליטיקס OpenAI */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-display text-2xl font-bold text-indigo-night">
+            אנליטיקס OpenAI 📊
+          </h2>
+          <Link 
+            href="/dashboard/admin/analytics" 
+            className="px-6 py-3 bg-indigo-night hover:bg-indigo-night/90 text-white rounded-xl transition-colors duration-200 flex items-center space-x-2"
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span>צפה בדוח מפורט</span>
+          </Link>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* נתוני אנליטיקס בסיסיים - נתונים אמיתיים */}
+          <div className="replayme-card p-6 border-r-4 border-purple-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-indigo-night/60 text-sm font-medium mb-1">עלות חודשית</p>
+                <p className="text-3xl font-bold text-indigo-night">
+                  {analytics.loading ? (
+                    <span className="animate-pulse">$--</span>
+                  ) : analytics.error ? (
+                    <span className="text-red-500 text-lg">שגיאה</span>
+                  ) : (
+                    `$${analytics.totalCosts.toFixed(2)}`
+                  )}
+                </p>
+                <p className="text-sm text-purple-600 font-medium mt-1">
+                  {analytics.loading ? 'טוען נתונים...' : 
+                   analytics.error ? 'לא ניתן לטעון' : 
+                   '30 ימים אחרונים'}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                <CreditCard className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="replayme-card p-6 border-r-4 border-blue-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-indigo-night/60 text-sm font-medium mb-1">בקשות API</p>
+                <p className="text-3xl font-bold text-indigo-night">
+                  {analytics.loading ? (
+                    <span className="animate-pulse">--</span>
+                  ) : analytics.error ? (
+                    <span className="text-red-500 text-lg">שגיאה</span>
+                  ) : (
+                    analytics.totalRequests >= 1000 ? 
+                      `${(analytics.totalRequests / 1000).toFixed(1)}K` : 
+                      analytics.totalRequests.toString()
+                  )}
+                </p>
+                <p className="text-sm text-blue-600 font-medium mt-1">
+                  {analytics.loading ? 'טוען נתונים...' : 
+                   analytics.error ? 'לא ניתן לטעון' : 
+                   'בקשות כוללות'}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                <Activity className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="replayme-card p-6 border-r-4 border-green-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-indigo-night/60 text-sm font-medium mb-1">טוקנים</p>
+                <p className="text-3xl font-bold text-indigo-night">
+                  {analytics.loading ? (
+                    <span className="animate-pulse">--</span>
+                  ) : analytics.error ? (
+                    <span className="text-red-500 text-lg">שגיאה</span>
+                  ) : (
+                    analytics.totalTokens >= 1000000 ? 
+                      `${(analytics.totalTokens / 1000000).toFixed(1)}M` :
+                    analytics.totalTokens >= 1000 ? 
+                      `${(analytics.totalTokens / 1000).toFixed(1)}K` : 
+                      analytics.totalTokens.toString()
+                  )}
+                </p>
+                <p className="text-sm text-green-600 font-medium mt-1">
+                  {analytics.loading ? 'טוען נתונים...' : 
+                   analytics.error ? 'לא ניתן לטעון' : 
+                   'סה"כ טוקנים'}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="replayme-card p-6 border-r-4 border-orange-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-indigo-night/60 text-sm font-medium mb-1">עלות לבקשה</p>
+                <p className="text-3xl font-bold text-indigo-night">
+                  {analytics.loading ? (
+                    <span className="animate-pulse">$--</span>
+                  ) : analytics.error ? (
+                    <span className="text-red-500 text-lg">שגיאה</span>
+                  ) : (
+                    `$${analytics.averageRequestCost.toFixed(4)}`
+                  )}
+                </p>
+                <p className="text-sm text-orange-600 font-medium mt-1">
+                  {analytics.loading ? 'טוען נתונים...' : 
+                   analytics.error ? 'לא ניתן לטעון' : 
+                   'ממוצע לבקשה'}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                <Star className="w-6 h-6 text-orange-600" />
+              </div>
             </div>
           </div>
         </div>
