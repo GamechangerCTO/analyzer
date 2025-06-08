@@ -1,0 +1,261 @@
+# Cursor Rules: פלטפורמת אימון מכירות ושירות
+
+**עדכון אחרון:** דצמבר 2024 - הוספת דפוסי טיפול שגיאות JSON קריטיים 🔧
+
+## אינטליגנציה פרויקט ודפוסים חשובים
+
+### 🔧 דפוסי טיפול שגיאות JSON קריטיים (חדש!)
+**חובה מוחלטת! בכל עבודה עם OpenAI APIs:**
+
+#### 1. פונקציית `cleanOpenAIResponse` היא קריטית:
+```typescript
+// תמיד השתמש בפונקציה הזו לפני JSON.parse של תשובות OpenAI:
+function cleanOpenAIResponse(content: string): string {
+  if (!content) return '{}';
+  
+  // ניקוי Markdown blocks
+  let cleaned = content.replace(/```(?:json|JSON)?\s*/g, '').replace(/```\s*$/g, '');
+  cleaned = cleaned.replace(/^`+|`+$/g, '').trim();
+  
+  // חיפוש JSON boundaries
+  const jsonStart = cleaned.indexOf('{');
+  if (jsonStart !== -1) {
+    cleaned = cleaned.substring(jsonStart);
+  }
+  
+  // אלגוריתם איזון סוגריים
+  let braceCount = 0;
+  let lastValidEnd = -1;
+  
+  for (let i = 0; i < cleaned.length; i++) {
+    const char = cleaned[i];
+    if (char === '{') braceCount++;
+    else if (char === '}') {
+      braceCount--;
+      if (braceCount === 0) {
+        lastValidEnd = i;
+        break;
+      }
+    }
+  }
+  
+  if (lastValidEnd !== -1) {
+    cleaned = cleaned.substring(0, lastValidEnd + 1);
+  }
+  
+  // תיקון אוטומטי
+  try {
+    JSON.parse(cleaned);
+    return cleaned;
+  } catch (error) {
+    let fixed = cleaned
+      .replace(/,(\s*[}\]])/g, '$1')
+      .replace(/([^\\]")([^"]*?)\n([^"]*?)(")/g, '$1$2 $3$4')
+      .replace(/\\"/g, '"').replace(/\\n/g, ' ');
+    
+    if (!fixed.endsWith('}') && fixed.includes('{')) {
+      fixed += '}';
+    }
+    
+    try {
+      JSON.parse(fixed);
+      return fixed;
+    } catch {
+      return '{}';
+    }
+  }
+}
+```
+
+#### 2. דפוס טיפול שגיאות עם fallback חכם:
+```typescript
+// תמיד כלול error recovery עם partial JSON:
+try {
+  const result = JSON.parse(cleanedContent);
+  return result;
+} catch (parseError: any) {
+  // נסה לחלץ חלק תקין
+  const errorPosition = parseError.message.match(/position (\d+)/)?.[1];
+  if (errorPosition) {
+    const position = parseInt(errorPosition);
+    const truncatedContent = cleanedContent.substring(0, position);
+    try {
+      const partialResult = JSON.parse(truncatedContent + '}');
+      return partialResult;
+    } catch {
+      return generateIntelligentFallback(); // ברירת מחדל חכמה
+    }
+  }
+}
+```
+
+#### 3. ברירות מחדל אינטליגנטיות:
+- **לניתוח טונציה:** נתונים ריאליים עם הערות על בעיה טכנית
+- **לניתוח תוכן:** דוח בסיסי עם המלצות כלליות
+- **תמיד כלול:** `red_flags: []` ו-`recommendations: []`
+
+#### 4. חובות logging:
+```typescript
+// תמיד לוג שגיאות עם context מלא:
+await addCallLog(call_id, '❌ שגיאה בניתוח JSON', {
+  error: parseError.message,
+  error_position: parseError.message.match(/position (\d+)/)?.[1],
+  raw_content_preview: rawContent.substring(0, 500),
+  cleaned_content_preview: cleanedContent.substring(0, 500),
+  recovery_attempted: true
+});
+```
+
+### 🎯 דפוסי ניתוח שיחות מושלמים (קיים)
+
+#### 1. תהליך עיבוד שיחה:
+- **תמלול:** `gpt-4o-transcribe` (לא `whisper-1`)
+- **ניתוח טונציה:** `gpt-4o-audio-preview` (רק wav/mp3)
+- **ניתוח תוכן:** `gpt-4-turbo-2024-04`
+
+#### 2. המרת אודיו אוטומטית:
+- **זיהוי:** `needsConversion()` בודק אם נדרש המרה
+- **המרה:** `convertAudioToMp3()` עם ffmpeg.wasm
+- **פורמטים:** MP3, WAV (ישיר), M4A, MP4, AAC, WebM, OGG, WMA (המרה)
+
+#### 3. פרומפטים מקצועיים:
+- 7 סוגי שיחות עם פרומפטים מותאמים
+- דרישה מפורשת לציטוטים עם timestamps
+- מבנה JSON קבוע עם `ציטוטים_רלוונטיים`
+
+### 🛡️ דפוסי אבטחה והרשאות
+
+#### 1. RLS (Row Level Security):
+```sql
+-- תמיד השתמש בpattern הזה לטבלאות חדשות:
+ALTER TABLE table_name ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own company data" ON table_name
+  FOR SELECT USING (
+    company_id IN (
+      SELECT company_id FROM auth.users 
+      WHERE id = auth.uid()
+    )
+  );
+```
+
+#### 2. היררכיית הרשאות:
+- **Super Admin:** שליטה מלאה
+- **Admin:** ניהול managers ו-agents
+- **Manager:** ניהול agents בחברה שלו
+- **Agent:** גישה לשיחות שלו בלבד
+
+### 💰 דפוסי מערכת מכסות ותשלומים (חדש!)
+
+#### 1. בדיקת מכסה לפני יצירת משתמש:
+```typescript
+const { data: canAdd } = await supabase.rpc('can_add_user_to_company', {
+  company_uuid: user.company_id
+});
+
+if (canAdd) {
+  // יצירה מיידית
+  const newUser = await createUser();
+} else {
+  // בקשת אישור מאדמין
+  const request = await createApprovalRequest();
+}
+```
+
+#### 2. פופאפ תשלום multi-step:
+```typescript
+type PaymentStep = 'package' | 'discount' | 'payment' | 'processing' | 'success';
+
+// תמיד כלול מצבים אלה עם אנימציות
+const handleStepTransition = (nextStep: PaymentStep) => {
+  setCurrentStep(nextStep);
+  // Add animations and state management
+};
+```
+
+### 🎨 דפוסי UI/UX מעולים
+
+#### 1. טעינות דינמיות:
+```tsx
+// תמיד כלול loading states:
+const [isLoading, setIsLoading] = useState(false);
+const [error, setError] = useState<string | null>(null);
+
+{isLoading && <LoadingSpinner />}
+{error && <ErrorAlert message={error} />}
+```
+
+#### 2. הודעות המרה אינטראקטיביות:
+```tsx
+// לכל המרת אודיו, כלול feedback למשתמש:
+{isConverting && (
+  <div className="mb-4 p-4 rounded-xl border-r-4 bg-blue-50 border-blue-400">
+    <div className="flex items-center">
+      <Loader2 className="w-5 h-5 text-blue-600 animate-spin ml-2" />
+      <p className="text-sm font-medium mr-3">{conversionStatus}</p>
+    </div>
+  </div>
+)}
+```
+
+### 📊 דפוסי נתונים ומסד נתונים
+
+#### 1. מבנה calls table:
+```sql
+-- כל שיחה חייבת לכלול:
+id, agent_id, company_id, call_type, transcript, 
+tone_analysis, content_analysis, audio_file_path,
+processing_status, created_at, updated_at
+```
+
+#### 2. דפוס call_logs:
+```typescript
+// תמיד לוג פעולות חשובות:
+await addCallLog(call_id, 'סטטוס', {
+  details: {},
+  timestamp: new Date().toISOString()
+});
+```
+
+#### 3. מכסות משתמשים:
+```sql
+-- טבלת company_user_quotas עם triggers אוטומטיים
+-- פונקציות can_add_user_to_company() ו-get_company_user_quota()
+```
+
+### ⚠️ דברים חשובים לזכור
+
+1. **אל תשכח cleanOpenAIResponse!** - חובה לפני כל JSON.parse של OpenAI
+2. **תמיד בדוק המרת אודיו** - needsConversion() לפני עיבוד
+3. **כלול fallbacks אינטליגנטיים** - לא רק {} ריק
+4. **לוג הכול** - שגיאות, התקדמות, ושחזור
+5. **בדוק מכסות** - לפני יצירת משתמשים חדשים
+6. **RLS תמיד מופעל** - לכל טבלה חדשה
+7. **הודעות למשתמש** - תמיד עדכן על מצב התהליך
+
+### 🚀 דפוסי ביצועים
+
+#### 1. caching:
+```typescript
+// השתמש בcaching לנתונים כבדים:
+const cached = cache.get(key);
+if (cached) return cached;
+const result = await expensiveOperation();
+cache.set(key, result, 5 * 60 * 1000); // 5 minutes
+```
+
+#### 2. עיבוד אסינכרוני:
+```typescript
+// עיבוד שיחות תמיד אסינכרוני:
+const processCall = async (call_id: string) => {
+  await updateStatus('processing');
+  try {
+    // עיבוד...
+    await updateStatus('completed');
+  } catch (error) {
+    await updateStatus('error');
+  }
+};
+```
+
+**זכור: הפרויקט הזה הוא מערכת אימון מכירות ושירות מתקדמת עם דגש על איכות, יציבות ו-UX מעולה!** 
