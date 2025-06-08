@@ -129,6 +129,8 @@ export async function GET(request: NextRequest) {
         periodDays: days,
         lastUpdated: new Date().toISOString(),
         currency: 'USD',
+        source: openaiAnalytics.getDataSource(),
+        dataType: openaiAnalytics.getDataType(),
       },
     };
 

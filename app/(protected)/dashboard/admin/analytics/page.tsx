@@ -78,6 +78,8 @@ interface AnalyticsData {
     periodDays: number
     lastUpdated: string
     currency: string
+    source?: string
+    dataType?: string
   }
 }
 
@@ -237,6 +239,27 @@ export default function AnalyticsPage() {
           <p className="text-white/80 text-lg">
             דוח מפורט על צריכת API, עלויות וביצועים
           </p>
+          
+          {/* הודעת מקור נתונים */}
+          {analyticsData.metadata.source && (
+            <div className="mt-4 flex items-center space-x-3 bg-white/10 rounded-lg px-4 py-2 w-fit">
+              {analyticsData.metadata.source === 'OpenAI API' ? (
+                <CheckCircle className="w-4 h-4 text-green-400" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-yellow-400" />
+              )}
+              <div className="text-sm">
+                <span className="font-medium">מקור נתונים: </span>
+                <span>{analyticsData.metadata.source}</span>
+                {analyticsData.metadata.dataType && (
+                  <>
+                    <span className="mx-2">•</span>
+                    <span className="text-white/80">{analyticsData.metadata.dataType}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
