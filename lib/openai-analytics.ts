@@ -377,8 +377,8 @@ class OpenAIAnalyticsService {
           id,
           created_at,
           transcript,
-          tone_analysis,
-          content_analysis,
+          tone_analysis_report,
+          analysis_report,
           processing_status
         `)
         .gte('created_at', startDate.toISOString())
@@ -411,7 +411,7 @@ class OpenAIAnalyticsService {
 
        const { data: calls, error } = await supabase
          .from('calls')
-         .select('created_at, transcript, tone_analysis, content_analysis')
+         .select('created_at, transcript, tone_analysis_report, analysis_report')
          .gte('created_at', startDate.toISOString())
          .eq('processing_status', 'completed');
 
@@ -445,8 +445,8 @@ class OpenAIAnalyticsService {
       
       // הערכת tokens בהתבסס על אורך הטקסט
       const transcriptLength = (call.transcript || '').length;
-      const toneAnalysisLength = JSON.stringify(call.tone_analysis || {}).length;
-      const contentAnalysisLength = JSON.stringify(call.content_analysis || {}).length;
+      const toneAnalysisLength = JSON.stringify(call.tone_analysis_report || {}).length;
+      const contentAnalysisLength = JSON.stringify(call.analysis_report || {}).length;
       
       // חישוב משוער של tokens (כ-4 תווים לtoken)
       const estimatedInputTokens = Math.ceil(transcriptLength / 4);
@@ -472,7 +472,7 @@ class OpenAIAnalyticsService {
       }
       
       // ניתוח טונציה
-      if (call.tone_analysis) {
+      if (call.tone_analysis_report) {
         usageData.push({
           start_time: timestamp,
           end_time: timestamp + 3600,
@@ -491,7 +491,7 @@ class OpenAIAnalyticsService {
       }
       
       // ניתוח תוכן
-      if (call.content_analysis) {
+      if (call.analysis_report) {
         usageData.push({
           start_time: timestamp,
           end_time: timestamp + 3600,
@@ -521,8 +521,8 @@ class OpenAIAnalyticsService {
        const timestamp = Math.floor(callDate.getTime() / 1000);
        
        const transcriptLength = (call.transcript || '').length;
-       const toneAnalysisLength = JSON.stringify(call.tone_analysis || {}).length;
-       const contentAnalysisLength = JSON.stringify(call.content_analysis || {}).length;
+       const toneAnalysisLength = JSON.stringify(call.tone_analysis_report || {}).length;
+       const contentAnalysisLength = JSON.stringify(call.analysis_report || {}).length;
        
        // חישובי עלויות מבוססי מחירי OpenAI בפועל
        let totalCost = 0;
@@ -545,7 +545,7 @@ class OpenAIAnalyticsService {
        }
        
        // 2. ניתוח טונציה (gpt-4o-audio-preview)
-       if (call.tone_analysis && transcriptLength > 0) {
+       if (call.tone_analysis_report && transcriptLength > 0) {
          const inputTokens = Math.ceil(transcriptLength / 4);
          const outputTokens = Math.ceil(toneAnalysisLength / 4);
          const toneCost = (inputTokens * 0.000005) + (outputTokens * 0.000015); // $5/1M input, $15/1M output
@@ -563,7 +563,7 @@ class OpenAIAnalyticsService {
        }
        
        // 3. ניתוח תוכן (gpt-4-turbo-2024-04-09)
-       if (call.content_analysis && transcriptLength > 0) {
+       if (call.analysis_report && transcriptLength > 0) {
          const inputTokens = Math.ceil(transcriptLength / 4);
          const outputTokens = Math.ceil(contentAnalysisLength / 4);
          const contentCost = (inputTokens * 0.00001) + (outputTokens * 0.00003); // $10/1M input, $30/1M output

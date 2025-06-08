@@ -541,7 +541,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-center">
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${getScoreBg(score)}`}>
-            {score}/10
+            {score}/10 (טווח 3-10)
           </span>
         </td>
         <td className="px-6 py-4 text-sm text-gray-700">
@@ -636,7 +636,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   <div className={`text-6xl font-bold mb-4 score-animation ${getScoreColor(finalOverallScore)}`}>
                     {finalOverallScore}
                   </div>
-                  <div className="text-gray-600">מתוך 10</div>
+                  <div className="text-gray-600">מתוך 10 (טווח 3-10)</div>
                   <div className={`mt-4 p-3 rounded-lg ${getScoreBg(finalOverallScore)}`}>
                     <span className={`text-sm font-medium ${getScoreColor(finalOverallScore)}`}>
                       {finalOverallScore >= 8 ? 'ביצועים מעולים!' :
@@ -763,7 +763,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                           <span className={`text-3xl font-bold ${getScoreColor(scoreValue)}`}>
                             {scoreValue}
                           </span>
-                          <span className="text-gray-500 text-sm">/10</span>
+                          <span className="text-gray-500 text-sm">/10 (טווח 3-10)</span>
                         </div>
                       </div>
 
@@ -784,7 +784,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                           <h4 className="font-medium text-gray-700 mb-2">📝 סיכום מהיר:</h4>
                           <p className="text-gray-700 leading-relaxed text-sm">
                             {categoryData.subcategories.length} פרמטרים בקטגוריה זו - 
-                            ציון ממוצע: <span className="font-bold">{scoreValue}/10</span>
+                            ציון ממוצע: <span className="font-bold">{scoreValue}/10 (טווח 3-10)</span>
                           </p>
                         </div>
                       )}
@@ -974,7 +974,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                     <div className="text-5xl font-bold text-blue-600 mb-2">
                       {getFieldValue(tone_analysis_report, ['ציון_טונציה'])}
                     </div>
-                    <div className="text-gray-600">מתוך 10</div>
+                    <div className="text-gray-600">מתוך 10 (טווח 3-10)</div>
                   </div>
                 )}
 
@@ -1136,7 +1136,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                     <h3 className="text-xl font-semibold text-white flex items-center justify-between">
                       <span>{categoryData.category}</span>
                       <span className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreBg(categoryData.score)}`}>
-                        {categoryData.score}/10
+                        {categoryData.score}/10 (טווח 3-10)
                       </span>
                     </h3>
                   </div>
@@ -1166,8 +1166,8 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                               {param.name}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${getScoreBg(param.score)}`}>
-                                {param.score}/10
+                                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${getScoreBg(param.score)}`}>
+                        {param.score}/10 (טווח 3-10)
                               </span>
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
@@ -1202,7 +1202,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                               <h4 className="font-semibold text-red-800 mb-2">{flag.קטגוריה || 'דגל אדום'}</h4>
                               <p className="text-red-700 mb-2">{flag.הערה}</p>
                               {flag.ציון && (
-                                <div className="text-sm text-red-600">ציון: {flag.ציון}/10</div>
+                                <div className="text-sm text-red-600">ציון: {flag.ציון}/10 (טווח 3-10)</div>
                               )}
                               {flag.ציטוטים && flag.ציטוטים.length > 0 && (
                                 <div className="mt-3">
