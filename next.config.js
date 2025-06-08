@@ -5,6 +5,8 @@ const nextConfig = {
     serverComponentsExternalPackages: ['openai']
   },
   
+
+  
   // הגדרות תמונות מסופבייס
   images: {
     remotePatterns: [
