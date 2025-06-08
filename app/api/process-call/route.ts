@@ -39,6 +39,48 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
+// פונקציה לניקוי תשובות OpenAI מקידוד Markdown
+function cleanOpenAIResponse(content: string): string {
+  if (!content) return '{}';
+  
+  // הסרת code blocks שונים (```json, ```JSON, ```)
+  let cleaned = content.replace(/```(?:json|JSON)?\s*/g, '').replace(/```\s*$/g, '');
+  
+  // הסרת backticks יחידים שעלולים להישאר
+  cleaned = cleaned.replace(/^`+|`+$/g, '');
+  
+  // הסרת רווחים מיותרים בתחילת ובסוף
+  cleaned = cleaned.trim();
+  
+  // חיפוש התחלת JSON אם יש טקסט לפניו
+  const jsonStart = cleaned.indexOf('{');
+  const arrayStart = cleaned.indexOf('[');
+  
+  if (jsonStart !== -1 && (arrayStart === -1 || jsonStart < arrayStart)) {
+    cleaned = cleaned.substring(jsonStart);
+  } else if (arrayStart !== -1) {
+    cleaned = cleaned.substring(arrayStart);
+  }
+  
+  // חיפוש סיום JSON אם יש טקסט אחריו
+  const jsonEnd = cleaned.lastIndexOf('}');
+  const arrayEnd = cleaned.lastIndexOf(']');
+  
+  if (jsonEnd !== -1 && jsonEnd > arrayEnd) {
+    cleaned = cleaned.substring(0, jsonEnd + 1);
+  } else if (arrayEnd !== -1) {
+    cleaned = cleaned.substring(0, arrayEnd + 1);
+  }
+  
+  // אם התוכן עדיין לא מתחיל ב-{ או [ אז זה לא JSON תקין
+  if (!cleaned.startsWith('{') && !cleaned.startsWith('[')) {
+    console.error('תשובת OpenAI לא מכילה JSON תקין:', cleaned.substring(0, 200));
+    return '{}';
+  }
+  
+  return cleaned;
+}
+
 export async function POST(request: Request) {
   try {
     // בדיקת זמינות מפתח OpenAI עם לוגים מפורטים
@@ -435,7 +477,7 @@ export async function POST(request: Request) {
                 ${transcript ? `תמליל השיחה: ${transcript}` : 'לא קיים תמליל זמין. אנא נתח את הטונציה ורמת האנרגיה רק מהאודיו.'}
                 ${!transcript ? 'שים לב: התמלול נכשל, לכן אנא התמקד בניתוח טונאלי מהאודיו בלבד ובזיהוי דגלים אדומים אקוסטיים.' : ''}
                 
-                הקפד להחזיר את התשובה בפורמט JSON המדויק שצוין למעלה.`
+                חשוב מאוד: החזר רק JSON נקי ללא עיטוף Markdown או backticks. התחל ישירות ב-{ וסיים ב-}.`
               },
               {
                 type: 'input_audio',
@@ -455,7 +497,27 @@ export async function POST(request: Request) {
         response_id: toneAnalysisResponse.id
       });
 
-      const toneAnalysisReport = JSON.parse(toneAnalysisResponse.choices[0].message.content || '{}');
+      const rawToneContent = toneAnalysisResponse.choices[0].message.content || '{}';
+      const cleanedToneContent = cleanOpenAIResponse(rawToneContent);
+      
+      await addCallLog(call_id, '🧹 ניקוי תשובת ניתוח טונציה', { 
+        raw_length: rawToneContent.length,
+        cleaned_length: cleanedToneContent.length,
+        starts_with_backticks: rawToneContent.startsWith('```'),
+        cleaned_preview: cleanedToneContent.substring(0, 100)
+      });
+      
+      let toneAnalysisReport;
+      try {
+        toneAnalysisReport = JSON.parse(cleanedToneContent);
+      } catch (parseError: any) {
+        await addCallLog(call_id, '❌ שגיאה בניתוח JSON של ניתוח טונציה', { 
+          error: parseError.message,
+          raw_content_preview: rawToneContent.substring(0, 500),
+          cleaned_content_preview: cleanedToneContent.substring(0, 500)
+        });
+        throw new Error(`שגיאה בניתוח תשובת OpenAI לטונציה: ${parseError.message}`);
+      }
       
       await addCallLog(call_id, '✅ ניתוח טונציה הושלם', { 
         report_keys: Object.keys(toneAnalysisReport),
@@ -594,11 +656,13 @@ export async function POST(request: Request) {
               ניתוח טונציה: ${JSON.stringify(toneAnalysisReport)}
               
               הנחיות:
-              1. החזר תמיד JSON תקין
+              1. החזר תמיד JSON תקין - התחל ישירות ב-{ וסיים ב-} ללא backticks או markdown
               2. בציטוטים החלף שמות ב"הנציג" ו"הלקוח"
               3. תן ציונים מדויקים מ-1-10 לכל פרמטר
               4. הסבר בקצרה כל ציון
-              5. הצע דרכים מעשיות לשיפור`
+              5. הצע דרכים מעשיות לשיפור
+              
+              חשוב מאוד: החזר רק JSON נקי ללא עיטוף Markdown או backticks!`
             }
           ]
         });
@@ -610,7 +674,27 @@ export async function POST(request: Request) {
           completion_time: new Date().toISOString()
         });
 
-        const contentAnalysisReport = JSON.parse(contentAnalysisResponse.choices[0].message.content || '{}');
+        const rawContentResponse = contentAnalysisResponse.choices[0].message.content || '{}';
+        const cleanedContentResponse = cleanOpenAIResponse(rawContentResponse);
+        
+        await addCallLog(call_id, '🧹 ניקוי תשובת ניתוח תוכן', { 
+          raw_length: rawContentResponse.length,
+          cleaned_length: cleanedContentResponse.length,
+          starts_with_backticks: rawContentResponse.startsWith('```'),
+          cleaned_preview: cleanedContentResponse.substring(0, 100)
+        });
+        
+        let contentAnalysisReport;
+        try {
+          contentAnalysisReport = JSON.parse(cleanedContentResponse);
+        } catch (parseError: any) {
+          await addCallLog(call_id, '❌ שגיאה בניתוח JSON של ניתוח תוכן', { 
+            error: parseError.message,
+            raw_content_preview: rawContentResponse.substring(0, 500),
+            cleaned_content_preview: cleanedContentResponse.substring(0, 500)
+          });
+          throw new Error(`שגיאה בניתוח תשובת OpenAI לתוכן: ${parseError.message}`);
+        }
         
         await addCallLog(call_id, '✅ ניתוח תוכן הושלם', { 
           overall_score: contentAnalysisReport.overall_score,

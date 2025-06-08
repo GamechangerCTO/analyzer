@@ -177,9 +177,9 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     fetchAgents();
   }, [userData, user]);
   
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside or pressing Escape
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (isCallTypeDropdownOpen) {
         const target = event.target as HTMLElement;
         if (!target.closest('[data-dropdown="call-type"]')) {
@@ -188,11 +188,30 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isCallTypeDropdownOpen && event.key === 'Escape') {
+        setIsCallTypeDropdownOpen(false);
+      }
+    };
+
+    if (isCallTypeDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isCallTypeDropdownOpen]);
+
+  // Function to handle call type selection
+  const handleCallTypeSelect = (optionValue: string) => {
+    setCallType(optionValue);
+    setIsCallTypeDropdownOpen(false);
+  };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadCount(count => count + 1);
@@ -793,9 +812,10 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                       <button
                         key={option.value}
                         type="button"
-                        onClick={() => {
-                          setCallType(option.value);
-                          setIsCallTypeDropdownOpen(false);
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleCallTypeSelect(option.value);
                         }}
                         className="w-full p-4 text-right hover:bg-lemon-mint/10 transition-colors duration-200 flex items-center space-x-4"
                       >
