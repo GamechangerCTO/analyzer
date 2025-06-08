@@ -455,14 +455,26 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
       
       const subcategories = category.subcategories.map(sub => {
-        const subData = categoryData[sub.key] || {};
+        // נסה מפתחות שונים כי יש מפתחות עם גרשיים מוזרים
+        const possibleKeys = [
+          sub.key,
+          `"${sub.key}"`,
+          `"\\${sub.key}"`,
+          sub.key.replace(/_/g, ' ')
+        ];
         
-
+        let subData: any = {};
+        for (const key of possibleKeys) {
+          if (categoryData[key]) {
+            subData = categoryData[key];
+            break;
+          }
+        }
         
         return {
           name: sub.name,
           score: subData.ציון || subData.score || 0,
-          insights: subData.הסבר || subData.תובנות || subData.insights || 'לא זמין',
+          insights: subData.תובנות || subData.הסבר || subData.insights || 'לא זמין',
           improvements: subData.איך_משפרים || subData.improvements || 'לא זמין'
         };
       });
@@ -497,7 +509,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   };
   
   const detailed_analysis = analysisReport.detailed_analysis || {};
-  const overall_score_from_report = getFieldValue(analysisReport, ['ציון כללי', 'ציון_כללי', 'overall_score', 'score_overall']) || 
+  const overall_score_from_report = getFieldValue(analysisReport, ['ציון_כללי', 'ממוצע_משוקלל_כללי', 'ציון כללי', 'overall_score', 'score_overall']) || 
                                    (detailed_analysis.overall_score || detailed_analysis.ציון_כללי);
   const red_flag_from_report = getFieldValue(analysisReport, ['red_flag', 'דגל_אדום']);
   const red_flags = getFieldValue(analysisReport, ['דגלים אדומים', 'דגלים_אדומים', 'red_flags']) || [];
@@ -1057,16 +1069,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               </div>
             </div>
 
-            {/* הודעה על מצב הניתוח */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="flex items-center">
-                <span className="text-yellow-500 text-lg mr-2">ℹ️</span>
-                <p className="text-yellow-800 text-sm">
-                  <strong>שימו לב:</strong> אם אתם רואים "בהכנה..." בחלק מהתובנות או ההמלצות, 
-                  זה אומר שהניתוח עדיין מתבצע ברקע. נסו לרענן את הדף בעוד כמה דקות.
-                </p>
-              </div>
-            </div>
+
 
             {/* נקודות כשל מרכזיות */}
             {analysis_report.נקודות_כשל_מרכזיות && analysis_report.נקודות_כשל_מרכזיות.length > 0 && (
