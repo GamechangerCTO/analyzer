@@ -448,7 +448,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-red-100 text-red-800'
                           }`}>
-                            {call.tone_analysis_report.ציון_טונציה}/10 (טווח 3-10)
+                            {call.tone_analysis_report.ציון_טונציה}/10
                           </span>
                         ) : (
                           <span className="text-gray-400 text-sm">-</span>
