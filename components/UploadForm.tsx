@@ -977,10 +977,12 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
           
           <div>
             <h3 className="text-display text-2xl font-bold text-indigo-night mb-4">
-              הניתוח הושלם! 🎉
+              השיחה הועלתה בהצלחה! ✅
             </h3>
             <p className="text-indigo-night/70 text-lg">
-              השיחה שלך נותחה בהצלחה ומוכנה לצפייה
+              השיחה נשמרה במערכת והניתוח התחיל ברקע
+              <br />
+              <span className="text-lemon-mint-dark font-semibold">תוכל לצפות בתוצאות בעוד כ-3-5 דקות</span>
             </p>
           </div>
 
@@ -991,7 +993,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
             >
               <div className="flex items-center space-x-2">
                 <ArrowRight className="w-5 h-5" />
-                <span>צפה בתוצאות</span>
+                <span>עבור לדף השיחה</span>
               </div>
             </button>
             

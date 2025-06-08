@@ -362,6 +362,15 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     return null;
   };
   
+  // Debug: בואו נראה מה יש בניתוח
+  console.log('Analysis Report Structure:', {
+    analysisReport,
+    keys: Object.keys(analysisReport),
+    sample: analysisReport['פתיחת_שיחה_ובניית_אמון'],
+    firstKey: Object.keys(analysisReport)[0],
+    firstValue: Object.values(analysisReport)[0]
+  });
+
   // פונקציה לחילוץ הניתוח המפורט החדש
   const getDetailedScores = () => {
     const categories = [
@@ -449,13 +458,35 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
     return categories.map(category => {
       const categoryData = analysis_report[category.key] || {};
+      
+      // Debug לקטגוריה הספציפית
+      if (category.key === 'פתיחת_שיחה_ובניית_אמון') {
+        console.log('Category Data for פתיחת_שיחה_ובניית_אמון:', {
+          categoryData,
+          keys: Object.keys(categoryData),
+          sampleSub: categoryData[category.subcategories[0]?.key],
+        });
+      }
+      
       const subcategories = category.subcategories.map(sub => {
         const subData = categoryData[sub.key] || {};
+        
+        // Debug לפרמטר הראשון של הקטגוריה הראשונה
+        if (category.key === 'פתיחת_שיחה_ובניית_אמון' && sub.key === 'פתיח_אנרגטי') {
+          console.log('SubData for פתיח_אנרגטי:', {
+            subData,
+            keys: Object.keys(subData),
+            score: subData.ציון || subData.score,
+            insights: subData.תובנות || subData.insights,
+            improvements: subData.איך_משפרים || subData.improvements
+          });
+        }
+        
         return {
           name: sub.name,
           score: subData.ציון || subData.score || 0,
-          insights: subData.תובנות || subData.insights || 'לא זמין',
-          improvements: subData.איך_משפרים || subData.improvements || 'לא זמין'
+          insights: subData.תובנות || subData.insights || subData.הערות || subData.הסבר || 'הניתוח המפורט עדיין לא זמין',
+          improvements: subData.איך_משפרים || subData.improvements || subData.המלצות || subData.שיפור || 'המלצות שיפור עדיין לא זמינות'
         };
       });
 
@@ -499,6 +530,14 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   // משתנים נוספים שהקומפוננטה מחפשת
   const all_quotes = getFieldValue(analysisReport, ['ציטוטים_רלוונטיים', 'ציטוטים', 'quotes', 'all_quotes']) || [];
   const segment_quotes = all_quotes; // alias
+  
+  // Debug ציטוטים
+  console.log('Quotes Debug:', {
+    all_quotes,
+    quotes_length: all_quotes.length,
+    analysis_keys_with_quotes: Object.keys(analysisReport).filter(key => key.includes('ציטוט') || key.includes('quotes')),
+    sample_quote: all_quotes[0]
+  });
   const practical_recommendations = getFieldValue(analysisReport, ['המלצות_פרקטיות', 'practical_recommendations']) || [];
   const detailed_scores = getDetailedScores();
   const finalOverallScore = overall_score_from_report || call.overall_score || 0;
@@ -573,6 +612,18 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 </a>
               )}
               <CallStatusBadge status={status} />
+              
+              {/* כפתור רענון */}
+              <button
+                onClick={() => window.location.reload()}
+                className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+                title="רענן את הניתוח"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                רענן
+              </button>
             </div>
           </div>
         </div>
@@ -1047,6 +1098,17 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               </div>
             </div>
 
+            {/* הודעה על מצב הניתוח */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <span className="text-yellow-500 text-lg mr-2">ℹ️</span>
+                <p className="text-yellow-800 text-sm">
+                  <strong>שימו לב:</strong> אם אתם רואים "בהכנה..." בחלק מהתובנות או ההמלצות, 
+                  זה אומר שהניתוח עדיין מתבצע ברקע. נסו לרענן את הדף בעוד כמה דקות.
+                </p>
+              </div>
+            </div>
+
             {/* נקודות כשל מרכזיות */}
             {analysis_report.נקודות_כשל_מרכזיות && analysis_report.נקודות_כשל_מרכזיות.length > 0 && (
               <div className="bg-red-50 border border-red-200 rounded-xl shadow-lg p-6">
@@ -1146,10 +1208,18 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                               </span>
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
-                              {param.insights}
+                              {param.insights === 'הניתוח המפורט עדיין לא זמין' ? (
+                                <div className="text-gray-500 italic">
+                                  <span className="text-xs">⏳</span> בהכנה...
+                                </div>
+                              ) : param.insights}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
-                              {param.improvements}
+                              {param.improvements === 'המלצות שיפור עדיין לא זמינות' ? (
+                                <div className="text-gray-500 italic">
+                                  <span className="text-xs">⏳</span> בהכנה...
+                                </div>
+                              ) : param.improvements}
                             </td>
                           </tr>
                         ))}
@@ -1510,6 +1580,9 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 <div className="text-center py-8 text-gray-500">
                   <span className="text-4xl mb-2 block">📝</span>
                   <p>לא נמצאו ציטוטים רלוונטיים</p>
+                  <div className="mt-4 text-sm text-gray-400">
+                    <p>אדגמה: במידה והניתוח עדיין לא מלא, ציטוטים יתווספו כאשר הניתוח יושלם לחלוטין</p>
+                  </div>
                 </div>
               )}
             </div>
