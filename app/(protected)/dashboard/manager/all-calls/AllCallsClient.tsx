@@ -100,7 +100,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
     const matchesScore = filterScore === 'all' || 
       (filterScore === 'high' && call.overall_score && call.overall_score >= 8) ||
       (filterScore === 'medium' && call.overall_score && call.overall_score >= 6 && call.overall_score < 8) ||
-      (filterScore === 'low' && call.overall_score && call.overall_score < 6)
+      (filterScore === 'low' && call.overall_score && call.overall_score >= 3 && call.overall_score < 6)
 
     const matchesRedFlag = filterRedFlag === 'all' || 
       (filterRedFlag === 'true' && call.red_flag === true) ||
@@ -127,6 +127,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
     
     if (score >= 8) return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">{score.toFixed(1)}</span>
     if (score >= 6) return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">{score.toFixed(1)}</span>
+    if (score >= 4) return <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">{score.toFixed(1)}</span>
     return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">{score.toFixed(1)}</span>
   }
 

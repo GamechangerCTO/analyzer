@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch fresh data from OpenAI
     console.log(`🔄 Fetching OpenAI analytics for last ${days} days...`);
+    console.log(`📋 Data source: ${openaiAnalytics.getDataSource()}`);
     
     const [usageData, costData] = await Promise.all([
       openaiAnalytics.getRecentUsage(days),
@@ -149,11 +150,35 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('❌ Error fetching OpenAI analytics:', error);
     
+    // טיפול שגיאות מפורט יותר
+    let errorMessage = 'Unknown error';
+    let errorCode = 500;
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      
+      // זיהוי שגיאות ספציפיות של OpenAI API
+      if (error.message.includes('Limit exceeds the maximum')) {
+        errorMessage = 'בקשה לתקופה ארוכה מדי. נסה תקופה קצרה יותר.';
+        errorCode = 400;
+      } else if (error.message.includes('invalid_request_error')) {
+        errorMessage = 'פרמטרים לא תקינים לAPI של OpenAI';
+        errorCode = 400;
+      } else if (error.message.includes('ADMIN_OPENAI_KEY')) {
+        errorMessage = 'מפתח API של OpenAI לא מוגדר';
+        errorCode = 503;
+      }
+    }
+    
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch analytics data',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    }, { status: 500 });
+      message: errorMessage,
+      debug: process.env.NODE_ENV === 'development' ? {
+        originalError: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      } : undefined,
+    }, { status: errorCode });
   }
 }
 

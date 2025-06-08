@@ -640,12 +640,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   <div className={`mt-4 p-3 rounded-lg ${getScoreBg(finalOverallScore)}`}>
                     <span className={`text-sm font-medium ${getScoreColor(finalOverallScore)}`}>
                       {finalOverallScore >= 8 ? 'ביצועים מעולים!' :
-                       finalOverallScore >= 7 ? 'ביצועים סבירים - יש מקום לשיפור' :
-                       'דרוש שיפור משמעותי'}
+                       finalOverallScore >= 6 ? 'ביצועים סבירים - יש מקום לשיפור' :
+                       finalOverallScore >= 4 ? 'דרוש שיפור משמעותי' :
+                       'ביצועים מתחת לסטנדרט'}
                     </span>
                     {finalOverallScore < 8 && (
                       <div className="mt-2 text-xs text-gray-600">
-                        💡 <strong>זכור:</strong> הסטנדרטים שלנו גבוהים - רק 8+ נחשב מעולה
+                        💡 <strong>זכור:</strong> הסטנדרטים שלנו גבוהים - רק 8+ נחשב מעולה, טווח הציונים: 3-10
                       </div>
                     )}
                   </div>
@@ -753,7 +754,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
                   return (
                     <div key={idx} className="bg-white rounded-xl shadow-lg p-6 border-l-4" 
-                         style={{ borderLeftColor: scoreValue >= 8 ? '#10b981' : scoreValue >= 7 ? '#f59e0b' : '#ef4444' }}>
+                         style={{ borderLeftColor: scoreValue >= 8 ? '#10b981' : scoreValue >= 6 ? '#f59e0b' : '#ef4444' }}>
                       
                       {/* כותרת הפרמטר עם ציון */}
                       <div className="flex justify-between items-start mb-4">
@@ -771,7 +772,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                         <div 
                           className={`h-3 rounded-full transition-all duration-300 ${
                             scoreValue >= 8 ? 'bg-green-500' :
-                            scoreValue >= 7 ? 'bg-orange-500' : 'bg-red-500'
+                            scoreValue >= 6 ? 'bg-orange-500' : 'bg-red-500'
                           }`}
                           style={{ width: `${(scoreValue / 10) * 100}%` }}
                         />

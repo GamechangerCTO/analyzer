@@ -296,7 +296,7 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
       filtered = filtered.filter(user => {
         if (scoreFilter === 'high') return user.avgScore >= 8
         if (scoreFilter === 'medium') return user.avgScore >= 6 && user.avgScore < 8
-        if (scoreFilter === 'low') return user.avgScore < 6
+        if (scoreFilter === 'low') return user.avgScore >= 3 && user.avgScore < 6
         return true
       })
     }
@@ -1054,9 +1054,9 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
               <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg">
                 <CallsBarChart 
                   data={{
-                    labels: ['נמוך (0-6)', 'בינוני (6-8)', 'גבוה (8-10)'],
+                    labels: ['נמוך (3-6)', 'בינוני (6-8)', 'גבוה (8-10)'],
                     values: [
-                      calls.filter(call => call.overall_score !== null && call.overall_score < 6).length,
+                      calls.filter(call => call.overall_score !== null && call.overall_score >= 3 && call.overall_score < 6).length,
                       calls.filter(call => call.overall_score !== null && call.overall_score >= 6 && call.overall_score < 8).length,
                       calls.filter(call => call.overall_score !== null && call.overall_score >= 8).length
                     ]

@@ -442,9 +442,9 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {call.tone_analysis_report && call.tone_analysis_report.ציון_טונציה ? (
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            call.tone_analysis_report.ציון_טונציה >= 7 
+                            call.tone_analysis_report.ציון_טונציה >= 6 
                               ? 'bg-blue-100 text-blue-800' 
-                              : call.tone_analysis_report.ציון_טונציה >= 5
+                              : call.tone_analysis_report.ציון_טונציה >= 4
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-red-100 text-red-800'
                           }`}>

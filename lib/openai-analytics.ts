@@ -213,12 +213,16 @@ class OpenAIAnalyticsService {
     const endTime = Math.floor(Date.now() / 1000);
     const startTime = endTime - (days * 24 * 60 * 60);
 
+    // אופטימיזציה לפי מגבלות OpenAI API
+    const bucketWidth = days <= 31 ? '1d' : '1h';
+    const maxLimit = days <= 31 ? 31 : Math.min(days * 24, 168);
+
     return this.getUsageData({
       start_time: startTime,
       end_time: endTime,
-      bucket_width: '1d',
+      bucket_width: bucketWidth,
       group_by: ['model', 'project_id', 'api_key_id'],
-      limit: 100,
+      limit: maxLimit,
     });
   }
 
@@ -230,12 +234,16 @@ class OpenAIAnalyticsService {
     const endTime = Math.floor(Date.now() / 1000);
     const startTime = endTime - (days * 24 * 60 * 60);
 
+    // אופטימיזציה לפי מגבלות OpenAI API
+    const bucketWidth = days <= 31 ? '1d' : '1h';
+    const maxLimit = days <= 31 ? 31 : Math.min(days * 24, 168);
+
     return this.getCostData({
       start_time: startTime,
       end_time: endTime,
-      bucket_width: '1d',
+      bucket_width: bucketWidth,
       group_by: ['line_item', 'project_id'],
-      limit: 100,
+      limit: maxLimit,
     });
   }
 
