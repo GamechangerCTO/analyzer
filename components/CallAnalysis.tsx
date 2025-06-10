@@ -217,12 +217,46 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     setCurrentPlayingQuote('')
   }, [activeTab])
   
-  // פולינג לבדיקת סטטוס העיבוד עם timeout
+  // Real-time subscription לעדכוני סטטוס + פולינג כגיבוי
   useEffect(() => {
     if (['pending', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
       setIsPolling(true)
       let pollCount = 0
       const maxPolls = 120 // מקסימום 6 דקות (120 * 3 שניות)
+      
+      // הוספת real-time subscription לטבלת calls
+      const { createClient } = require('@supabase/supabase-js')
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      )
+      
+      // יצירת subscription לשינויים בשיחה הספציפית
+      const subscription = supabase
+        .channel(`call-${call.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'calls',
+          filter: `id=eq.${call.id}`
+        }, (payload: any) => {
+          console.log('🔄 Real-time update received:', payload.new)
+          
+          const newStatus = payload.new.processing_status
+          if (newStatus && newStatus !== status) {
+            setStatus(newStatus)
+            
+            // אם הסטטוס השתנה ל-completed, נרענן את הדף
+            if (newStatus === 'completed') {
+              setIsPolling(false)
+              console.log('✅ Analysis completed - reloading page')
+              setTimeout(() => window.location.reload(), 500) // המתנה קצרה כדי לוודא שהנתונים נשמרו
+            }
+          }
+        })
+        .subscribe()
+      
+      console.log('🔗 Real-time subscription created for call:', call.id)
       
       const intervalId = setInterval(async () => {
         pollCount++
@@ -268,9 +302,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
             window.location.reload()
           }
         }
-      }, 3000)
+              }, pollCount < 10 ? 1000 : 3000) // פולינג כל שנייה ב-10 הפעמים הראשונות, אחר כך כל 3 שניות
       
-      return () => clearInterval(intervalId)
+      return () => {
+        clearInterval(intervalId)
+        subscription.unsubscribe()
+        console.log('🔌 Real-time subscription cleaned up for call:', call.id)
+      }
     }
   }, [status, call.id])
   
@@ -289,9 +327,17 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 השיחה נמצאת בתהליך עיבוד
               </h2>
               
-              <p className="text-gray-600 mb-8 text-center max-w-md">
+              <p className="text-gray-600 mb-4 text-center max-w-md">
                 אנו מנתחים את השיחה שלך באמצעות בינה מלאכותית מתקדמת. התהליך עשוי לקחת מספר דקות.
               </p>
+              
+              {status === 'analyzing_tone' && (
+                <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800 text-center">
+                    🎭 מבצע ניתוח טונציה מתקדם - הדף יתעדכן אוטומטיקית ברגע השלמת הניתוח
+                  </p>
+                </div>
+              )}
               
               {/* מד התקדמות מעוצב */}
               <div className="w-full max-w-lg mx-auto mb-8">
