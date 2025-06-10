@@ -925,7 +925,7 @@ export async function POST(request: Request) {
         };
 
         // עדכון הניתוח הסופי בטבלה
-        await supabase
+        const { error: updateError } = await supabase
           .from('calls')
           .update({
             analysis_report: finalReport,
@@ -936,6 +936,24 @@ export async function POST(request: Request) {
             analyzed_at: new Date().toISOString()
           })
           .eq('id', call_id);
+          
+        if (updateError) {
+          await addCallLog(call_id, '❌ שגיאה בעדכון טבלת calls', { 
+            error: updateError.message,
+            update_data: {
+              overall_score: contentAnalysisReport.overall_score,
+              red_flag: contentAnalysisReport.red_flag,
+              processing_status: 'completed'
+            }
+          });
+          throw new Error(`שגיאה בעדכון הטבלה: ${updateError.message}`);
+        }
+        
+        await addCallLog(call_id, '✅ טבלת calls עודכנה בהצלחה', { 
+          overall_score: contentAnalysisReport.overall_score,
+          red_flag: contentAnalysisReport.red_flag,
+          processing_status: 'completed'
+        });
           
         await addCallLog(call_id, '🏁 ניתוח שיחה הושלם', { 
           overall_score: contentAnalysisReport.overall_score,
@@ -958,7 +976,7 @@ export async function POST(request: Request) {
           improvement_points: toneAnalysisReport.המלצות_שיפור || []
         };
 
-        await supabase
+        const { error: updateError } = await supabase
           .from('calls')
           .update({
             analysis_report: finalReport,
@@ -969,6 +987,24 @@ export async function POST(request: Request) {
             analyzed_at: new Date().toISOString()
           })
           .eq('id', call_id);
+          
+        if (updateError) {
+          await addCallLog(call_id, '❌ שגיאה בעדכון טבלת calls (טונציה בלבד)', { 
+            error: updateError.message,
+            update_data: {
+              overall_score: finalReport.overall_score,
+              red_flag: finalReport.red_flag,
+              processing_status: 'completed'
+            }
+          });
+          throw new Error(`שגיאה בעדכון הטבלה: ${updateError.message}`);
+        }
+        
+        await addCallLog(call_id, '✅ טבלת calls עודכנה בהצלחה (טונציה בלבד)', { 
+          overall_score: finalReport.overall_score,
+          red_flag: finalReport.red_flag,
+          processing_status: 'completed'
+        });
           
         await addCallLog(call_id, '🏁 ניתוח טונציה הושלם (סוג ניתוח: טונציה בלבד)', { 
           overall_score: finalReport.overall_score,
@@ -998,13 +1034,19 @@ export async function POST(request: Request) {
           api_format_sent: fileExtension
         });
         
-        await supabase
+        const { error: updateError } = await supabase
           .from('calls')
           .update({
             processing_status: 'failed',
             error_message: `פורמט ${fileExtension} לא נתמך לניתוח טונאלי. נתמכים: wav, mp3`
           })
           .eq('id', call_id);
+          
+        if (updateError) {
+          await addCallLog(call_id, '❌ שגיאה בעדכון סטטוס failed', { 
+            error: updateError.message
+          });
+        }
 
         return NextResponse.json(
           { 
@@ -1015,13 +1057,19 @@ export async function POST(request: Request) {
         );
       }
       
-      await supabase
+      const { error: updateError } = await supabase
         .from('calls')
         .update({
           processing_status: 'error',
           error_message: `שגיאת ניתוח: ${analysisError.message}`
         })
         .eq('id', call_id);
+        
+      if (updateError) {
+        await addCallLog(call_id, '❌ שגיאה בעדכון סטטוס error', { 
+          error: updateError.message
+        });
+      }
 
       return NextResponse.json(
         { error: 'הניתוח נכשל', details: analysisError.message },
