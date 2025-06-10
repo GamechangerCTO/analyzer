@@ -217,6 +217,24 @@ export default function LoginForm() {
               console.log(`[onAuthStateChange] Approved regular user. Role: ${userData.role}. Redirecting...`);
               setAuthLoading(false)
               
+              // דיבוג נוסף לבדיקת session ו-cookies
+              console.log('[DEBUG] Current session check before redirect...')
+              const { data: currentSession } = await supabase.auth.getSession()
+              console.log('[DEBUG] Session data:', {
+                hasSession: !!currentSession.session,
+                userId: currentSession.session?.user?.id,
+                userEmail: currentSession.session?.user?.email,
+                expiresAt: currentSession.session?.expires_at,
+                accessToken: currentSession.session?.access_token ? 'Present' : 'Missing'
+              })
+              
+              // בדיקת cookies ידנית
+              console.log('[DEBUG] Document cookies:', document.cookie)
+              console.log('[DEBUG] Available storage:', {
+                localStorage: typeof(Storage) !== 'undefined',
+                sessionStorage: typeof(Storage) !== 'undefined'
+              })
+              
               console.log('[DEBUG] About to redirect immediately...')
               // ניסיון ניתוב ישיר ראשון
               if (userData.role === 'admin') { // This case should ideally not be hit if not super admin email
@@ -231,8 +249,16 @@ export default function LoginForm() {
               }
               
               // גיבוי - אם הניתוב הישיר לא עבד, נסה עם timeout
-              setTimeout(() => {
+              setTimeout(async () => {
                 console.log('[DEBUG] Backup timeout redirect executing...')
+                
+                // בדיקה נוספת של session לפני גיבוי
+                const { data: backupSession } = await supabase.auth.getSession()
+                console.log('[DEBUG] Backup session check:', {
+                  hasSession: !!backupSession.session,
+                  userId: backupSession.session?.user?.id
+                })
+                
                 if (userData.role === 'admin') {
                   console.log('[DEBUG] Backup redirect to /dashboard')
                   window.location.href = '/dashboard';

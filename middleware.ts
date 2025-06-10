@@ -49,9 +49,6 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // בדיקת התחברות
-  const { data: { session } } = await supabase.auth.getSession()
-  
   // נתיבים פתוחים (אין צורך בהתחברות)
   const publicPaths = ['/login', '/api', '/not-approved', '/not-found']
   
@@ -65,18 +62,37 @@ export async function middleware(request: NextRequest) {
   
   // אם הנתיב ציבורי או משאב סטטי, אין צורך בבדיקת התחברות
   if (isPublicPath || isStaticResource) {
+    console.log('Middleware - Allowing public path:', request.nextUrl.pathname)
     return response
   }
   
+  // דיבוג מתקדם לauth
+  console.log('Middleware - Checking auth for path:', request.nextUrl.pathname)
+  console.log('Middleware - Auth cookies present:', {
+    'sb-access-token': !!request.cookies.get('sb-oesbtvlnnvygbntkrqyk-auth-token'),
+    'sb-refresh-token': !!request.cookies.get('sb-oesbtvlnnvygbntkrqyk-auth-token-code-verifier'),
+    allCookies: request.cookies.getAll().map(c => c.name)
+  })
+
+  // בדיקת התחברות
+  const { data: { session }, error } = await supabase.auth.getSession()
+  
+  console.log('Middleware - Session check result:', {
+    hasSession: !!session,
+    hasUser: !!session?.user,
+    userEmail: session?.user?.email,
+    sessionError: error?.message,
+    sessionExpires: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'N/A'
+  })
+  
   // אם אין משתמש מחובר והנתיב דורש התחברות, מפנים לדף הכניסה
   if (!session) {
-    console.log('ניתוב לעמוד התחברות - אין משתמש מזוהה', request.nextUrl.pathname)
-    console.log('Session data:', session)
-    console.log('Cookies:', request.cookies.toString())
+    console.log('Middleware - No session found, redirecting to login from:', request.nextUrl.pathname)
+    console.log('Middleware - Full URL was:', request.url)
     return NextResponse.redirect(new URL('/login', request.url))
   }
   
-  console.log('Middleware - User authenticated:', session.user.email, 'for path:', request.nextUrl.pathname)
+  console.log('Middleware - Auth successful for:', session.user.email, 'accessing:', request.nextUrl.pathname)
 
   // לאחר שהמשתמש מזוהה, אפשר להמשיך
   return response
