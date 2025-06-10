@@ -216,13 +216,34 @@ export default function LoginForm() {
               
               console.log(`[onAuthStateChange] Approved regular user. Role: ${userData.role}. Redirecting...`);
               setAuthLoading(false)
+              
+              console.log('[DEBUG] About to redirect immediately...')
+              // ניסיון ניתוב ישיר ראשון
               if (userData.role === 'admin') { // This case should ideally not be hit if not super admin email
+                console.log('[DEBUG] Redirecting to /dashboard')
                 router.push('/dashboard');
               } else if (userData.role === 'manager' || userData.role === 'owner') {
+                console.log('[DEBUG] Redirecting to /dashboard/manager')
                 router.push('/dashboard/manager');
               } else { // agent
+                console.log('[DEBUG] Redirecting to /dashboard/agent')
                 router.push('/dashboard/agent');
               }
+              
+              // גיבוי - אם הניתוב הישיר לא עבד, נסה עם timeout
+              setTimeout(() => {
+                console.log('[DEBUG] Backup timeout redirect executing...')
+                if (userData.role === 'admin') {
+                  console.log('[DEBUG] Backup redirect to /dashboard')
+                  window.location.href = '/dashboard';
+                } else if (userData.role === 'manager' || userData.role === 'owner') {
+                  console.log('[DEBUG] Backup redirect to /dashboard/manager')
+                  window.location.href = '/dashboard/manager';
+                } else { // agent
+                  console.log('[DEBUG] Backup redirect to /dashboard/agent')
+                  window.location.href = '/dashboard/agent';
+                }
+              }, 1000)
             }
           } catch (error) {
             console.error("[onAuthStateChange] Error in auth state change handler:", error);

@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const next = searchParams.get('next') ?? '/dashboard'
 
   if (code) {
     const cookieStore = cookies()
@@ -16,8 +16,9 @@ export async function GET(request: NextRequest) {
     if (!error) {
       const user = (await supabase.auth.getUser()).data.user
       if (user) {
-        // Redirect to login page so the existing auth logic can handle user setup
-        return NextResponse.redirect(`${origin}/login`)
+        // ניתוב ישיר לדשבורד במקום חזרה ל-login
+        const finalDestination = next.startsWith('/') ? next : '/dashboard'
+        return NextResponse.redirect(`${origin}${finalDestination}`)
       }
     }
   }
