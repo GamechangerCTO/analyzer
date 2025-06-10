@@ -14,26 +14,55 @@ export default async function ProtectedLayout({
   
   const { data: { user }, error } = await supabase.auth.getUser()
   
+  console.log('Protected Layout - Auth check:', { 
+    user: user ? `${user.email} (${user.id})` : 'null', 
+    error: error?.message 
+  })
+  
   if (!user || error) {
+    console.log('Protected Layout - Redirecting to login, no user or error:', error?.message)
     redirect('/login')
   }
 
-  // בדיקה האם המשתמש קיים במערכת ומאושר
-  const { data: userData, error: userError } = await supabase
+  // על פי memory bank - דפוס זיהוי משתמשים כפול: ID ו-email
+  // זה הדפוס הנכון ממערכת הביטחון של הפרויקט
+  const isAdmin = user.email === 'ido.segev23@gmail.com'
+  
+  // בדיקה האם המשתמש קיים במערכת ומאושר - תחילה לפי email (דפוס ראשי)
+  let { data: userData, error: userError } = await supabase
     .from('users')
     .select('id, role, is_approved, company_id')
-    .eq('id', user.id)
-    .single()
+    .eq('email', user.email!)
+    .maybeSingle()
   
+  // אם לא נמצא לפי email, נסה לפי ID (דפוס משני)
   if (userError || !userData) {
-    // אם המשתמש לא קיים במערכת מפנים לדף שגיאה
-    redirect('/not-approved?reason=not-found')
+    console.log('Protected Layout - User not found by email, trying by ID')
+    const { data: userDataById, error: idError } = await supabase
+      .from('users')
+      .select('id, role, is_approved, company_id')
+      .eq('id', user.id)
+      .maybeSingle()
+    
+    if (!idError && userDataById) {
+      userData = userDataById
+      console.log('Protected Layout - User found by ID:', userDataById)
+    } else {
+      console.log('Protected Layout - User not found in database, redirecting to not-found')
+      // אם המשתמש לא קיים במערכת מפנים לדף שגיאה
+      redirect('/not-approved?reason=not-found')
+    }
+  } else {
+    console.log('Protected Layout - User found by email:', userData)
   }
   
   // בדיקה שהמשתמש מאושר
-  if (!userData.is_approved) {
+  if (!userData.is_approved && !isAdmin) {
+    console.log('Protected Layout - User not approved, redirecting to not-approved')
     redirect('/not-approved?reason=pending')
   }
+
+  console.log('Protected Layout - Auth successful, rendering page for:', user.email)
 
   return (
     <div className="min-h-screen flex flex-col bg-cream-sand-light">

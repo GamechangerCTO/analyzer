@@ -71,8 +71,12 @@ export async function middleware(request: NextRequest) {
   // אם אין משתמש מחובר והנתיב דורש התחברות, מפנים לדף הכניסה
   if (!session) {
     console.log('ניתוב לעמוד התחברות - אין משתמש מזוהה', request.nextUrl.pathname)
+    console.log('Session data:', session)
+    console.log('Cookies:', request.cookies.toString())
     return NextResponse.redirect(new URL('/login', request.url))
   }
+  
+  console.log('Middleware - User authenticated:', session.user.email, 'for path:', request.nextUrl.pathname)
 
   // לאחר שהמשתמש מזוהה, אפשר להמשיך
   return response
