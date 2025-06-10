@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { Database } from '@/types/database.types';
 import OpenAI from 'openai';
@@ -160,8 +161,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // יצירת לקוח סופהבייס בצד השרת עם הרשאות מלאות
-    const supabase = createRouteHandlerClient<Database>({ cookies });
+    // יצירת לקוח סופהבייס עם service role key כדי לעקוף RLS
+    const supabase = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     
     // קבלת ה-ID של השיחה מגוף הבקשה
     const requestBody = await request.json();
@@ -1037,8 +1041,11 @@ export async function POST(request: Request) {
     // ניסיון לעדכן את הסטטוס בבסיס הנתונים גם במקרה של שגיאה כללית
     try {
       if (call_id) {
-        const supabase = createRouteHandlerClient<Database>({ cookies });
-        await supabase
+        const supabaseForError = createClient<Database>(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+        await supabaseForError
           .from('calls')
           .update({
             processing_status: 'error',
