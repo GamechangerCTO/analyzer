@@ -921,7 +921,7 @@ export async function POST(request: Request) {
         };
 
         // עדכון הניתוח הסופי בטבלה
-        await supabase
+        const updateResult = await supabase
           .from('calls')
           .update({
             analysis_report: finalReport,
@@ -933,11 +933,20 @@ export async function POST(request: Request) {
           })
           .eq('id', call_id);
           
+        if (updateResult.error) {
+          await addCallLog(call_id, '❌ שגיאה בעדכון הניתוח הסופי', { 
+            error: updateResult.error.message,
+            error_details: updateResult.error
+          });
+          throw new Error(`שגיאה בעדכון הניתוח: ${updateResult.error.message}`);
+        }
+          
         await addCallLog(call_id, '🏁 ניתוח שיחה הושלם', { 
           overall_score: contentAnalysisReport.overall_score,
           red_flag: contentAnalysisReport.red_flag || false,
           completion_time: new Date().toISOString(),
-          time_taken_seconds: Math.round((new Date().getTime() - new Date(callData.created_at).getTime()) / 1000)
+          time_taken_seconds: Math.round((new Date().getTime() - new Date(callData.created_at).getTime()) / 1000),
+          update_success: !updateResult.error
         });
           
       } else {
@@ -954,7 +963,7 @@ export async function POST(request: Request) {
           improvement_points: toneAnalysisReport.המלצות_שיפור || []
         };
 
-        await supabase
+        const updateResult = await supabase
           .from('calls')
           .update({
             analysis_report: finalReport,
@@ -966,11 +975,20 @@ export async function POST(request: Request) {
           })
           .eq('id', call_id);
           
+        if (updateResult.error) {
+          await addCallLog(call_id, '❌ שגיאה בעדכון ניתוח טונציה', { 
+            error: updateResult.error.message,
+            error_details: updateResult.error
+          });
+          throw new Error(`שגיאה בעדכון ניתוח טונציה: ${updateResult.error.message}`);
+        }
+          
         await addCallLog(call_id, '🏁 ניתוח טונציה הושלם (סוג ניתוח: טונציה בלבד)', { 
           overall_score: finalReport.overall_score,
           red_flag: finalReport.red_flag || false,
           completion_time: new Date().toISOString(),
-          time_taken_seconds: Math.round((new Date().getTime() - new Date(callData.created_at).getTime()) / 1000)
+          time_taken_seconds: Math.round((new Date().getTime() - new Date(callData.created_at).getTime()) / 1000),
+          update_success: !updateResult.error
         });
       }
 

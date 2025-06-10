@@ -66,36 +66,52 @@ export async function middleware(request: NextRequest) {
     return response
   }
   
-  // דיבוג מתקדם לauth
+  // דיבוג מתקדם לauth - בדיקת cookies הנכונים
+  const authCookieName = `sb-${process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0]}-auth-token`
   console.log('Middleware - Checking auth for path:', request.nextUrl.pathname)
-  console.log('Middleware - Auth cookies present:', {
-    'sb-access-token': !!request.cookies.get('sb-oesbtvlnnvygbntkrqyk-auth-token'),
-    'sb-refresh-token': !!request.cookies.get('sb-oesbtvlnnvygbntkrqyk-auth-token-code-verifier'),
-    allCookies: request.cookies.getAll().map(c => c.name)
+  console.log('Middleware - Looking for cookie:', authCookieName)
+  
+  // בדיקה מורחבת של cookies
+  const allCookies = request.cookies.getAll()
+  const authTokenCookie = allCookies.find(c => c.name.includes('auth-token'))
+  
+  console.log('Middleware - Auth cookies analysis:', {
+    'expected-cookie': authCookieName,
+    'found-auth-cookie': authTokenCookie?.name || 'None',
+    'has-auth-value': !!authTokenCookie?.value,
+    'all-cookie-names': allCookies.map(c => c.name),
+    'total-cookies': allCookies.length
   })
 
-  // בדיקת התחברות
-  const { data: { session }, error } = await supabase.auth.getSession()
-  
-  console.log('Middleware - Session check result:', {
-    hasSession: !!session,
-    hasUser: !!session?.user,
-    userEmail: session?.user?.email,
-    sessionError: error?.message,
-    sessionExpires: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'N/A'
-  })
-  
-  // אם אין משתמש מחובר והנתיב דורש התחברות, מפנים לדף הכניסה
-  if (!session) {
-    console.log('Middleware - No session found, redirecting to login from:', request.nextUrl.pathname)
-    console.log('Middleware - Full URL was:', request.url)
+  // בדיקת התחברות עם טיפול שגיאות מתקדם
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    
+    console.log('Middleware - Session check result:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userEmail: session?.user?.email,
+      sessionError: error?.message,
+      sessionExpires: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : 'N/A'
+    })
+    
+    // אם אין משתמש מחובר והנתיב דורש התחברות, מפנים לדף הכניסה
+    if (!session) {
+      console.log('Middleware - No session found, redirecting to login from:', request.nextUrl.pathname)
+      console.log('Middleware - Full URL was:', request.url)
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    
+    console.log('Middleware - Auth successful for:', session.user.email, 'accessing:', request.nextUrl.pathname)
+
+    // לאחר שהמשתמש מזוהה, אפשר להמשיך
+    return response
+    
+  } catch (authError) {
+    console.error('Middleware - Auth error:', authError)
+    console.log('Middleware - Auth error, redirecting to login from:', request.nextUrl.pathname)
     return NextResponse.redirect(new URL('/login', request.url))
   }
-  
-  console.log('Middleware - Auth successful for:', session.user.email, 'accessing:', request.nextUrl.pathname)
-
-  // לאחר שהמשתמש מזוהה, אפשר להמשיך
-  return response
 }
 
 export const config = {

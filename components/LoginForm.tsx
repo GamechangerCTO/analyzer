@@ -235,41 +235,29 @@ export default function LoginForm() {
                 sessionStorage: typeof(Storage) !== 'undefined'
               })
               
+              // וידוא שהcookies נשמרו לפני redirect
+              console.log('[DEBUG] Waiting for cookies to be saved...')
+              await new Promise(resolve => setTimeout(resolve, 500)) // חכה חצי שנייה
+              
+              // בדיקה נוספת אחרי ההמתנה
+              const { data: finalSession } = await supabase.auth.getSession()
+              console.log('[DEBUG] Final session check after wait:', {
+                hasSession: !!finalSession.session,
+                userId: finalSession.session?.user?.id
+              })
+              
               console.log('[DEBUG] About to redirect immediately...')
               // ניסיון ניתוב ישיר ראשון
               if (userData.role === 'admin') { // This case should ideally not be hit if not super admin email
                 console.log('[DEBUG] Redirecting to /dashboard')
-                router.push('/dashboard');
+                window.location.href = '/dashboard'; // שימוש ב-window.location במקום router
               } else if (userData.role === 'manager' || userData.role === 'owner') {
                 console.log('[DEBUG] Redirecting to /dashboard/manager')
-                router.push('/dashboard/manager');
+                window.location.href = '/dashboard/manager'; // שימוש ב-window.location במקום router
               } else { // agent
                 console.log('[DEBUG] Redirecting to /dashboard/agent')
-                router.push('/dashboard/agent');
+                window.location.href = '/dashboard/agent'; // שימוש ב-window.location במקום router
               }
-              
-              // גיבוי - אם הניתוב הישיר לא עבד, נסה עם timeout
-              setTimeout(async () => {
-                console.log('[DEBUG] Backup timeout redirect executing...')
-                
-                // בדיקה נוספת של session לפני גיבוי
-                const { data: backupSession } = await supabase.auth.getSession()
-                console.log('[DEBUG] Backup session check:', {
-                  hasSession: !!backupSession.session,
-                  userId: backupSession.session?.user?.id
-                })
-                
-                if (userData.role === 'admin') {
-                  console.log('[DEBUG] Backup redirect to /dashboard')
-                  window.location.href = '/dashboard';
-                } else if (userData.role === 'manager' || userData.role === 'owner') {
-                  console.log('[DEBUG] Backup redirect to /dashboard/manager')
-                  window.location.href = '/dashboard/manager';
-                } else { // agent
-                  console.log('[DEBUG] Backup redirect to /dashboard/agent')
-                  window.location.href = '/dashboard/agent';
-                }
-              }, 1000)
             }
           } catch (error) {
             console.error("[onAuthStateChange] Error in auth state change handler:", error);
