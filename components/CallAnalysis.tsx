@@ -217,20 +217,36 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     setCurrentPlayingQuote('')
   }, [activeTab])
   
-  // פולינג לבדיקת סטטוס העיבוד
+  // פולינג לבדיקת סטטוס העיבוד עם timeout
   useEffect(() => {
     if (['pending', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
       setIsPolling(true)
+      let pollCount = 0
+      const maxPolls = 120 // מקסימום 6 דקות (120 * 3 שניות)
+      
       const intervalId = setInterval(async () => {
+        pollCount++
+        
+        // אם עבר יותר מידי זמן, נעצור את הפולינג ונחזור לדף הראשי
+        if (pollCount > maxPolls) {
+          clearInterval(intervalId)
+          setIsPolling(false)
+          console.log('Polling timeout - redirecting to refresh')
+          window.location.reload()
+          return
+        }
+        
         try {
           const statusInfo = await getCallStatus(call.id)
           setStatus(statusInfo.status)
           setErrorMessage(statusInfo.errorMessage)
           
-          if (!statusInfo.isProcessing) {
+          console.log('Polling status:', statusInfo)
+          
+          if (!statusInfo.isProcessing || statusInfo.status === 'completed') {
             clearInterval(intervalId)
             setIsPolling(false)
-            if (statusInfo.isComplete) {
+            if (statusInfo.isComplete || statusInfo.status === 'completed') {
               window.location.reload()
             }
           }
@@ -245,6 +261,12 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           
         } catch (error) {
           console.error('Error polling call status:', error)
+          // אם יש שגיאה ברשת, ננסה עוד פעם בעוד כמה שניות
+          if (pollCount > 10) { // אחרי 10 נסיונות, נעצור
+            clearInterval(intervalId)
+            setIsPolling(false)
+            window.location.reload()
+          }
         }
       }, 3000)
       
@@ -330,6 +352,19 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   </div>
                 </div>
               )}
+              
+              {/* כפתור חירום */}
+              <div className="mt-6">
+                <button 
+                  onClick={() => {
+                    setIsPolling(false)
+                    window.location.reload()
+                  }}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  🔄 רענן דף וטען ניתוח
+                </button>
+              </div>
             </div>
           </div>
         </div>
