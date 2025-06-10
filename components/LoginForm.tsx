@@ -15,9 +15,13 @@ export default function LoginForm() {
   const router = useRouter()
   const [showRoleSelector, setShowRoleSelector] = useState(false)
   const [selectedRole, setSelectedRole] = useState<Role>('admin')
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authStatus, setAuthStatus] = useState<string>('מוכן להתחברות')
 
   const toggleView = () => {
     setView(view === 'sign_in' ? 'sign_up' : 'sign_in')
+    setAuthError(null) // ניקוי שגיאות בעת מעבר בין מצבים
   }
 
   // פונקציה להתחברות עם תפקיד נבחר
@@ -36,9 +40,34 @@ export default function LoginForm() {
 
   // מאזין לשינויים במצב ההתחברות ומנתב אם יש משתמש מחובר
   useEffect(() => {
+    // הוספת לוגים למעקב אחר טפסי התחברות
+    const handleFormSubmit = (e: Event) => {
+      console.log('[FORM] Form submitted:', e)
+      const form = e.target as HTMLFormElement
+      if (form) {
+        const formData = new FormData(form)
+        console.log('[FORM] Form data:', Object.fromEntries(formData.entries()))
+      }
+    }
+
+    const handleFormError = (e: Event) => {
+      console.log('[FORM] Form error:', e)
+    }
+
+    // הוספת listeners לטפסים
+    document.addEventListener('submit', handleFormSubmit)
+    document.addEventListener('error', handleFormError)
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log(`[AUTH] Event: ${event}`, { session: session?.user?.email })
+        setAuthStatus(`אירוע: ${event}`)
+
         if (event === 'SIGNED_IN' && session) {
+          setAuthLoading(true)
+          setAuthError(null)
+          setAuthStatus('מתחבר...')
+          
           try {
             const currentEmail = session.user.email || '';
             // הדפסה של האימייל כפי שהוא מתקבל מהסשן
@@ -59,6 +88,8 @@ export default function LoginForm() {
 
               if (adminCheckError) {
                 console.error("[onAuthStateChange] Error checking existing super admin user:", adminCheckError);
+                setAuthError(`שגיאה בבדיקת משתמש: ${adminCheckError.message}`)
+                setAuthLoading(false)
                 return;
               }
 
@@ -78,6 +109,8 @@ export default function LoginForm() {
 
                 if (insertUserError) {
                   console.error("[onAuthStateChange] Error creating super admin in users table:", insertUserError);
+                  setAuthError(`שגיאה ביצירת משתמש: ${insertUserError.message}`)
+                  setAuthLoading(false)
                   return;
                 }
                 console.log("[onAuthStateChange] Super admin created in users table.");
@@ -89,6 +122,8 @@ export default function LoginForm() {
 
                 if (insertSystemAdminError) {
                   console.error("[onAuthStateChange] Error creating super admin in system_admins table:", insertSystemAdminError);
+                  setAuthError(`שגיאה ביצירת מנהל מערכת: ${insertSystemAdminError.message}`)
+                  setAuthLoading(false)
                   return;
                 }
                 console.log("[onAuthStateChange] Super admin ensured in system_admins table.");
@@ -108,6 +143,8 @@ export default function LoginForm() {
                     .eq('id', session.user.id);
                   if (updateUserError) {
                     console.error("[onAuthStateChange] Error updating super admin record:", updateUserError);
+                    setAuthError(`שגיאה בעדכון משתמש: ${updateUserError.message}`)
+                    setAuthLoading(false)
                     return;
                   }
                   console.log("[onAuthStateChange] Super admin record updated.");
@@ -120,12 +157,15 @@ export default function LoginForm() {
                 
                 if (upsertSystemAdminError) {
                   console.error("[onAuthStateChange] Error upserting super admin in system_admins table:", upsertSystemAdminError);
+                  setAuthError(`שגיאה בעדכון מנהל מערכת: ${upsertSystemAdminError.message}`)
+                  setAuthLoading(false)
                   return;
                 }
                 console.log("[onAuthStateChange] Super admin ensured in system_admins table (on existing user).");
               }
               
               console.log("[onAuthStateChange] Attempting to show role selector for super admin.");
+              setAuthLoading(false)
               setShowRoleSelector(true); // Show role selector for super admin
               return;
 
@@ -139,6 +179,8 @@ export default function LoginForm() {
               
               if (userCheckError) {
                 console.error("[onAuthStateChange] Error checking existing regular user:", userCheckError);
+                setAuthError(`שגיאה בבדיקת משתמש: ${userCheckError.message}`)
+                setAuthLoading(false)
                 return;
               }
               
@@ -157,6 +199,9 @@ export default function LoginForm() {
                 
                 if (insertError) {
                   console.error("[onAuthStateChange] Error creating regular user:", insertError);
+                  setAuthError(`שגיאה ביצירת משתמש: ${insertError.message}`)
+                  setAuthLoading(false)
+                  return;
                 }
                 console.log("[onAuthStateChange] Redirecting new regular user to /not-approved?reason=pending");
                 router.push('/not-approved?reason=pending');
@@ -170,6 +215,7 @@ export default function LoginForm() {
               }
               
               console.log(`[onAuthStateChange] Approved regular user. Role: ${userData.role}. Redirecting...`);
+              setAuthLoading(false)
               if (userData.role === 'admin') { // This case should ideally not be hit if not super admin email
                 router.push('/dashboard');
               } else if (userData.role === 'manager' || userData.role === 'owner') {
@@ -180,25 +226,161 @@ export default function LoginForm() {
             }
           } catch (error) {
             console.error("[onAuthStateChange] Error in auth state change handler:", error);
+            setAuthError(`שגיאה בעיבוד התחברות: ${error instanceof Error ? error.message : 'שגיאה לא ידועה'}`)
+            setAuthLoading(false)
             // Fallback redirect, consider a more specific error page
             router.push('/login?error=auth_handler_failed'); 
           }
         } else if (event === 'SIGNED_OUT') {
           console.log("[onAuthStateChange] User signed out. Redirecting to login.");
           setShowRoleSelector(false); // Hide role selector on sign out
+          setAuthError(null)
+          setAuthLoading(false)
+          setAuthStatus('מוכן להתחברות')
           router.push('/login');
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log("[AUTH] Token refreshed successfully")
+          setAuthStatus('טוקן רועען')
+        } else if (event === 'USER_UPDATED') {
+          console.log("[AUTH] User updated")
+          setAuthStatus('משתמש עודכן')
+        } else {
+          // כל אירוע אחר
+          console.log(`[AUTH] Other auth event: ${event}`)
+          setAuthStatus(`סטטוס: ${event}`)
         }
       }
     )
     
-    // ניקוי ה-listener כשהקומפוננטה נהרסת
+    // ניקוי ה-listeners כשהקומפוננטה נהרסת
     return () => {
       subscription.unsubscribe()
+      document.removeEventListener('submit', handleFormSubmit)
+      document.removeEventListener('error', handleFormError)
     }
   }, [supabase, router])
 
+  // פונקציה לבדיקת התחברות ישירה (לצרכי debug)
+  const testDirectLogin = async () => {
+    setAuthLoading(true)
+    setAuthError(null)
+    setAuthStatus('בודק התחברות ישירה...')
+    
+    try {
+      console.log('[DEBUG] Testing direct email/password login...')
+      
+      // נסה התחברות עם פרטים לדוגמה
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'test@example.com',
+        password: 'test123456'
+      })
+      
+      console.log('[DEBUG] Login result:', { data, error })
+      
+      if (error) {
+        console.error('[DEBUG] Login error:', error)
+        setAuthError(`שגיאה בהתחברות ישירה: ${error.message}`)
+      } else {
+        console.log('[DEBUG] Login successful:', data)
+        setAuthStatus('התחברות ישירה הצליחה!')
+      }
+    } catch (err) {
+      console.error('[DEBUG] Exception during login:', err)
+      setAuthError(`שגיאה לא צפויה: ${err instanceof Error ? err.message : 'שגיאה לא ידועה'}`)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  // פונקציה לבדיקת הרשמה (לצרכי debug)
+  const testDirectSignup = async () => {
+    setAuthLoading(true)
+    setAuthError(null)
+    setAuthStatus('בודק הרשמה ישירה...')
+    
+    try {
+      console.log('[DEBUG] Testing direct email/password signup...')
+      
+      const testEmail = `test-${Date.now()}@example.com`
+      const testPassword = 'TestPassword123!'
+      
+      // נסה הרשמה עם פרטים לדוגמה
+      const { data, error } = await supabase.auth.signUp({
+        email: testEmail,
+        password: testPassword
+      })
+      
+      console.log('[DEBUG] Signup result:', { data, error })
+      
+      if (error) {
+        console.error('[DEBUG] Signup error:', error)
+        setAuthError(`שגיאה בהרשמה ישירה: ${error.message}`)
+      } else {
+        console.log('[DEBUG] Signup successful:', data)
+        setAuthStatus('הרשמה ישירה הצליחה! בדוק אימיילים.')
+      }
+    } catch (err) {
+      console.error('[DEBUG] Exception during signup:', err)
+      setAuthError(`שגיאה לא צפויה בהרשמה: ${err instanceof Error ? err.message : 'שגיאה לא ידועה'}`)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  // פונקציה לבדיקת מצב המערכת
+  const checkSystemStatus = async () => {
+    setAuthLoading(true)
+    setAuthError(null)
+    setAuthStatus('בודק מצב מערכת...')
+    
+    try {
+      console.log('[DEBUG] Checking system status...')
+      
+      // בדיקת חיבור ל-Supabase
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      console.log('[DEBUG] Current session:', { sessionData, sessionError })
+      
+      // בדיקת חיבור למסד הנתונים
+      const { data: testQuery, error: queryError } = await supabase
+        .from('users')
+        .select('count')
+        .limit(1)
+      
+      console.log('[DEBUG] DB connection test:', { testQuery, queryError })
+      
+      setAuthStatus('מערכת תקינה!')
+    } catch (err) {
+      console.error('[DEBUG] System check error:', err)
+      setAuthError(`שגיאה בבדיקת מערכת: ${err instanceof Error ? err.message : 'שגיאה לא ידועה'}`)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
+      {/* הצגת שגיאות אותנטיקציה */}
+      {authError && (
+        <div className="replayme-card p-4 bg-electric-coral/10 border border-electric-coral/30">
+          <div className="flex items-center space-x-3">
+            <svg className="w-5 h-5 text-electric-coral flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div className="text-sm text-electric-coral font-medium">{authError}</div>
+          </div>
+        </div>
+      )}
+
+      {/* הצגת סטטוס טעינה */}
+      {authLoading && (
+        <div className="replayme-card p-4 bg-lemon-mint/10 border border-lemon-mint/30">
+          <div className="flex items-center space-x-3">
+            <div className="w-5 h-5 border-2 border-lemon-mint-dark border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+            <div className="text-sm text-lemon-mint-dark font-medium">{authStatus}</div>
+          </div>
+        </div>
+      )}
+
       {/* חלון בחירת תפקיד */}
       {showRoleSelector && (
         <div className="fixed inset-0 flex items-center justify-center bg-indigo-night/60 backdrop-blur-sm z-50">
@@ -283,6 +465,61 @@ export default function LoginForm() {
         </div>
       )}
 
+      {/* הצגת שגיאות אותנטיקציה */}
+      {authError && (
+        <div className="mb-4 p-4 rounded-xl border-r-4 bg-electric-coral/10 border-electric-coral">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 text-electric-coral ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div>
+              <p className="text-sm font-medium text-electric-coral">שגיאה בהתחברות</p>
+              <p className="text-xs text-indigo-night/70 mt-1">{authError}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* הצגת סטטוס התחברות */}
+      {authStatus !== 'מוכן להתחברות' && (
+        <div className="mb-4 p-3 rounded-lg bg-cream-sand text-center">
+          <p className="text-sm text-indigo-night/70">{authStatus}</p>
+        </div>
+      )}
+
+      {/* Debug Panel - מסיר בייצור */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h3 className="text-sm font-medium text-yellow-800 mb-2">🔧 Debug Panel</h3>
+          <div className="space-y-2">
+            <button
+              onClick={testDirectLogin}
+              disabled={authLoading}
+              className="px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs hover:bg-yellow-300 disabled:opacity-50"
+            >
+              בדוק התחברות ישירה
+            </button>
+            <button
+              onClick={testDirectSignup}
+              disabled={authLoading}
+              className="px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs hover:bg-yellow-300 disabled:opacity-50"
+            >
+              בדוק הרשמה ישירה
+            </button>
+            <button
+              onClick={checkSystemStatus}
+              disabled={authLoading}
+              className="px-3 py-1 bg-yellow-200 text-yellow-800 rounded text-xs hover:bg-yellow-300 disabled:opacity-50"
+            >
+              בדוק מצב מערכת
+            </button>
+            <div className="text-xs text-yellow-700">
+              Auth Status: {authStatus}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* כפתורי בחירת מצב */}
       <div className="flex rounded-lg bg-cream-sand p-1 mb-4">
         <button
@@ -310,6 +547,9 @@ export default function LoginForm() {
       <Auth
         supabaseClient={supabase}
         view={view}
+        onlyThirdPartyProviders={false}
+        magicLink={true}
+        showLinks={true}
         appearance={{
           theme: ThemeSupa,
           variables: {
