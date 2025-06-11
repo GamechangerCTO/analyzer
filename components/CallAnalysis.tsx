@@ -302,7 +302,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
             window.location.reload()
           }
         }
-              }, pollCount < 10 ? 1000 : 3000) // פולינג כל שנייה ב-10 הפעמים הראשונות, אחר כך כל 3 שניות
+      }, pollCount < 10 ? 1000 : 3000) // פולינג כל שנייה ב-10 הפעמים הראשונות, אחר כך כל 3 שניות
       
       return () => {
         clearInterval(intervalId)
@@ -311,6 +311,39 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       }
     }
   }, [status, call.id])
+
+  // פונקציה לחישוב progress דינמי עם אנימציות
+  const calculateDynamicProgress = () => {
+    const baseProgress = {
+      pending: { base: 5, max: 15 },
+      transcribing: { base: 15, max: 45 },
+      analyzing_tone: { base: 45, max: 75 },
+      analyzing_content: { base: 75, max: 95 }
+    }
+
+    const currentStage = baseProgress[status as keyof typeof baseProgress]
+    if (!currentStage) return 0
+
+    // הוספת התקדמות סימולירית בתוך השלב הנוכחי
+    const elapsedTime = Date.now() - (call.created_at ? new Date(call.created_at).getTime() : Date.now())
+    const stageProgress = Math.min((elapsedTime / 1000) % 30 / 30, 1) // התקדמות מדומה בתוך השלב
+    
+    return Math.round(currentStage.base + (currentStage.max - currentStage.base) * stageProgress)
+  }
+
+  // State לprogreaa הדינמי
+  const [dynamicProgress, setDynamicProgress] = useState(calculateDynamicProgress())
+
+  // עדכון progress בזמן אמת
+  useEffect(() => {
+    if (['pending', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
+      const progressInterval = setInterval(() => {
+        setDynamicProgress(calculateDynamicProgress())
+      }, 500) // עדכון כל חצי שנייה לאנימציה חלקה
+
+      return () => clearInterval(progressInterval)
+    }
+  }, [status, call.created_at])
   
   // הצגת סטטוס העיבוד
   if (['pending', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status) || isPolling) {
@@ -339,7 +372,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 </div>
               )}
               
-              {/* מד התקדמות מעוצב */}
+              {/* מד התקדמות מעוצב - עם progress דינמי */}
               <div className="w-full max-w-lg mx-auto mb-8">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-semibold text-blue-600">
@@ -349,24 +382,32 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                      status === 'analyzing_content' ? '📊 ניתוח תוכן' : 
                      'מעבד...'}
                   </span>
-                  <span className="text-sm font-bold text-blue-600">
-                    {status === 'pending' ? '10%' :
-                     status === 'transcribing' ? '35%' :
-                     status === 'analyzing_tone' ? '65%' :
-                     status === 'analyzing_content' ? '90%' : 
-                     '0%'}
+                  <span className="text-sm font-bold text-blue-600 transition-all duration-500">
+                    {dynamicProgress}%
                   </span>
                 </div>
-                <div className="overflow-hidden h-3 bg-blue-100 rounded-full">
-                  <div 
-                    style={{ 
-                      width: status === 'pending' ? '10%' :
-                            status === 'transcribing' ? '35%' :
-                            status === 'analyzing_tone' ? '65%' :
-                            status === 'analyzing_content' ? '90%' : '0%'
-                    }} 
-                    className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500 ease-out"
-                  />
+                                 <div className="overflow-hidden h-3 bg-blue-100 rounded-full relative">
+                   <div 
+                     style={{ width: `${dynamicProgress}%` }} 
+                     className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500 ease-out"
+                   />
+                   {/* אפקט זוהר מתקדם */}
+                   <div 
+                     style={{ width: `${dynamicProgress}%` }} 
+                     className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full opacity-60 animate-pulse absolute top-0"
+                   />
+                 </div>
+                
+                {/* מחוון מילולי מתקדם */}
+                <div className="mt-2 text-xs text-gray-500 text-center">
+                  {status === 'pending' && dynamicProgress < 10 && 'מכין את המערכת לעיבוד...'}
+                  {status === 'pending' && dynamicProgress >= 10 && 'טוען את קובץ האודיו...'}
+                  {status === 'transcribing' && dynamicProgress < 30 && 'מתחיל תמלול השיחה...'}
+                  {status === 'transcribing' && dynamicProgress >= 30 && 'ממשיך בתמלול מדויק...'}
+                  {status === 'analyzing_tone' && dynamicProgress < 60 && 'מנתח טון ורגש...'}
+                  {status === 'analyzing_tone' && dynamicProgress >= 60 && 'מסיים ניתוח טונציה...'}
+                  {status === 'analyzing_content' && dynamicProgress < 85 && 'מנתח תוכן מקצועי...'}
+                  {status === 'analyzing_content' && dynamicProgress >= 85 && 'מכין דוח סופי...'}
                 </div>
               </div>
               

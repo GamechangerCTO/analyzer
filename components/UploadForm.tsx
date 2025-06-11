@@ -955,16 +955,32 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
             </p>
           </div>
 
-          <div className="progress-bar">
-            <div 
-              className="progress-bar-fill bg-lemon-mint" 
-              style={{ width: `${progress}%` }}
-            ></div>
+          <div className="relative">
+            <div className="progress-bar">
+              <div 
+                className="progress-bar-fill bg-lemon-mint transition-all duration-700 ease-out" 
+                style={{ width: `${progress}%` }}
+              ></div>
+              {/* אפקט זוהר */}
+              <div 
+                className="progress-bar-fill bg-lemon-mint/50 animate-pulse absolute top-0" 
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
           </div>
           
-          <p className="text-sm text-indigo-night/60">
-            התקדמות: {Math.round(progress)}%
-          </p>
+          <div className="space-y-2">
+            <p className="text-sm text-indigo-night/60">
+              התקדמות: {Math.round(progress)}%
+            </p>
+            <p className="text-xs text-indigo-night/50">
+              {progress < 20 && '🔄 טוען קובץ ומכין למעבד...'}
+              {progress >= 20 && progress < 50 && '📝 מתחיל תמלול השיחה...'}
+              {progress >= 50 && progress < 80 && '🎭 מנתח טון ורגש בשיחה...'}
+              {progress >= 80 && progress < 95 && '📊 מבצע ניתוח תוכן מקצועי...'}
+              {progress >= 95 && '✨ מסיים ומכין דוח...'}
+            </p>
+          </div>
         </div>
       )}
 
