@@ -1,17 +1,40 @@
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import LoginForm from '@/components/LoginForm'
 import Image from 'next/image'
 
-export default async function LoginPage() {
-  const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+export default function LoginPage() {
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
+  const supabase = createClient()
   
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (user && !error) {
-    redirect('/dashboard?login=true')
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        
+        if (user && !error) {
+          router.push('/dashboard?login=true')
+        }
+      } catch (error) {
+        console.log('Auth check error (non-critical):', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    checkAuth()
+  }, [router, supabase])
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-cream-sand-light via-white to-lemon-mint/10">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-night"></div>
+      </div>
+    )
   }
   
   return (
