@@ -485,35 +485,21 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       setDynamicProgress(100)
       setShowSuccessAnimation(true)
       
-      // בדיקה אם יש כבר ניתוח במסד הנתונים
-      const hasExistingAnalysis = call.analysis_report && call.tone_analysis_report && 
-                                  Object.keys(call.analysis_report).length > 0 && 
-                                  Object.keys(call.tone_analysis_report).length > 0
-      
-      if (hasExistingAnalysis) {
-        console.log('✅ הניתוח כבר קיים במסד הנתונים - מציג אותו')
-        setCountdown(0)
-        // נתן זמן קצר לאנימציה ואז נעבור לניתוח
-        setTimeout(() => {
-          setShouldShowAnalysis(true)
-        }, 2000)
-      } else {
-        console.log('🔄 אין ניתוח במסד הנתונים - טוען מחדש לקבלת הניתוח')
-        // ספירה לאחור ואז טעינה מחודשת
-        const countdownInterval = setInterval(() => {
-          setCountdown(prev => {
-            if (prev <= 1) {
-              clearInterval(countdownInterval)
-              console.log('🔄 טוען את הניתוח המושלם')
-              window.location.reload()
-              return 0
-            }
-            return prev - 1
-          })
-        }, 1000)
+      console.log('🔄 המתנה של 3 שניות ואז טעינה מחדש לקבלת הניתוח')
+      // ספירה לאחור ואז טעינה מחודשת - תמיד נטען מחדש כדי לקבל את הניתוח המעודכן
+      const countdownInterval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval)
+            console.log('🔄 טוען את הניתוח המושלם')
+            window.location.reload()
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
 
-        return () => clearInterval(countdownInterval)
-      }
+      return () => clearInterval(countdownInterval)
     }
   }, [status, hasCompletedOnce, call.analysis_report, call.tone_analysis_report])
   
