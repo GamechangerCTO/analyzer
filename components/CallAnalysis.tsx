@@ -219,7 +219,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   
   // Real-time subscription לעדכוני סטטוס (ללא פולינג מטורף!)
   useEffect(() => {
-    if (['pending', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
+    if (['pending', 'processing', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
       setIsPolling(true)
       
       // הוספת real-time subscription לטבלת calls - זה המנגנון העיקרי!
@@ -304,27 +304,34 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     }
   }, [status, call.id])
 
-  // פונקציה לחישוב progress דינמי עם אנימציות
+  // פונקציה לחישוב progress דינמי לפי הסטטוסים האמיתיים מהלוגים
   const calculateDynamicProgress = () => {
-    const baseProgress = {
-      pending: { base: 5, max: 15 },
-      transcribing: { base: 15, max: 45 },
-      analyzing_tone: { base: 45, max: 75 },
-      analyzing_content: { base: 75, max: 95 },
-      completed: { base: 100, max: 100 }
+    // הסטטוסים האמיתיים שמגיעים מהלוגים לפי הרצף הנכון
+    const statusMapping = {
+      'pending': 5,
+      'processing': 10,          // התחלת תהליך ניתוח שיחה
+      'transcribing': 25,        // 🔄 עדכון סטטוס לתמלול
+      'analyzing_tone': 55,      // 🎭 מתחיל ניתוח טונציה 
+      'analyzing_content': 85,   // 📊 מתחיל ניתוח תוכן
+      'completed': 100,          // 🏁 ניתוח שיחה הושלם
+      'error': 0
     }
 
-    const currentStage = baseProgress[status as keyof typeof baseProgress]
-    if (!currentStage) return 0
-
-    // אם הסטטוס הוא completed - תמיד 100%
-    if (status === 'completed') return 100
-
-    // הוספת התקדמות סימולירית בתוך השלב הנוכחי
-    const elapsedTime = Date.now() - (call.created_at ? new Date(call.created_at).getTime() : Date.now())
-    const stageProgress = Math.min((elapsedTime / 1000) % 30 / 30, 1) // התקדמות מדומה בתוך השלב
+    const progress = statusMapping[status as keyof typeof statusMapping] || 0
     
-    return Math.round(currentStage.base + (currentStage.max - currentStage.base) * stageProgress)
+    // אם הסטטוס הוא completed - תמיד 100%
+    if (status === 'completed') {
+      return 100
+    }
+
+    // לסטטוסים אחרים, הוסף התקדמות קלה בתוך השלב
+    if (progress > 0 && progress < 100) {
+      const elapsedTime = Date.now() - (call.created_at ? new Date(call.created_at).getTime() : Date.now())
+      const microProgress = Math.min((elapsedTime / 1000) % 15 / 15, 1) * 3 // מקסימום 3% נוספים
+      return Math.min(progress + Math.round(microProgress), 99) // לא יותר מ-99% עד completed
+    }
+
+    return progress
   }
 
   // State לprogreaa הדינמי
@@ -332,7 +339,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
   // עדכון progress בזמן אמת
   useEffect(() => {
-    if (['pending', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
+    if (['pending', 'processing', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
       const progressInterval = setInterval(() => {
         setDynamicProgress(calculateDynamicProgress())
       }, 500) // עדכון כל חצי שנייה לאנימציה חלקה
@@ -347,33 +354,52 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   // State נוסף לאנימציית הצלחה
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
   const [countdown, setCountdown] = useState(3)
+  const [hasCompletedOnce, setHasCompletedOnce] = useState(false) // למניעת לופ
+  const [shouldShowAnalysis, setShouldShowAnalysis] = useState(false)
 
-  // טיפול מיוחד בסטטוס completed - טעינה מחודשת אוטומטית
+  // טיפול מיוחד בסטטוס completed - מעבר לניתוח אוטומטית
   useEffect(() => {
-    if (status === 'completed') {
-      console.log('✅ ניתוח השיחה הושלם - מתכונן לטעינה מחודשת')
+    if (status === 'completed' && !hasCompletedOnce) {
+      console.log('✅ ניתוח השיחה הושלם - בודק אם יש ניתוח קיים')
+      setHasCompletedOnce(true) // מונע לופ
       setDynamicProgress(100)
       setShowSuccessAnimation(true)
       
-      // countdown timer
-      const countdownInterval = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(countdownInterval)
-            console.log('🔄 טוען את הניתוח המושלם')
-            window.location.reload()
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
+      // בדיקה אם יש כבר ניתוח במסד הנתונים
+      const hasExistingAnalysis = call.analysis_report && call.tone_analysis_report && 
+                                  Object.keys(call.analysis_report).length > 0 && 
+                                  Object.keys(call.tone_analysis_report).length > 0
+      
+      if (hasExistingAnalysis) {
+        console.log('✅ הניתוח כבר קיים במסד הנתונים - מציג אותו')
+        setCountdown(0)
+        // נתן זמן קצר לאנימציה ואז נעבור לניתוח
+        setTimeout(() => {
+          setShouldShowAnalysis(true)
+        }, 2000)
+      } else {
+        console.log('🔄 אין ניתוח במסד הנתונים - טוען מחדש לקבלת הניתוח')
+        // ספירה לאחור ואז טעינה מחודשת
+        const countdownInterval = setInterval(() => {
+          setCountdown(prev => {
+            if (prev <= 1) {
+              clearInterval(countdownInterval)
+              console.log('🔄 טוען את הניתוח המושלם')
+              window.location.reload()
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
 
-      return () => clearInterval(countdownInterval)
+        return () => clearInterval(countdownInterval)
+      }
     }
-  }, [status])
+  }, [status, hasCompletedOnce, call.analysis_report, call.tone_analysis_report])
   
   // הצגת סטטוס העיבוד עם הודעה מיוחדת לcompleted
-  if (['pending', 'transcribing', 'analyzing_tone', 'analyzing_content', 'completed'].includes(status) || isPolling) {
+  // אבל רק אם עדיין לא אמורים להציג את הניתוח
+  if ((['pending', 'processing', 'transcribing', 'analyzing_tone', 'analyzing_content', 'completed'].includes(status) || isPolling) && !shouldShowAnalysis) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
         <div className="max-w-4xl mx-auto">
@@ -405,7 +431,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 </div>
               )}
 
-              {status === 'completed' && (
+              {status === 'completed' && countdown > 0 && (
                 <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-800 text-center font-medium mb-3">
                     ✅ הניתוח הושלם בהצלחה! טוען את התוצאות בעוד {countdown} שניות...
@@ -420,12 +446,21 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   </div>
                 </div>
               )}
+
+              {status === 'completed' && countdown === 0 && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800 text-center font-medium">
+                    ✅ הניתוח הושלם! מעבר לתוצאות...
+                  </p>
+                </div>
+              )}
               
               {/* מד התקדמות מעוצב - עם progress דינמי */}
               <div className="w-full max-w-lg mx-auto mb-8">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-semibold text-blue-600">
                     {status === 'pending' ? '🔄 טוען משאבים' :
+                     status === 'processing' ? '⚙️ מכין לעיבוד' :
                      status === 'transcribing' ? '📝 תמלול השיחה' :
                      status === 'analyzing_tone' ? '🎭 ניתוח טונציה' :
                      status === 'analyzing_content' ? '📊 ניתוח תוכן' :
@@ -466,6 +501,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 <div className="mt-2 text-xs text-gray-500 text-center">
                   {status === 'pending' && dynamicProgress < 10 && 'מכין את המערכת לעיבוד...'}
                   {status === 'pending' && dynamicProgress >= 10 && 'טוען את קובץ האודיו...'}
+                  {status === 'processing' && 'מתחיל תהליך ניתוח השיחה...'}
                   {status === 'transcribing' && dynamicProgress < 30 && 'מתחיל תמלול השיחה...'}
                   {status === 'transcribing' && dynamicProgress >= 30 && 'ממשיך בתמלול מדויק...'}
                   {status === 'analyzing_tone' && dynamicProgress < 60 && 'מנתח טון ורגש...'}
@@ -483,7 +519,8 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                     status === 'completed' ? 'border-green-500' : 'border-blue-500'
                   }`}></div>
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl">
-                    {status === 'transcribing' ? '📝' :
+                    {status === 'processing' ? '🔄' :
+                     status === 'transcribing' ? '📝' :
                      status === 'analyzing_tone' ? '🎭' :
                      status === 'analyzing_content' ? '📊' :
                      status === 'completed' ? '✅' : '⚙️'}
