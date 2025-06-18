@@ -40,101 +40,145 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
-// פונקציה לניקוי תשובות OpenAI מקידוד Markdown
+// פונקציה מתקדמת לניקוי תשובות OpenAI עם טיפול טוב יותר ב-JSON שבור
 function cleanOpenAIResponse(content: string): string {
   if (!content) return '{}';
   
-  // הסרת code blocks שונים (```json, ```JSON, ```)
-  let cleaned = content.replace(/```(?:json|JSON)?\s*/g, '').replace(/```\s*$/g, '');
+  console.log(`🧹 מנקה תגובת OpenAI`, { original_length: content.length });
   
-  // הסרת backticks יחידים שעלולים להישאר
-  cleaned = cleaned.replace(/^`+|`+$/g, '');
+  // שלב 1: ניקוי בסיסי
+  let cleaned = content
+    .replace(/```(?:json|JSON)?\s*/g, '') // הסרת code blocks
+    .replace(/```\s*$/g, '')
+    .replace(/^`+|`+$/g, '') // הסרת backticks
+    .trim();
   
-  // הסרת רווחים מיותרים בתחילת ובסוף
-  cleaned = cleaned.trim();
-  
-  // חיפוש התחלת JSON אם יש טקסט לפניו
+  // שלב 2: חיפוש JSON boundaries
   const jsonStart = cleaned.indexOf('{');
-  const arrayStart = cleaned.indexOf('[');
-  
-  if (jsonStart !== -1 && (arrayStart === -1 || jsonStart < arrayStart)) {
+  if (jsonStart !== -1) {
     cleaned = cleaned.substring(jsonStart);
-  } else if (arrayStart !== -1) {
-    cleaned = cleaned.substring(arrayStart);
+  } else {
+    console.error('❌ לא נמצא תחילת JSON valid');
+    return '{}';
   }
   
-  // אסטרטגיה מתקדמת לתיקון JSON שבור
-  if (cleaned.startsWith('{')) {
-    // ניסיון לתקן JSON שבור על ידי חיפוש סוגריים מאוזנים
-    let braceCount = 0;
-    let lastValidIndex = -1;
+  // שלב 3: אלגוריתם מתקדם לאיזון סוגריים
+  let braceCount = 0;
+  let lastValidEnd = -1;
+  let inString = false;
+  let escapeNext = false;
+  
+  for (let i = 0; i < cleaned.length; i++) {
+    const char = cleaned[i];
     
-    for (let i = 0; i < cleaned.length; i++) {
-      const char = cleaned[i];
-      
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+    
+    if (char === '\\') {
+      escapeNext = true;
+      continue;
+    }
+    
+    if (char === '"' && !escapeNext) {
+      inString = !inString;
+      continue;
+    }
+    
+    if (!inString) {
       if (char === '{') {
         braceCount++;
       } else if (char === '}') {
         braceCount--;
-        
-        // אם הגענו לאיזון מלא, זה מיקום תקין לסיום
         if (braceCount === 0) {
-          lastValidIndex = i;
+          lastValidEnd = i;
+          break; // נמצא JSON מלא ותקין
         }
       }
     }
+  }
+  
+  // שלב 4: חיתוך לJSON תקין
+  if (lastValidEnd !== -1) {
+    cleaned = cleaned.substring(0, lastValidEnd + 1);
+  } else {
+    // אם לא מצאנו סוף תקין, נסה לתקן
+    const openBraces = (cleaned.match(/\{/g) || []).length;
+    const closeBraces = (cleaned.match(/\}/g) || []).length;
+    const missingBraces = openBraces - closeBraces;
     
-    // אם מצאנו נקודת סיום תקינה, חתוך שם
-    if (lastValidIndex !== -1) {
-      cleaned = cleaned.substring(0, lastValidIndex + 1);
-    } else {
-      // אם לא מצאנו איזון, נסה להוסיף סוגריים חסרים
-      const openBraces = (cleaned.match(/\{/g) || []).length;
-      const closeBraces = (cleaned.match(/\}/g) || []).length;
-      const missingBraces = openBraces - closeBraces;
-      
-      if (missingBraces > 0) {
-        cleaned += '}'.repeat(missingBraces);
-      }
+    if (missingBraces > 0 && missingBraces < 10) { // מגבלה סבירה
+      cleaned += '}'.repeat(missingBraces);
     }
   }
   
-  // בדיקה אם התוכן מתחיל בצורה תקינה
-  if (!cleaned.startsWith('{') && !cleaned.startsWith('[')) {
-    console.error('תשובת OpenAI לא מכילה JSON תקין:', cleaned.substring(0, 200));
-    return '{}';
-  }
-  
-  // ניסיון parse מקדים לוודא שה-JSON תקין
+  // שלב 5: ניסיון parse ראשוני
   try {
     JSON.parse(cleaned);
+    console.log(`✅ JSON תקין אחרי ניקוי`, { cleaned_length: cleaned.length });
     return cleaned;
-  } catch (parseError) {
-    console.error('JSON לא תקין אחרי ניקוי, מנסה תיקונים נוספים:', parseError);
+  } catch (parseError: any) {
+    console.warn(`⚠️ JSON לא תקין אחרי ניקוי, מנסה תיקונים`, { 
+      error: parseError.message,
+      position: parseError.message.match(/position (\d+)/)?.[1] 
+    });
     
-    // תיקונים נוספים
+    // שלב 6: תיקונים מתקדמים
     try {
-      // הסרת פסיקים מיותרים לפני סוגריים סוגרים
-      let fixed = cleaned.replace(/,(\s*[}\]])/g, '$1');
+      let fixed = cleaned
+        // הסרת פסיקים מיותרים
+        .replace(/,(\s*[}\]])/g, '$1')
+        // תיקון newlines בתוך strings
+        .replace(/([^\\]")([^"]*?)\n([^"]*?)(")/g, '$1$2 $3$4')
+        // תיקון escaped quotes כפולים
+        .replace(/\\"/g, '"')
+        .replace(/\\n/g, ' ')
+        // תיקון quotes לא מאוזנים
+        .replace(/([{,]\s*)([a-zA-Z_]+):/g, '$1"$2":');
       
-      // תיקון quotes לא מאוזנים
-      fixed = fixed.replace(/([^\\])'/g, '$1"'); // החלפת ' ב-" (למעט escaped quotes)
+      // אם JSON לא מסתיים בצורה תקינה
+      if (!fixed.endsWith('}') && fixed.includes('{')) {
+        fixed += '}';
+      }
       
-      // הסרת newlines בתוך strings שעלולים לשבור את ה-JSON
-      fixed = fixed.replace(/(".*?)\n(.*?")/g, '$1 $2');
-      
-      // ניסיון parse נוסף
       JSON.parse(fixed);
+      console.log(`✅ JSON תוקן בהצלחה`);
       return fixed;
-    } catch (secondParseError) {
-      console.error('גם אחרי תיקונים נוספים JSON לא תקין:', secondParseError);
-      
-      // במקרה קיצון, נחזיר JSON בסיסי
-      return JSON.stringify({
-        error: "Failed to parse OpenAI response",
-        original_content_preview: content.substring(0, 200),
-        cleaned_content_preview: cleaned.substring(0, 200)
+    } catch (secondError: any) {
+      console.error(`❌ כשל בתיקון JSON`, { 
+        error: secondError.message,
+        preview: cleaned.substring(0, 200) 
       });
+      
+      // שלב 7: ניסיון חילוץ partial JSON
+      const errorPosition = parseError.message.match(/position (\d+)/)?.[1];
+      if (errorPosition) {
+        const position = parseInt(errorPosition);
+        const truncatedContent = cleaned.substring(0, position);
+        
+        try {
+          // נסה לחלץ JSON חלקי
+          const partialJson = truncatedContent + '}';
+          const result = JSON.parse(partialJson);
+          console.log(`⚠️ חולץ JSON חלקי בהצלחה`);
+          return partialJson;
+        } catch {
+          // אם גם זה נכשל, נחזיר fallback אינטליגנטי
+        }
+      }
+      
+      // שלב 8: fallback אינטליגנטי על פי סוג הניתוח
+      const intelligentFallback = {
+        error: "Failed to parse OpenAI response",
+        recovered_data: "Attempting intelligent recovery...",
+        red_flags: [],
+        recommendations: ["בדוק את התמלול ונסה שוב", "יתכן שהתשובה חתוכה או פגומה"],
+        original_content_preview: content.substring(0, 300)
+      };
+      
+      console.log(`🔄 משתמש ב-fallback אינטליגנטי`);
+      return JSON.stringify(intelligentFallback);
     }
   }
 }
@@ -562,13 +606,21 @@ export async function POST(request: Request) {
       });
 
       const rawToneContent = toneAnalysisResponse.choices[0].message.content || '{}';
+      
+      await addCallLog(call_id, '📥 תשובת OpenAI גולמית לטונציה', { 
+        raw_length: rawToneContent.length,
+        starts_with_backticks: rawToneContent.startsWith('```'),
+        starts_with_brace: rawToneContent.trim().startsWith('{'),
+        first_100_chars: rawToneContent.substring(0, 100)
+      });
+      
       const cleanedToneContent = cleanOpenAIResponse(rawToneContent);
       
-      await addCallLog(call_id, '🧹 ניקוי תשובת ניתוח טונציה', { 
-        raw_length: rawToneContent.length,
+      await addCallLog(call_id, '🧹 תשובה אחרי ניקוי לטונציה', { 
         cleaned_length: cleanedToneContent.length,
-        starts_with_backticks: rawToneContent.startsWith('```'),
-        cleaned_preview: cleanedToneContent.substring(0, 100)
+        is_valid_json_start: cleanedToneContent.trim().startsWith('{'),
+        cleaned_preview: cleanedToneContent.substring(0, 200),
+        cleaning_success: rawToneContent !== cleanedToneContent
       });
       
       let toneAnalysisReport;
@@ -843,13 +895,21 @@ export async function POST(request: Request) {
         });
 
         const rawContentResponse = contentAnalysisResponse.choices[0].message.content || '{}';
+        
+        await addCallLog(call_id, '📥 תשובת OpenAI גולמית לתוכן', { 
+          raw_length: rawContentResponse.length,
+          starts_with_backticks: rawContentResponse.startsWith('```'),
+          starts_with_brace: rawContentResponse.trim().startsWith('{'),
+          first_200_chars: rawContentResponse.substring(0, 200)
+        });
+        
         const cleanedContentResponse = cleanOpenAIResponse(rawContentResponse);
         
-        await addCallLog(call_id, '🧹 ניקוי תשובת ניתוח תוכן', { 
-          raw_length: rawContentResponse.length,
+        await addCallLog(call_id, '🧹 תשובה אחרי ניקוי לתוכן', { 
           cleaned_length: cleanedContentResponse.length,
-          starts_with_backticks: rawContentResponse.startsWith('```'),
-          cleaned_preview: cleanedContentResponse.substring(0, 100)
+          is_valid_json_start: cleanedContentResponse.trim().startsWith('{'),
+          cleaned_preview: cleanedContentResponse.substring(0, 300),
+          cleaning_success: rawContentResponse !== cleanedContentResponse
         });
         
         let contentAnalysisReport;

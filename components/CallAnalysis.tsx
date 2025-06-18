@@ -217,14 +217,12 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     setCurrentPlayingQuote('')
   }, [activeTab])
   
-  // Real-time subscription לעדכוני סטטוס + פולינג כגיבוי
+  // Real-time subscription לעדכוני סטטוס (ללא פולינג מטורף!)
   useEffect(() => {
     if (['pending', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
       setIsPolling(true)
-      let pollCount = 0
-      const maxPolls = 120 // מקסימום 6 דקות (120 * 3 שניות)
       
-      // הוספת real-time subscription לטבלת calls
+      // הוספת real-time subscription לטבלת calls - זה המנגנון העיקרי!
       const { createClient } = require('@supabase/supabase-js')
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -244,13 +242,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           
           const newStatus = payload.new.processing_status
           if (newStatus && newStatus !== status) {
+            console.log(`📊 Status changed from ${status} to ${newStatus}`)
             setStatus(newStatus)
             
-            // אם הסטטוס השתנה ל-completed, נרענן את הדף
+            // אם הסטטוס השתנה ל-completed, עצור פולינג
             if (newStatus === 'completed') {
               setIsPolling(false)
-              console.log('✅ Analysis completed - reloading page')
-              setTimeout(() => window.location.reload(), 500) // המתנה קצרה כדי לוודא שהנתונים נשמרו
+              console.log('✅ Analysis completed via real-time subscription')
             }
           }
         })
@@ -258,51 +256,45 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       
       console.log('🔗 Real-time subscription created for call:', call.id)
       
+      // פולינג נדיר בלבד כגיבוי (כל 30 שניות, מקסימום 10 פעמים = 5 דקות)
+      let pollCount = 0
+      const maxPolls = 10 // מקסימום 10 בדיקות
+      const pollInterval = 30000 // כל 30 שניות
+      
       const intervalId = setInterval(async () => {
         pollCount++
-        
-        // אם עבר יותר מידי זמן, נעצור את הפולינג ונחזור לדף הראשי
-        if (pollCount > maxPolls) {
-          clearInterval(intervalId)
-          setIsPolling(false)
-          console.log('Polling timeout - redirecting to refresh')
-          window.location.reload()
-          return
-        }
+        console.log(`🔍 Backup polling check #${pollCount} (every 30s)`)
         
         try {
-          const statusInfo = await getCallStatus(call.id)
-          setStatus(statusInfo.status)
-          setErrorMessage(statusInfo.errorMessage)
+          const response = await fetch(`/api/call-status/${call.id}`)
+          const data = await response.json()
           
-          console.log('Polling status:', statusInfo)
-          
-          if (!statusInfo.isProcessing || statusInfo.status === 'completed') {
-            clearInterval(intervalId)
-            setIsPolling(false)
-            if (statusInfo.isComplete || statusInfo.status === 'completed') {
-              window.location.reload()
+          if (data.status && data.status !== status) {
+            console.log(`📈 Backup poll found status update: ${status} → ${data.status}`)
+            setStatus(data.status)
+            
+            if (data.status === 'completed') {
+              setIsPolling(false)
+              clearInterval(intervalId)
+              console.log('✅ Analysis completed via backup polling')
             }
           }
-          
-          const logsResponse = await fetch(`/api/call-logs/${call.id}`, {
-            cache: 'no-store'
-          })
-          if (logsResponse.ok) {
-            const logsData = await logsResponse.json()
-            setCallLogs(logsData.logs || [])
-          }
-          
         } catch (error) {
-          console.error('Error polling call status:', error)
-          // אם יש שגיאה ברשת, ננסה עוד פעם בעוד כמה שניות
-          if (pollCount > 10) { // אחרי 10 נסיונות, נעצור
-            clearInterval(intervalId)
-            setIsPolling(false)
-            window.location.reload()
-          }
+          console.error('Error in backup polling:', error)
         }
-      }, pollCount < 10 ? 1000 : 3000) // פולינג כל שנייה ב-10 הפעמים הראשונות, אחר כך כל 3 שניות
+        
+        if (pollCount >= maxPolls) {
+          console.log('⏰ Max backup polls reached - stopping')
+          clearInterval(intervalId)
+          setIsPolling(false)
+        }
+        
+        if (status === 'completed') {
+          console.log('🎯 Status is completed - stopping backup polling')
+          clearInterval(intervalId)
+          setIsPolling(false)
+        }
+      }, pollInterval)
       
       return () => {
         clearInterval(intervalId)
@@ -318,11 +310,15 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       pending: { base: 5, max: 15 },
       transcribing: { base: 15, max: 45 },
       analyzing_tone: { base: 45, max: 75 },
-      analyzing_content: { base: 75, max: 95 }
+      analyzing_content: { base: 75, max: 95 },
+      completed: { base: 100, max: 100 }
     }
 
     const currentStage = baseProgress[status as keyof typeof baseProgress]
     if (!currentStage) return 0
+
+    // אם הסטטוס הוא completed - תמיד 100%
+    if (status === 'completed') return 100
 
     // הוספת התקדמות סימולירית בתוך השלב הנוכחי
     const elapsedTime = Date.now() - (call.created_at ? new Date(call.created_at).getTime() : Date.now())
@@ -342,11 +338,42 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       }, 500) // עדכון כל חצי שנייה לאנימציה חלקה
 
       return () => clearInterval(progressInterval)
+    } else if (status === 'completed') {
+      // וודא שהprogress הוא 100% כשהסטטוס completed
+      setDynamicProgress(100)
     }
   }, [status, call.created_at])
+
+  // State נוסף לאנימציית הצלחה
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
+  const [countdown, setCountdown] = useState(3)
+
+  // טיפול מיוחד בסטטוס completed - טעינה מחודשת אוטומטית
+  useEffect(() => {
+    if (status === 'completed') {
+      console.log('✅ ניתוח השיחה הושלם - מתכונן לטעינה מחודשת')
+      setDynamicProgress(100)
+      setShowSuccessAnimation(true)
+      
+      // countdown timer
+      const countdownInterval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval)
+            console.log('🔄 טוען את הניתוח המושלם')
+            window.location.reload()
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+
+      return () => clearInterval(countdownInterval)
+    }
+  }, [status])
   
-  // הצגת סטטוס העיבוד
-  if (['pending', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status) || isPolling) {
+  // הצגת סטטוס העיבוד עם הודעה מיוחדת לcompleted
+  if (['pending', 'transcribing', 'analyzing_tone', 'analyzing_content', 'completed'].includes(status) || isPolling) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
         <div className="max-w-4xl mx-auto">
@@ -357,11 +384,17 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               </div>
               
               <h2 className="text-2xl font-bold mb-3 text-center text-gray-800">
-                השיחה נמצאת בתהליך עיבוד
+                {status === 'completed' 
+                  ? 'ניתוח השיחה הושלם! 🎉' 
+                  : 'השיחה נמצאת בתהליך עיבוד'
+                }
               </h2>
               
               <p className="text-gray-600 mb-4 text-center max-w-md">
-                אנו מנתחים את השיחה שלך באמצעות בינה מלאכותית מתקדמת. התהליך עשוי לקחת מספר דקות.
+                {status === 'completed' 
+                  ? 'הניתוח הושלם בהצלחה! טוען את התוצאות...'
+                  : 'אנו מנתחים את השיחה שלך באמצעות בינה מלאכותית מתקדמת. התהליך עשוי לקחת מספר דקות.'
+                }
               </p>
               
               {status === 'analyzing_tone' && (
@@ -369,6 +402,22 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   <p className="text-sm text-yellow-800 text-center">
                     🎭 מבצע ניתוח טונציה מתקדם - הדף יתעדכן אוטומטיקית ברגע השלמת הניתוח
                   </p>
+                </div>
+              )}
+
+              {status === 'completed' && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800 text-center font-medium mb-3">
+                    ✅ הניתוח הושלם בהצלחה! טוען את התוצאות בעוד {countdown} שניות...
+                  </p>
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors font-medium"
+                    >
+                      🚀 טען עכשיו
+                    </button>
+                  </div>
                 </div>
               )}
               
@@ -379,7 +428,8 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                     {status === 'pending' ? '🔄 טוען משאבים' :
                      status === 'transcribing' ? '📝 תמלול השיחה' :
                      status === 'analyzing_tone' ? '🎭 ניתוח טונציה' :
-                     status === 'analyzing_content' ? '📊 ניתוח תוכן' : 
+                     status === 'analyzing_content' ? '📊 ניתוח תוכן' :
+                     status === 'completed' ? '✅ הושלם' :
                      'מעבד...'}
                   </span>
                   <span className="text-sm font-bold text-blue-600 transition-all duration-500">
@@ -389,13 +439,27 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                                  <div className="overflow-hidden h-3 bg-blue-100 rounded-full relative">
                    <div 
                      style={{ width: `${dynamicProgress}%` }} 
-                     className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500 ease-out"
+                     className={`h-full rounded-full transition-all duration-500 ease-out ${
+                       status === 'completed' 
+                         ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                         : 'bg-gradient-to-r from-blue-500 to-blue-600'
+                     } ${showSuccessAnimation ? 'animate-pulse' : ''}`}
                    />
                    {/* אפקט זוהר מתקדם */}
                    <div 
                      style={{ width: `${dynamicProgress}%` }} 
-                     className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full opacity-60 animate-pulse absolute top-0"
+                     className={`h-full rounded-full opacity-60 absolute top-0 ${
+                       status === 'completed' 
+                         ? 'bg-gradient-to-r from-green-400 to-green-500 animate-ping' 
+                         : 'bg-gradient-to-r from-blue-400 to-blue-500 animate-pulse'
+                     }`}
                    />
+                   {/* אפקט כוכבים מיוחד ל-completed */}
+                   {status === 'completed' && showSuccessAnimation && (
+                     <div className="absolute inset-0 flex justify-center items-center">
+                       <span className="text-xs text-white font-bold animate-bounce">✨</span>
+                     </div>
+                   )}
                  </div>
                 
                 {/* מחוון מילולי מתקדם */}
@@ -408,17 +472,21 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   {status === 'analyzing_tone' && dynamicProgress >= 60 && 'מסיים ניתוח טונציה...'}
                   {status === 'analyzing_content' && dynamicProgress < 85 && 'מנתח תוכן מקצועי...'}
                   {status === 'analyzing_content' && dynamicProgress >= 85 && 'מכין דוח סופי...'}
+                  {status === 'completed' && 'הניתוח הושלם! טוען תוצאות...'}
                 </div>
               </div>
               
               {/* אנימציית טעינה מעוצבת */}
               <div className="flex justify-center items-center mb-8">
                 <div className="relative">
-                  <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+                  <div className={`animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 ${
+                    status === 'completed' ? 'border-green-500' : 'border-blue-500'
+                  }`}></div>
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl">
                     {status === 'transcribing' ? '📝' :
                      status === 'analyzing_tone' ? '🎭' :
-                     status === 'analyzing_content' ? '📊' : '⚙️'}
+                     status === 'analyzing_content' ? '📊' :
+                     status === 'completed' ? '✅' : '⚙️'}
                   </div>
                 </div>
               </div>
