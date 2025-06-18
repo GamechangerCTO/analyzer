@@ -256,48 +256,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       
       console.log('🔗 Real-time subscription created for call:', call.id)
       
-      // פולינג נדיר בלבד כגיבוי (כל 30 שניות, מקסימום 10 פעמים = 5 דקות)
-      let pollCount = 0
-      const maxPolls = 10 // מקסימום 10 בדיקות
-      const pollInterval = 30000 // כל 30 שניות
-      
-      const intervalId = setInterval(async () => {
-        pollCount++
-        console.log(`🔍 Backup polling check #${pollCount} (every 30s)`)
-        
-        try {
-          const response = await fetch(`/api/call-status/${call.id}`)
-          const data = await response.json()
-          
-          if (data.status && data.status !== status) {
-            console.log(`📈 Backup poll found status update: ${status} → ${data.status}`)
-            setStatus(data.status)
-            
-            if (data.status === 'completed') {
-              setIsPolling(false)
-              clearInterval(intervalId)
-              console.log('✅ Analysis completed via backup polling')
-            }
-          }
-        } catch (error) {
-          console.error('Error in backup polling:', error)
-        }
-        
-        if (pollCount >= maxPolls) {
-          console.log('⏰ Max backup polls reached - stopping')
-          clearInterval(intervalId)
-          setIsPolling(false)
-        }
-        
-        if (status === 'completed') {
-          console.log('🎯 Status is completed - stopping backup polling')
-          clearInterval(intervalId)
-          setIsPolling(false)
-        }
-      }, pollInterval)
-      
       return () => {
-        clearInterval(intervalId)
         subscription.unsubscribe()
         console.log('🔌 Real-time subscription cleaned up for call:', call.id)
       }
@@ -380,10 +339,21 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     return maxProgress
   }
 
-  // מערכת ריענון לוגים בזמן אמת
+  // מערכת ריענון לוגים בזמן אמת - אופטימיזציה לפרודקשן
   useEffect(() => {
     if (['pending', 'processing', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
+      let logFetchCount = 0
+      const maxLogFetches = 30 // מקסימום 30 בקשות (= 15 דקות)
+      
       const fetchLogs = async () => {
+        // הגבלת מספר בקשות
+        if (logFetchCount >= maxLogFetches) {
+          console.log('⏰ הגעתי למקסימום בקשות לוגים - עוצר')
+          return
+        }
+        
+        logFetchCount++
+        
         try {
           const logsResponse = await fetch(`/api/call-logs/${call.id}`)
           const logsData = await logsResponse.json()
@@ -392,7 +362,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
             // עדכון רק אם יש לוגים חדשים
             if (logsData.logs.length > lastProcessedLogIndex) {
               const newLogs = logsData.logs.slice(lastProcessedLogIndex)
-              console.log('📊 לוגים חדשים זוהו:', newLogs.length)
+              console.log(`📊 לוגים חדשים זוהו: ${newLogs.length} (בקשה #${logFetchCount})`)
               
               // חישוב התקדמות מעודכנת
               const newProgress = calculateProgressFromLogs(logsData.logs)
@@ -407,29 +377,44 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               // עדכון הלוגים המוצגים
               setCallLogs(logsData.logs)
               
-                             // בדיקה אם הושלם
-               const hasCompletionLog = logsData.logs.some((log: any) => 
-                 log.message.includes('🏁 ניתוח') && log.message.includes('הושלם')
-               )
+              // בדיקה אם הושלם
+              const hasCompletionLog = logsData.logs.some((log: any) => 
+                log.message.includes('🏁 ניתוח') && log.message.includes('הושלם')
+              )
               
               if (hasCompletionLog && status !== 'completed') {
                 console.log('✅ זוהה השלמת ניתוח מהלוגים - מעדכן סטטוס')
                 setStatus('completed')
+                return // עצור polling של לוגים
               }
+            } else {
+              console.log(`📊 אין לוגים חדשים (בקשה #${logFetchCount})`)
             }
           }
         } catch (error) {
           console.error('שגיאה בקריאת לוגים:', error)
+          logFetchCount-- // לא נספור שגיאות
         }
       }
       
       // קריאה ראשונית
       fetchLogs()
       
-      // קריאה כל 2 שניות
-      const logsInterval = setInterval(fetchLogs, 2000)
+      // קריאה כל 5 שניות (במקום 2) - פחות אגרסיבי
+      const logsInterval = setInterval(() => {
+        if (logFetchCount < maxLogFetches && 
+            ['pending', 'processing', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
+          fetchLogs()
+        } else {
+          clearInterval(logsInterval)
+          console.log('🔌 עצרתי polling של לוגים')
+        }
+      }, 5000)
       
-      return () => clearInterval(logsInterval)
+      return () => {
+        clearInterval(logsInterval)
+        console.log('🧹 ניקיתי interval של לוגים')
+      }
     }
   }, [status, call.id, lastProcessedLogIndex, logBasedProgress])
 
@@ -454,22 +439,16 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     return statusMapping[status as keyof typeof statusMapping] || 0
   }
 
-  // State לprogreaa הדינמי
+  // State לprogress הדינמי - עכשיו מחושב לפי לוגים
   const [dynamicProgress, setDynamicProgress] = useState(calculateDynamicProgress())
 
-  // עדכון progress בזמן אמת
+  // עדכון progress בזמן אמת - רק כשיש שינוי אמיתי
   useEffect(() => {
-    if (['pending', 'processing', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
-      const progressInterval = setInterval(() => {
-        setDynamicProgress(calculateDynamicProgress())
-      }, 500) // עדכון כל חצי שנייה לאנימציה חלקה
-
-      return () => clearInterval(progressInterval)
-    } else if (status === 'completed') {
-      // וודא שהprogress הוא 100% כשהסטטוס completed
-      setDynamicProgress(100)
+    const newProgress = calculateDynamicProgress()
+    if (newProgress !== dynamicProgress) {
+      setDynamicProgress(newProgress)
     }
-  }, [status, call.created_at])
+  }, [logBasedProgress, status])
 
   // State נוסף לאנימציית הצלחה
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
@@ -894,6 +873,29 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       </tr>
     );
   };
+
+  // Cleanup כשהמשתמש עוזב את הדף - אופטימיזציה לפרודקשן
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      console.log('🧹 המשתמש עוזב את הדף - מנקה את כל ה-intervals')
+    }
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log('📱 הדף הפך ללא פעיל - מקטין polling')
+      } else {
+        console.log('👁️ הדף חזר להיות פעיל')
+      }
+    }
+    
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
