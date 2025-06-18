@@ -304,34 +304,154 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     }
   }, [status, call.id])
 
-  // פונקציה לחישוב progress דינמי לפי הסטטוסים האמיתיים מהלוגים
+  // State לניהול התקדמות בהתבסס על לוגים אמיתיים
+  const [logBasedProgress, setLogBasedProgress] = useState(0)
+  const [currentLogStatus, setCurrentLogStatus] = useState('')
+  const [lastProcessedLogIndex, setLastProcessedLogIndex] = useState(0)
+
+  // פונקציה לחישוב progress מדויק לפי לוגים של Vercel
+  const calculateProgressFromLogs = (logs: any[]) => {
+    if (!logs || logs.length === 0) return 0
+    
+    // מפת התקדמות לפי הודעות לוג ספציפיות מ-Vercel
+    const logProgressMap: Record<string, number> = {
+      // התחלה
+      '🚀 התחלת תהליך ניתוח שיחה': 5,
+      '✅ קישור האודיו נוצר בהצלחה': 10,
+      
+      // תמלול
+      '📝 מתחיל תהליך תמלול שיחה': 15,
+      '⬇️ מוריד קובץ אודיו מהשרת': 20,
+      '✅ קובץ אודיו הורד בהצלחה': 25,
+      '📡 תשובת Whisper API התקבלה': 35,
+      '✅ תמלול הושלם בהצלחה': 45,
+      
+      // ניתוח טונציה
+      '🎭 מתחיל ניתוח טונציה': 50,
+      '🔄 מכין בקשה לניתוח טונציה עם GPT-4o-audio': 55,
+      '✅ תשובת OpenAI התקבלה לניתוח טונציה': 65,
+      '✅ ניתוח טונציה הושלם בהצלחה': 70,
+      
+      // ניתוח תוכן
+      '📊 מתחיל ניתוח תוכן': 75,
+      '🔄 שולח בקשה לניתוח תוכן ל-gpt-4.1-2025-04-14': 80,
+      '✅ תשובת OpenAI התקבלה לניתוח תוכן': 90,
+      '✅ ניתוח תוכן הושלם בהצלחה': 95,
+      
+      // השלמה
+      '✅ טבלת calls עודכנה בהצלחה': 98,
+      '🏁 ניתוח השיחה הושלם': 100,
+      '🏁 ניתוח טונציה הושלם': 100
+    }
+    
+    let maxProgress = 0
+    let latestMessage = ''
+    
+    // חיפוש ההתקדמות המקסימלית והודעה האחרונה
+    for (const log of logs) {
+      const message = log.message
+      
+      // חיפוש התאמה מדויקת
+      if (logProgressMap[message]) {
+        if (logProgressMap[message] > maxProgress) {
+          maxProgress = logProgressMap[message]
+          latestMessage = message
+        }
+      } else {
+        // חיפוש התאמה חלקית
+        for (const [logKey, progress] of Object.entries(logProgressMap)) {
+          if (message.includes(logKey.split(' ')[0]) || logKey.includes(message.split(' ')[0])) {
+            if (progress > maxProgress) {
+              maxProgress = progress
+              latestMessage = message
+            }
+          }
+        }
+      }
+      
+      // זיהוי שגיאות
+      if (message.includes('❌') || message.includes('שגיאה')) {
+        // אם יש שגיאה, נשמור על ההתקדמות האחרונה אבל נעדכן את ההודעה
+        latestMessage = message
+      }
+    }
+    
+    setCurrentLogStatus(latestMessage)
+    return maxProgress
+  }
+
+  // מערכת ריענון לוגים בזמן אמת
+  useEffect(() => {
+    if (['pending', 'processing', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status)) {
+      const fetchLogs = async () => {
+        try {
+          const logsResponse = await fetch(`/api/call-logs/${call.id}`)
+          const logsData = await logsResponse.json()
+          
+          if (logsData.logs && logsData.logs.length > 0) {
+            // עדכון רק אם יש לוגים חדשים
+            if (logsData.logs.length > lastProcessedLogIndex) {
+              const newLogs = logsData.logs.slice(lastProcessedLogIndex)
+              console.log('📊 לוגים חדשים זוהו:', newLogs.length)
+              
+              // חישוב התקדמות מעודכנת
+              const newProgress = calculateProgressFromLogs(logsData.logs)
+              
+              if (newProgress > logBasedProgress) {
+                setLogBasedProgress(newProgress)
+                console.log(`📈 התקדמות עודכנה ללוגים: ${newProgress}%`)
+              }
+              
+              setLastProcessedLogIndex(logsData.logs.length)
+              
+              // עדכון הלוגים המוצגים
+              setCallLogs(logsData.logs)
+              
+                             // בדיקה אם הושלם
+               const hasCompletionLog = logsData.logs.some((log: any) => 
+                 log.message.includes('🏁 ניתוח') && log.message.includes('הושלם')
+               )
+              
+              if (hasCompletionLog && status !== 'completed') {
+                console.log('✅ זוהה השלמת ניתוח מהלוגים - מעדכן סטטוס')
+                setStatus('completed')
+              }
+            }
+          }
+        } catch (error) {
+          console.error('שגיאה בקריאת לוגים:', error)
+        }
+      }
+      
+      // קריאה ראשונית
+      fetchLogs()
+      
+      // קריאה כל 2 שניות
+      const logsInterval = setInterval(fetchLogs, 2000)
+      
+      return () => clearInterval(logsInterval)
+    }
+  }, [status, call.id, lastProcessedLogIndex, logBasedProgress])
+
+  // פונקציה לחישוב progress דינמי - עכשיו משתמשת בלוגים אמיתיים
   const calculateDynamicProgress = () => {
-    // הסטטוסים האמיתיים שמגיעים מהלוגים לפי הרצף הנכון
+    // אם יש לנו progress מהלוגים, נשתמש בו
+    if (logBasedProgress > 0) {
+      return logBasedProgress
+    }
+    
+    // fallback למיפוי הישן אם אין לוגים
     const statusMapping = {
       'pending': 5,
-      'processing': 10,          // התחלת תהליך ניתוח שיחה
-      'transcribing': 25,        // 🔄 עדכון סטטוס לתמלול
-      'analyzing_tone': 55,      // 🎭 מתחיל ניתוח טונציה 
-      'analyzing_content': 85,   // 📊 מתחיל ניתוח תוכן
-      'completed': 100,          // 🏁 ניתוח שיחה הושלם
+      'processing': 10,
+      'transcribing': 25,
+      'analyzing_tone': 55,
+      'analyzing_content': 85,
+      'completed': 100,
       'error': 0
     }
 
-    const progress = statusMapping[status as keyof typeof statusMapping] || 0
-    
-    // אם הסטטוס הוא completed - תמיד 100%
-    if (status === 'completed') {
-      return 100
-    }
-
-    // לסטטוסים אחרים, הוסף התקדמות קלה בתוך השלב
-    if (progress > 0 && progress < 100) {
-      const elapsedTime = Date.now() - (call.created_at ? new Date(call.created_at).getTime() : Date.now())
-      const microProgress = Math.min((elapsedTime / 1000) % 15 / 15, 1) * 3 // מקסימום 3% נוספים
-      return Math.min(progress + Math.round(microProgress), 99) // לא יותר מ-99% עד completed
-    }
-
-    return progress
+    return statusMapping[status as keyof typeof statusMapping] || 0
   }
 
   // State לprogreaa הדינמי
@@ -497,18 +617,26 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                    )}
                  </div>
                 
-                {/* מחוון מילולי מתקדם */}
+                {/* מחוון מילולי מתקדם - מבוסס על לוגים אמיתיים */}
                 <div className="mt-2 text-xs text-gray-500 text-center">
-                  {status === 'pending' && dynamicProgress < 10 && 'מכין את המערכת לעיבוד...'}
-                  {status === 'pending' && dynamicProgress >= 10 && 'טוען את קובץ האודיו...'}
-                  {status === 'processing' && 'מתחיל תהליך ניתוח השיחה...'}
-                  {status === 'transcribing' && dynamicProgress < 30 && 'מתחיל תמלול השיחה...'}
-                  {status === 'transcribing' && dynamicProgress >= 30 && 'ממשיך בתמלול מדויק...'}
-                  {status === 'analyzing_tone' && dynamicProgress < 60 && 'מנתח טון ורגש...'}
-                  {status === 'analyzing_tone' && dynamicProgress >= 60 && 'מסיים ניתוח טונציה...'}
-                  {status === 'analyzing_content' && dynamicProgress < 85 && 'מנתח תוכן מקצועי...'}
-                  {status === 'analyzing_content' && dynamicProgress >= 85 && 'מכין דוח סופי...'}
-                  {status === 'completed' && 'הניתוח הושלם! טוען תוצאות...'}
+                  {currentLogStatus ? (
+                    <span className="font-medium text-blue-600">
+                      {currentLogStatus.replace(/[🚀📝🎭📊✅🔄⬇️📡🏁❌]/g, '').trim()}
+                    </span>
+                  ) : (
+                    <>
+                      {status === 'pending' && dynamicProgress < 10 && 'מכין את המערכת לעיבוד...'}
+                      {status === 'pending' && dynamicProgress >= 10 && 'טוען את קובץ האודיו...'}
+                      {status === 'processing' && 'מתחיל תהליך ניתוח השיחה...'}
+                      {status === 'transcribing' && dynamicProgress < 30 && 'מתחיל תמלול השיחה...'}
+                      {status === 'transcribing' && dynamicProgress >= 30 && 'ממשיך בתמלול מדויק...'}
+                      {status === 'analyzing_tone' && dynamicProgress < 60 && 'מנתח טון ורגש...'}
+                      {status === 'analyzing_tone' && dynamicProgress >= 60 && 'מסיים ניתוח טונציה...'}
+                      {status === 'analyzing_content' && dynamicProgress < 85 && 'מנתח תוכן מקצועי...'}
+                      {status === 'analyzing_content' && dynamicProgress >= 85 && 'מכין דוח סופי...'}
+                      {status === 'completed' && 'הניתוח הושלם! טוען תוצאות...'}
+                    </>
+                  )}
                 </div>
               </div>
               
