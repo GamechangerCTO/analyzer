@@ -456,16 +456,42 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   const [hasCompletedOnce, setHasCompletedOnce] = useState(false) // למניעת לופ
   const [shouldShowAnalysis, setShouldShowAnalysis] = useState(false)
 
+  // בדיקה אם יש ניתוח קיים
+  const hasAnalysisData = call.analysis_report || call.tone_analysis_report
+  
+  // בדיקה ראשונית - אם יש ניתוח קיים, הצג ניתוח מיד
+  useEffect(() => {
+    if (hasAnalysisData) {
+      console.log('🎯 יש נתוני ניתוח קיימים - מציג ניתוח מיד')
+      setShouldShowAnalysis(true)
+      setDynamicProgress(100)
+      setIsPolling(false)
+      // אם הסטטוס לא completed אבל יש ניתוח, עדכן את הסטטוס
+      if (status !== 'completed') {
+        setStatus('completed')
+      }
+    }
+  }, [hasAnalysisData])
+  
   // טיפול מיוחד בסטטוס completed - מעבר לניתוח אוטומטית
   useEffect(() => {
-    if (status === 'completed' && !hasCompletedOnce) {
-      console.log('✅ ניתוח השיחה הושלם - בודק אם יש ניתוח קיים')
+    // אם הסטטוס הוא completed ויש נתוני ניתוח - הצג את הניתוח מיד
+    if (status === 'completed' && hasAnalysisData) {
+      console.log('✅ ניתוח הושלם ויש נתונים - מציג ניתוח')
+      setShouldShowAnalysis(true)
+      setDynamicProgress(100)
+      setIsPolling(false)
+      return
+    }
+    
+    // אם הסטטוס הוא completed אבל אין נתונים - נסה לטעון מחדש
+    if (status === 'completed' && !hasAnalysisData && !hasCompletedOnce) {
+      console.log('✅ ניתוח השיחה הושלם אבל אין נתונים - טוען מחדש')
       setHasCompletedOnce(true) // מונע לופ
       setDynamicProgress(100)
       setShowSuccessAnimation(true)
       
       console.log('🔄 המתנה של 3 שניות ואז טעינה מחדש לקבלת הניתוח')
-      // ספירה לאחור ואז טעינה מחודשת - תמיד נטען מחדש כדי לקבל את הניתוח המעודכן
       const countdownInterval = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
@@ -480,11 +506,10 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
       return () => clearInterval(countdownInterval)
     }
-  }, [status, hasCompletedOnce, call.analysis_report, call.tone_analysis_report])
+  }, [status, hasCompletedOnce, hasAnalysisData])
   
-  // הצגת סטטוס העיבוד עם הודעה מיוחדת לcompleted
-  // אבל רק אם עדיין לא אמורים להציג את הניתוח
-  if ((['pending', 'processing', 'transcribing', 'analyzing_tone', 'analyzing_content', 'completed'].includes(status) || isPolling) && !shouldShowAnalysis) {
+  // הצגת סטטוס העיבוד - רק אם אין ניתוח קיים או אם המעמד אינו completed
+  if (!shouldShowAnalysis && (['pending', 'processing', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status) || (status === 'completed' && !hasAnalysisData) || isPolling)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
         <div className="max-w-4xl mx-auto">
