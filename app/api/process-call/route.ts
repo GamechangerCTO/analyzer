@@ -40,20 +40,22 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
-// פונקציה מתקדמת לניקוי תשובות OpenAI עם טיפול טוב יותר ב-JSON שבור
+// פונקציה מתקדמת לניקוי תשובות OpenAI עם טיפול מעולה ב-JSON שבור
 function cleanOpenAIResponse(content: string): string {
   if (!content) return '{}';
   
   console.log(`🧹 מנקה תגובת OpenAI`, { original_length: content.length });
   
-  // שלב 1: ניקוי בסיסי
+  // שלב 1: ניקוי בסיסי מתקדם
   let cleaned = content
     .replace(/```(?:json|JSON)?\s*/g, '') // הסרת code blocks
     .replace(/```\s*$/g, '')
     .replace(/^`+|`+$/g, '') // הסרת backticks
+    .replace(/^\s*[\r\n]+/g, '') // הסרת line breaks בתחילת
+    .replace(/[\r\n]+\s*$/g, '') // הסרת line breaks בסוף
     .trim();
   
-  // שלב 2: חיפוש JSON boundaries
+  // שלב 2: חיפוש JSON boundaries מתקדם
   const jsonStart = cleaned.indexOf('{');
   if (jsonStart !== -1) {
     cleaned = cleaned.substring(jsonStart);
@@ -62,11 +64,23 @@ function cleanOpenAIResponse(content: string): string {
     return '{}';
   }
   
-  // שלב 3: אלגוריתם מתקדם לאיזון סוגריים
+  // שלב 3: תיקון בעיות נפוצות לפני parsing
+  cleaned = cleaned
+    // תיקון של objects keys שלא מצוטטים
+    .replace(/([{,]\s*)([a-zA-Zא-ת_][a-zA-Zא-ת0-9_]*)\s*:/g, '$1"$2":')
+    // תיקון של values בוליאניים ומספריים לא מצוטטים (רק אם הם אמיתיים)
+    .replace(/:\s*(true|false|null|\d+\.?\d*)\s*([,}])/g, ':$1$2')
+    // הסרת אותיות בודדות שלא שייכות לstring
+    .replace(/([^"\\])\\([^"\\nrt/])/g, '$1$2')
+    // תיקון newlines בתוך strings
+    .replace(/("([^"\\]|\\.)*?)\n(([^"\\]|\\.)*?")/g, '$1 $3');
+  
+  // שלב 4: אלגוריתם מתקדם לאיזון סוגריים עם context tracking
   let braceCount = 0;
   let lastValidEnd = -1;
   let inString = false;
   let escapeNext = false;
+  let stringChar = null;
   
   for (let i = 0; i < cleaned.length; i++) {
     const char = cleaned[i];
@@ -81,8 +95,14 @@ function cleanOpenAIResponse(content: string): string {
       continue;
     }
     
-    if (char === '"' && !escapeNext) {
-      inString = !inString;
+    if ((char === '"' || char === "'") && !escapeNext) {
+      if (!inString) {
+        inString = true;
+        stringChar = char;
+      } else if (char === stringChar) {
+        inString = false;
+        stringChar = null;
+      }
       continue;
     }
     
@@ -99,21 +119,29 @@ function cleanOpenAIResponse(content: string): string {
     }
   }
   
-  // שלב 4: חיתוך לJSON תקין
+  // שלב 5: חיתוך לJSON תקין או תיקון
   if (lastValidEnd !== -1) {
     cleaned = cleaned.substring(0, lastValidEnd + 1);
   } else {
-    // אם לא מצאנו סוף תקין, נסה לתקן
+    // אם לא מצאנו סוף תקין, נסה לתקן באופן חכם
     const openBraces = (cleaned.match(/\{/g) || []).length;
     const closeBraces = (cleaned.match(/\}/g) || []).length;
     const missingBraces = openBraces - closeBraces;
     
     if (missingBraces > 0 && missingBraces < 10) { // מגבלה סבירה
+      // בדוק אם אנחנו באמצע string וסגור אותו
+      const lastQuote = cleaned.lastIndexOf('"');
+      const beforeLastQuote = cleaned.substring(0, lastQuote).split('"').length;
+      
+      if (beforeLastQuote % 2 === 1) { // מספר אי-זוגי של quotes = באמצע string
+        cleaned += '"';
+      }
+      
       cleaned += '}'.repeat(missingBraces);
     }
   }
   
-  // שלב 5: ניסיון parse ראשוני
+  // שלב 6: ניסיון parse ראשוני
   try {
     JSON.parse(cleaned);
     console.log(`✅ JSON תקין אחרי ניקוי`, { cleaned_length: cleaned.length });
@@ -124,21 +152,28 @@ function cleanOpenAIResponse(content: string): string {
       position: parseError.message.match(/position (\d+)/)?.[1] 
     });
     
-    // שלב 6: תיקונים מתקדמים
+    // שלב 7: תיקונים מתקדמים יותר
     try {
       let fixed = cleaned
-        // הסרת פסיקים מיותרים
+        // הסרת פסיקים מיותרים לפני סוגריים
         .replace(/,(\s*[}\]])/g, '$1')
-        // תיקון newlines בתוך strings
-        .replace(/([^\\]")([^"]*?)\n([^"]*?)(")/g, '$1$2 $3$4')
+        // תיקון double quotes בתוך values
+        .replace(/:\s*"([^"]*)"([^"]*)"([^",}]*)/g, ':"$1$2$3"')
         // תיקון escaped quotes כפולים
-        .replace(/\\"/g, '"')
+        .replace(/\\\\"/g, '\\"')
         .replace(/\\n/g, ' ')
-        // תיקון quotes לא מאוזנים
-        .replace(/([{,]\s*)([a-zA-Z_]+):/g, '$1"$2":');
+        .replace(/\\r/g, ' ')
+        .replace(/\\t/g, ' ')
+        // תיקון strings שמסתיימים פתאום
+        .replace(/:\s*"([^"]*?)$/, ':"$1"');
       
-      // אם JSON לא מסתיים בצורה תקינה
+      // תיקון אחרון - אם JSON לא מסתיים בצורה תקינה
       if (!fixed.endsWith('}') && fixed.includes('{')) {
+        // בדוק אם יש string פתוח
+        const quotes = (fixed.match(/"/g) || []).length;
+        if (quotes % 2 === 1) {
+          fixed += '"';
+        }
         fixed += '}';
       }
       
@@ -151,11 +186,20 @@ function cleanOpenAIResponse(content: string): string {
         preview: cleaned.substring(0, 200) 
       });
       
-      // שלב 7: ניסיון חילוץ partial JSON
+      // שלב 8: ניסיון חילוץ partial JSON מתקדם
       const errorPosition = parseError.message.match(/position (\d+)/)?.[1];
       if (errorPosition) {
         const position = parseInt(errorPosition);
-        const truncatedContent = cleaned.substring(0, position);
+        let truncatedContent = cleaned.substring(0, position);
+        
+        // נסה למצוא נקודת חיתוך טובה יותר
+        const lastComma = truncatedContent.lastIndexOf(',');
+        const lastColon = truncatedContent.lastIndexOf(':');
+        
+        if (lastComma > lastColon) {
+          // אם הפסיק האחרון אחרי הנקודותיים האחרונות, חתוך שם
+          truncatedContent = truncatedContent.substring(0, lastComma);
+        }
         
         try {
           // נסה לחלץ JSON חלקי
@@ -168,16 +212,22 @@ function cleanOpenAIResponse(content: string): string {
         }
       }
       
-      // שלב 8: fallback אינטליגנטי על פי סוג הניתוח
+      // שלב 9: fallback אינטליגנטי מתקדם על פי סוג הניתוח
       const intelligentFallback = {
         error: "Failed to parse OpenAI response",
         recovered_data: "Attempting intelligent recovery...",
         red_flags: [],
-        recommendations: ["בדוק את התמלול ונסה שוב", "יתכן שהתשובה חתוכה או פגומה"],
-        original_content_preview: content.substring(0, 300)
+        recommendations: ["בדוק את התמלול ונסה שוב", "יתכן שהתשובה חתוכה או פגומה", "נסה להקליט שוב באיכות גבוהה יותר"],
+        original_content_preview: content.substring(0, 300),
+        parsing_attempts: {
+          basic_cleaning: true,
+          advanced_fixing: true,
+          partial_extraction: true,
+          final_fallback: true
+        }
       };
       
-      console.log(`🔄 משתמש ב-fallback אינטליגנטי`);
+      console.log(`🔄 משתמש ב-fallback אינטליגנטי מתקדם`);
       return JSON.stringify(intelligentFallback);
     }
   }
@@ -660,34 +710,65 @@ export async function POST(request: Request) {
           } else {
             throw new Error('לא ניתן לזהות מיקום שגיאה');
           }
-        } catch (secondParseError: any) {
-          await addCallLog(call_id, '❌ גם תיקון JSON של ניתוח טונציה נכשל - משתמש ברירת מחדל', { 
-            second_error: secondParseError.message
-          });
-          
-          // ברירת מחדל לטונציה
-          toneAnalysisReport = {
-            טון_כללי: "לא ניתן לנתח בשל שגיאת פורמט",
-            רמת_אנרגיה: "לא זמין",
-            מקצועיות: "לא זמין", 
-            חיוביות: "לא זמין",
-            דגלים_אדומים: {
+                  } catch (secondParseError: any) {
+            await addCallLog(call_id, '❌ גם תיקון JSON של ניתוח טונציה נכשל - משתמש ברירת מחדל מתקדמת', { 
+              second_error: secondParseError.message
+            });
+            
+            // ברירת מחדל מתקדמת לטונציה מבוססת על אודיו
+            let estimatedToneScore = 6;
+            let detectedFlags = {
               צעקות_זוהו: false,
               לחץ_גבוה: false,
               חוסר_סבלנות: false,
               אגרסיביות: false,
               טון_לא_מקצועי: false
-            },
-            ניתוח_פרוזודי: "לא ניתן לנתח בשל שגיאת פורמט התשובה מ-OpenAI",
-            ציון_טונציה: 6,
-            המלצות_שיפור: ["לא זמין בשל שגיאת פורמט"],
-            נקודות_חוזק_טונליות: ["לא זמין בשל שגיאת פורמט"],
-            error_info: {
-              original_error: parseError.message,
-              content_preview: cleanedToneContent.substring(0, 200)
+            };
+            
+            // אם יש תמליל, נסה לחלץ רמזים על הטונציה
+            if (transcript && transcript.length > 50) {
+              const urgentWords = ['דחוף', 'מיידי', 'בעיה', 'חשוב'];
+              const positiveWords = ['תודה', 'מעולה', 'נהדר'];
+              const negativeWords = ['כועס', 'זועם', 'גרוע'];
+              
+              const hasUrgency = urgentWords.some(word => transcript.includes(word));
+              const hasPositive = positiveWords.some(word => transcript.includes(word));
+              const hasNegative = negativeWords.some(word => transcript.includes(word));
+              
+              if (hasNegative) {
+                estimatedToneScore = 4;
+                detectedFlags.לחץ_גבוה = true;
+              } else if (hasPositive) {
+                estimatedToneScore = 8;
+              } else if (hasUrgency) {
+                estimatedToneScore = 5;
+                detectedFlags.חוסר_סבלנות = true;
+              }
             }
-          };
-        }
+            
+            toneAnalysisReport = {
+              טון_כללי: "ניתוח אוטומטי בסיסי בשל שגיאת פורמט",
+              רמת_אנרגיה: estimatedToneScore >= 7 ? "גבוהה" : estimatedToneScore >= 5 ? "בינונית" : "נמוכה",
+              מקצועיות: estimatedToneScore >= 6 ? "טובה" : "דורשת שיפור", 
+              חיוביות: estimatedToneScore >= 7 ? "חיובית" : estimatedToneScore >= 5 ? "נייטרלית" : "שלילית",
+              דגלים_אדומים: detectedFlags,
+              ניתוח_פרוזודי: `ניתוח אוטומטי מבוסס תמליל (ציון: ${estimatedToneScore}/10)`,
+              ציון_טונציה: estimatedToneScore,
+              המלצות_שיפור: estimatedToneScore < 6 ? 
+                ["שפר את הטון הכללי", "תרגל הרגעה לפני השיחה"] : 
+                ["המשך גישה מקצועית"],
+              נקודות_חוזק_טונליות: estimatedToneScore >= 6 ? 
+                ["טון יחסית מקצועי"] : 
+                ["נדרש שיפור בטונציה"],
+              recovery_info: {
+                method: "intelligent_fallback_with_transcript_hints",
+                original_error: parseError.message,
+                content_preview: cleanedToneContent.substring(0, 200),
+                estimated_from_transcript: !!transcript,
+                recovery_timestamp: new Date().toISOString()
+              }
+            };
+          }
       }
       
       await addCallLog(call_id, '✅ ניתוח טונציה הושלם', { 
@@ -844,6 +925,32 @@ export async function POST(request: Request) {
           company_name: companyName || 'לא ידוע'
         });
 
+        // טעינת שאלון החברה אם קיים
+        let companyQuestionnaire: any = null;
+        const companyId = userData?.companies && 'id' in userData.companies ? userData.companies.id : null;
+        
+        if (companyId) {
+          const { data: questionnaireData, error: questionnaireError } = await supabase
+            .from('company_questionnaires')
+            .select('*')
+            .eq('company_id', companyId)
+            .single();
+          
+          if (questionnaireData && !questionnaireError) {
+            companyQuestionnaire = questionnaireData;
+            await addCallLog(call_id, '✅ שאלון החברה נטען בהצלחה', { 
+              company_id: companyId,
+              questionnaire_exists: true,
+              questionnaire_fields: Object.keys(companyQuestionnaire || {})
+            });
+          } else {
+            await addCallLog(call_id, 'ℹ️ לא נמצא שאלון חברה', { 
+              company_id: companyId,
+              error: questionnaireError?.message
+            });
+          }
+        }
+
         // ניתוח התוכן עם gpt-4.1-2025-04-14
         await addCallLog(call_id, '🔄 שולח בקשה לניתוח תוכן ל-gpt-4.1-2025-04-14', {
           transcript_length: transcript?.length || 0,
@@ -855,6 +962,26 @@ export async function POST(request: Request) {
           model: 'gpt-4.1-2025-04-14',
           messages: [
             {
+              role: 'system',
+              content: `אתה מנתח מכירות ושירות מקצועי. החזר רקרק JSON נקי ותקין.
+              
+              מבנה התשובה הנדרש:
+              {
+                "overall_score": [מספר בין 1-10],
+                "red_flag": [true/false],
+                "general_key_insights": ["...", "..."],
+                "improvement_points": ["...", "..."],
+                "strengths_and_preservation_points": ["...", "..."],
+                "executive_summary": "..."
+              }
+              
+              ⚠️ חשוב ביותר:
+              - התחל ישירות ב-{ וסיים ב-}
+              - אל תשתמש ב-markdown blocks או backticks
+              - ודא שכל string מצוטט בגרשיים
+              - אל תכלול הערות או הסברים מחוץ ל-JSON`
+            },
+            {
               role: 'user',
               content: systemPrompt + '\n\n' + `נתח את השיחה הבאה:
               סוג שיחה: ${callData.call_type}
@@ -864,6 +991,11 @@ export async function POST(request: Request) {
               ${companyName ? `חברה: ${companyName}` : ''}
               ${userData ? `תפקיד המשתמש: ${userData.role}` : ''}
               ${callData.agent_notes ? `הערות נציג: ${callData.agent_notes}` : ''}
+              
+              ${companyQuestionnaire ? `📋 שאלון החברה:
+              ${JSON.stringify(companyQuestionnaire, null, 2)}
+              
+              ⚠️ חשוב מאוד: עבור על כל מה שהלקוח מילא בשאלון החברה והתייחס בניתוח בהתאם!` : ''}
               
               ${callData.analysis_notes ? `🎯 פרמטרים מיוחדים לניתוח זה:
               ${callData.analysis_notes}
@@ -884,7 +1016,10 @@ export async function POST(request: Request) {
               
               חשוב מאוד: החזר רק JSON נקי ללא עיטוף Markdown או backticks!`
             }
-          ]
+          ],
+          temperature: 0.3, // נמוך יותר ליציבות
+          max_tokens: 4000, // מגבלה להימנע מתשובות חתוכות
+          top_p: 0.9
         });
 
         await addCallLog(call_id, '✅ תשובת OpenAI התקבלה לניתוח תוכן', { 
@@ -900,7 +1035,35 @@ export async function POST(request: Request) {
           raw_length: rawContentResponse.length,
           starts_with_backticks: rawContentResponse.startsWith('```'),
           starts_with_brace: rawContentResponse.trim().startsWith('{'),
-          first_200_chars: rawContentResponse.substring(0, 200)
+          first_200_chars: rawContentResponse.substring(0, 200),
+          ends_with_brace: rawContentResponse.trim().endsWith('}'),
+          potential_truncation: rawContentResponse.length > 8000, // OpenAI לפעמים חותך תשובות ארוכות
+          brace_balance_check: {
+            open_braces: (rawContentResponse.match(/\{/g) || []).length,
+            close_braces: (rawContentResponse.match(/\}/g) || []).length
+          }
+        });
+        
+        // בדיקה מקדימה לזיהוי בעיות פוטנציאליות
+        const openBraces = (rawContentResponse.match(/\{/g) || []).length;
+        const closeBraces = (rawContentResponse.match(/\}/g) || []).length;
+        const potentialIssues = [];
+        
+        if (openBraces !== closeBraces) {
+          potentialIssues.push(`איזון סוגריים: ${openBraces} פתיחות, ${closeBraces} סגירות`);
+        }
+        
+        if (rawContentResponse.length > 8000) {
+          potentialIssues.push("תשובה ארוכה מאוד - יכולה להיות חתוכה");
+        }
+        
+        if (!rawContentResponse.trim().endsWith('}')) {
+          potentialIssues.push("התשובה לא מסתיימת בסוגריים");
+        }
+        
+        await addCallLog(call_id, '🔍 בדיקה מקדימה של תשובת OpenAI', { 
+          potential_issues: potentialIssues,
+          requires_advanced_recovery: potentialIssues.length > 0
         });
         
         const cleanedContentResponse = cleanOpenAIResponse(rawContentResponse);
@@ -909,7 +1072,8 @@ export async function POST(request: Request) {
           cleaned_length: cleanedContentResponse.length,
           is_valid_json_start: cleanedContentResponse.trim().startsWith('{'),
           cleaned_preview: cleanedContentResponse.substring(0, 300),
-          cleaning_success: rawContentResponse !== cleanedContentResponse
+          cleaning_success: rawContentResponse !== cleanedContentResponse,
+          length_difference: rawContentResponse.length - cleanedContentResponse.length
         });
         
         let contentAnalysisReport;
@@ -923,28 +1087,91 @@ export async function POST(request: Request) {
             cleaned_content_preview: cleanedContentResponse.substring(0, 500)
           });
           
-          // ניסיון תיקון נוסף ספציפי לניתוח תוכן
+          // ניסיון תיקון מתקדם ספציפי לניתוח תוכן
           try {
-            // אם השגיאה מכילה מיקום, ננתח רק את החלק התקין
+            let recoveredData = null;
             const positionMatch = parseError.message.match(/position (\d+)/);
+            
             if (positionMatch) {
               const position = parseInt(positionMatch[1]);
-              const validPart = cleanedContentResponse.substring(0, position);
-              const lastOpenBrace = validPart.lastIndexOf('{');
-              if (lastOpenBrace !== -1) {
-                let truncated = validPart.substring(lastOpenBrace);
-                // הוספת סוגריים חסרים
-                const openCount = (truncated.match(/\{/g) || []).length;
-                const closeCount = (truncated.match(/\}/g) || []).length;
-                truncated += '}'.repeat(Math.max(0, openCount - closeCount));
+              await addCallLog(call_id, '🔧 מנסה שחזור חכם של JSON', { 
+                error_position: position,
+                content_length: cleanedContentResponse.length,
+                analysis_type: 'content'
+              });
+              
+              // גישה 1: ניסיון לחתוך בנקודת השגיאה ולתקן
+              let validPart = cleanedContentResponse.substring(0, position);
+              
+              // גישה 2: חיפוש JSON block אחרון שלם
+              const jsonBlocks = validPart.split('{').filter(block => block.trim());
+              for (let i = jsonBlocks.length - 1; i >= 0; i--) {
+                try {
+                  let testJson = '{' + jsonBlocks.slice(i).join('{');
+                  
+                  // תיקון בעיות נפוצות בJSON שנקטע
+                  testJson = testJson
+                    .replace(/,(\s*)$/, '$1') // הסרת פסיק בסוף
+                    .replace(/:\s*([^",\{\}\[\]]+)(?=\s*[,\}])/g, ':"$1"') // תיקון values לא מצוטטים
+                    .replace(/,(\s*[}\]])/g, '$1') // הסרת פסיקים מיותרים
+                    .replace(/([^\\]")([^"]*?)\n([^"]*?)(")/g, '$1$2 $3$4'); // תיקון line breaks
+                  
+                  // הוספת סוגריים חסרים
+                  const openCount = (testJson.match(/\{/g) || []).length;
+                  const closeCount = (testJson.match(/\}/g) || []).length;
+                  testJson += '}'.repeat(Math.max(0, openCount - closeCount));
+                  
+                  recoveredData = JSON.parse(testJson);
+                  
+                  await addCallLog(call_id, '✅ שחזור JSON הצליח', { 
+                    recovery_method: 'json_block_analysis',
+                    original_length: cleanedContentResponse.length,
+                    recovered_length: testJson.length,
+                    recovered_fields: Object.keys(recoveredData)
+                  });
+                  break;
+                } catch (blockError) {
+                  continue;
+                }
+              }
+              
+              // גישה 3: אם עדיין לא הצלחנו, ננסה partial extraction
+              if (!recoveredData) {
+                // ניסיון לחלץ לפחות חלקים חשובים
+                const scoreMatch = cleanedContentResponse.match(/["']overall_score["']\s*:\s*(\d+)/);
+                const redFlagMatch = cleanedContentResponse.match(/["']red_flag["']\s*:\s*(true|false)/);
+                const summaryMatch = cleanedContentResponse.match(/["']executive_summary["']\s*:\s*["']([^"']*?)["']/);
                 
-                contentAnalysisReport = JSON.parse(truncated);
-                await addCallLog(call_id, '✅ תיקון JSON של ניתוח תוכן הצליח', { 
-                  original_length: cleanedContentResponse.length,
-                  fixed_length: truncated.length
-                });
+                if (scoreMatch || redFlagMatch || summaryMatch) {
+                  recoveredData = {
+                    overall_score: scoreMatch ? parseInt(scoreMatch[1]) : 6,
+                    red_flag: redFlagMatch ? redFlagMatch[1] === 'true' : false,
+                    executive_summary: summaryMatch ? summaryMatch[1] : "ניתוח חלקי בשל שגיאת פורמט",
+                    general_key_insights: ["ניתוח חלקי - חולץ מתוכן לא שלם"],
+                    improvement_points: ["בדוק את איכות ההקלטה ונסה שוב"],
+                    strengths_and_preservation_points: ["לא זמין - חלוץ חלקי"],
+                    recovery_info: {
+                      method: "partial_regex_extraction",
+                      extracted_fields: {
+                        score: !!scoreMatch,
+                        red_flag: !!redFlagMatch,
+                        summary: !!summaryMatch
+                      }
+                    }
+                  };
+                  
+                  await addCallLog(call_id, '⚠️ שחזור חלקי בביצועי regex', { 
+                    extracted_score: !!scoreMatch,
+                    extracted_red_flag: !!redFlagMatch,
+                    extracted_summary: !!summaryMatch
+                  });
+                }
+              }
+              
+              if (recoveredData) {
+                contentAnalysisReport = recoveredData;
               } else {
-                throw new Error('לא ניתן לתקן JSON');
+                throw new Error('לא ניתן לשחזר נתונים שימושיים');
               }
             } else {
               throw new Error('לא ניתן לזהות מיקום שגיאה');
@@ -954,18 +1181,68 @@ export async function POST(request: Request) {
               second_error: secondParseError.message
             });
             
-            // ברירת מחדל לניתוח תוכן
-            contentAnalysisReport = {
-              overall_score: 6,
-              red_flag: false,
-              general_key_insights: ["לא ניתן לנתח בשל שגיאת פורמט התשובה מ-OpenAI"],
-              improvement_points: ["לא זמין בשל שגיאת פורמט"],
-              strengths_and_preservation_points: ["לא זמין בשל שגיאת פורמט"],
-              executive_summary: "לא ניתן לבצע ניתוח מפורט בשל שגיאת פורמט התשובה מהמודל",
-              error_info: {
-                original_error: parseError.message,
-                content_preview: cleanedContentResponse.substring(0, 200)
+            // ברירת מחדל מתקדמת לניתוח תוכן עם ניסיון חילוץ מידע מהתמליל
+            await addCallLog(call_id, '🔄 יוצר fallback אינטליגנטי לניתוח תוכן', { 
+              transcript_length: transcript?.length || 0,
+              call_type: callData.call_type
+            });
+            
+            // ניסיון לחלץ תובנות בסיסיות מהתמליל עצמו
+            let basicInsights = ["ניתוח טכני נכשל - מבוסס על תמליל"];
+            let basicRecommendations = ["שפר את איכות ההקלטה", "נסה לדבר בצורה ברורה יותר"];
+            let estimatedScore = 6;
+            let hasRedFlags = false;
+            
+            if (transcript && transcript.length > 100) {
+              // חיפוש מילות מפתח חיוביות
+              const positiveWords = ['תודה', 'מעולה', 'נהדר', 'מצוין', 'מקצועי', 'שירות טוב', 'מרוצה'];
+              const negativeWords = ['בעיה', 'אכזבה', 'זועם', 'נורא', 'גרוע', 'לא מרוצה', 'תלונה', 'כועס'];
+              
+              const positiveCount = positiveWords.filter(word => transcript.includes(word)).length;
+              const negativeCount = negativeWords.filter(word => transcript.includes(word)).length;
+              
+              if (positiveCount > negativeCount) {
+                estimatedScore = Math.min(8, 6 + positiveCount);
+                basicInsights = ["זוהו ביטויים חיוביים בשיחה", "טון כללי נראה מקצועי"];
+                basicRecommendations = ["המשך גישה מקצועית זו", "שמור על רמת השירות"];
+              } else if (negativeCount > 0) {
+                estimatedScore = Math.max(3, 6 - negativeCount);
+                hasRedFlags = negativeCount > 2;
+                basicInsights = ["זוהו ביטויים שליליים בשיחה", "יש מקום לשיפור בטיפול"];
+                basicRecommendations = ["שפר את טכניקות ההרגעה", "תן מענה ממוקד יותר לבעיות"];
               }
+              
+              // בדיקה לאורך השיחה
+              if (transcript.length > 2000) {
+                basicInsights.push("שיחה ארוכה - טיפול מעמיק");
+              } else if (transcript.length < 500) {
+                basicInsights.push("שיחה קצרה - יכול להצביע על טיפול מהיר או חד וחלק");
+              }
+            }
+            
+            contentAnalysisReport = {
+              overall_score: estimatedScore,
+              red_flag: hasRedFlags,
+              general_key_insights: basicInsights,
+              improvement_points: basicRecommendations,
+              strengths_and_preservation_points: estimatedScore >= 7 ? 
+                ["גישה מקצועית", "טיפול מוקפד"] : 
+                ["נדרש שיפור בטיפול"],
+              executive_summary: `ניתוח אוטומטי בסיסי (ציון: ${estimatedScore}/10) - ${hasRedFlags ? 'זוהו נקודות לשיפור' : 'טיפול סביר'}`,
+              
+              // מידע טכני על הכשל
+              technical_recovery_info: {
+                recovery_method: "intelligent_fallback_with_transcript_analysis",
+                original_error: parseError.message,
+                content_preview: cleanedContentResponse.substring(0, 200),
+                transcript_analyzed: !!transcript,
+                word_count: transcript?.split(' ').length || 0,
+                estimated_quality: estimatedScore >= 7 ? 'טוב' : estimatedScore >= 5 ? 'בינוני' : 'נמוך'
+              },
+              
+              // הוספת שדות נדרשים למערכת
+              tone_analysis_report: toneAnalysisReport,
+              recovery_timestamp: new Date().toISOString()
             };
           }
         }

@@ -486,7 +486,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     
     // אם הסטטוס הוא completed אבל אין נתונים - נסה לטעון מחדש
     if (status === 'completed' && !hasAnalysisData && !hasCompletedOnce) {
-      console.log('✅ ניתוח השיחה הושלם אבל אין נתונים - טוען מחדש')
+      console.log('✅ ניתוח השיחה הושלם אבל אין נתונים - טוען מחדש לקבלת הניתוח')
       setHasCompletedOnce(true) // מונע לופ
       setDynamicProgress(100)
       setShowSuccessAnimation(true)
@@ -740,8 +740,8 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         key: 'הקשבה_ואינטראקציה',
         subcategories: [
           { name: 'הקשבה פעילה', key: 'הקשבה_פעילה' },
-          { name: 'דיבור מאוזן', key: 'דיבור_מאוזן' },
-          { name: 'זרימה וסדר', key: 'זרימה_וסדר' },
+          { name: 'יחס דיבור - הקשבה', key: 'יחס_דיבור_הקשבה' },
+          { name: 'זרימה ושטף', key: 'זרימה_ושטף' },
           { name: 'הצפת יתר', key: 'הצפת_יתר' }
         ]
       },
@@ -753,7 +753,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           { name: 'תועלות וערכים', key: 'תועלות_וערכים' },
           { name: 'תועלות רגשיות', key: 'תועלות_רגשיות' },
           { name: 'עדויות/הוכחות', key: 'עדויות_הוכחות' },
-          { name: 'יתרון על המחיר', key: 'יתרון_על_המחיר' },
+          { name: 'ערך מעל מחיר', key: 'ערך_מעל_מחיר' },
           { name: 'מומחיות מקצועית', key: 'מומחיות_מקצועית' }
         ]
       },
@@ -761,9 +761,10 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         category: 'טיפול בהתנגדויות',
         key: 'טיפול_בהתנגדויות',
         subcategories: [
-          { name: 'זיהוי אמת/תירוץ', key: 'זיהוי_אמת_תירוץ' },
+          { name: 'זיהוי התנגדות אמיתית/מזויפת', key: 'זיהוי_התנגדות_אמיתית_מזויפת' },
           { name: 'צריך לחשוב', key: 'צריך_לחשוב' },
-          { name: 'יקר לי', key: 'יקר_לי' }
+          { name: 'יקר לי', key: 'יקר_לי' },
+          { name: 'זה לא רלוונטי', key: 'זה_לא_רלוונטי' }
         ]
       },
       {
@@ -776,10 +777,9 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         ]
       },
       {
-        category: 'שפת תקשורת ודינמיקה קולית',
-        key: 'שפת_תקשורת_ודינמיקה_קולית',
+        category: 'שפת תקשורת',
+        key: 'שפת_תקשורת',
         subcategories: [
-          { name: 'אינטונציה', key: 'אינטונציה' },
           { name: 'התלהבות/אנרגיה', key: 'התלהבות_אנרגיה' },
           { name: 'שפה חיובית ונחרצת', key: 'שפה_חיובית_ונחרצת' }
         ]
@@ -790,6 +790,15 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         subcategories: [
           { name: 'סיכום שיחה ברור', key: 'סיכום_שיחה_ברור' },
           { name: 'צידה לדרך', key: 'צידה_לדרך' }
+        ]
+      },
+      {
+        category: 'שלושת הלמה',
+        key: 'שלושת_הלמה',
+        subcategories: [
+          { name: 'למה דווקא המוצר/שירות הזה', key: 'למה_דווקא_המוצר_הזה' },
+          { name: 'למה דווקא עכשיו', key: 'למה_דווקא_עכשיו' },
+          { name: 'למה דווקא מאיתנו', key: 'למה_דווקא_מאיתנו' }
         ]
       }
     ];
@@ -820,7 +829,9 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           name: sub.name,
           score: subData.ציון || subData.score || 0,
           insights: subData.תובנות || subData.הסבר || subData.insights || 'לא זמין',
-          improvements: subData.איך_משפרים || subData.improvements || 'לא זמין'
+          improvements: subData.איך_משפרים || subData.improvements || 'לא זמין',
+          // הוסף את כל הנתונים המקוריים לשימוש בתצוגה
+          rawData: subData
         };
       });
 
@@ -889,10 +900,23 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                                   {score}/10
           </span>
         </td>
-        <td className="px-6 py-4 text-sm text-gray-700">
+        <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
           {insights}
+          
+          {/* תוספת לשדות מיוחדים */}
+          {name === 'פתיח אנרגטי' && param.rawData?.שימוש_בשם_פרטי && (
+            <div className="mt-2 inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">
+              {param.rawData.שימוש_בשם_פרטי === 'כן' ? '✅ השתמש בשם פרטי' : '❌ לא השתמש בשם פרטי'}
+            </div>
+          )}
+          
+          {name === 'הנעה לפעולה' && param.rawData?.שימוש_בטכניקות_סגירה && (
+            <div className="mt-2 inline-flex items-center px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs">
+              {param.rawData.שימוש_בטכניקות_סגירה === 'כן' ? '✅ השתמש בטכניקות סגירה' : '❌ לא השתמש בטכניקות סגירה'}
+            </div>
+          )}
         </td>
-        <td className="px-6 py-4 text-sm text-gray-700">
+        <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
           {improvements}
         </td>
       </tr>
@@ -1540,6 +1564,19 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
                               {param.insights}
+                              
+                              {/* תוספת לשדות מיוחדים */}
+                              {param.name === 'פתיח אנרגטי' && param.rawData?.שימוש_בשם_פרטי && (
+                                <div className="mt-2 inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">
+                                  {param.rawData.שימוש_בשם_פרטי === 'כן' ? '✅ השתמש בשם פרטי' : '❌ לא השתמש בשם פרטי'}
+                                </div>
+                              )}
+                              
+                              {param.name === 'הנעה לפעולה' && param.rawData?.שימוש_בטכניקות_סגירה && (
+                                <div className="mt-2 inline-flex items-center px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs">
+                                  {param.rawData.שימוש_בטכניקות_סגירה === 'כן' ? '✅ השתמש בטכניקות סגירה' : '❌ לא השתמש בטכניקות סגירה'}
+                                </div>
+                              )}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
                               {param.improvements}

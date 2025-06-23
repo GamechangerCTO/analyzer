@@ -6,23 +6,25 @@ import fs from 'fs';
 import path from 'path';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-const promptMappings = {
-  'sales_call': 'sales_call_prompt.md',
+// Map of call types to their prompt files
+const promptFiles: { [key: string]: string } = {
   'appointment_setting': 'appointment_setting_prompt.md',
-  'customer_service': 'customer_service_prompt.md',
-  'follow_up_appointment_setting': 'follow_up_appointment_setting_prompt.md',
-  'follow_up_before_proposal': 'follow_up_before_proposal_prompt.md',
-  'follow_up_after_proposal': 'follow_up_after_proposal_prompt.md'
+  'sales_call': 'sales_call_prompt.md',
+  'follow_up': 'follow_up_prompt.md',
+  'service_call': 'service_call_prompt.md',
+  'onboarding': 'onboarding_prompt.md',
+  'renewal': 'renewal_prompt.md',
+  'follow_up_after_offer': 'follow_up_after_proposal_prompt.md'
 };
 
 async function updatePrompts() {
   console.log('עידכון פרומפטים במסד הנתונים...');
   
-  for (const [callType, fileName] of Object.entries(promptMappings)) {
+  for (const [callType, fileName] of Object.entries(promptFiles)) {
     try {
       const filePath = path.join(process.cwd(), 'memory-bank', 'prompts', fileName);
       const content = fs.readFileSync(filePath, 'utf-8');

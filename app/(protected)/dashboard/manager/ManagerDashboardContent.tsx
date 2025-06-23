@@ -181,93 +181,134 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
 
   return (
     <div className="space-y-8">
-      {/* כותרת ברוכים הבאים */}
-      <div className="replayme-card p-8 bg-gradient-to-l from-indigo-night to-indigo-night/80 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <div className="w-20 h-20 bg-lemon-mint/20 rounded-2xl flex items-center justify-center">
-              <Users className="w-10 h-10 text-lemon-mint" />
+      {/* כותרת עליונה עם פרטי המנהל והחברה */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 mb-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-4 lg:mb-0">
+              <h1 className="text-3xl font-bold mb-2">דשבורד מנהל</h1>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-semibold">{managerInfo?.full_name || 'לא זמין'}</p>
+                    <p className="text-blue-100 text-sm">{managerInfo?.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <Building2 className="w-6 h-6" />
+                  </div>
+                  <p className="font-medium">ניהול צוות החברה</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <h1 className="text-display text-3xl font-bold mb-2">
-                ברוך הבא, {managerInfo?.full_name || 'מנהל'} 👋
-              </h1>
-              <p className="text-white/80 text-lg">
-                הנה המצב העדכני של הצוות שלך
-              </p>
-            </div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-2xl font-mono font-bold text-lemon-mint mb-1">
-              {new Date().toLocaleDateString('he-IL')}
-            </div>
-            <div className="text-white/60 text-sm">
-              {new Date().toLocaleDateString('he-IL', { weekday: 'long' })}
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/upload" className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2 font-semibold">
+                <Upload className="w-5 h-5" />
+                <span>העלאת שיחה</span>
+              </Link>
+              <Link href="/team" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-400 transition-colors flex items-center gap-2 font-semibold">
+                <Users className="w-5 h-5" />
+                <span>ניהול צוות</span>
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
-      {/* סטטיסטיקות עיקריות */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="replayme-card p-6 border-r-4 border-lemon-mint">
+      {/* סטטיסטיקות מרכזיות */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* סה"כ נציגים */}
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-indigo-night/60 text-sm font-medium mb-1">סה"כ נציגים</p>
-              <p className="text-3xl font-bold text-indigo-night animate-score-bounce">{stats.totalAgents}</p>
-              <p className="text-lemon-mint-dark text-sm font-medium mt-1">פעילים במערכת</p>
+              <p className="text-gray-600 text-sm font-medium">נציגים פעילים</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {stats.totalAgents}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">בצוות שלך</p>
             </div>
-            <div className="w-12 h-12 bg-lemon-mint/20 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-lemon-mint-dark" />
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="replayme-card p-6 border-r-4 border-electric-coral">
+        {/* סה"כ שיחות */}
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-indigo-night/60 text-sm font-medium mb-1">סה"כ שיחות</p>
-              <p className="text-3xl font-bold text-indigo-night animate-score-bounce">{stats.totalCalls}</p>
-              <p className="text-electric-coral text-sm font-medium mt-1">נותחו ונבדקו</p>
+              <p className="text-gray-600 text-sm font-medium">סה"כ שיחות</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {stats.totalCalls}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">של כל הצוות</p>
             </div>
-            <div className="w-12 h-12 bg-electric-coral/20 rounded-xl flex items-center justify-center">
-              <Phone className="w-6 h-6 text-electric-coral" />
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+              <Phone className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className="replayme-card p-6 border-r-4 border-success">
+        {/* ציון ממוצע */}
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-indigo-night/60 text-sm font-medium mb-1">ציון ממוצע</p>
-              <p className={`text-3xl font-bold animate-score-bounce ${
-                stats.avgScore >= 8 ? 'score-high' : 
-                stats.avgScore >= 6 ? 'score-medium' : 'score-low'
+              <p className="text-gray-600 text-sm font-medium">ציון ממוצע</p>
+              <p className={`text-3xl font-bold mt-2 ${
+                stats.avgScore >= 8.5 ? 'text-green-600' : 
+                stats.avgScore >= 7 ? 'text-yellow-600' : 'text-red-600'
               }`}>
-                {stats.avgScore.toFixed(1)}
+                {stats.avgScore > 0 ? stats.avgScore.toFixed(1) : '-'}
               </p>
-              <p className="text-success text-sm font-medium mt-1">מתוך 10</p>
+              <p className="text-xs text-gray-500 mt-1">מתוך 10</p>
             </div>
-            <div className="w-12 h-12 bg-success/20 rounded-xl flex items-center justify-center">
-              <Star className="w-6 h-6 text-success" />
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+              stats.avgScore >= 8.5 ? 'bg-green-100' : 
+              stats.avgScore >= 7 ? 'bg-yellow-100' : 'bg-red-100'
+            }`}>
+              <TrendingUp className={`w-6 h-6 ${
+                stats.avgScore >= 8.5 ? 'text-green-600' : 
+                stats.avgScore >= 7 ? 'text-yellow-600' : 'text-red-600'
+              }`} />
             </div>
           </div>
         </div>
 
-        <div className="replayme-card p-6 border-r-4 border-warning">
+        {/* שיחות מוצלחות */}
+        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-indigo-night/60 text-sm font-medium mb-1">שיחות ממתינות</p>
-              <p className="text-3xl font-bold text-indigo-night animate-score-bounce">{stats.pendingCalls}</p>
-              <p className="text-warning text-sm font-medium mt-1">לעיבוד</p>
+              <p className="text-gray-600 text-sm font-medium">שיחות מוצלחות</p>
+              <p className="text-3xl font-bold text-green-600 mt-2">
+                {stats.successfulCalls}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">ציון מעל 8.0</p>
             </div>
-            <div className="w-12 h-12 bg-warning/20 rounded-xl flex items-center justify-center">
-              <Clock className="w-6 h-6 text-warning" />
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+              <Award className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
       </div>
+
+      {/* שיחות בתהליך */}
+      {stats.pendingCalls > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-8">
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-yellow-600" />
+            <p className="text-yellow-800 font-medium">
+              {stats.pendingCalls} שיחות בתהליך עיבוד
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* תצוגת ביצועי נציגים מובילים */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
