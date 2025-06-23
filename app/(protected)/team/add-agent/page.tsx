@@ -15,7 +15,7 @@ export default async function AddAgentPage() {
     redirect('/login')
   }
   
-  // בדיקה שהמשתמש הוא מנהל או בעל חברה
+  // בדיקה שהמשתמש הוא מנהל
   const { data: userData, error: userError } = await supabase
     .from('users')
     .select('id, role, company_id, full_name')
@@ -26,7 +26,7 @@ export default async function AddAgentPage() {
     notFound()
   }
   
-  if (userData.role !== 'manager' && userData.role !== 'owner') {
+  if (userData.role !== 'manager') {
     redirect('/dashboard')
   }
   

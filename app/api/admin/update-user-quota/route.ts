@@ -109,7 +109,7 @@ async function createCompanyNotification(
       .from('users')
       .select('id')
       .eq('company_id', data.companyId)
-      .in('role', ['manager', 'owner'])
+      .eq('role', 'manager')
 
     if (managers && managers.length > 0) {
       // יצירת התראה לכל מנהל בחברה

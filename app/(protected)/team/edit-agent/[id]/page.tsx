@@ -20,7 +20,7 @@ export default async function EditAgentPage({ params }: EditAgentPageProps) {
     redirect('/login')
   }
   
-  // בדיקה שהמשתמש הוא מנהל או בעל חברה
+  // בדיקה שהמשתמש הוא מנהל
   const { data: userData, error: userError } = await supabase
     .from('users')
     .select('id, role, company_id')
@@ -31,7 +31,7 @@ export default async function EditAgentPage({ params }: EditAgentPageProps) {
     notFound()
   }
   
-  if (userData.role !== 'manager' && userData.role !== 'owner') {
+  if (userData.role !== 'manager') {
     redirect('/dashboard')
   }
 
@@ -82,8 +82,7 @@ export default async function EditAgentPage({ params }: EditAgentPageProps) {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">תפקיד</label>
               <p className="text-gray-900 bg-gray-50 p-2 rounded">
-                {agentData.role === 'owner' ? 'בעל חברה' : 
-                 agentData.role === 'manager' ? 'מנהל' : 
+                {agentData.role === 'manager' ? 'מנהל' : 
                  agentData.role === 'agent' ? 'נציג' : 
                  agentData.role}
               </p>

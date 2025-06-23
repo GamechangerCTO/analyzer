@@ -44,11 +44,11 @@ export default async function CallPage({ params }: CallPageProps) {
   }
   
   // בדיקת הרשאות - רק המשתמש שהעלה את השיחה או משתמש מאותה חברה עם תפקיד מנהל יכול לצפות
-  const isOwner = callData.user_id === user.id
-  const isManager = userData?.role === 'manager' || userData?.role === 'owner'
+  const isCallOwner = callData.user_id === user.id
+  const isManager = userData?.role === 'manager'
   const isSameCompany = userData?.company_id === callData.company_id
   
-  if (!isOwner && !(isManager && isSameCompany)) {
+  if (!isCallOwner && !(isManager && isSameCompany)) {
     redirect('/dashboard')
   }
   

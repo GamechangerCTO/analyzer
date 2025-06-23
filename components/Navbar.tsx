@@ -155,7 +155,7 @@ export default function Navbar({ user, userData }: NavbarProps) {
             )}
             
             {/* תפריט לניהול צוות (למנהלים ובעלי חברות) */}
-            {(userData.role === 'owner' || userData.role === 'manager') && (
+            {userData.role === 'manager' && (
               <Link 
                 href="/team" 
                 className={`${isActive('/team')}`}
@@ -255,7 +255,7 @@ export default function Navbar({ user, userData }: NavbarProps) {
               </Link>
             )}
             
-            {(userData.role === 'owner' || userData.role === 'manager') && (
+            {userData.role === 'manager' && (
               <Link
                 href="/team"
                 className={`block px-3 py-2 rounded-md text-base font-medium ${isActive('/team')}`}

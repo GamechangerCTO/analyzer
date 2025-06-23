@@ -90,7 +90,7 @@ export default function DashboardPage() {
           if (userDataById.role === 'admin') {
             router.push('/dashboard/admin')
             return
-          } else if (userDataById.role === 'manager' || userDataById.role === 'owner') {
+          } else if (userDataById.role === 'manager') {
             router.push('/dashboard/manager')
           } else if (userDataById.role === 'agent') {
             router.push('/dashboard/agent')
@@ -115,7 +115,7 @@ export default function DashboardPage() {
         if (userData.role === 'admin') {
           router.push('/dashboard/admin')
           return
-        } else if (userData.role === 'manager' || userData.role === 'owner') {
+        } else if (userData.role === 'manager') {
           router.push('/dashboard/manager')
         } else if (userData.role === 'agent') {
           router.push('/dashboard/agent')

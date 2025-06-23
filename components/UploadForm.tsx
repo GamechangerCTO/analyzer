@@ -149,7 +149,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     const fetchAgents = async () => {
       const freshSupabase = createClient();
       
-      if (userData?.role === 'manager' || userData?.role === 'owner') {
+      if (userData?.role === 'manager') {
         if (userData?.companies?.id) {
           const { data, error } = await freshSupabase
             .from('users')
@@ -632,7 +632,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     }
   };
 
-  const isManager = userData?.role === 'manager' || userData?.role === 'owner';
+  const isManager = userData?.role === 'manager';
   
   return (
     <div className="space-y-8">

@@ -251,7 +251,7 @@ export default function LoginForm() {
               if (userData.role === 'admin') { // This case should ideally not be hit if not super admin email
                 console.log('[DEBUG] Redirecting to /dashboard')
                 window.location.href = '/dashboard'; // שימוש ב-window.location במקום router
-              } else if (userData.role === 'manager' || userData.role === 'owner') {
+              } else if (userData.role === 'manager') {
                 console.log('[DEBUG] Redirecting to /dashboard/manager')
                 window.location.href = '/dashboard/manager'; // שימוש ב-window.location במקום router
               } else { // agent

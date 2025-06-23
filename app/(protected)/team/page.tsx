@@ -25,7 +25,7 @@ export default async function TeamPage() {
     notFound()
   }
   
-  if (userData.role !== 'manager' && userData.role !== 'owner') {
+  if (userData.role !== 'manager') {
     redirect('/dashboard')
   }
   

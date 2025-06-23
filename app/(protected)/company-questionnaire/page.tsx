@@ -23,7 +23,7 @@ export default async function CompanyQuestionnairePage() {
     redirect('/login')
   }
 
-  // בדיקה שהמשתמש הוא מנהל של החברה
+  // בדיקה שהמשתמש הוא מנהל
   if (user.role !== 'manager' && user.role !== 'admin') {
     redirect('/dashboard')
   }

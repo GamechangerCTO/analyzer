@@ -34,8 +34,8 @@ interface Company {
   name: string;
 }
 
-const AVAILABLE_ROLES_FOR_ASSIGNMENT: Array<User['role']> = ['agent', 'manager', 'owner'];
-const AVAILABLE_ROLES_FOR_FILTER: Array<User['role']> = ['agent', 'manager', 'owner', 'admin'];
+const AVAILABLE_ROLES_FOR_ASSIGNMENT: Array<User['role']> = ['agent', 'manager'];
+const AVAILABLE_ROLES_FOR_FILTER: Array<User['role']> = ['agent', 'manager', 'admin'];
 
 export default function AdminUsersPage() {
   const router = useRouter()

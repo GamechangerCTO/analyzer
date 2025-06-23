@@ -43,8 +43,8 @@ export default function ManagerDashboardPage() {
           return
         }
 
-        // בדיקת הרשאות - מאפשר גם למנהל וגם לבעלי חברה
-        if (userData.role !== 'manager' && userData.role !== 'owner' && userData.role !== 'admin') {
+        // בדיקת הרשאות - מאפשר רק למנהל
+        if (userData.role !== 'manager' && userData.role !== 'admin') {
           router.push('/dashboard/agent')
           return
         }

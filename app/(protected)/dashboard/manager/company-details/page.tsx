@@ -24,7 +24,7 @@ export default async function CompanyDetailsPage() {
   }
 
   // בדיקה שהמשתמש הוא מנהל
-  if (user.role !== 'manager' && user.role !== 'owner') {
+  if (user.role !== 'manager') {
     redirect('/dashboard')
   }
 

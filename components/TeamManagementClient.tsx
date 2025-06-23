@@ -248,8 +248,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'owner': return Crown
-      case 'manager': return Shield
+      case 'manager': return Crown
       case 'agent': return Users
       default: return Users
     }
@@ -257,7 +256,6 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
 
   const getRoleText = (role: string) => {
     switch (role) {
-      case 'owner': return 'בעלים'
       case 'manager': return 'מנהל'
       case 'agent': return 'נציג'
       default: return 'לא ידוע'

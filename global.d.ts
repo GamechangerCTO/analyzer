@@ -9,7 +9,7 @@ declare global {
     }
   }
   
-  type UserRole = 'owner' | 'manager' | 'agent';
+  type UserRole = 'manager' | 'agent';
   
   interface UserDetails {
     id: string;

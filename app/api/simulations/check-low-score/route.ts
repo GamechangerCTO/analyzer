@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
             .from('users')
             .select('id, email, full_name')
             .eq('company_id', call.company_id)
-            .in('role', ['manager', 'owner'])
+            .eq('role', 'manager')
 
           if (managers && managers.length > 0) {
             // יצירת התראות למנהלים
