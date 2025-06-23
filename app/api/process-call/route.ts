@@ -64,16 +64,22 @@ function cleanOpenAIResponse(content: string): string {
     return '{}';
   }
   
-  // שלב 3: תיקון בעיות נפוצות לפני parsing
+  // שלב 3: תיקונים מיוחדים לבעיות שזוהו
   cleaned = cleaned
-    // תיקון של objects keys שלא מצוטטים
+    // תיקון של objects keys שלא מצוטטים (כולל עברית)
     .replace(/([{,]\s*)([a-zA-Zא-ת_][a-zA-Zא-ת0-9_]*)\s*:/g, '$1"$2":')
-    // תיקון של values בוליאניים ומספריים לא מצוטטים (רק אם הם אמיתיים)
+    // תיקון של values בוליאניים ומספריים לא מצוטטים
     .replace(/:\s*(true|false|null|\d+\.?\d*)\s*([,}])/g, ':$1$2')
-    // הסרת אותיות בודדות שלא שייכות לstring
-    .replace(/([^"\\])\\([^"\\nrt/])/g, '$1$2')
-    // תיקון newlines בתוך strings
-    .replace(/("([^"\\]|\\.)*?)\n(([^"\\]|\\.)*?")/g, '$1 $3');
+    // תיקון של strings שנקטעו ללא מרכאות סוגרות
+    .replace(/:\s*"([^"]*?)(?=\s*[,}])/g, ':"$1"')
+    // תיקון מיוחד לstring שמתחיל ב-" אבל לא מסתיים ב-"
+    .replace(/:\s*"([^"]*?)(\s*[,}])/g, ':"$1"$2')
+    // תיקון newlines שפוגעים ב-JSON
+    .replace(/("([^"\\]|\\.)*?)\n(([^"\\]|\\.)*?")/g, '$1 $3')
+    // תיקון של מקרה ספציפי כמו בדוגמה שלך - string שלא נסגר
+    .replace(/:\s*"([^"]*?)\s*(\{|\}|$)/g, ':"$1"$2')
+    // תיקון מקרה נוסף - value שמתחיל כ-string אבל לא מסתיים
+    .replace(/:\s*([^",}\s]+?)(\s*[,}])/g, ':"$1"$2');
   
   // שלב 4: אלגוריתם מתקדם לאיזון סוגריים עם context tracking
   let braceCount = 0;
@@ -119,24 +125,36 @@ function cleanOpenAIResponse(content: string): string {
     }
   }
   
-  // שלב 5: חיתוך לJSON תקין או תיקון
+  // שלב 5: חיתוך לJSON תקין או תיקון מתקדם
   if (lastValidEnd !== -1) {
     cleaned = cleaned.substring(0, lastValidEnd + 1);
   } else {
-    // אם לא מצאנו סוף תקין, נסה לתקן באופן חכם
+    // תיקון חכם יותר אם לא מצאנו סוף תקין
     const openBraces = (cleaned.match(/\{/g) || []).length;
     const closeBraces = (cleaned.match(/\}/g) || []).length;
     const missingBraces = openBraces - closeBraces;
     
-    if (missingBraces > 0 && missingBraces < 10) { // מגבלה סבירה
-      // בדוק אם אנחנו באמצע string וסגור אותו
-      const lastQuote = cleaned.lastIndexOf('"');
-      const beforeLastQuote = cleaned.substring(0, lastQuote).split('"').length;
+    if (missingBraces > 0 && missingBraces < 10) {
+      // בדיקה מתקדמת יותר לstring פתוח
+      const quotes = cleaned.match(/"/g) || [];
+      let inStringMode = false;
+      let quotePairs = 0;
       
-      if (beforeLastQuote % 2 === 1) { // מספר אי-זוגי של quotes = באמצע string
+      for (let i = 0; i < quotes.length; i++) {
+        // בדוק אם הcite הזה escaped
+        const quoteIndex = cleaned.indexOf(quotes[i]);
+        if (quoteIndex === 0 || cleaned[quoteIndex - 1] !== '\\') {
+          inStringMode = !inStringMode;
+          if (!inStringMode) quotePairs++;
+        }
+      }
+      
+      // אם יש string פתוח, סגור אותו
+      if (inStringMode) {
         cleaned += '"';
       }
       
+      // הוסף את הסוגריים החסרים
       cleaned += '}'.repeat(missingBraces);
     }
   }
@@ -147,43 +165,69 @@ function cleanOpenAIResponse(content: string): string {
     console.log(`✅ JSON תקין אחרי ניקוי`, { cleaned_length: cleaned.length });
     return cleaned;
   } catch (parseError: any) {
-    console.warn(`⚠️ JSON לא תקין אחרי ניקוי, מנסה תיקונים`, { 
+    console.warn(`⚠️ JSON לא תקין אחרי ניקוי, מנסה תיקונים מתקדמים`, { 
       error: parseError.message,
       position: parseError.message.match(/position (\d+)/)?.[1] 
     });
     
-    // שלב 7: תיקונים מתקדמים יותר
+    // שלב 7: תיקונים מתקדמים יותר בהתבסס על השגיאה הספציפית
     try {
-      let fixed = cleaned
-        // הסרת פסיקים מיותרים לפני סוגריים
-        .replace(/,(\s*[}\]])/g, '$1')
-        // תיקון double quotes בתוך values
-        .replace(/:\s*"([^"]*)"([^"]*)"([^",}]*)/g, ':"$1$2$3"')
-        // תיקון escaped quotes כפולים
-        .replace(/\\\\"/g, '\\"')
-        .replace(/\\n/g, ' ')
-        .replace(/\\r/g, ' ')
-        .replace(/\\t/g, ' ')
-        // תיקון strings שמסתיימים פתאום
-        .replace(/:\s*"([^"]*?)$/, ':"$1"');
+      let fixed = cleaned;
       
-      // תיקון אחרון - אם JSON לא מסתיים בצורה תקינה
+      // תיקון מיוחד לShגיאה בדוגמה שלך
+      const errorPos = parseError.message.match(/position (\d+)/)?.[1];
+      if (errorPos) {
+        const pos = parseInt(errorPos);
+        const problematicChar = cleaned[pos];
+        const before = cleaned.substring(0, pos);
+        const after = cleaned.substring(pos + 1);
+        
+        console.log(`🔍 בודק תו בעייתי במיקום ${pos}:`, { 
+          char: problematicChar, 
+          char_code: problematicChar?.charCodeAt(0),
+          before_preview: before.slice(-20),
+          after_preview: after.slice(0, 20)
+        });
+        
+        // תיקונים ספציפיים למיקום השגיאה
+        if (problematicChar && problematicChar.match(/[א-ת]/)) {
+          // אם התו בעייתי הוא עברית ללא מרכאות
+          fixed = before + '"' + problematicChar + after;
+        } else if (before.endsWith('"') && !after.startsWith('"')) {
+          // מקרה של string שלא נסגר
+          fixed = before + after.replace(/^[^",:}]*/, '') || before + '"}';
+        }
+      }
+      
+      // תיקונים כלליים נוספים
+      fixed = fixed
+        .replace(/,(\s*[}\]])/g, '$1') // הסרת פסיקים מיותרים
+        .replace(/:\s*"([^"]*)"([^"]*)"([^",}]*)/g, ':"$1$2$3"') // תיקון double quotes
+        .replace(/\\\\"/g, '\\"') // תיקון escaped quotes כפולים
+        .replace(/\\n/g, ' ').replace(/\\r/g, ' ').replace(/\\t/g, ' ') // ניקוי whitespace
+        .replace(/:\s*"([^"]*?)$/, ':"$1"') // strings שמסתיימים פתאום
+        .replace(/,\s*}/g, '}'); // פסיק לפני סגירת object
+      
+      // תיקון אחרון מתקדם
       if (!fixed.endsWith('}') && fixed.includes('{')) {
-        // בדוק אם יש string פתוח
         const quotes = (fixed.match(/"/g) || []).length;
         if (quotes % 2 === 1) {
           fixed += '"';
         }
-        fixed += '}';
+        
+        // הוסף סוגריים חסרים
+        const openCount = (fixed.match(/\{/g) || []).length;
+        const closeCount = (fixed.match(/\}/g) || []).length;
+        fixed += '}'.repeat(Math.max(0, openCount - closeCount));
       }
       
       JSON.parse(fixed);
-      console.log(`✅ JSON תוקן בהצלחה`);
+      console.log(`✅ JSON תוקן בהצלחה במעבר שני`);
       return fixed;
     } catch (secondError: any) {
-      console.error(`❌ כשל בתיקון JSON`, { 
+      console.error(`❌ כשל בתיקון JSON מתקדם`, { 
         error: secondError.message,
-        preview: cleaned.substring(0, 200) 
+        preview: cleaned.substring(0, 300) 
       });
       
       // שלב 8: ניסיון חילוץ partial JSON מתקדם
@@ -192,42 +236,63 @@ function cleanOpenAIResponse(content: string): string {
         const position = parseInt(errorPosition);
         let truncatedContent = cleaned.substring(0, position);
         
-        // נסה למצוא נקודת חיתוך טובה יותר
+        // חיפוש נקודת חיתוך חכמה יותר
         const lastComma = truncatedContent.lastIndexOf(',');
         const lastColon = truncatedContent.lastIndexOf(':');
+        const lastQuote = truncatedContent.lastIndexOf('"');
         
-        if (lastComma > lastColon) {
-          // אם הפסיק האחרון אחרי הנקודותיים האחרונות, חתוך שם
-          truncatedContent = truncatedContent.substring(0, lastComma);
+        // בחר את הנקודה הטובה ביותר לחיתוך
+        let cutPoint = position;
+        if (lastComma > lastColon && lastComma > lastQuote - 50) {
+          cutPoint = lastComma;
+        } else if (lastQuote > 0 && position - lastQuote < 50) {
+          cutPoint = lastQuote + 1;
         }
         
+        truncatedContent = cleaned.substring(0, cutPoint);
+        
         try {
-          // נסה לחלץ JSON חלקי
-          const partialJson = truncatedContent + '}';
+          // ניסיון חילוץ JSON חלקי מתקדם יותר
+          let partialJson = truncatedContent;
+          
+          // ודא שאנחנו מסיימים בצורה תקינה
+          if (!partialJson.endsWith('"') && !partialJson.endsWith('}')) {
+            if (partialJson.includes(':') && !partialJson.includes('"', partialJson.lastIndexOf(':'))) {
+              partialJson += '"';
+            }
+          }
+          
+          partialJson += '}';
           const result = JSON.parse(partialJson);
-          console.log(`⚠️ חולץ JSON חלקי בהצלחה`);
+          console.log(`⚠️ חולץ JSON חלקי בהצלחה עם ${Object.keys(result).length} שדות`);
           return partialJson;
-        } catch {
-          // אם גם זה נכשל, נחזיר fallback אינטליגנטי
+                 } catch (partialError: any) {
+           console.warn(`❌ גם חילוץ חלקי נכשל:`, partialError.message);
         }
       }
       
-      // שלב 9: fallback אינטליגנטי מתקדם על פי סוג הניתוח
+      // שלב 9: fallback אינטליגנטי מתקדם
       const intelligentFallback = {
-        error: "Failed to parse OpenAI response",
-        recovered_data: "Attempting intelligent recovery...",
+        error: "Failed to parse OpenAI response after advanced recovery attempts",
+        recovered_data: "Multiple parsing strategies failed",
         red_flags: [],
-        recommendations: ["בדוק את התמלול ונסה שוב", "יתכן שהתשובה חתוכה או פגומה", "נסה להקליט שוב באיכות גבוהה יותר"],
+        recommendations: [
+          "בדוק את התמלול ונסה שוב", 
+          "יתכן שהתשובה חתוכה או פגומה", 
+          "נסה להקליט שוב באיכות גבוהה יותר",
+          "בדוק חיבור לאינטרנט יציב"
+        ],
         original_content_preview: content.substring(0, 300),
-        parsing_attempts: {
-          basic_cleaning: true,
-          advanced_fixing: true,
-          partial_extraction: true,
-          final_fallback: true
+        parsing_debug: {
+          original_length: content.length,
+          cleaned_length: cleaned.length,
+          error_position: parseError.message.match(/position (\d+)/)?.[1],
+          error_details: parseError.message,
+          recovery_attempts: ["basic_cleaning", "advanced_fixing", "position_based_truncation", "intelligent_fallback"]
         }
       };
       
-      console.log(`🔄 משתמש ב-fallback אינטליגנטי מתקדם`);
+      console.log(`🔄 משתמש ב-fallback אינטליגנטי מתקדם עם debug מפורט`);
       return JSON.stringify(intelligentFallback);
     }
   }
@@ -670,7 +735,10 @@ export async function POST(request: Request) {
         cleaned_length: cleanedToneContent.length,
         is_valid_json_start: cleanedToneContent.trim().startsWith('{'),
         cleaned_preview: cleanedToneContent.substring(0, 200),
-        cleaning_success: rawToneContent !== cleanedToneContent
+        cleaning_success: rawToneContent !== cleanedToneContent,
+        quote_count: (cleanedToneContent.match(/"/g) || []).length,
+        ends_with_quote: cleanedToneContent.trim().endsWith('"'),
+        ends_with_brace: cleanedToneContent.trim().endsWith('}')
       });
       
       let toneAnalysisReport;
@@ -1073,7 +1141,11 @@ export async function POST(request: Request) {
           is_valid_json_start: cleanedContentResponse.trim().startsWith('{'),
           cleaned_preview: cleanedContentResponse.substring(0, 300),
           cleaning_success: rawContentResponse !== cleanedContentResponse,
-          length_difference: rawContentResponse.length - cleanedContentResponse.length
+          length_difference: rawContentResponse.length - cleanedContentResponse.length,
+          quote_count: (cleanedContentResponse.match(/"/g) || []).length,
+          quote_balanced: (cleanedContentResponse.match(/"/g) || []).length % 2 === 0,
+          ends_with_quote: cleanedContentResponse.trim().endsWith('"'),
+          ends_with_brace: cleanedContentResponse.trim().endsWith('}')
         });
         
         let contentAnalysisReport;

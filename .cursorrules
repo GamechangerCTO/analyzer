@@ -74,11 +74,29 @@ try {
   const result = JSON.parse(cleanedContent);
   return result;
 } catch (parseError: any) {
+  // לוג מפורט של השגיאה
+  await addCallLog(call_id, '❌ שגיאה בניתוח JSON', {
+    error: parseError.message,
+    error_position: parseError.message.match(/position (\d+)/)?.[1],
+    content_preview: cleanedContent.substring(0, 500),
+    quote_count: (cleanedContent.match(/"/g) || []).length,
+    quote_balanced: (cleanedContent.match(/"/g) || []).length % 2 === 0
+  });
+  
   // נסה לחלץ חלק תקין
   const errorPosition = parseError.message.match(/position (\d+)/)?.[1];
   if (errorPosition) {
     const position = parseInt(errorPosition);
-    const truncatedContent = cleanedContent.substring(0, position);
+    let truncatedContent = cleanedContent.substring(0, position);
+    
+    // בדיקות מתקדמות לחיתוך נכון
+    const lastComma = truncatedContent.lastIndexOf(',');
+    const lastQuote = truncatedContent.lastIndexOf('"');
+    
+    if (lastComma > lastQuote - 50) {
+      truncatedContent = truncatedContent.substring(0, lastComma);
+    }
+    
     try {
       const partialResult = JSON.parse(truncatedContent + '}');
       return partialResult;
@@ -226,12 +244,13 @@ await addCallLog(call_id, 'סטטוס', {
 ### ⚠️ דברים חשובים לזכור
 
 1. **אל תשכח cleanOpenAIResponse!** - חובה לפני כל JSON.parse של OpenAI
-2. **תמיד בדוק המרת אודיו** - needsConversion() לפני עיבוד
-3. **כלול fallbacks אינטליגנטיים** - לא רק {} ריק
-4. **לוג הכול** - שגיאות, התקדמות, ושחזור
-5. **בדוק מכסות** - לפני יצירת משתמשים חדשים
-6. **RLS תמיד מופעל** - לכל טבלה חדשה
-7. **הודעות למשתמש** - תמיד עדכן על מצב התהליך
+2. **שגיאות JSON נפוצות** - strings לא סגורים, מרכאות לא מאוזנות, תווים עבריים ללא מרכאות
+3. **תמיד בדוק המרת אודיו** - needsConversion() לפני עיבוד
+4. **כלול fallbacks אינטליגנטיים** - לא רק {} ריק
+5. **לוג הכול בפירוט** - שגיאות עם position, מספר מרכאות, content preview
+6. **בדוק מכסות** - לפני יצירת משתמשים חדשים
+7. **RLS תמיד מופעל** - לכל טבלה חדשה
+8. **הודעות למשתמש** - תמיד עדכן על מצב התהליך
 
 ### 🚀 דפוסי ביצועים
 
