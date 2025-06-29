@@ -44,115 +44,29 @@ const openai = new OpenAI({
 function cleanOpenAIResponse(content: string): string {
   if (!content) return '{}';
   
-  console.log(`🧹 מנקה תגובת OpenAI`, { original_length: content.length });
+  console.log(`🧹 מנקה תגובת OpenAI (גרסה פשוטה ויציבה)`, { original_length: content.length });
   
-  // שלב 1: ניקוי בסיסי מתקדם
+  // שלב 1: ניקוי בסיסי
   let cleaned = content
     .replace(/```(?:json|JSON)?\s*/g, '') // הסרת code blocks
     .replace(/```\s*$/g, '')
     .replace(/^`+|`+$/g, '') // הסרת backticks
-    .replace(/^\s*[\r\n]+/g, '') // הסרת line breaks בתחילת
-    .replace(/[\r\n]+\s*$/g, '') // הסרת line breaks בסוף
     .trim();
   
-  // שלב 2: חיפוש JSON boundaries מתקדם
+  // שלב 2: חיפוש JSON boundaries
   const jsonStart = cleaned.indexOf('{');
   if (jsonStart !== -1) {
     cleaned = cleaned.substring(jsonStart);
+  } else {
+    console.error('❌ לא נמצא תחילת JSON valid');
+    return '{}';
   }
   
-    // שלב 3.5: תיקון מרכאות לא מאוזנות בתוך ערכים (קריטי!) - עדכון סופר חזק!
-  
-  // 🆕 תיקון קריטי למקרה הספציפי: "key":"value text "another_key":
-  // Pattern: "טון_כללי": "שיחה ישירה ועניינית עם נטייה לאגרסיביות קלה "רמת_אנרגיה":
-  cleaned = cleaned.replace(/("[\u0590-\u05FFa-zA-Z_]+"\s*:\s*"[^"]*)\s*"([\u0590-\u05FFa-zA-Z_]+"\s*:\s*)/g, (match, p1, p2) => {
-    console.log(`🔧 תיקון קריטי: ${match} -> ${p1}", "${p2}`);
-    return `${p1}", "${p2}`;
-  });
-  
-  // 🆕 תיקון מרכאות שנסגרות באמצע מילה עברית
-  // Pattern: "key":"value למכירה "next -> "key":"value למכירה", "next":
-  cleaned = cleaned.replace(/("[\u0590-\u05FFa-zA-Z_]+"\s*:\s*"[^"]*[\u0590-\u05FF]+)\s*"([\u0590-\u05FFa-zA-Z_]+)/g, (match, p1, p2) => {
-    console.log(`🔧 תיקון מרכאות באמצע: ${match} -> ${p1}", "${p2}`);
-    return `${p1}", "${p2}`;
-  });
-  
-  // 🆕 תיקון ספציפי רק למקרים בעייתיים (לא לכל מפתח!)
-  // Pattern: ללא מרכאה סוגרת + רווח + מרכאה פותחת למפתח חדש
-  // מחפש דווקא: "value text "key": כאשר אין מרכאה סוגרת לפני המפתח החדש
-  cleaned = cleaned.replace(/("[\u0590-\u05FFa-zA-Z_]+"\s*:\s*"[^"]*[\u0590-\u05FF]+)\s+"([\u0590-\u05FFa-zA-Z_]+"\s*:\s*")/g, (match, p1, p2) => {
-    console.log(`🔧 תיקון ספציפי: ${match} -> ${p1}", "${p2}`);
-    return `${p1}", "${p2}`;
-  });
-  
-  // 🆕 תיקון מתקדם למרכאות שנסגרות באמצע ערכים עבריים
-  // Pattern: "תובנות":"הפתיחה הייתה עניינית "איך_משפרים": -> "תובנות":"הפתיחה הייתה עניינית", "איך_משפרים":
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*[\u0590-\u05FF][^"]*)\s+"([\u0590-\u05FF\w_]+"\s*:\s*)/g, (match, p1, p2) => {
-    return `${p1}", "${p2}`;
-  });
-  
-  // 🆕 תיקון חזק יותר - מפתח עברי שמופיע ללא מרכאה פותחת
-  // Pattern: "תובנות":"טקסט במיוחד "איך_משפרים": -> "תובנות":"טקסט במיוחד", "איך_משפרים":
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*)\s+([\u0590-\u05FF][א-ת\w_]*"\s*:\s*)/g, (match, p1, p2) => {
-    return `${p1}", "${p2}`;
-  });
-  
-  // תיקון מיוחד לבעיה שזוהתה - מפתח שמופיע ללא פסיק אחרי ערך
-  // Pattern: "תובנות":"טקסט" איך_משפרים": -> "תובנות":"טקסט", "איך_משפרים":
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([א-ת\w_]+"\s*:)/g, (match, p1, p2) => {
-    return `${p1}, "${p2}`;
-  });
-  
-  // תיקון נוסף - מרכאות שנסגרות באמצע הערך
-  // Pattern: "key":"value" unquoted_next_key": -> "key":"value", "unquoted_next_key":
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([^,\s][^":]*":\s*)/g, (match, p1, p2) => {
-    return `${p1}, ${p2}`;
-  });
-  
-  // מחפש patterns של: "key":"value", text" ומתקן אותם
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]+)"(\s*,\s*)([^":}\]]+)"/g, (match, p1, p2, p3) => {
-    // מוציא את הפסיק ומחבר את הטקסט
-    return `${p1} ${p3.trim()}"`;
-  });
-  
-  // תיקון נוסף למקרים של מרכאות כפולות באמצע ערך
-  // Pattern: "תובנות":"טקסט", טקסט נוסף" -> "תובנות":"טקסט טקסט נוסף"
-  cleaned = cleaned.replace(/:\s*"([^"]*)"(,)([^":{}[\]]+)"/g, ':"$1 $3"');
-  
-  // תיקון ספציפי לבעיה של הדוגמה
-  // Pattern: "תובנות":"טקסט", טקסט.", -> "תובנות":"טקסט טקסט.",
-  cleaned = cleaned.replace(/("תובנות"\s*:\s*"[^"]+)"(\s*,\s*)([^"]+)("\s*,)/g, (match, p1, p2, p3, p4) => {
-    return `${p1} ${p3.trim()}${p4}`;
-  });
-  
-  // תיקון כללי יותר לכל שדה עם pattern דומה
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]+)"(\s*,\s*)([^"]+)("\s*,\s*"[\u0590-\u05FF\w_]+"\s*:)/g, (match, p1, p2, p3, p4) => {
-    return `${p1} ${p3.trim()}${p4}`;
-  });
-  
-  // שלב 3: תיקונים מיוחדים לבעיות שזוהו
-  cleaned = cleaned
-    // תיקון של objects keys שלא מצוטטים (כולל עברית)
-    .replace(/([{,]\s*)([a-zA-Zא-ת_][a-zA-Zא-ת0-9_]*)\s*:/g, '$1"$2":')
-    // תיקון של values בוליאניים ומספריים לא מצוטטים
-    .replace(/:\s*(true|false|null|\d+\.?\d*)\s*([,}])/g, ':$1$2')
-    // תיקון של strings שנקטעו ללא מרכאות סוגרות
-    .replace(/:\s*"([^"]*?)(?=\s*[,}])/g, ':"$1"')
-    // תיקון מיוחד לstring שמתחיל ב-" אבל לא מסתיים ב-"
-    .replace(/:\s*"([^"]*?)(\s*[,}])/g, ':"$1"$2')
-    // תיקון newlines שפוגעים ב-JSON
-    .replace(/("([^"\\]|\\.)*?)\n(([^"\\]|\\.)*?")/g, '$1 $3')
-    // תיקון של מקרה ספציפי כמו בדוגמה שלך - string שלא נסגר
-    .replace(/:\s*"([^"]*?)\s*(\{|\}|$)/g, ':"$1"$2')
-    // תיקון מקרה נוסף - value שמתחיל כ-string אבל לא מסתיים
-    .replace(/:\s*([^",}\s]+?)(\s*[,}])/g, ':"$1"$2');
-  
-  // שלב 4: אלגוריתם מתקדם לאיזון סוגריים עם context tracking
+  // שלב 3: אלגוריתם מתקדם לאיזון סוגריים עם התחשבות ב-strings
   let braceCount = 0;
   let lastValidEnd = -1;
   let inString = false;
   let escapeNext = false;
-  let stringChar = null;
   
   for (let i = 0; i < cleaned.length; i++) {
     const char = cleaned[i];
@@ -167,14 +81,8 @@ function cleanOpenAIResponse(content: string): string {
       continue;
     }
     
-    if ((char === '"' || char === "'") && !escapeNext) {
-      if (!inString) {
-        inString = true;
-        stringChar = char;
-      } else if (char === stringChar) {
-        inString = false;
-        stringChar = null;
-      }
+    if (char === '"' && !escapeNext) {
+      inString = !inString;
       continue;
     }
     
@@ -191,196 +99,85 @@ function cleanOpenAIResponse(content: string): string {
     }
   }
   
-  // שלב 5: חיתוך לJSON תקין או תיקון מתקדם
+  // שלב 4: חיתוך לJSON תקין
   if (lastValidEnd !== -1) {
     cleaned = cleaned.substring(0, lastValidEnd + 1);
   } else {
-    // תיקון חכם יותר אם לא מצאנו סוף תקין
+    // אם לא מצאנו סוף תקין, נסה לתקן
     const openBraces = (cleaned.match(/\{/g) || []).length;
     const closeBraces = (cleaned.match(/\}/g) || []).length;
     const missingBraces = openBraces - closeBraces;
     
-    if (missingBraces > 0 && missingBraces < 10) {
-      // בדיקה מתקדמת יותר לstring פתוח
-      const quotes = cleaned.match(/"/g) || [];
-      let inStringMode = false;
-      let quotePairs = 0;
-      
-      for (let i = 0; i < quotes.length; i++) {
-        // בדוק אם הcite הזה escaped
-        const quoteIndex = cleaned.indexOf(quotes[i]);
-        if (quoteIndex === 0 || cleaned[quoteIndex - 1] !== '\\') {
-          inStringMode = !inStringMode;
-          if (!inStringMode) quotePairs++;
-        }
-      }
-      
-      // אם יש string פתוח, סגור אותו
-      if (inStringMode) {
-        cleaned += '"';
-      }
-      
-      // הוסף את הסוגריים החסרים
+    if (missingBraces > 0 && missingBraces < 10) { // מגבלה סבירה
       cleaned += '}'.repeat(missingBraces);
     }
   }
   
-  // שלב 6: ניסיון parse ראשוני
+  // שלב 5: ניסיון parse ראשוני
   try {
     JSON.parse(cleaned);
     console.log(`✅ JSON תקין אחרי ניקוי`, { cleaned_length: cleaned.length });
     return cleaned;
   } catch (parseError: any) {
-    console.warn(`⚠️ JSON לא תקין אחרי ניקוי, מנסה תיקונים מתקדמים`, { 
+    console.warn(`⚠️ JSON לא תקין אחרי ניקוי, מנסה תיקונים בסיסיים`, { 
       error: parseError.message,
       position: parseError.message.match(/position (\d+)/)?.[1] 
     });
     
-    // שלב 7: תיקונים מתקדמים יותר בהתבסס על השגיאה הספציפית
+    // שלב 6: תיקונים בסיסיים בלבד - לא רגקסים מסובכים!
     try {
-      let fixed = cleaned;
+      let fixed = cleaned
+        // הסרת פסיקים מיותרים
+        .replace(/,(\s*[}\]])/g, '$1')
+        // תיקון newlines בתוך strings
+        .replace(/([^\\]")([^"]*?)\n([^"]*?)(")/g, '$1$2 $3$4')
+        // תיקון escaped quotes כפולים
+        .replace(/\\"/g, '"')
+        .replace(/\\n/g, ' ')
+        // תיקון quotes לא מאוזנים לkeys
+        .replace(/([{,]\s*)([a-zA-Z_]+):/g, '$1"$2":');
       
-      // תיקון מיוחד לShגיאה בדוגמה שלך
-      const errorPos = parseError.message.match(/position (\d+)/)?.[1];
-      if (errorPos) {
-        const pos = parseInt(errorPos);
-        const problematicChar = cleaned[pos];
-        const before = cleaned.substring(0, pos);
-        const after = cleaned.substring(pos + 1);
-        
-        console.log(`🔍 בודק תו בעייתי במיקום ${pos}:`, { 
-          char: problematicChar, 
-          char_code: problematicChar?.charCodeAt(0),
-          before_preview: before.slice(-20),
-          after_preview: after.slice(0, 20)
-        });
-        
-        // תיקונים ספציפיים למיקום השגיאה
-        if (problematicChar && problematicChar.match(/[א-ת]/)) {
-          // אם התו בעייתי הוא עברית ללא מרכאות
-          fixed = before + '"' + problematicChar + after;
-        } else if (before.endsWith('"') && !after.startsWith('"')) {
-          // מקרה של string שלא נסגר
-          fixed = before + after.replace(/^[^",:}]*/, '') || before + '"}';
-        }
-      }
-      
-      // תיקונים כלליים נוספים
-      
-      // תיקון מרכאות כפולות בתוך ערכים - קריטי!
-      // מחפש pattern של: "key":"value", more text"
-      fixed = fixed.replace(/:(\s*)"([^"]*)"(,\s*)([^":}\]]+)"/g, (match, p1, p2, p3, p4) => {
-        // מחליף את הפסיק במרכאות לרווח
-        return `:${p1}"${p2} ${p4}"`;
-      });
-      
-      // תיקון נוסף למקרים מורכבים יותר
-      // Pattern: "value", unquoted text" -> "value unquoted text"
-      fixed = fixed.replace(/"([^"]*)"(,\s*)([^":}\]]+)(?=")/g, '"$1 $3');
-      
-      fixed = fixed
-        .replace(/,(\s*[}\]])/g, '$1') // הסרת פסיקים מיותרים
-        .replace(/:\s*"([^"]*)"([^"]*)"([^",}]*)/g, ':"$1$2$3"') // תיקון double quotes
-        .replace(/\\\\"/g, '\\"') // תיקון escaped quotes כפולים
-        .replace(/\\n/g, ' ').replace(/\\r/g, ' ').replace(/\\t/g, ' ') // ניקוי whitespace
-        .replace(/:\s*"([^"]*?)$/, ':"$1"') // strings שמסתיימים פתאום
-        .replace(/,\s*}/g, '}'); // פסיק לפני סגירת object
-      
-      // תיקון אחרון מתקדם
+      // אם JSON לא מסתיים בצורה תקינה
       if (!fixed.endsWith('}') && fixed.includes('{')) {
-        const quotes = (fixed.match(/"/g) || []).length;
-        if (quotes % 2 === 1) {
-          fixed += '"';
-        }
-        
-        // הוסף סוגריים חסרים
-        const openCount = (fixed.match(/\{/g) || []).length;
-        const closeCount = (fixed.match(/\}/g) || []).length;
-        fixed += '}'.repeat(Math.max(0, openCount - closeCount));
+        fixed += '}';
       }
       
       JSON.parse(fixed);
-      console.log(`✅ JSON תוקן בהצלחה במעבר שני`);
+      console.log(`✅ JSON תוקן בהצלחה`);
       return fixed;
     } catch (secondError: any) {
-      console.error(`❌ כשל בתיקון JSON מתקדם`, { 
+      console.error(`❌ כשל בתיקון JSON`, { 
         error: secondError.message,
-        preview: cleaned.substring(0, 300) 
+        preview: cleaned.substring(0, 200) 
       });
       
-      // שלב 8: ניסיון חילוץ partial JSON מתקדם עם טיפול בעברית
+      // שלב 7: ניסיון חילוץ partial JSON
       const errorPosition = parseError.message.match(/position (\d+)/)?.[1];
       if (errorPosition) {
         const position = parseInt(errorPosition);
-        let truncatedContent = cleaned.substring(0, position);
-        
-        // 🆕 תיקון מיוחד לפני החיתוך - טיפול במרכאות פתוחות בעברית
-        // מחפש מצבים כמו: "תובנות":"טקסט עברי במיוחד "מפתח_חדש
-        truncatedContent = truncatedContent.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*)\s+([\u0590-\u05FF][א-ת\w_]*$)/g, (match, p1, p2) => {
-          return `${p1} ${p2}"`;
-        });
-        
-        // חיפוש נקודת חיתוך חכמה יותר
-        const lastComma = truncatedContent.lastIndexOf(',');
-        const lastColon = truncatedContent.lastIndexOf(':');
-        const lastQuote = truncatedContent.lastIndexOf('"');
-        const lastHebrewChar = truncatedContent.search(/[\u0590-\u05FF][^"]*$/);
-        
-        // בחר את הנקודה הטובה ביותר לחיתוך עם התחשבות בעברית
-        let cutPoint = position;
-        if (lastComma > lastColon && lastComma > lastQuote - 50) {
-          cutPoint = lastComma;
-        } else if (lastQuote > 0 && position - lastQuote < 50) {
-          cutPoint = lastQuote + 1;
-        } else if (lastHebrewChar > 0 && position - lastHebrewChar < 20) {
-          // אם יש טקסט עברי בסוף, חתוך לפניו
-          cutPoint = lastHebrewChar;
-        }
-        
-        truncatedContent = cleaned.substring(0, cutPoint);
+        const truncatedContent = cleaned.substring(0, position);
         
         try {
-          // ניסיון חילוץ JSON חלקי מתקדם יותר
-          let partialJson = truncatedContent;
-          
-          // ודא שאנחנו מסיימים בצורה תקינה
-          if (!partialJson.endsWith('"') && !partialJson.endsWith('}')) {
-            if (partialJson.includes(':') && !partialJson.includes('"', partialJson.lastIndexOf(':'))) {
-              partialJson += '"';
-            }
-          }
-          
-          partialJson += '}';
+          // נסה לחלץ JSON חלקי
+          const partialJson = truncatedContent + '}';
           const result = JSON.parse(partialJson);
-          console.log(`⚠️ חולץ JSON חלקי בהצלחה עם ${Object.keys(result).length} שדות`);
+          console.log(`⚠️ חולץ JSON חלקי בהצלחה`);
           return partialJson;
-                 } catch (partialError: any) {
-           console.warn(`❌ גם חילוץ חלקי נכשל:`, partialError.message);
+        } catch {
+          // אם גם זה נכשל, נחזיר fallback אינטליגנטי
         }
       }
       
-      // שלב 9: fallback אינטליגנטי מתקדם
+      // שלב 8: fallback אינטליגנטי
       const intelligentFallback = {
-        error: "Failed to parse OpenAI response after advanced recovery attempts",
-        recovered_data: "Multiple parsing strategies failed",
+        error: "Failed to parse OpenAI response",
+        recovered_data: "Attempting intelligent recovery...",
         red_flags: [],
-        recommendations: [
-          "בדוק את התמלול ונסה שוב", 
-          "יתכן שהתשובה חתוכה או פגומה", 
-          "נסה להקליט שוב באיכות גבוהה יותר",
-          "בדוק חיבור לאינטרנט יציב"
-        ],
-        original_content_preview: content.substring(0, 300),
-        parsing_debug: {
-          original_length: content.length,
-          cleaned_length: cleaned.length,
-          error_position: parseError.message.match(/position (\d+)/)?.[1],
-          error_details: parseError.message,
-          recovery_attempts: ["basic_cleaning", "advanced_fixing", "position_based_truncation", "intelligent_fallback"]
-        }
+        recommendations: ["בדוק את התמלול ונסה שוב", "יתכן שהתשובה חתוכה או פגומה"],
+        original_content_preview: content.substring(0, 300)
       };
       
-      console.log(`🔄 משתמש ב-fallback אינטליגנטי מתקדם עם debug מפורט`);
+      console.log(`🔄 משתמש ב-fallback אינטליגנטי`);
       return JSON.stringify(intelligentFallback);
     }
   }
