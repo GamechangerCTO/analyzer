@@ -77,10 +77,11 @@ function cleanOpenAIResponse(content: string): string {
     return `${p1}", "${p2}`;
   });
   
-  // 🆕 תיקון חירום למקרה הספציפי שנראה בלוגים
-  // Pattern: לאגרסיביות קלה "רמת_אנרגיה": -> לאגרסיביות קלה", "רמת_אנרגיה":  
-  cleaned = cleaned.replace(/([\u0590-\u05FF\s]+)\s*"([\u0590-\u05FFa-zA-Z_]+"\s*:\s*)/g, (match, p1, p2) => {
-    console.log(`🔧 תיקון חירום: ${match} -> ${p1}", "${p2}`);
+  // 🆕 תיקון ספציפי רק למקרים בעייתיים (לא לכל מפתח!)
+  // Pattern: ללא מרכאה סוגרת + רווח + מרכאה פותחת למפתח חדש
+  // מחפש דווקא: "value text "key": כאשר אין מרכאה סוגרת לפני המפתח החדש
+  cleaned = cleaned.replace(/("[\u0590-\u05FFa-zA-Z_]+"\s*:\s*"[^"]*[\u0590-\u05FF]+)\s+"([\u0590-\u05FFa-zA-Z_]+"\s*:\s*")/g, (match, p1, p2) => {
+    console.log(`🔧 תיקון ספציפי: ${match} -> ${p1}", "${p2}`);
     return `${p1}", "${p2}`;
   });
   
@@ -775,11 +776,16 @@ export async function POST(request: Request) {
               "נקודות_חוזק_טונליות": ["רשימה של נקודות חוזק בטון ובאופן התקשורת"]
             }
             
-            ⚠️ חשוב ביותר לתקינות JSON:
-            - אל תשתמש במרכאות כפולות (") בתוך טקסטים - השתמש בגרש בודד (') במקום
-            - אם חייב להשתמש במרכאות כפולות, השתמש ב-escape: \"
-            - אל תכלול פסיקים בתוך ערכי טקסט ללא מרכאות
-            - ודא שכל ערך טקסט עטוף במרכאות כפולות מתחילתו ועד סופו`
+            ⚠️ CRITICAL! כללי JSON למניעת שגיאות:
+            - אל תשתמש במרכאות כפולות (") בתוך ערכי הטקסט - השתמש בגרש בודד (') במקום
+            - וודא שכל ערך טקסט מתחיל ומסתיים במרכאות כפולות ללא הפרעה באמצע
+            - אם חייב להזכיר מרכאות בטקסט, השתמש ב-escape: \"
+            - אל תכלול line breaks או tabs בתוך ערכי טקסט
+            - וודא שאין פסיקים בתוך ערכי טקסט ללא לעטוף אותם במרכאות
+            - לפני כל מפתח JSON (למעט הראשון) חייב להיות פסיק
+            - דוגמה נכונה: "טון_כללי": "ידידותי וחיובי עם אנרגיה בינונית"
+            - דוגמה שגויה: "טון_כללי": "ידידותי "רמת_אנרגיה": "בינונית"
+            - החזר JSON תקין בלבד ללא backticks או markdown!`
           },
           {
             role: 'user',
@@ -795,11 +801,16 @@ export async function POST(request: Request) {
                 
                 חשוב מאוד: החזר רק JSON נקי ללא עיטוף Markdown או backticks. התחל ישירות ב-{ וסיים ב-}.
                 
-                ⚠️ כללי JSON חשובים למניעת שגיאות:
-                - אל תשתמש במרכאות כפולות (") בתוך ערכי טקסט - השתמש בגרש בודד (') במקום
-                - אם חייב להשתמש במרכאות כפולות בתוך טקסט, השתמש ב-escape: \"
-                - אל תכלול פסיקים בתוך ערכי טקסט ללא לעטוף אותם במרכאות
-                - ודא שכל ערך טקסט מתחיל ומסתיים במרכאות כפולות ללא הפרעה באמצע`
+                ⚠️ CRITICAL JSON RULES - חובה למניעת שגיאות:
+                - אל תשתמש במרכאות כפולות (") בתוך ערכי הטקסט - השתמש בגרש בודד (') במקום
+                - וודא שכל ערך טקסט מתחיל ומסתיים במרכאות כפולות ללא הפרעה באמצע  
+                - אם חייב להזכיר מרכאות בטקסט, השתמש ב-escape: \"
+                - אל תכלול line breaks או tabs או ירידות שורה בתוך ערכי טקסט
+                - וודא שאין פסיקים חשופים בתוך ערכי טקסט ללא escape
+                - לפני כל מפתח JSON (למעט הראשון) חייב להיות פסיק
+                - דוגמה נכונה: "טון_כללי": "ידידותי וחיובי עם רמת אנרגיה בינונית"
+                - דוגמה שגויה: "טון_כללי": "ידידותי "רמת_אנרגיה":"בינונית"
+                - אל תכלול backticks, markdown או הערות - רק JSON צרוף!`
               },
               {
                 type: 'input_audio',
