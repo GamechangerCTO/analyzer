@@ -61,7 +61,21 @@ function cleanOpenAIResponse(content: string): string {
     cleaned = cleaned.substring(jsonStart);
   }
   
-    // שלב 3.5: תיקון מרכאות לא מאוזנות בתוך ערכים (קריטי!) - עדכון חזק יותר!
+    // שלב 3.5: תיקון מרכאות לא מאוזנות בתוך ערכים (קריטי!) - עדכון סופר חזק!
+  
+  // 🆕 תיקון קריטי למקרה הספציפי: "key":"value text "another_key":
+  // Pattern: "טון_כללי": "נייטרלי עם נטייה למכירה "רמת_אנרגיה":
+  cleaned = cleaned.replace(/("[\u0590-\u05FFa-zA-Z_]+"\s*:\s*"[^"]*)\s+"([\u0590-\u05FFa-zA-Z_]+"\s*:\s*)/g, (match, p1, p2) => {
+    console.log(`🔧 תיקון קריטי: ${match} -> ${p1}", "${p2}`);
+    return `${p1}", "${p2}`;
+  });
+  
+  // 🆕 תיקון מרכאות שנסגרות באמצע מילה עברית
+  // Pattern: "key":"value למכירה "next -> "key":"value למכירה", "next":
+  cleaned = cleaned.replace(/("[\u0590-\u05FFa-zA-Z_]+"\s*:\s*"[^"]*[\u0590-\u05FF]+)\s+"([\u0590-\u05FFa-zA-Z_]+)/g, (match, p1, p2) => {
+    console.log(`🔧 תיקון מרכאות באמצע: ${match} -> ${p1}", "${p2}`);
+    return `${p1}", "${p2}`;
+  });
   
   // 🆕 תיקון מתקדם למרכאות שנסגרות באמצע ערכים עבריים
   // Pattern: "תובנות":"הפתיחה הייתה עניינית "איך_משפרים": -> "תובנות":"הפתיחה הייתה עניינית", "איך_משפרים":
@@ -72,12 +86,6 @@ function cleanOpenAIResponse(content: string): string {
   // 🆕 תיקון חזק יותר - מפתח עברי שמופיע ללא מרכאה פותחת
   // Pattern: "תובנות":"טקסט במיוחד "איך_משפרים": -> "תובנות":"טקסט במיוחד", "איך_משפרים":
   cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*)\s+([\u0590-\u05FF][א-ת\w_]*"\s*:\s*)/g, (match, p1, p2) => {
-    return `${p1}", "${p2}`;
-  });
-  
-  // 🆕 תיקון למקרה כללי יותר - כל מפתח שמופיע אחרי טקסט ללא פסיק
-  // Pattern: "key":"value text "another_key": -> "key":"value text", "another_key":
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*[\u0590-\u05FF\s][^"]*)\s+"([\u0590-\u05FF\w_]+"\s*:\s*)/g, (match, p1, p2) => {
     return `${p1}", "${p2}`;
   });
   
