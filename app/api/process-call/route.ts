@@ -64,16 +64,23 @@ function cleanOpenAIResponse(content: string): string {
     // שלב 3.5: תיקון מרכאות לא מאוזנות בתוך ערכים (קריטי!) - עדכון סופר חזק!
   
   // 🆕 תיקון קריטי למקרה הספציפי: "key":"value text "another_key":
-  // Pattern: "טון_כללי": "נייטרלי עם נטייה למכירה "רמת_אנרגיה":
-  cleaned = cleaned.replace(/("[\u0590-\u05FFa-zA-Z_]+"\s*:\s*"[^"]*)\s+"([\u0590-\u05FFa-zA-Z_]+"\s*:\s*)/g, (match, p1, p2) => {
+  // Pattern: "טון_כללי": "שיחה ישירה ועניינית עם נטייה לאגרסיביות קלה "רמת_אנרגיה":
+  cleaned = cleaned.replace(/("[\u0590-\u05FFa-zA-Z_]+"\s*:\s*"[^"]*)\s*"([\u0590-\u05FFa-zA-Z_]+"\s*:\s*)/g, (match, p1, p2) => {
     console.log(`🔧 תיקון קריטי: ${match} -> ${p1}", "${p2}`);
     return `${p1}", "${p2}`;
   });
   
   // 🆕 תיקון מרכאות שנסגרות באמצע מילה עברית
   // Pattern: "key":"value למכירה "next -> "key":"value למכירה", "next":
-  cleaned = cleaned.replace(/("[\u0590-\u05FFa-zA-Z_]+"\s*:\s*"[^"]*[\u0590-\u05FF]+)\s+"([\u0590-\u05FFa-zA-Z_]+)/g, (match, p1, p2) => {
+  cleaned = cleaned.replace(/("[\u0590-\u05FFa-zA-Z_]+"\s*:\s*"[^"]*[\u0590-\u05FF]+)\s*"([\u0590-\u05FFa-zA-Z_]+)/g, (match, p1, p2) => {
     console.log(`🔧 תיקון מרכאות באמצע: ${match} -> ${p1}", "${p2}`);
+    return `${p1}", "${p2}`;
+  });
+  
+  // 🆕 תיקון חירום למקרה הספציפי שנראה בלוגים
+  // Pattern: לאגרסיביות קלה "רמת_אנרגיה": -> לאגרסיביות קלה", "רמת_אנרגיה":  
+  cleaned = cleaned.replace(/([\u0590-\u05FF\s]+)\s*"([\u0590-\u05FFa-zA-Z_]+"\s*:\s*)/g, (match, p1, p2) => {
+    console.log(`🔧 תיקון חירום: ${match} -> ${p1}", "${p2}`);
     return `${p1}", "${p2}`;
   });
   
