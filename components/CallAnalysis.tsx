@@ -383,8 +383,19 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               )
               
               if (hasCompletionLog && status !== 'completed') {
-                console.log('✅ זוהה השלמת ניתוח מהלוגים - מעדכן סטטוס')
+                console.log('✅ זוהה השלמת ניתוח מהלוגים - מעדכן סטטוס ומרענן דף')
                 setStatus('completed')
+                setCurrentLogStatus('🏁 ניתוח השיחה הושלם! מעבר לתוצאות...')
+                setLogBasedProgress(100)
+                setDynamicProgress(100)
+                setShowSuccessAnimation(true)
+                
+                // רענון הדף אחרי 2 שניות כדי לתת זמן להצגת ההודעה
+                setTimeout(() => {
+                  console.log('🔄 מרענן את הדף לטעינת התוצאות החדשות')
+                  window.location.reload()
+                }, 2000)
+                
                 return // עצור polling של לוגים
               }
             } else {
