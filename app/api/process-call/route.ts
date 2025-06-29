@@ -62,6 +62,19 @@ function cleanOpenAIResponse(content: string): string {
   }
   
     // שלב 3.5: תיקון מרכאות לא מאוזנות בתוך ערכים (קריטי!)
+  
+  // תיקון מיוחד לבעיה שזוהתה - מפתח שמופיע ללא פסיק אחרי ערך
+  // Pattern: "תובנות":"טקסט" איך_משפרים": -> "תובנות":"טקסט", "איך_משפרים":
+  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([א-ת\w_]+"\s*:)/g, (match, p1, p2) => {
+    return `${p1}, "${p2}`;
+  });
+  
+  // תיקון נוסף - מרכאות שנסגרות באמצע הערך
+  // Pattern: "key":"value" unquoted_next_key": -> "key":"value", "unquoted_next_key":
+  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([^,\s][^":]*":\s*)/g, (match, p1, p2) => {
+    return `${p1}, ${p2}`;
+  });
+  
   // מחפש patterns של: "key":"value", text" ומתקן אותם
   cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]+)"(\s*,\s*)([^":}\]]+)"/g, (match, p1, p2, p3) => {
     // מוציא את הפסיק ומחבר את הטקסט
