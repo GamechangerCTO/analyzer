@@ -61,7 +61,25 @@ function cleanOpenAIResponse(content: string): string {
     cleaned = cleaned.substring(jsonStart);
   }
   
-    // שלב 3.5: תיקון מרכאות לא מאוזנות בתוך ערכים (קריטי!)
+    // שלב 3.5: תיקון מרכאות לא מאוזנות בתוך ערכים (קריטי!) - עדכון חזק יותר!
+  
+  // 🆕 תיקון מתקדם למרכאות שנסגרות באמצע ערכים עבריים
+  // Pattern: "תובנות":"הפתיחה הייתה עניינית "איך_משפרים": -> "תובנות":"הפתיחה הייתה עניינית", "איך_משפרים":
+  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*[\u0590-\u05FF][^"]*)\s+"([\u0590-\u05FF\w_]+"\s*:\s*)/g, (match, p1, p2) => {
+    return `${p1}", "${p2}`;
+  });
+  
+  // 🆕 תיקון חזק יותר - מפתח עברי שמופיע ללא מרכאה פותחת
+  // Pattern: "תובנות":"טקסט במיוחד "איך_משפרים": -> "תובנות":"טקסט במיוחד", "איך_משפרים":
+  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*)\s+([\u0590-\u05FF][א-ת\w_]*"\s*:\s*)/g, (match, p1, p2) => {
+    return `${p1}", "${p2}`;
+  });
+  
+  // 🆕 תיקון למקרה כללי יותר - כל מפתח שמופיע אחרי טקסט ללא פסיק
+  // Pattern: "key":"value text "another_key": -> "key":"value text", "another_key":
+  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*[\u0590-\u05FF\s][^"]*)\s+"([\u0590-\u05FF\w_]+"\s*:\s*)/g, (match, p1, p2) => {
+    return `${p1}", "${p2}`;
+  });
   
   // תיקון מיוחד לבעיה שזוהתה - מפתח שמופיע ללא פסיק אחרי ערך
   // Pattern: "תובנות":"טקסט" איך_משפרים": -> "תובנות":"טקסט", "איך_משפרים":
@@ -274,23 +292,33 @@ function cleanOpenAIResponse(content: string): string {
         preview: cleaned.substring(0, 300) 
       });
       
-      // שלב 8: ניסיון חילוץ partial JSON מתקדם
+      // שלב 8: ניסיון חילוץ partial JSON מתקדם עם טיפול בעברית
       const errorPosition = parseError.message.match(/position (\d+)/)?.[1];
       if (errorPosition) {
         const position = parseInt(errorPosition);
         let truncatedContent = cleaned.substring(0, position);
         
+        // 🆕 תיקון מיוחד לפני החיתוך - טיפול במרכאות פתוחות בעברית
+        // מחפש מצבים כמו: "תובנות":"טקסט עברי במיוחד "מפתח_חדש
+        truncatedContent = truncatedContent.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*)\s+([\u0590-\u05FF][א-ת\w_]*$)/g, (match, p1, p2) => {
+          return `${p1} ${p2}"`;
+        });
+        
         // חיפוש נקודת חיתוך חכמה יותר
         const lastComma = truncatedContent.lastIndexOf(',');
         const lastColon = truncatedContent.lastIndexOf(':');
         const lastQuote = truncatedContent.lastIndexOf('"');
+        const lastHebrewChar = truncatedContent.search(/[\u0590-\u05FF][^"]*$/);
         
-        // בחר את הנקודה הטובה ביותר לחיתוך
+        // בחר את הנקודה הטובה ביותר לחיתוך עם התחשבות בעברית
         let cutPoint = position;
         if (lastComma > lastColon && lastComma > lastQuote - 50) {
           cutPoint = lastComma;
         } else if (lastQuote > 0 && position - lastQuote < 50) {
           cutPoint = lastQuote + 1;
+        } else if (lastHebrewChar > 0 && position - lastHebrewChar < 20) {
+          // אם יש טקסט עברי בסוף, חתוך לפניו
+          cutPoint = lastHebrewChar;
         }
         
         truncatedContent = cleaned.substring(0, cutPoint);

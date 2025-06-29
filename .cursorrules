@@ -1,13 +1,13 @@
 # Cursor Rules: פלטפורמת אימון מכירות ושירות
 
-**עדכון אחרון:** דצמבר 2024 - הוספת דפוסי טיפול שגיאות JSON קריטיים 🔧
+**עדכון אחרון:** דצמבר 2024 - תיקון קריטי משופר לשגיאות JSON 🔧🆕
 
 ## אינטליגנציה פרויקט ודפוסים חשובים
 
-### 🔧 דפוסי טיפול שגיאות JSON קריטיים (חדש!)
+### 🔧 דפוסי טיפול שגיאות JSON קריטיים (עדכון דצמבר 2024!)
 **חובה מוחלטת! בכל עבודה עם OpenAI APIs:**
 
-#### 1. פונקציית `cleanOpenAIResponse` היא קריטית:
+#### 1. פונקציית `cleanOpenAIResponse` היא קריטית - עדכון חדש!:
 ```typescript
 // תמיד השתמש בפונקציה הזו לפני JSON.parse של תשובות OpenAI:
 function cleanOpenAIResponse(content: string): string {
@@ -22,6 +22,26 @@ function cleanOpenAIResponse(content: string): string {
   if (jsonStart !== -1) {
     cleaned = cleaned.substring(jsonStart);
   }
+  
+  // 🆕 תיקון קריטי חדש - מפתחות שמופיעים ללא פסיק אחרי ערך
+  // Pattern: "תובנות":"טקסט" איך_משפרים": -> "תובנות":"טקסט", "איך_משפרים":
+  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([א-ת\w_]+"\s*:)/g, (match, p1, p2) => {
+    return `${p1}, "${p2}`;
+  });
+  
+  // 🆕 תיקון מרכאות שנסגרות באמצע הערך
+  // Pattern: "key":"value" unquoted_next_key": -> "key":"value", "unquoted_next_key":
+  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([^,\s][^":]*":\s*)/g, (match, p1, p2) => {
+    return `${p1}, ${p2}`;
+  });
+  
+  // מחפש patterns של: "key":"value", text" ומתקן אותם
+  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]+)"(\s*,\s*)([^":}\]]+)"/g, (match, p1, p2, p3) => {
+    return `${p1} ${p3.trim()}"`;
+  });
+  
+  // תיקון נוסף למקרים של מרכאות כפולות באמצע ערך
+  cleaned = cleaned.replace(/:\s*"([^"]*)"(,)([^":{}[\]]+)"/g, ':"$1 $3"');
   
   // אלגוריתם איזון סוגריים
   let braceCount = 0;
@@ -65,6 +85,15 @@ function cleanOpenAIResponse(content: string): string {
     }
   }
 }
+```
+
+#### 🆕 דוגמאות לשגיאות JSON נפוצות מ-OpenAI:
+```typescript
+// בעיה נפוצה - מרכאות שנסגרות באמצע ערך:
+"תובנות":"הפתיחה הייתה יבשה וללא אנרגיה או חיבור ראשוני "איך_משפרים":"להתחיל בברכה חמה"
+
+// התיקון האוטומטי:
+"תובנות":"הפתיחה הייתה יבשה וללא אנרגיה או חיבור ראשוני", "איך_משפרים":"להתחיל בברכה חמה"
 ```
 
 #### 2. דפוס טיפול שגיאות עם fallback חכם:
@@ -275,6 +304,22 @@ const processCall = async (call_id: string) => {
     await updateStatus('error');
   }
 };
+```
+
+### 🔄 תיקון אוטומטי לרענון דף בסיום ניתוח (חדש!)
+```typescript
+// בקובץ CallAnalysis.tsx - זיהוי אוטומטי של סיום ניתוח:
+const hasCompletionLog = logsData.logs.some((log: any) => 
+  log.message.includes('🏁 ניתוח') && log.message.includes('הושלם')
+);
+
+if (hasCompletionLog) {
+  setStatus('completed');
+  setCurrentLogStatus('🏁 ניתוח השיחה הושלם! מעבר לתוצאות...');
+  setTimeout(() => {
+    window.location.reload();
+  }, 2000);
+}
 ```
 
 **זכור: הפרויקט הזה הוא מערכת אימון מכירות ושירות מתקדמת עם דגש על איכות, יציבות ו-UX מעולה!** 
