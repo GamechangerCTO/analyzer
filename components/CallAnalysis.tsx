@@ -825,7 +825,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           sub.key,
           `"${sub.key}"`,
           `"\\${sub.key}"`,
-          sub.key.replace(/_/g, ' ')
+          sub.key.replace(/_/g, ' '),
+          // מפתחות נוספים שאפשר שיופיעו מ-OpenAI
+          sub.key.replace('התנגדות_אמיתית_מזויפת', 'אמת_תירוץ'),
+          sub.key.replace('יחס_דיבור_הקשבה', 'דיבור_מאוזן'),
+          sub.key.replace('זרימה_ושטף', 'זרימה_וסדר'),
+          sub.key.replace('ערך_מעל_מחיר', 'יתרון_על_המחיר'),
+          sub.key.replace('זה_לא_רלוונטי', 'לא_רלוונטי')
         ];
         
         let subData: any = {};
