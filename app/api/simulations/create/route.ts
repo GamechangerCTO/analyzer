@@ -3,9 +3,16 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Initialize OpenAI client only when needed to avoid build-time errors
+function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY environment variable is not set');
+  }
+  return new OpenAI({
+    apiKey: apiKey,
+  });
+}
 
 interface CreateSimulationRequest {
   simulation_type: string
@@ -132,6 +139,9 @@ ${originalCallContext}
       `
 
       try {
+        // Initialize OpenAI client
+        const openai = getOpenAIClient();
+        
         // Try with gpt-4o first (supports json_object)
         const completion = await openai.chat.completions.create({
           model: "gpt-4o",
@@ -156,6 +166,7 @@ ${originalCallContext}
         console.error('AI scenario generation failed:', aiError)
         // Fallback: try without response_format
         try {
+          const openai = getOpenAIClient();
           const completion = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: [

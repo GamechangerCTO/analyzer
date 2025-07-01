@@ -966,29 +966,7 @@ export async function POST(request: Request) {
           messages: [
             {
               role: 'system',
-              content: `אתה מנתח מכירות ושירות מקצועי. החזר רקרק JSON נקי ותקין.
-              
-              מבנה התשובה הנדרש:
-              {
-                "overall_score": [מספר בין 1-10],
-                "red_flag": [true/false],
-                "general_key_insights": ["...", "..."],
-                "improvement_points": ["...", "..."],
-                "strengths_and_preservation_points": ["...", "..."],
-                "executive_summary": "..."
-              }
-              
-              ⚠️ חשוב ביותר:
-              - התחל ישירות ב-{ וסיים ב-}
-              - אל תשתמש ב-markdown blocks או backticks
-              - ודא שכל string מצוטט בגרשיים
-              - אל תכלול הערות או הסברים מחוץ ל-JSON
-              
-              ⚠️ כללי JSON קריטיים:
-              - אל תשתמש במרכאות כפולות (") בתוך טקסטים - השתמש בגרש בודד (')
-              - אם חייב מרכאות כפולות, השתמש ב-escape: \"
-              - אל תכלול פסיקים באמצע ערכי טקסט
-              - כל ערך טקסט חייב להיות עטוף במרכאות מתחילתו ועד סופו`
+              content: systemPrompt
             },
             {
               role: 'user',
