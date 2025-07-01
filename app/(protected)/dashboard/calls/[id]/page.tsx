@@ -137,8 +137,7 @@ export default function CallPage({ params }: CallPageProps) {
                       ניתוח שיחה מתקדם
                     </h1>
                     <p className="text-blue-200 text-lg font-medium">
-                      תובנות מבוססות בינה מלאכותית
-                    </p>
+ניתוח מקצועי בהתאם לפרמטרים של החברה                    </p>
                   </div>
                 </div>
               </div>

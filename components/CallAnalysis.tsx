@@ -890,9 +890,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   const improvement_points = getFieldValue(analysisReport, ['נקודות לשיפור', 'נקודות_לשיפור', 'improvement_points', 'המלצות_שיפור', 'המלצות_פרקטיות', 'המלצות_דחופות_ביותר']) || [];
   const strengths_and_preservation_points = getFieldValue(analysisReport, ['נקודות חוזק לשימור', 'נקודות_חוזק', 'strengths_and_preservation_points', 'strengths', 'חוזקות', 'נקודות_חוזקה']) || [];
   
-  // משתנים נוספים שהקומפוננטה מחפשת
-  const all_quotes = getFieldValue(analysisReport, ['ציטוטים_רלוונטיים', 'ציטוטים', 'quotes', 'all_quotes']) || [];
-  const segment_quotes = all_quotes; // alias
+  // לא צריך ציטוטים יותר
   
 
   const practical_recommendations = getFieldValue(analysisReport, ['המלצות_פרקטיות', 'practical_recommendations']) || [];
@@ -1014,7 +1012,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         {/* Navigation Tabs */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <nav className="flex flex-wrap gap-4">
-            {['summary', 'tone', 'content', 'quotes', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
+            {['summary', 'tone', 'content', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -1027,7 +1025,6 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 {tab === 'summary' ? '📊 סיכום כללי' :
                  tab === 'tone' ? '🎭 ניתוח טונציה' :
                  tab === 'content' ? '📝 ניתוח מפורט' :
-                 tab === 'quotes' ? '💬 ציטוטים' :
                  '📄 תמליל'}
               </button>
             ))}
@@ -1154,13 +1151,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   const scoreValue = categoryData.score || 0;
                   const displayCategory = categoryData.category;
                   
-                  // חיפוש ציטוטים רלוונטיים לקטגוריה זו
-                  let relevantQuotes = segment_quotes ? segment_quotes.filter((quote: any) => {
-                    if (!quote || typeof quote !== 'object') return false;
-                    const quoteCategory = quote.category || quote.קטגוריה || quote.title || '';
-                    return quoteCategory.toLowerCase().includes(displayCategory.toLowerCase()) || 
-                           displayCategory.toLowerCase().includes(quoteCategory.toLowerCase());
-                  }) : [];
+                  // לא צריך ציטוטים במצב זה
 
                   return (
                     <div key={idx} className="bg-white rounded-xl shadow-lg p-6 border-l-4" 
@@ -1199,95 +1190,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                         </div>
                       )}
 
-                      {/* ציטוטים רלוונטיים לקטגוריה */}
-                      {relevantQuotes.length > 0 && (
-                        <div className="space-y-3">
-                          <h4 className="font-medium text-gray-700 flex items-center">
-                            <span className="mr-2">💬</span>
-                            ציטוטים רלוונטיים ({relevantQuotes.length}):
-                          </h4>
-                          {relevantQuotes.map((quote: any, quoteIdx: number) => {
-                            const quoteText = quote.text || quote.quote || quote.ציטוט || quote.content || '';
-                            const comment = quote.comment || quote.הערה || '';
-                            
-                            // חיפוש timestamp - קודם מהדוח, אחר כך מהפונקציה החכמה
-                            let timestampSeconds = quote.timestamp_seconds;
-                            
-                            // טיפול בפורמט החדש של timestamp
-                            if (!timestampSeconds && quote.timestamp) {
-                              const timestamp = quote.timestamp;
-                              if (timestamp && timestamp.includes(':')) {
-                                const parts = timestamp.split('-')[0].split(':'); // לוקחים את החלק הראשון של הטווח
-                                if (parts.length === 2) {
-                                  timestampSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-                                }
-                              }
-                            }
-                            
-                            if (!timestampSeconds && quoteText) {
-                              timestampSeconds = findTimestampForQuote(quoteText);
-                            }
-                            
-                            const isCurrentlyPlaying = isQuotePlaying(quoteText);
-                            
-                            return (
-                              <div 
-                                key={quoteIdx} 
-                                className={`transition-all duration-300 border rounded-lg p-3 ${
-                                  isCurrentlyPlaying 
-                                    ? 'bg-blue-100 border-blue-400 shadow-lg ring-2 ring-blue-300' 
-                                    : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                                }`}
-                              >
-                                <div className="flex justify-between items-start">
-                                  <div className="flex-1">
-                                    <p className={`italic mb-2 transition-colors ${
-                                      isCurrentlyPlaying ? 'text-blue-800 font-medium' : 'text-gray-700'
-                                    }`}>
-                                      "{quoteText}"
-                                    </p>
-                                    {comment && (
-                                      <p className="text-sm text-blue-700">
-                                        💭 {comment}
-                                      </p>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="flex items-center space-x-2 rtl:space-x-reverse mr-3">
-                                    {timestampSeconds !== undefined && timestampSeconds !== null && audioUrl && (
-                                      <>
-                                        {isCurrentlyPlaying ? (
-                                          <button 
-                                            onClick={stopQuote}
-                                            className="flex items-center px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-xs font-medium"
-                                            title="עצור השמעה"
-                                          >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
-                                            </svg>
-                                            עצור
-                                          </button>
-                                        ) : (
-                                          <button 
-                                            onClick={() => playQuote(timestampSeconds, quoteText)}
-                                            className="flex items-center px-2 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs font-medium"
-                                            title="השמע את הציטוט באודיו"
-                                          >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                            </svg>
-                                            {formatTime(timestampSeconds)}
-                                          </button>
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
+
                     </div>
                   );
                 })}
@@ -1822,147 +1725,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           </div>
         )}
 
-        {activeTab === 'quotes' && (
-          <div className="space-y-6">
-            {/* כותרת הציטוטים */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-gray-800 flex items-center">
-                  <span className="mr-2">💬</span>
-                  ציטוטים רלוונטיים
-                </h3>
-                <div className="text-sm text-gray-600">
-                  {all_quotes && all_quotes.length > 0 ? `${all_quotes.length} ציטוטים` : 'אין ציטוטים'}
-                </div>
-              </div>
-              
-              {all_quotes && all_quotes.length > 0 ? (
-                <div className="space-y-4">
-                  {all_quotes.map((quote: any, idx: number) => {
-                    const quoteText = quote.text || quote.quote || quote.ציטוט || quote.content || '';
-                    const comment = quote.comment || quote.הערה || quote.impact || quote.analysis || '';
-                    const category = quote.category || quote.קטגוריה || 'כללי';
-                    const alternative = quote.alternative || '';
-                    
-                                         // החלפת שמות לנציג/לקוח - פונקציה משופרת
-                     const anonymizedQuote = quoteText.replace(/([א-ת]+)(\s*:)/g, (match: string, name: string, colon: string) => {
-                       // בדיקה אם זה שם נציג או לקוח לפי הקשר
-                       const lowerName = name.toLowerCase();
-                       if (lowerName.includes('נציג') || lowerName.includes('מוכר') || lowerName.includes('שירות') || 
-                           lowerName.includes('agent') || lowerName.includes('sales')) {
-                         return 'הנציג' + colon;
-                       }
-                       return 'הלקוח' + colon;
-                     });
-                    
-                    // חיפוש timestamp
-                    let timestampSeconds = quote.timestamp_seconds;
-                    if (!timestampSeconds && quote.timestamp) {
-                      const timestamp = quote.timestamp;
-                      if (timestamp && timestamp.includes(':')) {
-                        const parts = timestamp.split('-')[0].split(':');
-                        if (parts.length === 2) {
-                          timestampSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-                        }
-                      }
-                    }
-                    if (!timestampSeconds && quoteText) {
-                      timestampSeconds = findTimestampForQuote(quoteText);
-                    }
-                    
-                    const isCurrentlyPlaying = isQuotePlaying(quoteText);
-                    
-                    return (
-                      <div 
-                        key={idx} 
-                        className={`transition-all duration-300 border rounded-lg p-4 ${
-                          isCurrentlyPlaying 
-                            ? 'bg-gradient-to-r from-blue-100 to-blue-50 border-blue-400 shadow-lg ring-2 ring-blue-300' 
-                            : 'bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center mb-2">
-                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium mr-2">
-                                {category}
-                              </span>
-                              {isCurrentlyPlaying && (
-                                <div className="flex items-center text-blue-600 animate-pulse">
-                                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.817L4.906 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.906l3.477-2.817z" clipRule="evenodd"/>
-                                  </svg>
-                                  <span className="text-sm font-medium">מנגן כעת</span>
-                                </div>
-                              )}
-                            </div>
-                            
-                            <p className={`italic mb-2 text-lg transition-colors ${
-                              isCurrentlyPlaying ? 'text-blue-800 font-medium' : 'text-gray-700'
-                            }`}>
-                              "{anonymizedQuote}"
-                            </p>
-                            
-                            {comment && (
-                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
-                                <p className="text-sm text-blue-800">
-                                  💭 <strong>הערה:</strong> {comment}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {alternative && (
-                              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-2">
-                                <p className="text-sm text-green-800">
-                                  ✨ <strong>איך צריך היה לנסח:</strong> "{alternative}"
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                          
-                          <div className="flex items-center space-x-2 rtl:space-x-reverse mr-4">
-                            {timestampSeconds !== undefined && timestampSeconds !== null && audioUrl && (
-                              <>
-                                {isCurrentlyPlaying ? (
-                                  <button 
-                                    onClick={stopQuote}
-                                    className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium shadow-md"
-                                    title="עצור השמעה"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
-                                    </svg>
-                                    עצור
-                                  </button>
-                                ) : (
-                                  <button 
-                                    onClick={() => playQuote(timestampSeconds, quoteText)}
-                                    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-md"
-                                    title="השמע את הציטוט באודיו"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                                    </svg>
-                                    השמע ב-{formatTime(timestampSeconds)}
-                                  </button>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <span className="text-4xl mb-2 block">📝</span>
-                  <p>לא נמצאו ציטוטים רלוונטיים</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+
 
         {activeTab === 'transcript' && (
           <div className="space-y-6">
