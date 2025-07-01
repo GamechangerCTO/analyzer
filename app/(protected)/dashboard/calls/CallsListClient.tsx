@@ -17,11 +17,13 @@ interface CallsListClientProps {
   userId: string
   companyId: string | null
   userRole: string | null
+  filterByAgent?: string
 }
 
-export default function CallsListClient({ userId, companyId, userRole }: CallsListClientProps) {
+export default function CallsListClient({ userId, companyId, userRole, filterByAgent }: CallsListClientProps) {
   const [calls, setCalls] = useState<Call[]>([])
   const [loading, setLoading] = useState(true)
+  const [agentName, setAgentName] = useState<string | null>(null)
   const supabase = getSupabaseClient()
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export default function CallsListClient({ userId, companyId, userRole }: CallsLi
           created_at, 
           overall_score, 
           processing_status,
+          user_id,
           users(full_name)
         `)
         .order('created_at', { ascending: false })
@@ -43,6 +46,22 @@ export default function CallsListClient({ userId, companyId, userRole }: CallsLi
         query = query.eq('user_id', userId)
       } else if (userRole === 'manager' && companyId) {
         query = query.eq('company_id', companyId)
+      }
+
+      // סינון נוסף לפי עובד ספציפי אם נתבקש
+      if (filterByAgent) {
+        query = query.eq('user_id', filterByAgent)
+        
+        // קבלת שם העובד לתצוגה
+        const { data: agentData } = await supabase
+          .from('users')
+          .select('full_name')
+          .eq('id', filterByAgent)
+          .single()
+        
+        if (agentData) {
+          setAgentName(agentData.full_name)
+        }
       }
 
       const { data, error } = await query
@@ -62,7 +81,7 @@ export default function CallsListClient({ userId, companyId, userRole }: CallsLi
     }
 
     fetchCalls()
-  }, [userId, companyId, userRole, supabase])
+  }, [userId, companyId, userRole, filterByAgent, supabase])
 
   if (loading) {
     return (
@@ -75,8 +94,28 @@ export default function CallsListClient({ userId, companyId, userRole }: CallsLi
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">כל השיחות</h1>
-        <p className="text-gray-600 mt-2">צפה בכל השיחות שלך</p>
+        <h1 className="text-3xl font-bold text-gray-900">
+          {filterByAgent && agentName ? `שיחות של ${agentName}` : 'כל השיחות'}
+        </h1>
+        <p className="text-gray-600 mt-2">
+          {filterByAgent && agentName 
+            ? `צפה בכל השיחות של ${agentName}` 
+            : 'צפה בכל השיחות שלך'
+          }
+        </p>
+        {filterByAgent && (
+          <div className="mt-4">
+            <Link 
+              href="/dashboard/calls"
+              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              חזרה לכל השיחות
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className="bg-white shadow rounded-lg overflow-hidden">

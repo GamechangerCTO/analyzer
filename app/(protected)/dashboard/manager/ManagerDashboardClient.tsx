@@ -907,14 +907,14 @@ export default function ManagerDashboardClient({ userId, companyId }: ManagerDas
                       className={`cursor-pointer transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:shadow-md ${
                         index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
                       }`}
-                      onClick={() => window.location.href = `/dashboard/agent?user=${user.id}`}>
+                      onClick={() => window.location.href = `/dashboard/calls?agent=${user.id}`}>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
                           {user.full_name?.charAt(0) || 'א'}
                         </div>
                         <div className="flex flex-col">
-                          <Link href={`/dashboard/agent?user=${user.id}`} 
+                          <Link href={`/dashboard/calls?agent=${user.id}`} 
                                 className="text-blue-600 hover:text-blue-900 font-semibold hover:underline"
                                 onClick={(e) => e.stopPropagation()}>
                             {user.full_name}
