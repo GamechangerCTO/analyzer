@@ -325,7 +325,11 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
 
             <div className="space-y-4">
               {topAgents.map((agent, index) => (
-                <div key={agent.id} className="replayme-card-secondary p-4 border-r-4 border-lemon-mint/50">
+                <Link 
+                  key={agent.id} 
+                  href={`/dashboard/calls?agent=${agent.id}`}
+                  className="block replayme-card-secondary p-4 border-r-4 border-lemon-mint/50 hover:border-lemon-mint hover:bg-lemon-mint/5 transition-all duration-200 cursor-pointer"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center space-x-3">
@@ -340,7 +344,9 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
                       </div>
                       
                       <div>
-                        <h4 className="font-semibold text-indigo-night">{agent.name}</h4>
+                        <h4 className="font-semibold text-indigo-night group-hover:text-lemon-mint-dark transition-colors">
+                          {agent.name}
+                        </h4>
                         <p className="text-sm text-indigo-night/60">
                           {agent.totalCalls} שיחות | {agent.successfulCalls} מוצלחות
                         </p>
@@ -358,18 +364,24 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
                         <div className="text-xs text-indigo-night/60">ממוצע</div>
                       </div>
                       
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        agent.trend === 'up' ? 'bg-success/20' :
-                        agent.trend === 'down' ? 'bg-error/20' : 'bg-ice-gray'
-                      }`}>
-                        <ArrowUpRight className={`w-4 h-4 ${
-                          agent.trend === 'up' ? 'text-success' :
-                          agent.trend === 'down' ? 'text-error rotate-90' : 'text-indigo-night/60'
-                        }`} />
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                          agent.trend === 'up' ? 'bg-success/20' :
+                          agent.trend === 'down' ? 'bg-error/20' : 'bg-ice-gray'
+                        }`}>
+                          <ArrowUpRight className={`w-4 h-4 ${
+                            agent.trend === 'up' ? 'text-success' :
+                            agent.trend === 'down' ? 'text-error rotate-90' : 'text-indigo-night/60'
+                          }`} />
+                        </div>
+                        
+                        <div className="text-xs text-indigo-night/60 hover:text-lemon-mint-dark transition-colors">
+                          לחץ לצפייה בשיחות
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

@@ -400,6 +400,34 @@ export default function AgentDashboardContent({ userId, companyId, targetUserInf
                 </div>
               </div>
             ))}
+            
+            {/* קישור לכל השיחות */}
+            {calls.length > 10 && (
+              <div className="text-center pt-4">
+                <Link 
+                  href={targetUserInfo ? `/dashboard/calls?agent=${userId}` : '/dashboard/calls'}
+                  className="replayme-button-secondary text-sm"
+                >
+                  <span className="flex items-center space-x-2">
+                    <span>צפה בכל השיחות ({calls.length})</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </span>
+                </Link>
+              </div>
+            )}
+            
+            {calls.length <= 10 && calls.length > 0 && (
+              <div className="text-center pt-4">
+                <Link 
+                  href={targetUserInfo ? `/dashboard/calls?agent=${userId}` : '/dashboard/calls'}
+                  className="text-sm text-lemon-mint-dark hover:text-lemon-mint font-medium underline decoration-2 underline-offset-4"
+                >
+                  צפה בדף השיחות המלא
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </div>
