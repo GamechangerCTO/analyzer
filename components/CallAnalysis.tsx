@@ -764,7 +764,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           { name: 'תועלות וערכים', key: 'תועלות_וערכים' },
           { name: 'תועלות רגשיות', key: 'תועלות_רגשיות' },
           { name: 'עדויות/הוכחות', key: 'עדויות_הוכחות' },
-          { name: 'ערך מעל מחיר', key: 'ערך_מעל_מחיר' },
+          { name: 'ערך הפתרון', key: 'ערך_הפתרון' },
           { name: 'מומחיות מקצועית', key: 'מומחיות_מקצועית' }
         ]
       },
@@ -774,7 +774,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         subcategories: [
           { name: 'זיהוי התנגדות אמיתית/מזויפת', key: 'זיהוי_התנגדות_אמיתית_מזויפת' },
           { name: 'צריך לחשוב', key: 'צריך_לחשוב' },
-          { name: 'יקר לי', key: 'יקר_לי' },
+          { name: 'אין זמן', key: 'אין_זמן' },
           { name: 'זה לא רלוונטי', key: 'זה_לא_רלוונטי' }
         ]
       },
@@ -783,8 +783,9 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         key: 'הנעה_לפעולה_וסגירה',
         subcategories: [
           { name: 'הנעה לפעולה', key: 'הנעה_לפעולה' },
+          { name: 'פתרון מוצלח', key: 'פתרון_מוצלח' },
           { name: 'סיכום ברור', key: 'סיכום_ברור' },
-          { name: 'סירוב מכבד', key: 'סירוב_מכבד' }
+          { name: 'מתן מעקב', key: 'מתן_מעקב' }
         ]
       },
       {
@@ -807,9 +808,9 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         category: 'שלושת הלמה',
         key: 'שלושת_הלמה',
         subcategories: [
-          { name: 'למה דווקא המוצר/שירות הזה', key: 'למה_דווקא_המוצר_הזה' },
+          { name: 'למה דווקא הפתרון שלנו', key: 'למה_דווקא_הפתרון_שלנו' },
           { name: 'למה דווקא עכשיו', key: 'למה_דווקא_עכשיו' },
-          { name: 'למה דווקא מאיתנו', key: 'למה_דווקא_מאיתנו' }
+          { name: 'למה דווקא איתנו', key: 'למה_דווקא_איתנו' }
         ]
       }
     ];
@@ -830,7 +831,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           sub.key.replace('התנגדות_אמיתית_מזויפת', 'אמת_תירוץ'),
           sub.key.replace('יחס_דיבור_הקשבה', 'דיבור_מאוזן'),
           sub.key.replace('זרימה_ושטף', 'זרימה_וסדר'),
-          sub.key.replace('ערך_מעל_מחיר', 'יתרון_על_המחיר'),
+          sub.key.replace('ערך_הפתרון', 'יתרון_על_המחיר'),
           sub.key.replace('זה_לא_רלוונטי', 'לא_רלוונטי')
         ];
         

@@ -96,7 +96,7 @@ export default function LoginPage() {
           <div className="mt-4 text-xs text-indigo-night/40">
             <span>&copy; {new Date().getFullYear()} ReplayMe</span>
             <span className="mx-2">•</span>
-            <span>פלטפורמת אימון AI מתקדמת</span>
+                            <span>פלטפורמת אימון מכירות ושירות מתקדמת</span>
           </div>
         </div>
       </div>
