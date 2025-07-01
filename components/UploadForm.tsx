@@ -60,6 +60,7 @@ interface UploadedCall {
   progress: number
   error?: string
   callId?: string
+  selectedAgent?: string
 }
 
 const CALL_TYPE_OPTIONS = [
@@ -479,6 +480,19 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
       return;
     }
 
+    // בדיקה שכל שיחה הוקצתה לnaget (במצב מנהל)
+    if (isManager && agents.length > 1) {
+      const unassignedFiles = files.filter((file, index) => {
+        const assignedCall = uploadedCalls.find(call => call.fileName === file.name);
+        return !assignedCall?.selectedAgent;
+      });
+
+      if (unassignedFiles.length > 0) {
+        setError(`אנא בחר נציג עבור כל השיחות. חסר נציג עבור: ${unassignedFiles.map(f => f.name).join(', ')}`);
+        return;
+      }
+    }
+
     // בדיקת שאלון החברה
     if (userData?.companies?.id && userData?.role !== 'admin') {
       const freshSupabase = createClient();
@@ -519,8 +533,14 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     try {
       const freshSupabase = createClient();
       const uploadPromises = files.map(async (file, index) => {
+        // קבלת הagent המוקצה לשיחה זו (או default לעובד)
+        const assignedCall = uploadedCalls.find(call => call.fileName === file.name);
+        const fileAgentId = isManager && agents.length > 1 
+          ? assignedCall?.selectedAgent || selectedAgent 
+          : selectedAgent;
+        
         const fileExt = file.name.split('.').pop();
-        const filePath = `${selectedAgent}/${Date.now()}-${index}.${fileExt}`;
+        const filePath = `${fileAgentId}/${Date.now()}-${index}.${fileExt}`;
         
         // עדכון סטטוס העלאה
         setUploadedCalls(prev => prev.map(call => 
@@ -550,7 +570,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
 
         // יצירת רשומה בבסיס הנתונים
         const callRecord = {
-          user_id: selectedAgent,
+          user_id: fileAgentId,
           company_id: userData?.companies?.id || null,
           call_type: callType,
           audio_file_path: filePath,
@@ -600,7 +620,25 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
 
       await Promise.all(uploadPromises);
       setUploadStep('completed');
-      setSuccess(`${files.length} שיחות הועלו בהצלחה! הניתוח מתבצע ברקע ותקבל התראות כשיושלמו.`);
+      
+      // הודעת הצלחה מפורטת יותר למנהלים
+      if (isManager && agents.length > 1) {
+        const agentCounts = files.reduce((acc, file, index) => {
+          const assignedCall = uploadedCalls.find(call => call.fileName === file.name);
+          const agentId = assignedCall?.selectedAgent || selectedAgent;
+          const agentName = agents.find(a => a.id === agentId)?.full_name || 'נציג ללא שם';
+          acc[agentName] = (acc[agentName] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        
+        const agentSummary = Object.entries(agentCounts)
+          .map(([name, count]) => `${name}: ${count} שיחות`)
+          .join(', ');
+        
+        setSuccess(`${files.length} שיחות הועלו בהצלחה! פילוח: ${agentSummary}. הניתוח מתבצע ברקע.`);
+      } else {
+        setSuccess(`${files.length} שיחות הועלו בהצלחה! הניתוח מתבצע ברקע ותקבל התראות כשיושלמו.`);
+      }
       
     } catch (error: any) {
       console.error('Error:', error);
@@ -614,6 +652,33 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   // הסרת קובץ מהרשימה
   const removeFileFromList = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
+    // הסרת גם השיחה המתאימה מuploaded calls אם קיימת
+    setUploadedCalls(prev => prev.filter((_, i) => i !== index));
+  }
+
+  // עדכון agent נבחר לשיחה ספציפית
+  const updateCallAgent = (fileIndex: number, agentId: string) => {
+    const fileName = files[fileIndex]?.name;
+    if (!fileName) return;
+
+    setUploadedCalls(prev => {
+      const existingCallIndex = prev.findIndex(call => call.fileName === fileName);
+      if (existingCallIndex >= 0) {
+        // עדכון קיים
+        const updated = [...prev];
+        updated[existingCallIndex] = { ...updated[existingCallIndex], selectedAgent: agentId };
+        return updated;
+      } else {
+        // יצירת חדש
+        return [...prev, {
+          id: `temp-${fileIndex}-${Date.now()}`,
+          fileName,
+          status: 'uploading' as const,
+          progress: 0,
+          selectedAgent: agentId
+        }];
+      }
+    });
   }
 
   const clearSelectedFile = (e: React.MouseEvent) => {
@@ -742,26 +807,53 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
             {uploadMode === 'multiple' && files.length > 0 && (
               <div className="space-y-3">
                 <h4 className="text-lg font-semibold text-indigo-night">קבצים שנבחרו:</h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
+                <div className="space-y-3 max-h-60 overflow-y-auto">
                   {files.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-cream-sand rounded-lg border border-ice-gray">
-                      <div className="flex items-center space-x-3">
-                        <FileAudio className="w-5 h-5 text-indigo-night" />
-                        <span className="text-sm font-medium text-indigo-night">{file.name}</span>
-                        <span className="text-xs text-indigo-night/60">
-                          {(file.size / (1024 * 1024)).toFixed(1)} MB
-                        </span>
+                    <div key={index} className="p-4 bg-cream-sand rounded-xl border border-ice-gray">
+                      {/* מידע הקובץ */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <FileAudio className="w-5 h-5 text-indigo-night" />
+                          <span className="text-sm font-medium text-indigo-night">{file.name}</span>
+                          <span className="text-xs text-indigo-night/60">
+                            {(file.size / (1024 * 1024)).toFixed(1)} MB
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFileFromList(index);
+                          }}
+                          className="text-electric-coral hover:text-electric-coral-dark p-1 rounded"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeFileFromList(index);
-                        }}
-                        className="text-electric-coral hover:text-electric-coral-dark p-1 rounded"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      
+                      {/* בחירת נציג לקובץ זה (רק למנהלים) */}
+                      {isManager && agents.length > 1 && (
+                        <div className="mt-3">
+                          <label className="block">
+                            <span className="text-sm font-semibold text-indigo-night mb-2 block">
+                              נציג לשיחה זו <span className="text-electric-coral">*</span>
+                            </span>
+                            <select
+                              value={uploadedCalls.find(call => call.fileName === file.name)?.selectedAgent || ''}
+                              onChange={(e) => updateCallAgent(index, e.target.value)}
+                              className="w-full p-3 border-2 border-ice-gray rounded-lg focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night text-sm"
+                              required
+                            >
+                              <option value="">בחר נציג...</option>
+                              {agents.map((agent) => (
+                                <option key={agent.id} value={agent.id}>
+                                  {agent.full_name || 'נציג ללא שם'}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -834,8 +926,8 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
             </label>
           </div>
 
-          {/* בחירת נציג (למנהלים) */}
-          {agents.length > 1 && (
+          {/* בחירת נציג (למנהלים במצב שיחה בודדת) */}
+          {agents.length > 1 && uploadMode === 'single' && (
             <div className="space-y-4">
               <label className="block">
                 <span className="text-lg font-semibold text-indigo-night mb-3 block">
@@ -854,6 +946,18 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                   ))}
                 </select>
               </label>
+            </div>
+          )}
+
+          {/* הודעה הסברית למנהלים במצב מרובה */}
+          {agents.length > 1 && uploadMode === 'multiple' && files.length > 0 && (
+            <div className="bg-lemon-mint/10 border border-lemon-mint/30 rounded-xl p-4">
+              <div className="flex items-center space-x-3">
+                <Info className="w-5 h-5 text-lemon-mint-dark flex-shrink-0" />
+                <p className="text-sm text-indigo-night">
+                  <span className="font-semibold">במצב שיחות מרובות:</span> בחר נציג נפרד עבור כל שיחה בטבלה למעלה
+                </p>
+              </div>
             </div>
           )}
 

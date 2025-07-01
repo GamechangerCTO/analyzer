@@ -73,9 +73,9 @@ function cleanOpenAIResponse(content: string): string {
     const char = cleaned[i];
     if (char === '{') braceCount++;
     else if (char === '}') {
-      braceCount--;
-      if (braceCount === 0) {
-        lastValidEnd = i;
+        braceCount--;
+        if (braceCount === 0) {
+          lastValidEnd = i;
         break;
       }
     }
