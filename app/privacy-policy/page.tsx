@@ -35,7 +35,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">שימוש במידע</h2>
             <p>אנו משתמשים במידע שנאסף למטרות הבאות:</p>
             <ul className="list-disc list-inside space-y-2 mt-4">
-              <li><strong>עיבוד וניתוח שיחות:</strong> שימוש ב-AI (OpenAI GPT-4, Whisper) לתמלול שיחות וניתוח ביצועים</li>
+              <li><strong>עיבוד וניתוח שיחות:</strong> שימוש בטכנולוגיות ניתוח מתקדמות (OpenAI GPT-4, Whisper) לתמלול שיחות וניתוח ביצועים</li>
               <li><strong>יצירת דוחות מותאמים אישית:</strong> הפקת תובנות, המלצות לשיפור ומעקב התקדמות</li>
               <li><strong>ניהול צוותים:</strong> מתן כלים למנהלים לניטור ושיפור ביצועי הצוות</li>
               <li><strong>שיפור השירות:</strong> פיתוח והשבחת אלגוריתמי הניתוח והפלטפורמה</li>
@@ -64,13 +64,13 @@ export default function PrivacyPolicyPage() {
               אנו לא נשתף את המידע והקלטות שלכם עם צדדים שלישיים, למעט במקרים הבאים:
             </p>
             <ul className="list-disc list-inside space-y-2 mt-4">
-              <li><strong>ספקי AI:</strong> שימוש ב-OpenAI (GPT-4, Whisper) לעיבוד הקלטות - עם התחייבות למחיקת נתונים</li>
+              <li><strong>ספקי טכנולוגיה:</strong> שימוש ב-OpenAI (GPT-4, Whisper) לעיבוד הקלטות - עם התחייבות למחיקת נתונים</li>
               <li><strong>בהסכמתכם המפורשת:</strong> שיתוף דוחות או הקלטות עם חברים בצוות או מנהלים</li>
               <li><strong>דרישות חוק:</strong> כאשר נדרש על פי חוק או בית משפט</li>
               <li><strong>הגנה על זכויות:</strong> כדי להגן על הזכויות, הבטיחות או הקניין שלנו</li>
             </ul>
             <p className="mt-4">
-              <strong>חשוב לדעת:</strong> ההקלטות שלכם לא משמשות לאימון מודלי AI או לשיפור שירותי צדדים שלישיים.
+              <strong>חשוב לדעת:</strong> ההקלטות שלכם לא משמשות לאימון מודלים או לשיפור שירותי צדדים שלישיים.
             </p>
           </section>
 
@@ -84,7 +84,7 @@ export default function PrivacyPolicyPage() {
               <li><strong>זכות ייצוא:</strong> הורדת כל הנתונים והדוחות שלכם בפורמט נגיש</li>
               <li><strong>זכות הגבלה:</strong> הגבלת השימוש בהקלטות או במידע מסוים</li>
               <li><strong>זכות שליטה:</strong> קביעה מי בארגון יכול לצפות בהקלטות שלכם</li>
-              <li><strong>זכות ביטול הסכמה:</strong> ביטול הסכמה לעיבוד AI או לשיתוף עם הצוות</li>
+              <li><strong>זכות ביטול הסכמה:</strong> ביטול הסכמה לעיבוד אוטומטי או לשיתוף עם הצוות</li>
             </ul>
           </section>
 
@@ -93,7 +93,7 @@ export default function PrivacyPolicyPage() {
             <p>שימוש בפלטפורמה מחייב הסכמות מיוחדות:</p>
             <ul className="list-disc list-inside space-y-2 mt-4">
               <li><strong>הקלטת שיחות:</strong> אחריותכם לוודא שכל הצדדים בשיחה הסכימו להקלטה</li>
-              <li><strong>עיבוד AI:</strong> הסכמה לעיבוד ההקלטות באמצעות טכנולוגיות בינה מלאכותית</li>
+              <li><strong>עיבוד אוטומטי:</strong> הסכמה לעיבוד ההקלטות באמצעות טכנולוגיות ניתוח מתקדמות</li>
               <li><strong>שיתוף בצוות:</strong> אפשרות לשתף הקלטות ודוחות עם מנהלים וחברי צוות</li>
               <li><strong>שמירת דוחות:</strong> דוחות הניתוח נשמרים לצורכי מעקב והתפתחות מקצועית</li>
               <li><strong>גיבוי מידע:</strong> הנתונים עשויים להיות מגובים למטרות אבטחה והמשכיות עסקית</li>

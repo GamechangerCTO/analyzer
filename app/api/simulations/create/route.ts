@@ -163,7 +163,7 @@ ${originalCallContext}
         scenarioDescription = scenarioData.scenario_description || baseScenario
         enhancedScenario = JSON.stringify(scenarioData)
       } catch (aiError) {
-        console.error('AI scenario generation failed:', aiError)
+        console.error('Scenario generation failed:', aiError)
         // Fallback: try without response_format
         try {
           const openai = getOpenAIClient();
@@ -185,7 +185,7 @@ ${originalCallContext}
           
           scenarioDescription = completion.choices[0].message.content || baseScenario
         } catch (fallbackError) {
-          console.error('Fallback AI generation also failed:', fallbackError)
+          console.error('Fallback scenario generation also failed:', fallbackError)
           scenarioDescription = baseScenario
         }
       }

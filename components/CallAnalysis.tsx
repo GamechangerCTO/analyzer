@@ -540,7 +540,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               <p className="text-gray-600 mb-4 text-center max-w-md">
                 {status === 'completed' 
                   ? 'הניתוח הושלם בהצלחה! טוען את התוצאות...'
-                  : 'אנו מנתחים את השיחה שלך באמצעות בינה מלאכותית מתקדמת. התהליך עשוי לקחת מספר דקות.'
+                  : 'אנו מנתחים את השיחה שלך באמצעות טכנולוגיות ניתוח מתקדמות. התהליך עשוי לקחת מספר דקות.'
                 }
               </p>
               

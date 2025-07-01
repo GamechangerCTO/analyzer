@@ -104,7 +104,7 @@ npm run deploy-check       # בדיקת מוכנות לפריסה
 
 ## תכונות עיקריות
 
-### 🎯 ניתוח שיחות AI
+### 🎯 ניתוח שיחות מתקדם
 - תמלול אוטומטי עם Whisper
 - ניתוח טונציה ורגשות עם GPT-4o  
 - ניתוח תוכן מקצועי עם GPT-4 Turbo

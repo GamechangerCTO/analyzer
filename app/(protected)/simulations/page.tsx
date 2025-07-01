@@ -163,10 +163,10 @@ export default async function SimulationsPage() {
             </div>
             <div>
               <h3 className="text-display text-xl font-bold text-indigo-night mb-3">
-                AI מאמן אישי 🤖
+                מאמן אישי דיגיטלי 🤖
               </h3>
               <p className="text-indigo-night/70 leading-relaxed">
-                בינה מלאכותית שתלמד את הסגנון שלך ותציע אימונים מותאמים אישית לשיפור מהיר
+                טכנולוגיה מתקדמת שתלמד את הסגנון שלך ותציע אימונים מותאמים אישית לשיפור מהיר
               </p>
             </div>
           </div>

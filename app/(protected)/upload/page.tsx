@@ -92,7 +92,7 @@ export default async function UploadPage() {
             העלה שיחה חדשה 🎯
           </h1>
           <p className="text-lg text-indigo-night/70 max-w-3xl mx-auto leading-relaxed">
-            העלה ונתח שיחות עם בינה מלאכותית מתקדמת לקבלת תובנות מעמיקות ומותאמות אישית
+            העלה ונתח שיחות עם טכנולוגיות ניתוח מתקדמות לקבלת תובנות מעמיקות ומותאמות אישית
             <br />
             <span className="text-lemon-mint-dark font-semibold">המערכת תכין עבורך דוח מפורט עם המלצות לשיפור</span>
           </p>
@@ -119,7 +119,7 @@ export default async function UploadPage() {
               <h3 className="text-display font-bold text-indigo-night">ניתוח מדויק</h3>
             </div>
             <p className="text-indigo-night/70 leading-relaxed">
-              בינה מלאכותית מתקדמת לניתוח שיחות עם דיוק גבוה ותובנות מעמיקות על ביצועים מכירתיים
+              אלגוריתמים מתקדמים לניתוח שיחות עם דיוק גבוה ותובנות מעמיקות על ביצועים מכירתיים
             </p>
           </div>
 
