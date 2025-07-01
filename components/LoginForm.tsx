@@ -180,34 +180,34 @@ export default function LoginForm() {
     <div className="flex flex-col gap-6">
       {/* הצגת שגיאות אותנטיקציה */}
       {authError && (
-        <div className="replayme-card p-4 bg-electric-coral/10 border border-electric-coral/30">
-          <p className="text-electric-coral text-sm font-medium">{authError}</p>
+        <div className="choacee-card-glass p-4 bg-clay-danger/10 border border-clay-danger/30">
+          <p className="text-clay-danger text-sm font-medium">{authError}</p>
         </div>
       )}
 
       {/* הצגת סטטוס אותנטיקציה */}
       {authLoading && (
-        <div className="replayme-card p-4 bg-lemon-mint/10 border border-lemon-mint/30">
+        <div className="choacee-card-glass p-4 bg-clay-success/10 border border-clay-success/30">
           <div className="flex items-center gap-3">
-            <div className="w-4 h-4 animate-spin rounded-full border-2 border-lemon-mint border-t-transparent"></div>
-            <p className="text-lemon-mint-dark text-sm font-medium">{authStatus}</p>
+            <div className="w-4 h-4 animate-spin rounded-full border-2 border-clay-success border-t-transparent"></div>
+            <p className="text-clay-success text-sm font-medium">{authStatus}</p>
           </div>
         </div>
       )}
 
       {/* בורר תפקידים לסופר אדמין */}
       {showRoleSelector && (
-        <div className="replayme-card p-6 bg-gradient-to-r from-lemon-mint/5 to-cream-sand-light/5 border border-lemon-mint/20">
-          <h3 className="text-lg font-semibold text-indigo-night mb-4">בחר תפקיד להתחברות</h3>
+        <div className="choacee-card-clay-raised p-6 bg-gradient-to-r from-clay-success/5 to-glass-light/5 border border-clay-success/20">
+          <h3 className="choacee-text-display text-lg font-semibold text-clay-primary mb-4">בחר תפקיד להתחברות</h3>
           <div className="grid gap-3">
             {(['admin', 'manager', 'agent'] as Role[]).map((role) => (
               <button
                 key={role}
                 onClick={() => setSelectedRole(role)}
-                className={`p-3 rounded-lg border-2 transition-all duration-200 text-right ${
+                className={`p-3 rounded-clay border-2 transition-all duration-200 text-right choacee-interactive ${
                   selectedRole === role
-                    ? 'border-lemon-mint bg-lemon-mint/10 text-lemon-mint-dark'
-                    : 'border-gray-200 hover:border-lemon-mint/50 text-indigo-night/70'
+                    ? 'border-clay-success bg-clay-success/10 text-clay-primary shadow-clay-soft'
+                    : 'border-neutral-200 hover:border-clay-success/50 text-neutral-600'
                 }`}
               >
                 <div className="font-medium">
@@ -220,7 +220,7 @@ export default function LoginForm() {
           </div>
           <button
             onClick={loginWithRole}
-            className="w-full mt-4 bg-lemon-mint hover:bg-lemon-mint-dark text-indigo-night font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+            className="choacee-btn-clay-success w-full mt-4 py-3 px-4"
           >
             המשך עם התפקיד הנבחר
           </button>
@@ -230,23 +230,23 @@ export default function LoginForm() {
       {/* טופס התחברות/הרשמה */}
       {!showRoleSelector && (
         <div className="space-y-4">
-          <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+          <div className="flex gap-2 p-1 bg-glass-light rounded-clay shadow-clay-soft">
             <button
               onClick={() => setView('sign_in')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${
+              className={`flex-1 py-2 px-4 rounded-clay text-sm font-medium transition-colors duration-200 choacee-interactive ${
                 view === 'sign_in' 
-                  ? 'bg-white text-indigo-night shadow-sm' 
-                  : 'text-indigo-night/60 hover:text-indigo-night'
+                  ? 'bg-white text-clay-primary shadow-clay-raised' 
+                  : 'text-neutral-500 hover:text-clay-primary'
               }`}
             >
               התחברות
             </button>
             <button
               onClick={() => setView('sign_up')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors duration-200 ${
+              className={`flex-1 py-2 px-4 rounded-clay text-sm font-medium transition-colors duration-200 choacee-interactive ${
                 view === 'sign_up' 
-                  ? 'bg-white text-indigo-night shadow-sm' 
-                  : 'text-indigo-night/60 hover:text-indigo-night'
+                  ? 'bg-white text-clay-primary shadow-clay-raised' 
+                  : 'text-neutral-500 hover:text-clay-primary'
               }`}
             >
               הרשמה
@@ -261,25 +261,25 @@ export default function LoginForm() {
               variables: {
                 default: {
                   colors: {
-                    brand: '#8FE9D1',
-                    brandAccent: '#65E3CE',
-                    brandButtonText: '#2C4F7C',
+                    brand: '#8B5FBF',
+                    brandAccent: '#7B4FAF',
+                    brandButtonText: 'white',
                     defaultButtonBackground: 'transparent',
-                    defaultButtonBackgroundHover: '#F7F8F9',
-                    defaultButtonBorder: '#E5E7EB',
-                    defaultButtonText: '#374151',
-                    dividerBackground: '#E5E7EB',
+                    defaultButtonBackgroundHover: '#F8F9FA',
+                    defaultButtonBorder: '#E9ECEF',
+                    defaultButtonText: '#495057',
+                    dividerBackground: '#E9ECEF',
                     inputBackground: 'white',
-                    inputBorder: '#D1D5DB',
-                    inputBorderHover: '#8FE9D1',
-                    inputBorderFocus: '#8FE9D1',
-                    inputText: '#1F2937',
-                    inputLabelText: '#6B7280',
-                    inputPlaceholder: '#9CA3AF',
-                    messageText: '#EF4444',
-                    messageTextDanger: '#EF4444',
-                    anchorTextColor: '#2C4F7C',
-                    anchorTextHoverColor: '#1E3A8A',
+                    inputBorder: '#DEE2E6',
+                    inputBorderHover: '#8B5FBF',
+                    inputBorderFocus: '#8B5FBF',
+                    inputText: '#212529',
+                    inputLabelText: '#6C757D',
+                    inputPlaceholder: '#ADB5BD',
+                    messageText: '#EC7063',
+                    messageTextDanger: '#EC7063',
+                    anchorTextColor: '#8B5FBF',
+                    anchorTextHoverColor: '#7B4FAF',
                   },
                   space: {
                     spaceSmall: '4px',
@@ -309,36 +309,38 @@ export default function LoginForm() {
                     inputBorderWidth: '1px',
                   },
                   radii: {
-                    borderRadiusButton: '8px',
-                    buttonBorderRadius: '8px',
-                    inputBorderRadius: '8px',
+                    borderRadiusButton: '1.5rem',
+                    buttonBorderRadius: '1.5rem',
+                    inputBorderRadius: '1.5rem',
                   },
                 },
               },
               style: {
                 button: {
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '8px',
+                  border: '1px solid #E9ECEF',
+                  borderRadius: '1.5rem',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
                 },
                 anchor: {
-                  color: '#2C4F7C',
+                  color: '#8B5FBF',
                   textDecoration: 'none',
                 },
                 container: {
                   direction: 'rtl',
                 },
                 input: {
-                  border: '1px solid #D1D5DB',
-                  borderRadius: '8px',
+                  border: '1px solid #DEE2E6',
+                  borderRadius: '1.5rem',
                   direction: 'rtl',
+                  boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)',
                 },
                 label: {
-                  color: '#6B7280',
+                  color: '#6C757D',
                   direction: 'rtl',
                   textAlign: 'right',
                 },
                 message: {
-                  color: '#EF4444',
+                  color: '#EC7063',
                   direction: 'rtl',
                   textAlign: 'right',
                 },
@@ -376,7 +378,7 @@ export default function LoginForm() {
                 },
               },
             }}
-            providers={[]}
+            providers={['google']}
             redirectTo={`${window.location.origin}/api/auth/callback`}
             onlyThirdPartyProviders={false}
             magicLink={false}
