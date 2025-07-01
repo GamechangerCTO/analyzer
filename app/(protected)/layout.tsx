@@ -64,19 +64,19 @@ export default async function ProtectedLayout({
   console.log('Protected Layout - Auth successful, rendering page for:', user.email)
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream-sand-light">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-glass-white via-white to-clay-accent/10">
       <Navbar user={user} userData={userData} />
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="smooth-appear">
+      <main className="flex-grow container mx-auto px-4 pt-24 pb-8">
+        <div className="choacee-smooth-appear">
           {children}
         </div>
       </main>
-      <footer className="bg-white shadow-soft border-t border-ice-gray py-6">
-        <div className="container mx-auto px-4 text-center text-indigo-night/70 text-sm">
+      <footer className="choacee-glass border-t border-glass-white/20 py-6">
+        <div className="container mx-auto px-4 text-center text-neutral-600 text-sm">
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-6 mb-4">
             <a 
               href="/privacy-policy" 
-              className="text-indigo-night/70 hover:text-indigo-night underline decoration-lemon-mint decoration-2 underline-offset-4 transition-colors duration-200"
+              className="text-neutral-500 hover:text-clay-primary underline decoration-clay-accent decoration-2 underline-offset-4 transition-colors duration-200 choacee-interactive"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -84,7 +84,7 @@ export default async function ProtectedLayout({
             </a>
             <a 
               href="/terms-of-service" 
-              className="text-indigo-night/70 hover:text-indigo-night underline decoration-lemon-mint decoration-2 underline-offset-4 transition-colors duration-200"
+              className="text-neutral-500 hover:text-clay-primary underline decoration-clay-accent decoration-2 underline-offset-4 transition-colors duration-200 choacee-interactive"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -92,9 +92,9 @@ export default async function ProtectedLayout({
             </a>
           </div>
           <div className="flex items-center justify-center space-x-2">
-            <span className="text-display font-semibold text-indigo-night">ReplayMe</span>
+            <span className="choacee-text-display font-semibold text-clay-primary">ReplayMe</span>
             <span>&copy; {new Date().getFullYear()}</span>
-            <span className="text-lemon-mint-dark">•</span>
+            <span className="text-clay-accent">•</span>
             <span>חדר כושר למכירות</span>
           </div>
         </div>

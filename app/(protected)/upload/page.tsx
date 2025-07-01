@@ -46,30 +46,30 @@ export default async function UploadPage() {
   return (
     <div className="min-h-screen">
       {/* Header עם breadcrumb מינימליסטי */}
-      <div className="replayme-card mb-8">
+      <div className="choacee-card-clay-raised mb-8">
         <div className="px-8 py-6">
           <div className="flex items-center justify-between">
             {/* Breadcrumb Navigation */}
-            <nav className="flex items-center space-x-2 text-sm text-indigo-night/60" aria-label="Breadcrumb">
+            <nav className="flex items-center space-x-2 text-sm text-neutral-500" aria-label="Breadcrumb">
               <Link 
                 href="/dashboard" 
-                className="flex items-center hover:text-lemon-mint-dark transition-colors duration-200 font-medium"
+                className="flex items-center hover:text-clay-primary transition-colors duration-200 font-medium choacee-interactive"
               >
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                 </svg>
                 דשבורד
               </Link>
-              <svg className="w-4 h-4 text-ice-gray" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
               </svg>
-              <span className="text-indigo-night font-semibold">העלאת שיחה</span>
+              <span className="text-clay-primary font-semibold">העלאת שיחה</span>
             </nav>
             
             {/* Company Info */}
             {userData?.companies?.name && (
-              <div className="text-sm text-indigo-night/60">
-                חברה: <span className="font-semibold text-indigo-night">{userData.companies.name}</span>
+              <div className="text-sm text-neutral-500">
+                חברה: <span className="font-semibold text-clay-primary">{userData.companies.name}</span>
               </div>
             )}
           </div>
@@ -79,21 +79,21 @@ export default async function UploadPage() {
       {/* Main Content */}
       <div className="space-y-8">
         {/* Page Title */}
-        <div className="text-center smooth-appear">
+        <div className="text-center choacee-smooth-appear">
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-lemon-mint/20 rounded-2xl flex items-center justify-center animate-lemon-pulse">
-              <svg className="w-10 h-10 text-lemon-mint-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-20 h-20 bg-clay-success/20 rounded-clay flex items-center justify-center animate-clay-float shadow-clay-soft">
+              <svg className="w-10 h-10 text-clay-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
             </div>
           </div>
-          <h1 className="text-display text-4xl font-bold text-indigo-night mb-4">
+          <h1 className="choacee-text-display text-4xl font-bold text-clay-primary mb-4">
             העלה שיחה חדשה 🎯
           </h1>
-          <p className="text-lg text-indigo-night/70 max-w-3xl mx-auto leading-relaxed">
+          <p className="choacee-text-body text-lg text-neutral-600 max-w-3xl mx-auto leading-relaxed">
             העלה ונתח שיחות עם טכנולוגיות ניתוח מתקדמות לקבלת תובנות מעמיקות ומותאמות אישית
             <br />
-            <span className="text-lemon-mint-dark font-semibold">המערכת תכין עבורך דוח מפורט עם המלצות לשיפור</span>
+            <span className="text-clay-success font-semibold">המערכת תכין עבורך דוח מפורט עם המלצות לשיפור</span>
           </p>
         </div>
 
