@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     }
 
     // יצירת לקוח סופהבייס בצד השרת עם הרשאות מלאות
-    const supabase = createRouteHandlerClient<Database>({ cookies });
+    const supabase = createRouteHandlerClient({ cookies });
     
     await addCallLog(call_id, '🔄 מנסה ניתוח חוזר', { 
       timestamp: new Date().toISOString(),

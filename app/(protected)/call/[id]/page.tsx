@@ -12,8 +12,7 @@ interface CallPageProps {
 
 export default async function CallPage({ params }: CallPageProps) {
   const { id } = params
-  const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = createClient()
   
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   

@@ -6,8 +6,7 @@ import Link from 'next/link'
 import AddAgentForm from '@/components/AddAgentForm'
 
 export default async function AddAgentPage() {
-  const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = createClient()
   
   const { data: { user }, error } = await supabase.auth.getUser()
   

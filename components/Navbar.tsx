@@ -67,7 +67,7 @@ export default function Navbar({ user, userData }: NavbarProps) {
   }
   
   const isActive = (path: string) => {
-    return pathname === path ? 'nav-item-active' : 'nav-item hover:bg-cream-sand'
+    return pathname === path ? 'choacee-nav-item-active' : 'choacee-nav-item'
   }
   
   // בדיקה האם המשתמש הוא מנהל מערכת
@@ -82,19 +82,19 @@ export default function Navbar({ user, userData }: NavbarProps) {
   }
   
   return (
-    <nav className="bg-white shadow-soft border-b border-ice-gray">
+    <nav className="choacee-glass-navbar">
       <div className="container mx-auto px-4">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link href="/dashboard" className="flex items-center space-x-3">
+            <Link href="/dashboard" className="flex items-center space-x-3 choacee-interactive">
               <Image 
                 src="/logo.webp" 
                 alt="ReplayMe Logo" 
                 width={40} 
                 height={40}
-                className="w-10 h-10"
+                className="w-10 h-10 rounded-clay shadow-clay-soft"
               />
-              <div className="text-display text-2xl font-bold text-indigo-night">
+              <div className="choacee-text-display text-2xl font-bold text-clay-primary">
                 ReplayMe
               </div>
             </Link>
@@ -185,7 +185,7 @@ export default function Navbar({ user, userData }: NavbarProps) {
             <button
               onClick={handleSignOut}
               disabled={isLoading}
-              className="replayme-button-coral text-sm disabled:opacity-50"
+              className="choacee-btn-clay-danger text-sm disabled:opacity-50"
             >
               {isLoading ? 'מתנתק...' : 'התנתק'}
             </button>
@@ -195,7 +195,7 @@ export default function Navbar({ user, userData }: NavbarProps) {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-indigo-night hover:text-indigo-night/80 hover:bg-cream-sand focus:outline-none focus:ring-2 focus:ring-lemon-mint"
+              className="choacee-interactive-clay p-2 rounded-clay"
               aria-expanded="false"
             >
               <span className="sr-only">פתח תפריט</span>

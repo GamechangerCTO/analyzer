@@ -94,10 +94,10 @@ export default function CallsListClient({ userId, companyId, userRole, filterByA
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="choacee-text-display text-3xl font-bold text-clay-primary">
           {filterByAgent && agentName ? `שיחות של ${agentName}` : 'כל השיחות'}
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="choacee-text-body text-neutral-600 mt-2">
           {filterByAgent && agentName 
             ? `צפה בכל השיחות של ${agentName}` 
             : 'צפה בכל השיחות שלך'
@@ -107,7 +107,7 @@ export default function CallsListClient({ userId, companyId, userRole, filterByA
           <div className="mt-4">
             <Link 
               href="/dashboard/calls"
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
+              className="inline-flex items-center text-clay-accent hover:text-clay-primary font-medium choacee-interactive"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -118,9 +118,9 @@ export default function CallsListClient({ userId, companyId, userRole, filterByA
         )}
       </div>
 
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold">רשימת שיחות</h2>
+      <div className="choacee-card-clay-raised overflow-hidden">
+        <div className="px-6 py-4 border-b border-neutral-200">
+          <h2 className="choacee-text-display text-xl font-semibold text-clay-primary">רשימת שיחות</h2>
         </div>
         
         {/* תצוגת כרטיסים לנייד */}

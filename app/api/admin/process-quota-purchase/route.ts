@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = createClient()
     
     // וודא שהמשתמש מחובר והוא מנהל מערכת
     const { data: { user }, error: userError } = await supabase.auth.getUser()

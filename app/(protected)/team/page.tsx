@@ -6,7 +6,7 @@ import TeamManagementClient from '@/components/TeamManagementClient'
 
 export default async function TeamPage() {
   const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = createClient()
   
   const { data: { user }, error } = await supabase.auth.getUser()
   

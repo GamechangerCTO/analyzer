@@ -703,14 +703,14 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     <div className="space-y-8">
       {/* בחירת מצב העלאה */}
       <div className="flex justify-center">
-        <div className="flex bg-cream-sand rounded-xl p-1 border border-ice-gray">
+        <div className="flex choacee-glass rounded-clay p-2">
           <button
             type="button"
             onClick={() => setUploadMode('single')}
-            className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+            className={`px-6 py-3 rounded-clay text-sm font-semibold transition-all duration-200 ${
               uploadMode === 'single'
-                ? 'bg-lemon-mint text-indigo-night shadow-md'
-                : 'text-indigo-night/60 hover:text-indigo-night'
+                ? 'choacee-btn-clay-primary'
+                : 'choacee-interactive-clay text-neutral-600'
             }`}
           >
             <div className="flex items-center space-x-2">
@@ -721,10 +721,10 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
           <button
             type="button"
             onClick={() => setUploadMode('multiple')}
-            className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
+            className={`px-6 py-3 rounded-clay text-sm font-semibold transition-all duration-200 ${
               uploadMode === 'multiple'
-                ? 'bg-electric-coral text-white shadow-md'
-                : 'text-indigo-night/60 hover:text-indigo-night'
+                ? 'choacee-btn-clay-secondary'
+                : 'choacee-interactive-clay text-neutral-600'
             }`}
           >
             <div className="flex items-center space-x-2">
@@ -746,12 +746,12 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               onDrop={handleDrop}
               onClick={triggerFileInput}
               className={`
-                relative border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-300
+                choacee-card-clay-raised cursor-pointer p-12 text-center transition-all duration-300
                 ${dragActive 
-                  ? 'border-lemon-mint bg-lemon-mint/10 scale-105' 
+                  ? 'shadow-clay-hover scale-105 border-2 border-clay-accent border-dashed' 
                   : file || files.length > 0
-                    ? 'border-success bg-success/5'
-                    : 'border-ice-gray hover:border-lemon-mint hover:bg-lemon-mint/5'
+                    ? 'shadow-clay-hover border-2 border-clay-success border-dashed'
+                    : 'hover:shadow-clay-hover hover:-translate-y-1'
                 }
               `}
             >
@@ -766,14 +766,14 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               
               <div className="space-y-4">
                 {isConverting ? (
-                  <div className="animate-lemon-pulse">
-                    <Loader2 className="w-16 h-16 text-lemon-mint-dark mx-auto animate-spin" />
-                    <p className="text-lg font-semibold text-indigo-night mt-4">{conversionStatus}</p>
+                  <div className="choacee-smooth-appear">
+                    <Loader2 className="w-16 h-16 text-clay-warning mx-auto animate-spin" />
+                    <p className="text-lg font-semibold text-neutral-800 mt-4">{conversionStatus}</p>
                   </div>
                 ) : file || files.length > 0 ? (
-                  <div className="text-success">
-                    <CheckCircle2 className="w-16 h-16 mx-auto animate-score-bounce" />
-                    <p className="text-lg font-semibold text-indigo-night mt-4">
+                  <div className="text-clay-success">
+                    <CheckCircle2 className="w-16 h-16 mx-auto choacee-smooth-appear" />
+                    <p className="text-lg font-semibold text-neutral-800 mt-4">
                       {uploadMode === 'single' 
                         ? `נבחר: ${fileName}` 
                         : `נבחרו ${files.length} קבצים`
@@ -782,19 +782,19 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                   </div>
                 ) : (
                   <>
-                    <div className={`w-20 h-20 mx-auto rounded-2xl flex items-center justify-center ${
-                      dragActive ? 'bg-lemon-mint/20 animate-lemon-pulse' : 'bg-indigo-night/10'
+                    <div className={`w-20 h-20 mx-auto rounded-clay flex items-center justify-center choacee-card-clay-pressed ${
+                      dragActive ? 'shadow-clay-hover' : ''
                     }`}>
                       <Upload className={`w-10 h-10 ${
-                        dragActive ? 'text-lemon-mint-dark' : 'text-indigo-night'
+                        dragActive ? 'text-clay-accent' : 'text-clay-primary'
                       }`} />
                     </div>
                     
                     <div>
-                      <h3 className="text-xl font-bold text-indigo-night mb-2">
+                      <h3 className="choacee-text-body text-xl font-bold text-neutral-800 mb-2">
                         {uploadMode === 'single' ? 'גרור שיחה או לחץ להעלאה' : 'גרור קבצים או לחץ להעלאה'}
                       </h3>
-                      <p className="text-indigo-night/60">
+                      <p className="text-neutral-500">
                         נתמך: MP3, WAV, M4A, AAC ועוד | עד 100MB לקובץ
                       </p>
                     </div>
@@ -1109,7 +1109,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
           <div className="flex justify-center space-x-4">
             <button
               onClick={goToCallAnalysis}
-              className="replayme-button-primary text-lg px-8 py-4"
+              className="choacee-btn-clay-primary text-lg px-8 py-4"
             >
               <div className="flex items-center space-x-2">
                 <ArrowRight className="w-5 h-5" />
@@ -1130,7 +1130,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 setError(null);
                 setSuccess(null);
               }}
-              className="replayme-button-secondary text-lg px-8 py-4"
+              className="choacee-btn-clay-secondary text-lg px-8 py-4"
             >
               העלה שיחה נוספת
             </button>

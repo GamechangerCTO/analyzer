@@ -1,11 +1,10 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Database } from '@/types/database.types'
 import PaymentModal from '@/components/PaymentModal'
-import { getSupabaseClient } from '@/lib/supabase/client'
 
 interface QuotaPackage {
   id: string
@@ -62,7 +61,7 @@ export default function PurchaseQuotaPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly') // תמחור חודשי/שנתי
   const [userCount, setUserCount] = useState(3) // ברירת מחדל 3 משתמשים
 
-  const supabase = getSupabaseClient()
+  const supabase = createClient()
 
   // פונקציה לחישוב מחיר לפי מספר משתמשים וסוג תמחור
   const calculatePrice = (packagePrice: number, users: number, period: 'monthly' | 'yearly') => {

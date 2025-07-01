@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { Database } from '@/types/database.types';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 
 // הגדרת max duration לוורסל
 export const maxDuration = 60;
@@ -149,10 +149,7 @@ async function addCallLog(callId: string, message: string, data?: any) {
     // 3. שמירה בסופהבייס - גישה ישירה במקום קריאה ל-API פנימי
     try {
       // יצירת קליינט סופאבייס עם סיסמה סודית (מוגדרת משתנה סביבה)
-      const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-        process.env.SUPABASE_SERVICE_ROLE_KEY || '' // שימוש במפתח שירות כדי לעקוף בעיות אימות
-      );
+      const supabaseAdmin = createClient();
       
       // ניסיון להוסיף את הלוג
       const { error: insertError } = await supabaseAdmin
@@ -168,44 +165,8 @@ async function addCallLog(callId: string, message: string, data?: any) {
       
       // אם יש שגיאה 42P01 (טבלה לא קיימת), ננסה ליצור אותה
       if (insertError && insertError.code === '42P01') {
-        console.log('טבלת call_logs לא קיימת, מנסה ליצור אותה');
-        
-        // SQL ליצירת הטבלה
-        const createTableSQL = `
-          -- יצירת טבלת לוגים של שיחות
-          CREATE TABLE IF NOT EXISTS call_logs (
-            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-            call_id UUID NOT NULL REFERENCES calls(id) ON DELETE CASCADE,
-            message TEXT NOT NULL,
-            data JSONB,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-          );
-        `;
-        
-        // ניסיון ליצור את הטבלה
-        const { error: createError } = await supabaseAdmin.rpc('run_sql', { 
-          sql: createTableSQL 
-        });
-        
-        if (createError) {
-          console.error('שגיאה ביצירת טבלת call_logs:', createError);
-        } else {
-          // נסה שוב להוסיף את הלוג אחרי יצירת הטבלה
-          const { error: retryError } = await supabaseAdmin
-            .from('call_logs')
-            .insert([
-              { 
-                call_id: callId, 
-                message, 
-                data,
-                created_at: timestamp 
-              }
-            ]);
-          
-          if (retryError) {
-            console.error('שגיאה בהוספת לוג אחרי יצירת הטבלה:', retryError);
-          }
-        }
+        console.log('טבלת call_logs לא קיימת, אבל לא ניתן ליצור אותה באופן אוטומטי');
+        console.error('נדרש ליצור את הטבלה במסד הנתונים באופן ידני');
       } else if (insertError) {
         console.error('שגיאה בשמירת לוג ישירות לסופהבייס:', insertError);
       }

@@ -1,10 +1,9 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = createClient()
     
     const { callId } = await request.json()
     
@@ -28,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // בדיקה האם הציון מתחת ל-7 ולא נוצרה כבר סימולציה
-    if (call.overall_score < 7) {
+    if (call.overall_score !== null && call.overall_score < 7) {
       // בדיקה שלא קיימת כבר סימולציה לשיחה זו
       const { data: existingSimulation } = await supabase
         .from('simulations')
@@ -41,13 +40,13 @@ export async function POST(request: NextRequest) {
         const { data: lowScoreCalls, count } = await supabase
           .from('calls')
           .select('id', { count: 'exact' })
-          .eq('user_id', call.user_id)
+          .eq('user_id', call.user_id || '')
           .lt('overall_score', 7)
           .not('id', 'in', `(
             SELECT triggered_by_call_id 
             FROM simulations 
             WHERE triggered_by_call_id IS NOT NULL 
-            AND agent_id = '${call.user_id}'
+            AND agent_id = '${call.user_id || ''}'
           )`)
 
         const lowScoreCount = count || 0
@@ -56,8 +55,8 @@ export async function POST(request: NextRequest) {
         await supabase
           .from('agent_notifications')
           .insert({
-            user_id: call.user_id,
-            company_id: call.company_id,
+            user_id: call.user_id || '',
+            company_id: call.company_id || '',
             notification_type: 'simulation_required',
             title: 'נדרש תרגול נוסף',
             message: `קיבלת ציון ${call.overall_score} בשיחת ${call.call_type}. מומלץ לתרגל כדי לשפר את הביצועים`,
@@ -77,49 +76,49 @@ export async function POST(request: NextRequest) {
           const { data: managers } = await supabase
             .from('users')
             .select('id, email, full_name')
-            .eq('company_id', call.company_id)
+            .eq('company_id', call.company_id || '')
             .eq('role', 'manager')
 
           if (managers && managers.length > 0) {
             // יצירת התראות למנהלים
-                         const managerNotifications = managers.map(manager => ({
-               user_id: manager.id,
-               company_id: call.company_id,
-               notification_type: 'red_flag_warning',
-               title: 'דגל אדום - נציג זקוק לתמיכה',
-               message: `${(call.users as any).full_name} צבר ${lowScoreCount} שיחות עם ציון מתחת ל-7 ללא תרגול`,
-               action_url: `/team?agent_id=${call.user_id}`,
-               priority: 'urgent',
-               metadata: {
-                 agent_id: call.user_id,
-                 agent_name: (call.users as any).full_name,
-                 low_score_count: lowScoreCount,
-                 latest_call_id: callId
-               }
-             }))
+            const managerNotifications = managers.map(manager => ({
+              user_id: manager.id,
+              company_id: call.company_id || '',
+              notification_type: 'red_flag_warning',
+              title: 'דגל אדום - נציג זקוק לתמיכה',
+              message: `${(call.users as any).full_name || 'נציג'} צבר ${lowScoreCount} שיחות עם ציון מתחת ל-7 ללא תרגול`,
+              action_url: `/team?agent_id=${call.user_id || ''}`,
+              priority: 'urgent',
+              metadata: {
+                agent_id: call.user_id || '',
+                agent_name: (call.users as any).full_name || 'נציג',
+                low_score_count: lowScoreCount,
+                latest_call_id: callId
+              }
+            }))
 
-             await supabase
-               .from('agent_notifications')
-               .insert(managerNotifications)
+            await supabase
+              .from('agent_notifications')
+              .insert(managerNotifications)
 
-             // שליחת אימייל למנהלים (אופציונלי)
-             try {
-               await fetch('/api/notifications/send-email', {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({
-                   type: 'red_flag',
-                   recipients: managers.map(m => m.email),
-                   data: {
-                     agent_name: (call.users as any).full_name,
-                     low_score_count: lowScoreCount,
-                     company_name: call.company_id
-                   }
-                 })
-               })
-             } catch (emailError) {
-               console.error('Failed to send email notification:', emailError)
-             }
+            // שליחת אימייל למנהלים (אופציונלי)
+            try {
+              await fetch('/api/notifications/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: 'red_flag',
+                  recipients: managers.map(m => m.email),
+                  data: {
+                    agent_name: (call.users as any).full_name || 'נציג',
+                    low_score_count: lowScoreCount,
+                    company_name: call.company_id || ''
+                  }
+                })
+              })
+            } catch (emailError) {
+              console.error('Failed to send email notification:', emailError)
+            }
           }
         }
 

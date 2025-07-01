@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { Database } from '@/types/database.types';
 
@@ -9,7 +9,7 @@ import { Database } from '@/types/database.types';
 export async function POST(request: Request) {
   try {
     // יצירת לקוח סופהבייס בצד השרת עם הרשאות מלאות
-    const supabase = createRouteHandlerClient<Database>({ cookies });
+    const supabase = createClient();
     
     // קבלת נתוני הלוג מגוף הבקשה
     const { call_id, message, data, timestamp } = await request.json();

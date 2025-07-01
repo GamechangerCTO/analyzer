@@ -7,8 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 export default async function UploadPage() {
-  const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = createClient()
   
   const { data: { user }, error } = await supabase.auth.getUser()
   
@@ -99,7 +98,7 @@ export default async function UploadPage() {
         </div>
 
         {/* Upload Form Component */}
-        <div className="replayme-card p-8">
+        <div className="choacee-card-clay-raised p-8">
           <UploadForm 
             user={user}
             userData={userData}
@@ -109,70 +108,70 @@ export default async function UploadPage() {
 
         {/* Bottom Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="replayme-card p-6 card-hover border-r-4 border-lemon-mint">
+          <div className="choacee-card-clay choacee-interactive border-r-4 border-clay-success">
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-lemon-mint/20 rounded-xl flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-lemon-mint-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-clay-success/20 rounded-clay flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-clay-success-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-display font-bold text-indigo-night">ניתוח מדויק</h3>
+              <h3 className="choacee-text-display font-bold text-clay-primary">ניתוח מדויק</h3>
             </div>
-            <p className="text-indigo-night/70 leading-relaxed">
+            <p className="choacee-text-body text-neutral-600 leading-relaxed">
               אלגוריתמים מתקדמים לניתוח שיחות עם דיוק גבוה ותובנות מעמיקות על ביצועים מכירתיים
             </p>
           </div>
 
-          <div className="replayme-card p-6 card-hover border-r-4 border-electric-coral">
+          <div className="choacee-card-clay choacee-interactive border-r-4 border-clay-danger">
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-electric-coral/20 rounded-xl flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-electric-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-clay-danger/20 rounded-clay flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-clay-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-display font-bold text-indigo-night">עיבוד מהיר</h3>
+              <h3 className="choacee-text-display font-bold text-clay-primary">עיבוד מהיר</h3>
             </div>
-            <p className="text-indigo-night/70 leading-relaxed">
+            <p className="choacee-text-body text-neutral-600 leading-relaxed">
               תוצאות ניתוח מוכנות תוך דקות ספורות עם דוחות מפורטים, מעשיים ומותאמים אישית
             </p>
           </div>
 
-          <div className="replayme-card p-6 card-hover border-r-4 border-indigo-night">
+          <div className="choacee-card-clay choacee-interactive border-r-4 border-clay-primary">
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-indigo-night/20 rounded-xl flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-indigo-night" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-clay-primary/20 rounded-clay flex items-center justify-center mr-4">
+                <svg className="w-6 h-6 text-clay-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <h3 className="text-display font-bold text-indigo-night">תובנות מתקדמות</h3>
+              <h3 className="choacee-text-display font-bold text-clay-primary">תובנות מתקדמות</h3>
             </div>
-            <p className="text-indigo-night/70 leading-relaxed">
+            <p className="choacee-text-body text-neutral-600 leading-relaxed">
               המלצות מותאמות אישית לשיפור ביצועי המכירות והשירות עם דגש על נקודות מפתח
             </p>
           </div>
         </div>
 
         {/* הוספת קטע עזרה */}
-        <div className="replayme-card-secondary p-6">
+        <div className="choacee-card-glass p-6">
           <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 bg-indigo-night/10 rounded-xl flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-indigo-night" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-clay-primary/10 rounded-clay flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-clay-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-display text-lg font-semibold text-indigo-night mb-2">💡 טיפים להעלאה מוצלחת</h3>
-              <ul className="text-indigo-night/70 space-y-2 text-sm">
+              <h3 className="choacee-text-display text-lg font-semibold text-clay-primary mb-2">💡 טיפים להעלאה מוצלחת</h3>
+              <ul className="choacee-text-body text-neutral-600 space-y-2 text-sm">
                 <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 bg-lemon-mint rounded-full"></span>
+                  <span className="w-1.5 h-1.5 bg-clay-success rounded-full"></span>
                   <span>וודא שאיכות הקול ברורה וללא רעשי רקע</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 bg-electric-coral rounded-full"></span>
+                  <span className="w-1.5 h-1.5 bg-clay-danger rounded-full"></span>
                   <span>בחר את סוג השיחה המדויק לקבלת ניתוח מותאם</span>
                 </li>
                 <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 bg-indigo-night rounded-full"></span>
+                  <span className="w-1.5 h-1.5 bg-clay-primary rounded-full"></span>
                   <span>תוכל לצפות בתוצאות תוך 2-5 דקות</span>
                 </li>
               </ul>

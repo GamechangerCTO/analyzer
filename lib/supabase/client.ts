@@ -1,10 +1,9 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Database } from '@/types/database.types'
 
-// יצירת instance יחיד של Supabase client
 let supabaseClient: ReturnType<typeof createClientComponentClient<Database>> | null = null
 
-export function getSupabaseClient() {
+export function createClient() {
   if (!supabaseClient) {
     supabaseClient = createClientComponentClient<Database>()
   }
@@ -12,8 +11,8 @@ export function getSupabaseClient() {
 }
 
 // Export של הפונקציה הישנה לתאימות לאחור
-export function createClient() {
-  return getSupabaseClient()
+export function getSupabaseClient() {
+  return createClient()
 }
 
 export { supabaseClient } 

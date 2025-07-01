@@ -2,29 +2,32 @@ import React from 'react'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 interface NotApprovedPageProps {
   searchParams: { [key: string]: string | string[] | undefined }
 }
 
 export default async function NotApprovedPage({ searchParams }: NotApprovedPageProps) {
-  const reason = searchParams.reason || 'pending'
-  const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = createClient()
   
   const { data: { user } } = await supabase.auth.getUser()
   
-  // בדיקה אם המשתמש קיים בטבלת users
-  let userData = null
-  if (user) {
-    const { data } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle()
-    
-    userData = data
+  if (!user) {
+    redirect('/login')
   }
+  
+  const { data: userData } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+  
+  if (userData?.is_approved) {
+    redirect('/dashboard')
+  }
+  
+  const reason = searchParams.reason || 'pending'
   
   let title = 'ממתין לאישור'
   let message = 'חשבון המשתמש שלך ממתין לאישור מנהל המערכת. אנא המתן לאישור לפני שתוכל להשתמש במערכת.'
@@ -36,9 +39,15 @@ export default async function NotApprovedPage({ searchParams }: NotApprovedPageP
   
   const handleSignOut = async () => {
     'use server'
-    const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = createClient()
     await supabase.auth.signOut()
+  }
+  
+  const handleResendRequest = async () => {
+    'use server'
+    
+    const supabase = createClient()
+    // ... existing code ...
   }
   
   return (

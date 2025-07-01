@@ -2,73 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ReplayMe Typography Import */
+/* Choacee Typography Import - Modern & Accessible */
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    /* ReplayMe Light Theme Colors */
-    --background: 255 255 255; /* Pure white */
-    --foreground: 42 45 74; /* indigo-night */
+    /* Choacee Light Theme Colors - Claymorphism + Glassmorphism */
+    --background: 254 254 254; /* glass-white */
+    --foreground: 31 41 55; /* neutral-800 */
 
-    --card: 255 255 255; /* White cards */
-    --card-foreground: 42 45 74; /* indigo-night text */
-    --card-secondary: 245 242 235; /* cream-sand cards */
+    --card: 254 254 254; /* glass-white cards */
+    --card-foreground: 31 41 55; /* neutral-800 text */
+    --card-secondary: 248 249 250; /* glass-light cards */
 
-    --popover: 255 255 255; /* White popovers */
-    --popover-foreground: 42 45 74; /* indigo-night text */
+    --popover: 254 254 254; /* glass-white popovers */
+    --popover-foreground: 31 41 55; /* neutral-800 text */
 
-    --primary: 198 245 71; /* lemon-mint */
-    --primary-foreground: 26 29 46; /* Dark text on bright background */
+    --primary: 139 95 191; /* clay-primary */
+    --primary-foreground: 254 254 254; /* glass-white text */
 
-    --secondary: 245 242 235; /* cream-sand */
-    --secondary-foreground: 42 45 74; /* indigo-night text */
+    --secondary: 232 168 124; /* clay-secondary */
+    --secondary-foreground: 31 41 55; /* neutral-800 text */
 
-    --muted: 245 242 235; /* cream-sand */
-    --muted-foreground: 107 114 128; /* gray-500 */
+    --muted: 243 244 246; /* neutral-100 */
+    --muted-foreground: 107 114 128; /* neutral-500 */
 
-    --accent: 42 45 74; /* indigo-night */
-    --accent-foreground: 255 255 255; /* white text */
+    --accent: 126 200 227; /* clay-accent */
+    --accent-foreground: 31 41 55; /* neutral-800 text */
 
-    --destructive: 255 107 107; /* electric-coral */
-    --destructive-foreground: 255 255 255; /* white text */
+    --destructive: 236 112 99; /* clay-danger */
+    --destructive-foreground: 254 254 254; /* glass-white text */
 
-    --border: 225 225 225; /* ice-gray */
-    --input: 245 242 235; /* cream-sand for inputs */
-    --ring: 198 245 71; /* lemon-mint focus ring */
+    --success: 144 198 149; /* clay-success */
+    --success-foreground: 254 254 254; /* glass-white text */
 
-    --radius: 0.75rem; /* Slightly more rounded for modern feel */
+    --warning: 244 208 63; /* clay-warning */
+    --warning-foreground: 31 41 55; /* neutral-800 text */
+
+    --border: 229 231 235; /* neutral-200 */
+    --input: 248 249 250; /* glass-light for inputs */
+    --ring: 139 95 191; /* clay-primary focus ring */
+
+    --radius: 1rem; /* Soft rounded corners */
   }
 
   .dark {
-    /* Keep dark theme support but optimized for light usage */
-    --background: 42 45 74; /* indigo-night */
-    --foreground: 255 255 255; /* white */
+    /* Choacee Dark Mode - Glass night theme */
+    --background: 45 55 72; /* glass-night */
+    --foreground: 254 254 254; /* glass-white */
 
-    --card: 42 45 74; /* indigo-night cards */
-    --card-foreground: 255 255 255; /* white text */
+    --card: 45 55 72; /* glass-night cards */
+    --card-foreground: 254 254 254; /* glass-white text */
 
-    --popover: 42 45 74; /* indigo-night */
-    --popover-foreground: 255 255 255; /* white */
+    --popover: 45 55 72; /* glass-night */
+    --popover-foreground: 254 254 254; /* glass-white */
 
-    --primary: 198 245 71; /* lemon-mint */
-    --primary-foreground: 26 29 46; /* dark text */
+    --primary: 167 142 209; /* clay-primary-light for dark mode */
+    --primary-foreground: 31 41 55; /* dark text */
 
-    --secondary: 74 77 106; /* lighter indigo */
-    --secondary-foreground: 255 255 255; /* white */
+    --secondary: 108 117 125; /* glass-dark */
+    --secondary-foreground: 254 254 254; /* glass-white */
 
-    --muted: 74 77 106; /* lighter indigo */
-    --muted-foreground: 156 163 175; /* gray-400 */
+    --muted: 108 117 125; /* glass-dark */
+    --muted-foreground: 156 163 175; /* neutral-400 */
 
-    --accent: 198 245 71; /* lemon-mint */
-    --accent-foreground: 26 29 46; /* dark text */
+    --accent: 168 216 236; /* clay-accent-light */
+    --accent-foreground: 31 41 55; /* dark text */
 
-    --destructive: 255 107 107; /* electric-coral */
-    --destructive-foreground: 255 255 255; /* white */
+    --destructive: 241 148 138; /* clay-danger-light */
+    --destructive-foreground: 254 254 254; /* glass-white */
 
-    --border: 74 77 106; /* lighter indigo */
-    --input: 74 77 106; /* lighter indigo */
-    --ring: 198 245 71; /* lemon-mint */
+    --border: 108 117 125; /* glass-dark */
+    --input: 108 117 125; /* glass-dark */
+    --ring: 167 142 209; /* clay-primary-light */
   }
 }
 
@@ -79,6 +85,8 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    /* Smooth transitions for better UX */
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   html {
     direction: rtl;
@@ -86,174 +94,382 @@
 }
 
 @layer components {
-  /* ReplayMe Component Styles */
-  .replayme-card {
-    @apply bg-white border border-ice-gray rounded-xl shadow-soft hover:shadow-replayme transition-all duration-300 ease-in-out;
+  /* === CHOACEE CORE COMPONENTS === */
+  
+  /* Claymorphism Buttons */
+  .choacee-btn-clay {
+    @apply relative px-6 py-3 rounded-clay font-medium text-neutral-800 
+           bg-gradient-to-br from-glass-white to-glass-light
+           shadow-clay-raised border-0 
+           transition-all duration-300 ease-out
+           hover:shadow-clay-hover hover:-translate-y-0.5
+           active:shadow-clay-pressed active:translate-y-0;
   }
   
-  .replayme-card-secondary {
-    @apply bg-cream-sand border border-cream-sand-dark rounded-xl shadow-soft hover:shadow-lg transition-all duration-300;
-  }
-
-  .replayme-button-primary {
-    @apply bg-lemon-mint text-indigo-night font-medium px-6 py-3 rounded-lg hover:bg-lemon-mint-dark hover:shadow-replayme transition-all duration-200 ease-in-out;
-  }
-
-  .replayme-button-secondary {
-    @apply bg-cream-sand text-indigo-night font-medium px-6 py-3 rounded-lg border border-ice-gray hover:bg-cream-sand-dark hover:shadow-soft transition-all duration-200;
-  }
-
-  .replayme-button-coral {
-    @apply bg-electric-coral text-white font-medium px-6 py-3 rounded-lg hover:bg-electric-coral-dark hover:shadow-coral transition-all duration-200;
-  }
-
-  /* Score Display Components */
-  .score-display {
-    @apply font-mono text-2xl font-bold;
+  .choacee-btn-clay-primary {
+    @apply choacee-btn-clay bg-gradient-to-br from-clay-primary to-clay-primary-dark 
+           text-glass-white shadow-clay-raised
+           hover:from-clay-primary-light hover:to-clay-primary;
   }
   
-  .score-high {
-    @apply text-success bg-success/10 px-3 py-1 rounded-full;
+  .choacee-btn-clay-secondary {
+    @apply choacee-btn-clay bg-gradient-to-br from-clay-secondary to-clay-secondary-dark 
+           text-neutral-800 shadow-clay-raised
+           hover:from-clay-secondary-light hover:to-clay-secondary;
   }
   
-  .score-medium {
-    @apply text-warning bg-warning/10 px-3 py-1 rounded-full;
+  .choacee-btn-clay-accent {
+    @apply choacee-btn-clay bg-gradient-to-br from-clay-accent to-clay-accent-dark 
+           text-neutral-800 shadow-clay-raised
+           hover:from-clay-accent-light hover:to-clay-accent;
   }
   
-  .score-low {
-    @apply text-electric-coral bg-electric-coral/10 px-3 py-1 rounded-full animate-coral-pulse;
+  .choacee-btn-clay-danger {
+    @apply choacee-btn-clay bg-gradient-to-br from-clay-danger to-clay-danger-dark 
+           text-glass-white shadow-clay-raised
+           hover:from-clay-danger-light hover:to-clay-danger;
+  }
+
+  /* Glassmorphism Elements */
+  .choacee-glass {
+    @apply backdrop-blur-glass-medium bg-glass-white/80 
+           border border-glass-white/20 shadow-glass-soft
+           rounded-glass;
+  }
+  
+  .choacee-glass-strong {
+    @apply backdrop-blur-glass-strong bg-glass-white/90 
+           border border-glass-white/30 shadow-glass-medium
+           rounded-glass;
+  }
+  
+  .choacee-glass-navbar {
+    @apply fixed top-0 w-full z-50 
+           backdrop-blur-glass-strong bg-glass-white/95 
+           border-b border-glass-white/20 shadow-glass-soft
+           animate-glass-breathe;
+  }
+  
+  .choacee-glass-sidebar {
+    @apply backdrop-blur-glass-medium bg-glass-white/85 
+           border-r border-glass-white/20 shadow-glass-soft;
+  }
+  
+  .choacee-glass-modal {
+    @apply backdrop-blur-glass-intense bg-glass-white/95 
+           border border-glass-white/30 shadow-glass-strong
+           rounded-glass;
+  }
+
+  /* Claymorphism Cards */
+  .choacee-card-clay {
+    @apply relative p-6 rounded-clay 
+           bg-gradient-to-br from-glass-white to-glass-light
+           shadow-clay-raised border-0
+           transition-all duration-300 ease-out
+           hover:shadow-clay-hover hover:-translate-y-1;
+  }
+  
+  .choacee-card-clay-raised {
+    @apply choacee-card-clay shadow-clay-raised
+           hover:shadow-clay-hover hover:-translate-y-2;
+  }
+  
+  .choacee-card-clay-pressed {
+    @apply relative p-6 rounded-clay 
+           bg-gradient-to-br from-glass-light to-glass-medium
+           shadow-clay-pressed border-0;
+  }
+
+  /* Glassmorphism Cards */
+  .choacee-card-glass {
+    @apply choacee-glass p-6 
+           transition-all duration-300 ease-out
+           hover:backdrop-blur-glass-strong hover:bg-glass-white/90
+           hover:-translate-y-1 hover:shadow-glass-glow;
+  }
+
+  /* Input Fields - Claymorphism Style */
+  .choacee-input-clay {
+    @apply w-full px-4 py-3 rounded-clay
+           bg-gradient-to-br from-glass-light to-glass-medium
+           shadow-clay-pressed border-0
+           text-neutral-800 placeholder-neutral-500
+           focus:shadow-clay-soft focus:outline-none
+           focus:ring-2 focus:ring-clay-primary/30
+           transition-all duration-200;
+  }
+  
+  .choacee-textarea-clay {
+    @apply choacee-input-clay min-h-[120px] resize-y;
   }
 
   /* Navigation Styles */
-  .nav-item {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:bg-cream-sand;
+  .choacee-nav-item {
+    @apply relative px-4 py-2 rounded-soft font-medium 
+           text-neutral-700 transition-all duration-200 
+           hover:text-clay-primary hover:bg-glass-light/50;
   }
   
-  .nav-item-active {
-    @apply bg-lemon-mint text-indigo-night font-semibold shadow-replayme;
+  .choacee-nav-item-active {
+    @apply choacee-nav-item
+           bg-gradient-to-r from-clay-primary/10 to-clay-primary/5
+           text-clay-primary font-semibold
+           shadow-clay-soft border border-clay-primary/20;
   }
 
-  /* Card hover effects */
-  .card-hover {
-    @apply transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-replayme;
+  /* Status Indicators - Clay Style */
+  .choacee-status-success {
+    @apply inline-flex items-center px-3 py-1 rounded-full
+           bg-gradient-to-r from-clay-success to-clay-success-dark
+           text-glass-white text-sm font-medium
+           shadow-clay-soft;
+  }
+  
+  .choacee-status-warning {
+    @apply inline-flex items-center px-3 py-1 rounded-full
+           bg-gradient-to-r from-clay-warning to-clay-warning-dark
+           text-neutral-800 text-sm font-medium
+           shadow-clay-soft;
+  }
+  
+  .choacee-status-danger {
+    @apply inline-flex items-center px-3 py-1 rounded-full
+           bg-gradient-to-r from-clay-danger to-clay-danger-dark
+           text-glass-white text-sm font-medium
+           shadow-clay-soft animate-clay-float;
   }
 
-  .card-hover-coral {
-    @apply transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-coral;
+  /* Progress Bars - Modern Clay Style */
+  .choacee-progress {
+    @apply relative overflow-hidden rounded-full h-3
+           bg-gradient-to-r from-glass-light to-glass-medium
+           shadow-clay-pressed;
   }
 
-  /* Progress indicators */
-  .progress-bar {
-    @apply relative overflow-hidden bg-cream-sand rounded-full h-2;
+  .choacee-progress-fill {
+    @apply h-full rounded-full transition-all duration-500 ease-out
+           bg-gradient-to-r from-clay-primary to-clay-primary-dark
+           shadow-inner;
+  }
+  
+  .choacee-progress-fill-success {
+    @apply choacee-progress-fill
+           bg-gradient-to-r from-clay-success to-clay-success-dark;
+  }
+  
+  .choacee-progress-fill-warning {
+    @apply choacee-progress-fill
+           bg-gradient-to-r from-clay-warning to-clay-warning-dark;
+  }
+  
+  .choacee-progress-fill-danger {
+    @apply choacee-progress-fill
+           bg-gradient-to-r from-clay-danger to-clay-danger-dark;
   }
 
-  .progress-fill {
-    @apply h-full bg-gradient-to-r from-lemon-mint to-lemon-mint-dark rounded-full transition-all duration-500 ease-out;
+  /* Modern Animations */
+  .choacee-smooth-appear {
+    animation: choaceeAppear 0.8s ease-out;
   }
 
-  .progress-fill-coral {
-    @apply h-full bg-gradient-to-r from-electric-coral to-electric-coral-dark rounded-full transition-all duration-500 ease-out;
-  }
-
-  /* Smooth animations */
-  .smooth-appear {
-    animation: smoothAppear 0.8s ease-out;
-  }
-
-  @keyframes smoothAppear {
+  @keyframes choaceeAppear {
     0% {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(30px) scale(0.95);
     }
     100% {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(0) scale(1);
     }
   }
 
-  /* Quote highlights for testimonials/feedback */
-  .quote-highlight {
-    @apply relative bg-cream-sand-light p-4 rounded-lg border-l-4 border-lemon-mint;
+  /* Interactive Elements */
+  .choacee-interactive {
+    @apply transition-all duration-200 ease-out
+           hover:scale-105 active:scale-95
+           cursor-pointer;
+  }
+  
+  .choacee-interactive-clay {
+    @apply choacee-interactive
+           hover:shadow-clay-hover active:shadow-clay-pressed;
+  }
+  
+  .choacee-interactive-glass {
+    @apply choacee-interactive
+           hover:backdrop-blur-glass-strong hover:bg-glass-white/95
+           hover:shadow-glass-glow;
   }
 
-  .quote-highlight::before {
-    content: '"';
-    @apply absolute -top-2 -right-2 text-6xl text-lemon-mint/30 font-serif;
+  /* Tooltips - Glass Style */
+  .choacee-tooltip {
+    @apply absolute z-50 px-3 py-2 text-sm
+           backdrop-blur-glass-strong bg-glass-night/90
+           text-glass-white rounded-soft
+           shadow-glass-strong border border-glass-white/10
+           opacity-0 pointer-events-none
+           transition-all duration-200;
+  }
+  
+  .choacee-tooltip.show {
+    @apply opacity-100 pointer-events-auto;
   }
 
-  /* Red flag indicators */
-  .red-flag-indicator {
-    @apply bg-electric-coral text-white px-3 py-1 rounded-full text-sm font-medium animate-coral-pulse;
+  /* Notifications - Clay + Glass Hybrid */
+  .choacee-notification {
+    @apply relative p-4 rounded-clay mb-4
+           backdrop-blur-glass-medium
+           border border-glass-white/20
+           shadow-glass-soft;
+  }
+  
+  .choacee-notification-success {
+    @apply choacee-notification
+           bg-gradient-to-r from-clay-success/20 to-clay-success/10
+           border-clay-success/30 text-clay-success-dark;
+  }
+  
+  .choacee-notification-warning {
+    @apply choacee-notification
+           bg-gradient-to-r from-clay-warning/20 to-clay-warning/10
+           border-clay-warning/30 text-clay-warning-dark;
+  }
+  
+  .choacee-notification-danger {
+    @apply choacee-notification
+           bg-gradient-to-r from-clay-danger/20 to-clay-danger/10
+           border-clay-danger/30 text-clay-danger-dark;
   }
 
-  /* Success indicators */
-  .success-indicator {
-    @apply bg-success text-white px-3 py-1 rounded-full text-sm font-medium;
+  /* Loading States */
+  .choacee-loading-shimmer {
+    @apply relative overflow-hidden;
+  }
+  
+  .choacee-loading-shimmer::after {
+    content: '';
+    @apply absolute inset-0 
+           bg-gradient-to-r from-transparent via-glass-white/30 to-transparent
+           animate-glass-shimmer;
   }
 
-  /* Glassmorphism effect for special cards */
-  .glass-card {
-    @apply backdrop-blur-sm bg-white/80 border border-white/20 shadow-glass;
+  /* === LEGACY COMPATIBILITY === */
+  .replayme-card {
+    @apply choacee-card-clay;
+  }
+  
+  .replayme-card-secondary {
+    @apply choacee-card-glass;
   }
 
-  /* Loading states */
-  .loading-shimmer {
-    @apply animate-pulse bg-gradient-to-r from-cream-sand via-cream-sand-light to-cream-sand bg-[length:200%_100%];
-    animation: shimmer 2s infinite;
+  .replayme-button-primary {
+    @apply choacee-btn-clay-primary;
   }
 
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+  .replayme-button-secondary {
+    @apply choacee-btn-clay-secondary;
   }
 
-  /* Notification styles */
-  .notification-success {
-    @apply bg-success/10 border border-success/20 text-success-foreground p-4 rounded-lg;
+  .replayme-button-coral {
+    @apply choacee-btn-clay-danger;
   }
 
-  .notification-warning {
-    @apply bg-warning/10 border border-warning/20 text-warning-foreground p-4 rounded-lg;
+  /* Score Display Components - Enhanced */
+  .choacee-score-display {
+    @apply font-mono text-3xl font-bold 
+           bg-gradient-to-br from-clay-primary to-clay-primary-dark
+           bg-clip-text text-transparent;
+  }
+  
+  .choacee-score-high {
+    @apply choacee-status-success animate-clay-float;
+  }
+  
+  .choacee-score-medium {
+    @apply choacee-status-warning;
+  }
+  
+  .choacee-score-low {
+    @apply choacee-status-danger;
   }
 
-  .notification-error {
-    @apply bg-electric-coral/10 border border-electric-coral/20 text-white p-4 rounded-lg;
+  /* Modern Scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-glass-light rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gradient-to-b from-clay-primary to-clay-primary-dark 
+           rounded-full shadow-clay-soft;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply from-clay-primary-light to-clay-primary;
+  }
+
+  /* RTL Support */
+  [dir="rtl"] {
+    @apply text-right;
+  }
+  
+  [dir="rtl"] .choacee-glass-sidebar {
+    @apply border-r-0 border-l border-glass-white/20;
+  }
+
+  /* Typography Classes */
+  .choacee-text-display {
+    @apply font-display text-clay-primary font-bold;
+  }
+
+  .choacee-text-body {
+    @apply font-sans text-neutral-700 leading-relaxed;
+  }
+
+  .choacee-text-mono {
+    @apply font-mono text-neutral-600;
+  }
+
+  /* Responsive Enhancements */
+  @media (max-width: 768px) {
+    .choacee-card-clay,
+    .choacee-card-glass {
+      @apply p-4;
+    }
+    
+    .choacee-btn-clay {
+      @apply px-4 py-2 text-sm;
+    }
   }
 }
 
-/* Custom scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Custom Properties for Advanced Theming */
+:root {
+  --choacee-clay-shadow-color: 139, 95, 191;
+  --choacee-glass-bg-opacity: 0.8;
+  --choacee-animation-speed: 0.3s;
+  --choacee-border-radius: 1rem;
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-cream-sand;
+/* Dark mode adjustments */
+.dark {
+  --choacee-clay-shadow-color: 167, 142, 209;
+  --choacee-glass-bg-opacity: 0.1;
 }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-ice-gray rounded-full hover:bg-indigo-night/20;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-indigo-night/30;
-}
-
-/* RTL Support */
-[dir="rtl"] {
-  text-align: right;
-}
-
-/* Typography classes */
-.text-display {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 600;
-}
-
-.text-body {
-  font-family: 'Inter', sans-serif;
-}
-
-.text-mono {
-  font-family: 'JetBrains Mono', monospace;
+/* Print Styles */
+@media print {
+  .choacee-glass,
+  .choacee-glass-strong,
+  .choacee-card-glass {
+    @apply bg-white border border-neutral-300 shadow-none backdrop-blur-none;
+  }
+  
+  .choacee-card-clay {
+    @apply bg-white shadow-none;
+  }
 } 

@@ -3,9 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import React from 'react'
 
-export default async function Home() {
+export default async function HomePage() {
   const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = createClient()
   
   const { data: { user }, error } = await supabase.auth.getUser()
   

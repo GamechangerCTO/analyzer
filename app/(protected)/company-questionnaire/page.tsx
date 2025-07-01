@@ -1,10 +1,9 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import CompanyQuestionnaireForm from '@/components/CompanyQuestionnaireForm'
 
 export default async function CompanyQuestionnairePage() {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
   
   const { data: { session } } = await supabase.auth.getSession()
   

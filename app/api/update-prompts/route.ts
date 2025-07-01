@@ -16,7 +16,7 @@ const promptFiles: { [key: string]: string } = {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = createClient();
 
     // בדיקת הרשאות - רק אדמינים יכולים לעדכן פרומפטים
     const { data: { user }, error: userError } = await supabase.auth.getUser();

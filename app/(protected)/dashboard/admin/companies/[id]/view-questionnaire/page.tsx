@@ -1,5 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
@@ -10,7 +9,7 @@ interface PageProps {
 }
 
 export default async function ViewCompanyQuestionnairePage({ params }: PageProps) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
   
   const { data: { session } } = await supabase.auth.getSession()
   

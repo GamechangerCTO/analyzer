@@ -11,8 +11,7 @@ interface EditAgentPageProps {
 }
 
 export default async function EditAgentPage({ params }: EditAgentPageProps) {
-  const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = createClient()
   
   const { data: { user }, error } = await supabase.auth.getUser()
   

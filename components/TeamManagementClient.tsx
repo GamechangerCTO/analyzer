@@ -281,14 +281,14 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
   return (
     <div className="space-y-8">
       {/* כותרת וסטטיסטיקות */}
-      <div className="replayme-card p-8 bg-gradient-to-l from-indigo-night to-indigo-night/80 text-white">
+      <div className="choacee-card-clay-raised p-8 bg-gradient-to-l from-clay-primary to-clay-primary/80 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-6">
-            <div className="w-20 h-20 bg-lemon-mint/20 rounded-2xl flex items-center justify-center">
-              <Users className="w-10 h-10 text-lemon-mint" />
+            <div className="w-20 h-20 bg-clay-success/20 rounded-clay flex items-center justify-center">
+              <Users className="w-10 h-10 text-clay-success" />
             </div>
             <div>
-              <h1 className="text-display text-3xl font-bold mb-2">
+              <h1 className="choacee-text-display text-3xl font-bold mb-2">
                 צוות {company?.name || 'החברה'} 👥
               </h1>
               <p className="text-white/80 text-lg">
@@ -298,7 +298,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
           </div>
           
           <div className="text-center">
-            <div className="text-3xl font-bold text-lemon-mint mb-1">
+            <div className="text-3xl font-bold text-clay-success mb-1">
               {agents.length}
             </div>
             <div className="text-white/60 text-sm">
@@ -310,30 +310,30 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
 
       {/* מכסת משתמשים */}
       {userQuota && (
-        <div className="replayme-card p-6 border-r-4 border-electric-coral">
+        <div className="choacee-card-clay p-6 border-r-4 border-clay-danger">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <Target className="w-6 h-6 text-electric-coral" />
-              <h3 className="text-display text-xl font-bold text-indigo-night">
+              <Target className="w-6 h-6 text-clay-danger" />
+              <h3 className="choacee-text-display text-xl font-bold text-clay-primary">
                 מכסת משתמשים
               </h3>
             </div>
-            <div className="text-2xl font-bold text-electric-coral">
+            <div className="text-2xl font-bold text-clay-danger">
               {userQuota.used_users}/{userQuota.total_users}
             </div>
           </div>
           
           <div className="space-y-3">
-            <div className="progress-bar">
+            <div className="choacee-progress-bar">
               <div 
-                className="progress-bar-fill bg-electric-coral" 
+                className="choacee-progress-fill bg-clay-danger" 
                 style={{ width: `${(userQuota.used_users / userQuota.total_users) * 100}%` }}
               ></div>
             </div>
             
             <div className="flex justify-between text-sm">
-              <span className="text-indigo-night/60">בשימוש: {userQuota.used_users}</span>
-              <span className="text-success font-medium">זמינים: {userQuota.available_users}</span>
+              <span className="text-neutral-500">בשימוש: {userQuota.used_users}</span>
+              <span className="text-clay-success font-medium">זמינים: {userQuota.available_users}</span>
             </div>
           </div>
         </div>
@@ -344,13 +344,13 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         <div className="flex flex-col sm:flex-row gap-4 flex-1">
           {/* חיפוש */}
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-indigo-night/40 w-5 h-5" />
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
             <input
               type="text"
               placeholder="חיפוש לפי שם או אימייל..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-4 pr-12 py-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night"
+              className="choacee-input-clay w-full pl-4 pr-12 py-3"
             />
           </div>
 
@@ -359,7 +359,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value as 'all' | 'agent' | 'manager')}
-              className="px-4 py-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night bg-white"
+              className="choacee-input-clay px-4 py-3"
             >
               <option value="all">כל התפקידים</option>
               <option value="agent">נציגים</option>
@@ -369,7 +369,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'all' | 'approved' | 'pending')}
-              className="px-4 py-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night bg-white"
+              className="choacee-input-clay px-4 py-3"
             >
               <option value="all">כל הסטטוסים</option>
               <option value="approved">מאושרים</option>
@@ -381,7 +381,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         {/* כפתור הוספת נציג */}
         <button
           onClick={() => setShowAddAgentModal(true)}
-          className="replayme-button-primary"
+          className="choacee-btn-clay-primary"
         >
           <div className="flex items-center space-x-2">
             <UserPlus className="w-5 h-5" />
@@ -395,19 +395,19 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         {filteredAgents.map((agent) => {
           const RoleIcon = getRoleIcon(agent.role)
           return (
-            <div key={agent.id} className="replayme-card p-6 card-hover">
+            <div key={agent.id} className="choacee-card-clay choacee-interactive">
               <div className="space-y-4">
                 {/* כותרת הכרטיס */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                                          <Avatar avatarUrl={`geom${(parseInt(agent.id.slice(-2), 16) % 12) + 1}`} fullName={agent.full_name} className="w-12 h-12" />
                     <div>
-                      <h3 className="font-semibold text-indigo-night text-lg">
+                      <h3 className="font-semibold text-clay-primary text-lg">
                         {agent.full_name || 'ללא שם'}
                       </h3>
                       <div className="flex items-center space-x-2">
-                        <RoleIcon className="w-4 h-4 text-indigo-night/60" />
-                        <span className="text-sm text-indigo-night/60">
+                        <RoleIcon className="w-4 h-4 text-neutral-500" />
+                        <span className="text-sm text-neutral-500">
                           {getRoleText(agent.role)}
                         </span>
                       </div>
@@ -432,11 +432,11 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
 
                 {/* פרטי קשר */}
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-3 text-sm text-indigo-night/70">
+                  <div className="flex items-center space-x-3 text-sm text-neutral-600">
                     <Mail className="w-4 h-4" />
                     <span>{agent.email}</span>
                   </div>
-                  <div className="flex items-center space-x-3 text-sm text-indigo-night/70">
+                  <div className="flex items-center space-x-3 text-sm text-neutral-600">
                     <Calendar className="w-4 h-4" />
                     <span>הצטרף ב-{new Date(agent.created_at).toLocaleDateString('he-IL')}</span>
                   </div>
@@ -446,7 +446,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
                 <div className="flex gap-2 pt-2">
                   <Link 
                     href={`/team/edit-agent/${agent.id}`}
-                    className="flex-1 py-2 px-3 rounded-lg border border-ice-gray hover:bg-lemon-mint/10 transition-colors duration-200 text-center text-sm font-medium text-indigo-night"
+                    className="flex-1 py-2 px-3 rounded-clay border border-neutral-200 hover:bg-clay-secondary/10 transition-colors duration-200 text-center text-sm font-medium text-clay-primary"
                   >
                     <div className="flex items-center justify-center space-x-1">
                       <Edit className="w-4 h-4" />
@@ -456,7 +456,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
                   
                   <Link 
                     href={`/dashboard/agent?userId=${agent.id}`}
-                    className="flex-1 py-2 px-3 rounded-lg bg-lemon-mint/20 hover:bg-lemon-mint/30 transition-colors duration-200 text-center text-sm font-medium text-lemon-mint-dark"
+                    className="flex-1 py-2 px-3 rounded-clay bg-clay-secondary/20 hover:bg-clay-secondary/30 transition-colors duration-200 text-center text-sm font-medium text-clay-secondary-dark"
                   >
                     <div className="flex items-center justify-center space-x-1">
                       <BarChart3 className="w-4 h-4" />

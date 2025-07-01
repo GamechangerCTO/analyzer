@@ -70,16 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     const cookieStore = cookies()
-    let supabase
-    try {
-      supabase = createClient(cookieStore)
-    } catch (clientError) {
-      console.error('Supabase client creation error:', clientError)
-      return NextResponse.json(
-        { error: 'Database connection error' },
-        { status: 500 }
-      )
-    }
+    let supabase = createClient()
     
     // וודא שהמשתמש מחובר ורשאי
     const { data: { user }, error: userError } = await supabase.auth.getUser()

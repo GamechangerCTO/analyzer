@@ -1,10 +1,10 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
 export default async function SimulationsPage() {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
   
   // בדיקת אימות משתמש
   const { data: { session }, error } = await supabase.auth.getSession()
@@ -33,29 +33,29 @@ export default async function SimulationsPage() {
       </div>
 
       {/* הודעת בנייה מעוצבת */}
-      <div className="replayme-card p-12 text-center border-r-4 border-electric-coral">
-        <div className="space-y-6">
+      <div className="choacee-card-clay-raised p-12 text-center border-r-4 border-clay-danger">
+        <div className="space-y-6 choacee-smooth-appear">
           <div className="flex justify-center items-center gap-6">
-            <div className="w-16 h-16 bg-electric-coral/20 rounded-2xl flex items-center justify-center animate-coral-pulse">
-              <svg className="w-8 h-8 text-electric-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-clay-danger/20 rounded-clay flex items-center justify-center animate-clay-float">
+              <svg className="w-8 h-8 text-clay-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
               </svg>
             </div>
             
             <div className="text-6xl animate-bounce">🚧</div>
             
-            <div className="w-16 h-16 bg-lemon-mint/20 rounded-2xl flex items-center justify-center animate-lemon-pulse">
-              <svg className="w-8 h-8 text-lemon-mint-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-clay-success/20 rounded-clay flex items-center justify-center animate-clay-float">
+              <svg className="w-8 h-8 text-clay-success-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
             </div>
           </div>
 
           <div>
-            <h2 className="text-display text-3xl font-bold text-indigo-night mb-4">
+            <h2 className="choacee-text-display text-3xl font-bold text-clay-primary mb-4">
               בונים עבורכם חדר כושר מתקדם! 🏗️
             </h2>
-            <p className="text-lg text-indigo-night/70 leading-relaxed">
+            <p className="choacee-text-body text-lg text-neutral-600 leading-relaxed">
               הצוות שלנו עובד ללא הפסקה על פיתוח מערכת אימון מתקדמת שתכיל:
             </p>
           </div>
@@ -64,54 +64,54 @@ export default async function SimulationsPage() {
 
       {/* תכונות עתידיות */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <div className="replayme-card p-8 card-hover border-r-4 border-lemon-mint">
+        <div className="choacee-card-clay choacee-interactive border-r-4 border-clay-success">
           <div className="space-y-4">
-            <div className="w-16 h-16 bg-lemon-mint/20 rounded-2xl flex items-center justify-center">
-              <svg className="w-8 h-8 text-lemon-mint-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-clay-success/20 rounded-clay flex items-center justify-center">
+              <svg className="w-8 h-8 text-clay-success-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0V1a1 1 0 011-1h2a1 1 0 011 1v4.586a1 1 0 01-.293.707l-2 2A1 1 0 0119 9H5a1 1 0 01-.707-.293l-2-2A1 1 0 012 6V2a1 1 0 011-1h2a1 1 0 011 1v3z" />
               </svg>
             </div>
             <div>
-              <h3 className="text-display text-xl font-bold text-indigo-night mb-3">
+              <h3 className="choacee-text-display text-xl font-bold text-clay-primary mb-3">
                 סימולציות מכירה אמיתיות 🎯
               </h3>
-              <p className="text-indigo-night/70 leading-relaxed">
+              <p className="choacee-text-body text-neutral-600 leading-relaxed">
                 שיחות מכירה מלאכותיות מותאמות לתחום שלך עם לקוחות ווירטואליים שמגיבים כמו לקוחות אמיתיים
               </p>
             </div>
           </div>
         </div>
 
-        <div className="replayme-card p-8 card-hover border-r-4 border-electric-coral">
+        <div className="choacee-card-clay choacee-interactive border-r-4 border-clay-danger">
           <div className="space-y-4">
-            <div className="w-16 h-16 bg-electric-coral/20 rounded-2xl flex items-center justify-center">
-              <svg className="w-8 h-8 text-electric-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-clay-danger/20 rounded-clay flex items-center justify-center">
+              <svg className="w-8 h-8 text-clay-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
               </svg>
             </div>
             <div>
-              <h3 className="text-display text-xl font-bold text-indigo-night mb-3">
+              <h3 className="choacee-text-display text-xl font-bold text-clay-primary mb-3">
                 מערכת תגמולים ודירוגים 🏆
               </h3>
-              <p className="text-indigo-night/70 leading-relaxed">
+              <p className="choacee-text-body text-neutral-600 leading-relaxed">
                 אתגרים יומיים, תחרויות צוותיות ומערכת נקודות שתהפוך את התרגול למהנה ומעורר השראה
               </p>
             </div>
           </div>
         </div>
 
-        <div className="replayme-card p-8 card-hover border-r-4 border-indigo-night">
+        <div className="choacee-card-clay choacee-interactive border-r-4 border-clay-primary">
           <div className="space-y-4">
-            <div className="w-16 h-16 bg-indigo-night/20 rounded-2xl flex items-center justify-center">
-              <svg className="w-8 h-8 text-indigo-night" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-clay-primary/20 rounded-clay flex items-center justify-center">
+              <svg className="w-8 h-8 text-clay-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
             <div>
-              <h3 className="text-display text-xl font-bold text-indigo-night mb-3">
+              <h3 className="choacee-text-display text-xl font-bold text-clay-primary mb-3">
                 ניתוח ביצועים מתקדם 📊
               </h3>
-              <p className="text-indigo-night/70 leading-relaxed">
+              <p className="choacee-text-body text-neutral-600 leading-relaxed">
                 מעקב מפורט אחר התקדמות, זיהוי נקודות חוזק וחולשה עם המלצות מותאמות אישית
               </p>
             </div>
@@ -174,13 +174,13 @@ export default async function SimulationsPage() {
       </div>
 
       {/* בר התקדמות */}
-      <div className="replayme-card p-8">
+      <div className="choacee-card-clay-raised p-8">
         <div className="space-y-6">
           <div className="text-center">
-            <h3 className="text-display text-2xl font-bold text-indigo-night mb-2">
+            <h3 className="choacee-text-display text-2xl font-bold text-clay-primary mb-2">
               התקדמות הפיתוח 🚀
             </h3>
-            <p className="text-indigo-night/70">אנחנו כמעט שם! עוד קצת סבלנות...</p>
+            <p className="choacee-text-body text-neutral-600">אנחנו כמעט שם! עוד קצת סבלנות...</p>
           </div>
           
           <div className="space-y-4">
@@ -215,19 +215,19 @@ export default async function SimulationsPage() {
       </div>
 
       {/* הודעה מעודדת */}
-      <div className="replayme-card-secondary p-8 border-r-4 border-lemon-mint">
+      <div className="choacee-card-glass p-8 border-r-4 border-clay-success">
         <div className="flex items-start space-x-6">
-          <div className="w-16 h-16 bg-lemon-mint/30 rounded-2xl flex items-center justify-center flex-shrink-0 animate-lemon-pulse">
-            <svg className="w-8 h-8 text-lemon-mint-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 bg-clay-success/30 rounded-clay flex items-center justify-center flex-shrink-0 animate-clay-float">
+            <svg className="w-8 h-8 text-clay-success-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
           </div>
           
           <div className="flex-1">
-            <h3 className="text-display text-2xl font-bold text-indigo-night mb-4">
+            <h3 className="choacee-text-display text-2xl font-bold text-clay-primary mb-4">
               בינתיים, המשיכו להתפתח! 💪
             </h3>
-            <p className="text-lg text-indigo-night/70 leading-relaxed mb-6">
+            <p className="choacee-text-body text-lg text-neutral-600 leading-relaxed mb-6">
               עד שחדר הכושר יהיה מוכן, תוכלו להמשיך לשפר את הכישורים שלכם על ידי העלאה וניתוח של שיחות אמיתיות
             </p>
             

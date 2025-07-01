@@ -6,7 +6,7 @@ import CompanyQuotaManagement from '@/components/admin/CompanyQuotaManagement'
 
 export default async function CompanyQuotasPage() {
   const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = createClient()
   
   const { data: { user }, error } = await supabase.auth.getUser()
   

@@ -22,8 +22,7 @@ export async function createUserWithServiceRole(userData: {
 }) {
   try {
     // בדיקת תפקיד המשתמש המוסיף
-    const cookieStore = cookies()
-    const supabase = createServerClient(cookieStore)
+    const supabase = createServerClient()
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
@@ -134,8 +133,7 @@ export async function createUserWithServiceRole(userData: {
 export async function approveUserById(userId: string) {
   try {
     // בדיקת תפקיד המשתמש המעדכן - רק מנהל מערכת יכול לאשר
-    const cookieStore = cookies()
-    const supabase = createServerClient(cookieStore)
+    const supabase = createServerClient()
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
@@ -203,4 +201,6 @@ export async function approveSpecificUser() {
     const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה'
     return { success: false, error: errorMessage }
   }
-} 
+}
+
+ 

@@ -167,12 +167,12 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-lemon-mint/20 rounded-2xl flex items-center justify-center mx-auto animate-lemon-pulse">
-            <Activity className="w-8 h-8 text-lemon-mint-dark animate-spin" />
+          <div className="w-16 h-16 bg-clay-accent/20 rounded-clay flex items-center justify-center mx-auto animate-clay-float">
+            <Activity className="w-8 h-8 text-clay-accent animate-spin" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-indigo-night">טוען נתוני דשבורד...</h3>
-            <p className="text-indigo-night/60">אוסף את כל המידע החשוב עבורך</p>
+            <h3 className="choacee-text-display text-lg font-semibold text-clay-primary">טוען נתוני דשבורד...</h3>
+            <p className="choacee-text-body text-neutral-600">אוסף את כל המידע החשוב עבורך</p>
           </div>
         </div>
       </div>
@@ -182,21 +182,21 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
   return (
     <div className="space-y-8">
       {/* כותרת עליונה עם פרטי המנהל והחברה */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 mb-6">
+      <div className="choacee-card-clay-raised bg-gradient-to-r from-clay-primary to-clay-accent text-white p-6 mb-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="mb-4 lg:mb-0">
-              <h1 className="text-3xl font-bold mb-2">דשבורד מנהל</h1>
+              <h1 className="choacee-text-display text-3xl font-bold mb-2">דשבורד מנהל</h1>
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-clay flex items-center justify-center">
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                     </svg>
                   </div>
                   <div>
                     <p className="font-semibold">{managerInfo?.full_name || 'לא זמין'}</p>
-                    <p className="text-blue-100 text-sm">{managerInfo?.email}</p>
+                    <p className="text-white/80 text-sm">{managerInfo?.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -225,74 +225,74 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
       {/* סטטיסטיקות מרכזיות */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* סה"כ נציגים */}
-        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+        <div className="choacee-card-clay choacee-interactive">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">נציגים פעילים</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">
+              <p className="text-neutral-500 text-sm font-medium">נציגים פעילים</p>
+              <p className="choacee-text-display text-3xl font-bold text-clay-primary mt-2">
                 {stats.totalAgents}
               </p>
-              <p className="text-xs text-gray-500 mt-1">בצוות שלך</p>
+              <p className="text-xs text-neutral-400 mt-1">בצוות שלך</p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-clay-accent/20 rounded-clay flex items-center justify-center">
+              <Users className="w-6 h-6 text-clay-accent" />
             </div>
           </div>
         </div>
 
         {/* סה"כ שיחות */}
-        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+        <div className="choacee-card-clay choacee-interactive">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">סה"כ שיחות</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">
+              <p className="text-neutral-500 text-sm font-medium">סה"כ שיחות</p>
+              <p className="choacee-text-display text-3xl font-bold text-clay-primary mt-2">
                 {stats.totalCalls}
               </p>
-              <p className="text-xs text-gray-500 mt-1">של כל הצוות</p>
+              <p className="text-xs text-neutral-400 mt-1">של כל הצוות</p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <Phone className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-clay-success/20 rounded-clay flex items-center justify-center">
+              <Phone className="w-6 h-6 text-clay-success" />
             </div>
           </div>
         </div>
 
         {/* ציון ממוצע */}
-        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+        <div className="choacee-card-clay choacee-interactive">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">ציון ממוצע</p>
-              <p className={`text-3xl font-bold mt-2 ${
-                stats.avgScore >= 8.5 ? 'text-green-600' : 
-                stats.avgScore >= 7 ? 'text-yellow-600' : 'text-red-600'
+              <p className="text-neutral-500 text-sm font-medium">ציון ממוצע</p>
+              <p className={`choacee-text-display text-3xl font-bold mt-2 ${
+                stats.avgScore >= 8.5 ? 'text-clay-success' : 
+                stats.avgScore >= 7 ? 'text-clay-warning' : 'text-clay-danger'
               }`}>
                 {stats.avgScore > 0 ? stats.avgScore.toFixed(1) : '-'}
               </p>
-              <p className="text-xs text-gray-500 mt-1">מתוך 10</p>
+              <p className="text-xs text-neutral-400 mt-1">מתוך 10</p>
             </div>
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-              stats.avgScore >= 8.5 ? 'bg-green-100' : 
-              stats.avgScore >= 7 ? 'bg-yellow-100' : 'bg-red-100'
+            <div className={`w-12 h-12 rounded-clay flex items-center justify-center ${
+              stats.avgScore >= 8.5 ? 'bg-clay-success/20' : 
+              stats.avgScore >= 7 ? 'bg-clay-warning/20' : 'bg-clay-danger/20'
             }`}>
               <TrendingUp className={`w-6 h-6 ${
-                stats.avgScore >= 8.5 ? 'text-green-600' : 
-                stats.avgScore >= 7 ? 'text-yellow-600' : 'text-red-600'
+                stats.avgScore >= 8.5 ? 'text-clay-success' : 
+                stats.avgScore >= 7 ? 'text-clay-warning' : 'text-clay-danger'
               }`} />
             </div>
           </div>
         </div>
 
         {/* שיחות מוצלחות */}
-        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
+        <div className="choacee-card-clay choacee-interactive">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">שיחות מוצלחות</p>
-              <p className="text-3xl font-bold text-green-600 mt-2">
+              <p className="text-neutral-500 text-sm font-medium">שיחות מוצלחות</p>
+              <p className="choacee-text-display text-3xl font-bold text-clay-success mt-2">
                 {stats.successfulCalls}
               </p>
-              <p className="text-xs text-gray-500 mt-1">ציון מעל 8.0</p>
+              <p className="text-xs text-neutral-400 mt-1">ציון מעל 8.0</p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <Award className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-clay-success/20 rounded-clay flex items-center justify-center">
+              <Award className="w-6 h-6 text-clay-success" />
             </div>
           </div>
         </div>
@@ -300,10 +300,10 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
 
       {/* שיחות בתהליך */}
       {stats.pendingCalls > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-8">
+        <div className="choacee-card-glass border border-clay-warning/30 rounded-clay p-4 mb-8">
           <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-yellow-600" />
-            <p className="text-yellow-800 font-medium">
+            <Clock className="w-5 h-5 text-clay-warning" />
+            <p className="text-clay-warning-dark font-medium">
               {stats.pendingCalls} שיחות בתהליך עיבוד
             </p>
           </div>
@@ -313,12 +313,12 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
       {/* תצוגת ביצועי נציגים מובילים */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <div className="replayme-card p-8">
+          <div className="choacee-card-clay-raised p-8">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-display text-2xl font-bold text-indigo-night">
+              <h3 className="choacee-text-display text-2xl font-bold text-clay-primary">
                 הנציגים המובילים 🏆
               </h3>
-              <Link href="/team" className="replayme-button-secondary text-sm">
+              <Link href="/team" className="choacee-btn-clay-secondary text-sm">
                 צפה בכל הצוות
               </Link>
             </div>
@@ -328,7 +328,7 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
                 <Link 
                   key={agent.id} 
                   href={`/dashboard/calls?agent=${agent.id}`}
-                  className="block replayme-card-secondary p-4 border-r-4 border-lemon-mint/50 hover:border-lemon-mint hover:bg-lemon-mint/5 transition-all duration-200 cursor-pointer"
+                  className="block choacee-card-glass p-4 border-r-4 border-clay-accent/50 hover:border-clay-accent hover:bg-clay-accent/5 transition-all duration-200 cursor-pointer choacee-interactive"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
@@ -344,10 +344,10 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
                       </div>
                       
                       <div>
-                        <h4 className="font-semibold text-indigo-night group-hover:text-lemon-mint-dark transition-colors">
+                        <h4 className="font-semibold text-clay-primary group-hover:text-clay-accent transition-colors">
                           {agent.name}
                         </h4>
-                        <p className="text-sm text-indigo-night/60">
+                        <p className="text-sm text-neutral-600">
                           {agent.totalCalls} שיחות | {agent.successfulCalls} מוצלחות
                         </p>
                       </div>
@@ -361,21 +361,21 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
                         }`}>
                           {agent.avgScore.toFixed(1)}
                         </div>
-                        <div className="text-xs text-indigo-night/60">ממוצע</div>
+                        <div className="text-xs text-neutral-500">ממוצע</div>
                       </div>
                       
                       <div className="flex items-center space-x-2">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                          agent.trend === 'up' ? 'bg-success/20' :
-                          agent.trend === 'down' ? 'bg-error/20' : 'bg-ice-gray'
+                          agent.trend === 'up' ? 'bg-clay-success/20' :
+                          agent.trend === 'down' ? 'bg-clay-danger/20' : 'bg-neutral-200'
                         }`}>
                           <ArrowUpRight className={`w-4 h-4 ${
-                            agent.trend === 'up' ? 'text-success' :
-                            agent.trend === 'down' ? 'text-error rotate-90' : 'text-indigo-night/60'
+                            agent.trend === 'up' ? 'text-clay-success' :
+                            agent.trend === 'down' ? 'text-clay-danger rotate-90' : 'text-neutral-500'
                           }`} />
                         </div>
                         
-                        <div className="text-xs text-indigo-night/60 hover:text-lemon-mint-dark transition-colors">
+                        <div className="text-xs text-neutral-500 hover:text-clay-accent transition-colors">
                           לחץ לצפייה בשיחות
                         </div>
                       </div>
@@ -389,56 +389,56 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
 
         {/* פעולות מהירות */}
         <div className="space-y-6">
-          <div className="replayme-card p-6">
-            <h3 className="text-display text-xl font-bold text-indigo-night mb-6">
+          <div className="choacee-card-clay p-6">
+            <h3 className="choacee-text-display text-xl font-bold text-clay-primary mb-6">
               פעולות מהירות ⚡
             </h3>
             
             <div className="space-y-4">
-              <Link href="/upload" className="block p-4 rounded-xl border border-ice-gray hover:bg-lemon-mint/10 transition-colors duration-200 group">
+              <Link href="/upload" className="block p-4 rounded-clay border border-neutral-200 hover:bg-clay-secondary/10 transition-colors duration-200 group choacee-interactive">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-lemon-mint/20 rounded-lg flex items-center justify-center group-hover:bg-lemon-mint/30 transition-colors">
-                    <Upload className="w-5 h-5 text-lemon-mint-dark" />
+                  <div className="w-10 h-10 bg-clay-secondary/20 rounded-clay flex items-center justify-center group-hover:bg-clay-secondary/30 transition-colors">
+                    <Upload className="w-5 h-5 text-clay-secondary" />
                   </div>
                   <div>
-                    <div className="font-semibold text-indigo-night">העלה שיחה</div>
-                    <div className="text-sm text-indigo-night/60">ניתוח מיידי</div>
+                    <div className="font-semibold text-clay-primary">העלה שיחה</div>
+                    <div className="text-sm text-neutral-600">ניתוח מיידי</div>
                   </div>
                 </div>
               </Link>
 
-              <Link href="/dashboard/manager/all-calls" className="block p-4 rounded-xl border border-ice-gray hover:bg-electric-coral/10 transition-colors duration-200 group">
+              <Link href="/dashboard/manager/all-calls" className="block p-4 rounded-clay border border-neutral-200 hover:bg-clay-danger/10 transition-colors duration-200 group choacee-interactive">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-electric-coral/20 rounded-lg flex items-center justify-center group-hover:bg-electric-coral/30 transition-colors">
-                    <BarChart3 className="w-5 h-5 text-electric-coral" />
+                  <div className="w-10 h-10 bg-clay-danger/20 rounded-clay flex items-center justify-center group-hover:bg-clay-danger/30 transition-colors">
+                    <BarChart3 className="w-5 h-5 text-clay-danger" />
                   </div>
                   <div>
-                    <div className="font-semibold text-indigo-night">כל השיחות</div>
-                    <div className="text-sm text-indigo-night/60">צפייה ופילטור</div>
+                    <div className="font-semibold text-clay-primary">כל השיחות</div>
+                    <div className="text-sm text-neutral-600">צפייה ופילטור</div>
                   </div>
                 </div>
               </Link>
 
-              <Link href="/team" className="block p-4 rounded-xl border border-ice-gray hover:bg-indigo-night/10 transition-colors duration-200 group">
+              <Link href="/team" className="block p-4 rounded-clay border border-neutral-200 hover:bg-clay-primary/10 transition-colors duration-200 group choacee-interactive">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-indigo-night/20 rounded-lg flex items-center justify-center group-hover:bg-indigo-night/30 transition-colors">
-                    <Users className="w-5 h-5 text-indigo-night" />
+                  <div className="w-10 h-10 bg-clay-primary/20 rounded-clay flex items-center justify-center group-hover:bg-clay-primary/30 transition-colors">
+                    <Users className="w-5 h-5 text-clay-primary" />
                   </div>
                   <div>
-                    <div className="font-semibold text-indigo-night">ניהול צוות</div>
-                    <div className="text-sm text-indigo-night/60">הוספה ועריכה</div>
+                    <div className="font-semibold text-clay-primary">ניהול צוות</div>
+                    <div className="text-sm text-neutral-600">הוספה ועריכה</div>
                   </div>
                 </div>
               </Link>
 
-              <Link href="/dashboard/manager/company-details" className="block p-4 rounded-xl border border-ice-gray hover:bg-success/10 transition-colors duration-200 group">
+              <Link href="/dashboard/manager/company-details" className="block p-4 rounded-clay border border-neutral-200 hover:bg-clay-success/10 transition-colors duration-200 group choacee-interactive">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-success/20 rounded-lg flex items-center justify-center group-hover:bg-success/30 transition-colors">
-                    <Building2 className="w-5 h-5 text-success" />
+                  <div className="w-10 h-10 bg-clay-success/20 rounded-clay flex items-center justify-center group-hover:bg-clay-success/30 transition-colors">
+                    <Building2 className="w-5 h-5 text-clay-success" />
                   </div>
                   <div>
-                    <div className="font-semibold text-indigo-night">פרטי החברה</div>
-                    <div className="text-sm text-indigo-night/60">הגדרות ותצורה</div>
+                    <div className="font-semibold text-clay-primary">פרטי החברה</div>
+                    <div className="text-sm text-neutral-600">הגדרות ותצורה</div>
                   </div>
                 </div>
               </Link>
@@ -446,38 +446,38 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
           </div>
 
           {/* סטטיסטיקות נוספות */}
-          <div className="replayme-card p-6">
-            <h3 className="text-display text-xl font-bold text-indigo-night mb-6">
+          <div className="choacee-card-clay p-6">
+            <h3 className="choacee-text-display text-xl font-bold text-clay-primary mb-6">
               תובנות השבוע 📊
             </h3>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-cream-sand rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-glass-light rounded-clay">
                 <div className="flex items-center space-x-3">
-                  <Target className="w-5 h-5 text-success" />
-                  <span className="text-sm font-medium text-indigo-night">שיחות מוצלחות</span>
+                  <Target className="w-5 h-5 text-clay-success" />
+                  <span className="text-sm font-medium text-clay-primary">שיחות מוצלחות</span>
                 </div>
-                <div className="text-lg font-bold text-success">
+                <div className="text-lg font-bold text-clay-success">
                   {((stats.successfulCalls / stats.totalCalls) * 100 || 0).toFixed(0)}%
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-cream-sand rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-glass-light rounded-clay">
                 <div className="flex items-center space-x-3">
-                  <Activity className="w-5 h-5 text-electric-coral" />
-                  <span className="text-sm font-medium text-indigo-night">קצב שיחות יומי</span>
+                  <Activity className="w-5 h-5 text-clay-danger" />
+                  <span className="text-sm font-medium text-clay-primary">קצב שיחות יומי</span>
                 </div>
-                <div className="text-lg font-bold text-electric-coral">
+                <div className="text-lg font-bold text-clay-danger">
                   {Math.round(stats.totalCalls / 7)}
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-cream-sand rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-glass-light rounded-clay">
                 <div className="flex items-center space-x-3">
-                  <Zap className="w-5 h-5 text-warning" />
-                  <span className="text-sm font-medium text-indigo-night">נציגים פעילים</span>
+                  <Zap className="w-5 h-5 text-clay-warning" />
+                  <span className="text-sm font-medium text-clay-primary">נציגים פעילים</span>
                 </div>
-                <div className="text-lg font-bold text-warning">
+                <div className="text-lg font-bold text-clay-warning">
                   {topAgents.filter(agent => agent.totalCalls > 0).length}
                 </div>
               </div>
@@ -487,16 +487,16 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
       </div>
 
       {/* הודעת עידוד */}
-      <div className="replayme-card-secondary p-8 border-r-4 border-lemon-mint">
+      <div className="choacee-card-glass p-8 border-r-4 border-clay-success">
         <div className="flex items-center space-x-6">
-          <div className="w-16 h-16 bg-lemon-mint/20 rounded-2xl flex items-center justify-center animate-lemon-pulse">
-            <Award className="w-8 h-8 text-lemon-mint-dark" />
+          <div className="w-16 h-16 bg-clay-success/20 rounded-clay flex items-center justify-center animate-clay-float">
+            <Award className="w-8 h-8 text-clay-success" />
           </div>
           <div>
-            <h3 className="text-display text-2xl font-bold text-indigo-night mb-2">
+            <h3 className="choacee-text-display text-2xl font-bold text-clay-primary mb-2">
               עבודה מצוינת! 🎉
             </h3>
-            <p className="text-lg text-indigo-night/70 leading-relaxed">
+            <p className="choacee-text-body text-lg text-neutral-600 leading-relaxed">
               הצוות שלך ממשיך להתפתח ולהשתפר. המשיכו לעבוד יחד ולהגיע לגבהים חדשים!
             </p>
           </div>

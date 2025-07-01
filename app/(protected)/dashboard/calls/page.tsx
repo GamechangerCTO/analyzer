@@ -1,5 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import CallsListClient from './CallsListClient'
 
@@ -8,7 +7,7 @@ interface CallsPageProps {
 }
 
 export default async function CallsPage({ searchParams }: CallsPageProps) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
   
   const { data: { session } } = await supabase.auth.getSession()
   
