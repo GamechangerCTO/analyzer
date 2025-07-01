@@ -44,16 +44,16 @@ const openai = new OpenAI({
 function cleanOpenAIResponse(content: string): string {
   if (!content) return '{}';
   
-  console.log(`🧹 מנקה תגובת OpenAI (גרסה מתקדמת)`, { original_length: content.length });
+  console.log(`🧹 מנקה תגובת OpenAI (גרסה פשוטה ומדויקת)`, { original_length: content.length });
   
-  // שלב 1: ניקוי בסיסי
+  // ניקוי בסיסי של Markdown blocks ורווחים
   let cleaned = content
-    .replace(/```(?:json|JSON)?\s*/g, '') // הסרת code blocks
+    .replace(/```(?:json|JSON)?\s*/g, '')
     .replace(/```\s*$/g, '')
-    .replace(/^`+|`+$/g, '') // הסרת backticks
+    .replace(/^`+|`+$/g, '')
     .trim();
   
-  // שלב 2: חיפוש JSON boundaries
+  // חיפוש JSON boundaries
   const jsonStart = cleaned.indexOf('{');
   if (jsonStart !== -1) {
     cleaned = cleaned.substring(jsonStart);
@@ -62,172 +62,43 @@ function cleanOpenAIResponse(content: string): string {
     throw new Error('No valid JSON found in OpenAI response');
   }
   
-  // שלב 3: תיקון שגיאות JSON נפוצות מ-OpenAI
-  // תיקון מפתחות שמופיעים ללא פסיק אחרי ערך
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([א-ת\w_]+"\s*:)/g, (match, p1, p2) => {
-    return `${p1}, "${p2}`;
-  });
+  // ניקוי תווי בקרה שגורמים לשגיאות (הבעיה העיקרית!)
+  cleaned = cleaned.replace(/[\r\n\t]/g, ' ').replace(/\s+/g, ' ');
   
-  // תיקון מרכאות שנסגרות באמצע הערך
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([^,\s][^":]*":\s*)/g, (match, p1, p2) => {
-    return `${p1}, ${p2}`;
-  });
-  
-  // תיקון מרכאות כפולות באמצע ערך
-  cleaned = cleaned.replace(/:\s*"([^"]*)"(,)([^":{}[\]]+)"/g, ':"$1 $3"');
-  
-  // שלב 4: אלגוריתם מתקדם לאיזון סוגריים עם התחשבות ב-strings
+  // איזון סוגריים בסיסי
   let braceCount = 0;
   let lastValidEnd = -1;
-  let inString = false;
-  let escapeNext = false;
   
   for (let i = 0; i < cleaned.length; i++) {
     const char = cleaned[i];
-    
-    if (escapeNext) {
-      escapeNext = false;
-      continue;
-    }
-    
-    if (char === '\\') {
-      escapeNext = true;
-      continue;
-    }
-    
-    if (char === '"' && !escapeNext) {
-      inString = !inString;
-      continue;
-    }
-    
-    if (!inString) {
-      if (char === '{') {
-        braceCount++;
-      } else if (char === '}') {
-        braceCount--;
-        if (braceCount === 0) {
-          lastValidEnd = i;
-          break; // נמצא JSON מלא ותקין
-        }
+    if (char === '{') braceCount++;
+    else if (char === '}') {
+      braceCount--;
+      if (braceCount === 0) {
+        lastValidEnd = i;
+        break;
       }
     }
   }
   
-  // שלב 5: חיתוך לJSON תקין
   if (lastValidEnd !== -1) {
     cleaned = cleaned.substring(0, lastValidEnd + 1);
-  } else {
-    // אם לא מצאנו סוף תקין, נסה לתקן
-    const openBraces = (cleaned.match(/\{/g) || []).length;
-    const closeBraces = (cleaned.match(/\}/g) || []).length;
-    const missingBraces = openBraces - closeBraces;
-    
-    if (missingBraces > 0 && missingBraces < 10) { // מגבלה סבירה
-      cleaned += '}'.repeat(missingBraces);
-    }
   }
   
-  // שלב 6: ניסיון parse ראשוני
+  // בדיקה אם ה-JSON תקין כעת
   try {
     JSON.parse(cleaned);
-    console.log(`✅ JSON תקין אחרי ניקוי`, { cleaned_length: cleaned.length });
+    console.log(`✅ JSON תקין אחרי ניקוי פשוט`, { cleaned_length: cleaned.length });
     return cleaned;
   } catch (parseError: any) {
-    console.warn(`⚠️ JSON לא תקין אחרי ניקוי, מנסה תיקונים מתקדמים`, { 
+    console.error(`❌ JSON לא תקין גם אחרי ניקוי פשוט - הבעיה בפרומפט!`, { 
       error: parseError.message,
-      position: parseError.message.match(/position (\d+)/)?.[1] 
+      position: parseError.message.match(/position (\d+)/)?.[1],
+      content_preview: cleaned.substring(0, 200)
     });
     
-    // שלב 7: תיקונים מתקדמים יותר אגרסיביים
-    try {
-      let fixed = cleaned
-        // הסרת פסיקים מיותרים
-        .replace(/,(\s*[}\]])/g, '$1')
-        // תיקון newlines בתוך strings
-        .replace(/([^\\]")([^"]*?)\n([^"]*?)(")/g, '$1$2 $3$4')
-        // תיקון escaped quotes כפולים
-        .replace(/\\"/g, '"')
-        .replace(/\\n/g, ' ')
-        // תיקון quotes לא מאוזנים לkeys
-        .replace(/([{,]\s*)([a-zA-Z_\u0590-\u05FF]+):/g, '$1"$2":')
-        // תיקון פסיקים חסרים בין אובייקטים
-        .replace(/}(\s*)"/g, '},$1"')
-        .replace(/](\s*)"/g, '],$1"')
-        // תיקון מפתחות עבריים ללא מרכאות
-        .replace(/([{,]\s*)([א-ת_][א-ת\w_]*)\s*:/g, '$1"$2":')
-        // תיקון ערכים שמתחילים במרכאה אבל לא נסגרים
-        .replace(/:\s*"([^"]*?)([א-ת\w_]+)"\s*([,}])/g, ':"$1$2"$3')
-        // תיקון כפילויות של פסיקים
-        .replace(/,,+/g, ',')
-        // תיקון פסיקים מיותרים לפני סוגריים
-        .replace(/,\s*}/g, '}')
-        .replace(/,\s*]/g, ']');
-      
-      // אם JSON לא מסתיים בצורה תקינה
-      if (!fixed.endsWith('}') && fixed.includes('{')) {
-        fixed += '}';
-      }
-      
-      // ניסיון parse נוסף
-      JSON.parse(fixed);
-      console.log(`✅ JSON תוקן בהצלחה עם תיקונים מתקדמים`);
-      return fixed;
-    } catch (secondError: any) {
-      console.error(`❌ כשל בתיקון JSON מתקדם`, { 
-        error: secondError.message,
-        preview: cleaned.substring(0, 200) 
-      });
-      
-      // שלב 8: ניסיון חילוץ partial JSON מתקדם יותר
-      const errorPosition = parseError.message.match(/position (\d+)/)?.[1];
-      if (errorPosition) {
-        const position = parseInt(errorPosition);
-        
-        // נסה לחתוך במקומות שונים סביב השגיאה
-        for (let offset = 0; offset <= 50; offset += 10) {
-          const cutPosition = Math.max(0, position - offset);
-          let truncatedContent = cleaned.substring(0, cutPosition);
-          
-          // חיפוש הפסיק הקרוב ביותר לפני השגיאה
-          const lastComma = truncatedContent.lastIndexOf(',');
-          const lastQuote = truncatedContent.lastIndexOf('"');
-          const lastBrace = truncatedContent.lastIndexOf('{');
-          
-          if (lastComma > lastQuote - 50 && lastComma > lastBrace) {
-            truncatedContent = truncatedContent.substring(0, lastComma);
-          }
-          
-          try {
-            // נסה לחלץ JSON חלקי עם סגירה נכונה
-            let partialJson = truncatedContent;
-            
-            // ספור סוגריים פתוחים וסגור אותם
-            const openBraces = (partialJson.match(/\{/g) || []).length;
-            const closeBraces = (partialJson.match(/\}/g) || []).length;
-            const missingBraces = openBraces - closeBraces;
-            
-            if (missingBraces > 0) {
-              partialJson += '}'.repeat(missingBraces);
-            }
-            
-            const result = JSON.parse(partialJson);
-            console.log(`⚠️ חולץ JSON חלקי בהצלחה עם תיקון מתקדם`);
-            return partialJson;
-          } catch {
-            // נמשיך לניסיון הבא
-          }
-        }
-      }
-      
-      // שלב 9: אם הכל נכשל - זרוק שגיאה במקום fallback
-      console.error(`❌ כל הניסיונות לתקן את ה-JSON נכשלו`, {
-        original_error: parseError.message,
-        second_error: secondError.message,
-        content_preview: content.substring(0, 500)
-      });
-      
-      throw new Error(`Failed to parse OpenAI JSON response: ${parseError.message}. Content preview: ${content.substring(0, 200)}`);
-    }
+    // במקום לנסות לתקן, נזרוק שגיאה שתאלץ את המודל ליצור JSON נכון
+    throw new Error(`Failed to parse OpenAI JSON response: ${parseError.message}. Content preview: ${cleaned.substring(0, 200)}`);
   }
 }
 
@@ -867,11 +738,30 @@ export async function POST(request: Request) {
           
           החזר רק JSON תקין ללא backticks או markdown!
           
-          ⚠️ כללי JSON קריטיים למניעת שגיאות:
-          - בכל שדות ה"תובנות" ו"איך_משפרים": אל תשתמש במרכאות כפולות (") - השתמש בגרש בודד (')
-          - אם חייב מרכאות כפולות בתוך טקסט, השתמש ב-escape: \"  
-          - אל תכלול פסיקים באמצע ערכי טקסט ללא לעטוף במרכאות
-          - ודא שכל ערך טקסט מתחיל ומסתיים במרכאות כפולות`;
+          ⚠️ חובה! כללי JSON קריטיים למניעת שגיאות:
+          - אל תשתמש במרכאות כפולות (") בתוך ערכי הטקסט - השתמש בגרש בודד (') או מקף
+          - וודא שכל ערך טקסט מתחיל ומסתיים במרכאות כפולות ללא הפרעה באמצע
+          - אל תכלול line breaks (\n) או tabs (\t) בתוך ערכי טקסט
+          - לפני כל מפתח JSON (למעט הראשון) חייב להיות פסיק
+          
+          ⚠️ כללים נוספים קריטיים:
+          1. כל ערך טקסט חייב להיות במשפט אחד רצוף ללא הפסקות שורה
+          2. במקום מרכאות כפולות בטקסט השתמש במקפיים: הנציג אמר - זה מוצר מעולה - בביטחון
+          3. במקום פסיקים באמצע משפט השתמש במקפים או נקודות
+          4. אל תכתוב טקסט שמתחיל או מסתיים ברווח
+          5. ודא שכל סוגריים מסולסלים { } מאוזנים נכון
+          6. שים פסיק אחרי כל ערך מלבד האחרון בקטגוריה
+          
+          דוגמה מושלמת:
+          {
+            "פתיחת_שיחה_ובניית_אמון": {
+              "פתיח_אנרגטי": {
+                "ציון": 7,
+                "תובנות": "הנציג פתח באנרגיה חיובית ובהצגה ברורה",
+                "איך_משפרים": "להוסיף חיוך בקול ושימוש בשם הלקוח מיד בפתיחה"
+              }
+            }
+          }`;
           await addCallLog(call_id, 'ℹ️ משתמש בפרומפט מקצועי מפורט (לא נמצא פרומפט ספציפי לסוג השיחה)', {
             call_type: callData.call_type,
             prompt_error: promptError?.message
