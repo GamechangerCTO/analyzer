@@ -19,6 +19,28 @@ export default function LoginForm() {
   const [authLoading, setAuthLoading] = useState(false)
   const [authStatus, setAuthStatus] = useState<string>('מוכן להתחברות')
 
+  // בדיקת שגיאות מ-URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const error = urlParams.get('error')
+    
+    if (error) {
+      const errorMessages: { [key: string]: string } = {
+        'auth_callback_error': 'שגיאה בהתחברות - אנא נסה שוב',
+        'database_error': 'שגיאה במסד הנתונים - אנא נסה שוב מאוחר יותר',
+        'creation_error': 'שגיאה ביצירת החשבון - אנא צור קשר עם התמיכה',
+        'auth_exchange_error': 'שגיאה בחילוף אסימונים - אנא נסה שוב',
+        'processing_error': 'שגיאה בעיבוד הבקשה - אנא נסה שוב'
+      }
+      
+      setAuthError(errorMessages[error] || 'שגיאה לא ידועה - אנא נסה שוב')
+      
+      // ניקוי השגיאה מה-URL
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [])
+
   const toggleView = () => {
     setView(view === 'sign_in' ? 'sign_up' : 'sign_in')
     setAuthError(null)
@@ -181,7 +203,16 @@ export default function LoginForm() {
       {/* הצגת שגיאות אותנטיקציה */}
       {authError && (
         <div className="choacee-card-glass p-4 bg-clay-danger/10 border border-clay-danger/30">
-          <p className="text-clay-danger text-sm font-medium">{authError}</p>
+          <div className="flex items-start justify-between">
+            <p className="text-clay-danger text-sm font-medium flex-1">{authError}</p>
+            <button
+              onClick={() => setAuthError(null)}
+              className="text-clay-danger hover:text-clay-danger/80 transition-colors ml-2"
+              title="סגור הודעה"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
 
