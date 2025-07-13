@@ -41,10 +41,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // בדיקה שהמשתמש הוא מנהל
-    if (currentUserData.role !== 'manager') {
+    // בדיקה שהמשתמש הוא מנהל או אדמין
+    if (currentUserData.role !== 'manager' && currentUserData.role !== 'admin') {
       return NextResponse.json(
-        { error: 'Only managers can add agents' },
+        { error: 'Only managers and admins can add agents' },
         { status: 403 }
       )
     }
@@ -58,40 +58,49 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // בדיקת מכסה זמינה
-    const { data: quotaData, error: quotaError } = await supabase
-      .rpc('can_add_user_to_company', { p_company_id: companyId })
-
-    if (quotaError) {
-      console.error('Error checking quota:', quotaError)
-      return NextResponse.json(
-        { error: 'Error checking quota' },
-        { status: 500 }
-      )
+    // ✅ BYPASS לאדמין - מנהלי מערכת יכולים ליצור נציגים ללא מגבלות מכסה
+    let skipQuotaCheck = false
+    if (currentUserData.role === 'admin') {
+      console.log('Admin bypass: יצירת נציג ללא בדיקת מכסה')
+      skipQuotaCheck = true
     }
 
-    if (!quotaData) {
-      // אין מכסה זמינה - מחזיר שגיאה ברורה
-      const { data: quotaInfo, error: quotaInfoError } = await supabase
-        .rpc('get_company_user_quota', { p_company_id: companyId })
+    // בדיקת מכסה זמינה - רק למנהלים רגילים
+    if (!skipQuotaCheck) {
+      const { data: quotaData, error: quotaError } = await supabase
+        .rpc('can_add_user_to_company', { p_company_id: companyId })
 
-      if (quotaInfoError) {
-        console.error('Error getting quota info:', quotaInfoError)
+      if (quotaError) {
+        console.error('Error checking quota:', quotaError)
         return NextResponse.json(
-          { error: 'No available quota. Please contact admin to increase your user limit.' },
-          { status: 400 }
+          { error: 'Error checking quota' },
+          { status: 500 }
         )
       }
 
-      const quota = quotaInfo?.[0]
-      return NextResponse.json(
-        { 
-          error: 'No available quota',
-          message: `החברה שלכם הגיעה למכסה המקסימלית של ${quota?.total_users || 'לא ידוע'} משתמשים. כרגע יש ${quota?.used_users || 'לא ידוע'} משתמשים פעילים. אנא פנו למנהל המערכת להגדלת המכסה.`,
-          quota_info: quota
-        },
-        { status: 400 }
-      )
+      if (!quotaData) {
+        // אין מכסה זמינה - מחזיר שגיאה ברורה
+        const { data: quotaInfo, error: quotaInfoError } = await supabase
+          .rpc('get_company_user_quota', { p_company_id: companyId })
+
+        if (quotaInfoError) {
+          console.error('Error getting quota info:', quotaInfoError)
+          return NextResponse.json(
+            { error: 'No available quota. Please contact admin to increase your user limit.' },
+            { status: 400 }
+          )
+        }
+
+        const quota = quotaInfo?.[0]
+        return NextResponse.json(
+          { 
+            error: 'No available quota',
+            message: `החברה שלכם הגיעה למכסה המקסימלית של ${quota?.total_users || 'לא ידוע'} משתמשים. כרגע יש ${quota?.used_users || 'לא ידוע'} משתמשים פעילים. אנא פנו למנהל המערכת להגדלת המכסה.`,
+            quota_info: quota
+          },
+          { status: 400 }
+        )
+      }
     }
 
     // בדיקה אם המייל כבר קיים
@@ -108,7 +117,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // יש מכסה זמינה - יוצר בקשה לאישור נציג (שתאושר אוטומטית)
+    // יש מכסה זמינה (או אדמין) - יוצר בקשה לאישור נציג (שתאושר אוטומטית)
     const { data: newRequest, error: insertError } = await supabase
       .from('agent_approval_requests')
       .insert({
@@ -116,7 +125,7 @@ export async function POST(request: NextRequest) {
         email,
         company_id: companyId,
         requested_by: user.id,
-        status: 'approved' // מאושר אוטומטית כי יש מכסה
+        status: 'approved' // מאושר אוטומטית כי יש מכסה או אדמין
       })
       .select()
       .single()
@@ -129,17 +138,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // קבלת מידע מעודכן על המכסה
-    const { data: updatedQuota, error: updatedQuotaError } = await supabase
-      .rpc('get_company_user_quota', { p_company_id: companyId })
+    // קבלת מידע מעודכן על המכסה (אם לא אדמין)
+    if (!skipQuotaCheck) {
+      const { data: updatedQuota, error: updatedQuotaError } = await supabase
+        .rpc('get_company_user_quota', { p_company_id: companyId })
 
-    const quota = updatedQuota?.[0]
-    return NextResponse.json({
-      success: true,
-      message: `נציג ${full_name} נוסף בהצלחה! המכסה שלכם עכשיו: ${quota?.used_users || 'לא ידוע'}/${quota?.total_users || 'לא ידוע'} משתמשים.`,
-      request: newRequest,
-      quota_info: quota
-    })
+      const quota = updatedQuota?.[0]
+      return NextResponse.json({
+        success: true,
+        message: `נציג ${full_name} נוסף בהצלחה! המכסה שלכם עכשיו: ${quota?.used_users || 'לא ידוע'}/${quota?.total_users || 'לא ידוע'} משתמשים.`,
+        request: newRequest,
+        quota_info: quota
+      })
+    } else {
+      // אדמין - הודעה פשוטה
+      return NextResponse.json({
+        success: true,
+        message: `נציג ${full_name} נוסף בהצלחה! (מנהל מערכת - ללא מגבלות מכסה)`,
+        request: newRequest
+      })
+    }
 
   } catch (error) {
     console.error('Error in add-agent API:', error)

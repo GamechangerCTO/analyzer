@@ -45,6 +45,11 @@ export async function createUserWithServiceRole(userData: {
     // אחרת, צריך אישור ממנהל מערכת
     const is_approved = currentUserData.role === 'admin' ? true : false
     
+    // ✅ BYPASS לאדמין - מנהלי מערכת יכולים ליצור משתמשים ללא מגבלות מכסה
+    if (currentUserData.role === 'admin') {
+      console.log('Admin bypass: יצירת משתמש ללא בדיקת מכסה')
+    }
+    
     // בדיקה אם המשתמש כבר קיים ב-Auth לפי האימייל
     const { data: existingUsers, error: existingError } = await supabaseAdmin.auth.admin.listUsers()
     
