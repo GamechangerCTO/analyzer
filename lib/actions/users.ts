@@ -20,16 +20,38 @@ export async function createUserWithServiceRole(userData: {
   company_id?: string | null
   is_approved?: boolean
 }) {
+  console.log('🚀 createUserWithServiceRole called with:', {
+    email: userData.email,
+    full_name: userData.full_name,
+    role: userData.role,
+    company_id: userData.company_id,
+    has_password: !!userData.password
+  });
+
   try {
+    // בדיקת משתנים בסביבת העבודה
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('❌ Missing environment variables:', {
+        SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+      });
+      throw new Error('משתנים חסרים בסביבת העבודה');
+    }
+
     // בדיקת תפקיד המשתמש המוסיף
+    console.log('🔍 Getting current user...');
     const supabase = createServerClient()
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
+      console.error('❌ No authenticated user found');
       throw new Error('משתמש לא מחובר')
     }
+
+    console.log('✅ Current user found:', { id: user.id, email: user.email });
     
     // בדיקת התפקיד של המשתמש המוסיף
+    console.log('🔍 Checking current user role...');
     const { data: currentUserData, error: userError } = await supabase
       .from('users')
       .select('role')
@@ -37,8 +59,11 @@ export async function createUserWithServiceRole(userData: {
       .single()
     
     if (userError) {
+      console.error('❌ Error checking current user role:', userError);
       throw new Error('שגיאה בבדיקת פרטי המשתמש המוסיף')
     }
+
+    console.log('✅ Current user role:', currentUserData.role);
     
     // קביעת סטטוס האישור בהתאם לתפקיד המוסיף
     // אם מנהל מערכת מוסיף - המשתמש מאושר אוטומטית
@@ -47,15 +72,19 @@ export async function createUserWithServiceRole(userData: {
     
     // ✅ BYPASS לאדמין - מנהלי מערכת יכולים ליצור משתמשים ללא מגבלות מכסה
     if (currentUserData.role === 'admin') {
-      console.log('Admin bypass: יצירת משתמש ללא בדיקת מכסה')
+      console.log('🔑 Admin bypass: יצירת משתמש ללא בדיקת מכסה')
     }
     
+    console.log('🔍 Creating supabase admin client...');
     // בדיקה אם המשתמש כבר קיים ב-Auth לפי האימייל
     const { data: existingUsers, error: existingError } = await supabaseAdmin.auth.admin.listUsers()
     
     if (existingError) {
+      console.error('❌ Error checking existing users:', existingError);
       throw new Error(`שגיאה בבדיקת משתמשים קיימים: ${existingError.message}`)
     }
+
+    console.log('✅ Checked existing users, found:', existingUsers.users.length);
     
     // חיפוש משתמש קיים לפי אימייל
     const existingUser = existingUsers.users.find(user => user.email === userData.email)
@@ -63,9 +92,10 @@ export async function createUserWithServiceRole(userData: {
 
     // אם המשתמש כבר קיים
     if (existingUser) {
-      console.log('משתמש קיים במערכת Auth, מעדכן פרטים')
+      console.log('ℹ️ משתמש קיים במערכת Auth, מעדכן פרטים')
       authUser = existingUser
     } else {
+      console.log('🔍 Creating new user in Auth...');
       // יצירת משתמש חדש ב-Auth
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: userData.email,
@@ -76,19 +106,30 @@ export async function createUserWithServiceRole(userData: {
         }
       })
 
-      if (authError) throw authError
-      if (!authData.user) throw new Error('משתמש לא נוצר ב-Auth')
+      if (authError) {
+        console.error('❌ Error creating user in Auth:', authError);
+        throw authError;
+      }
+      if (!authData.user) {
+        console.error('❌ Auth user creation returned no user');
+        throw new Error('משתמש לא נוצר ב-Auth');
+      }
       
+      console.log('✅ User created in Auth:', authData.user.id);
       authUser = authData.user
     }
 
+    console.log('🔍 Checking if user exists in public.users...');
     // בדיקה אם המשתמש כבר קיים בטבלת public.users
     const { data: existingPublicUser } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('id', authUser.id)
       .maybeSingle()
-      
+    
+    console.log('ℹ️ User exists in public.users:', !!existingPublicUser);
+
+    console.log('🔍 Upserting user to public.users...');
     // שימוש ב-upsert כדי ליצור או לעדכן משתמש קיים
     const { error: upsertError } = await supabaseAdmin
       .from('users')
@@ -102,25 +143,32 @@ export async function createUserWithServiceRole(userData: {
       }, { onConflict: 'id' })
 
     if (upsertError) {
-      console.error('שגיאה בהוספת/עדכון משתמש בטבלת users:', upsertError)
+      console.error('❌ שגיאה בהוספת/עדכון משתמש בטבלת users:', upsertError);
       throw new Error(`שגיאה בהוספת/עדכון משתמש: ${upsertError.message}`)
     }
+
+    console.log('✅ User upserted to public.users successfully');
     
     // אם קיים כבר משתמש בטבלה הציבורית והוא עודכן, עדכן גם את הסיסמה
     if (existingPublicUser) {
+      console.log('🔍 Updating password for existing user...');
       const { error: updatePasswordError } = await supabaseAdmin.auth.admin.updateUserById(
         authUser.id,
         { password: userData.password }
       )
       
       if (updatePasswordError) {
-        console.warn('שגיאה בעדכון סיסמה למשתמש קיים:', updatePasswordError)
+        console.warn('⚠️ שגיאה בעדכון סיסמה למשתמש קיים:', updatePasswordError)
+      } else {
+        console.log('✅ Password updated for existing user');
       }
     }
 
     // רענון הדף לאחר יצירת המשתמש
+    console.log('🔄 Revalidating path...');
     revalidatePath('/dashboard/admin/users')
     
+    console.log('✅ User creation completed successfully');
     // החזר את הסטטוס שנבחר כדי להציג הודעה מתאימה למשתמש
     return { 
       success: true, 
@@ -129,7 +177,8 @@ export async function createUserWithServiceRole(userData: {
       isExisting: !!existingPublicUser
     }
   } catch (error) {
-    console.error('שגיאה ביצירת משתמש:', error)
+    console.error('❌ שגיאה ביצירת משתמש:', error);
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
     const errorMessage = error instanceof Error ? error.message : 'שגיאה לא ידועה'
     return { success: false, error: errorMessage }
   }

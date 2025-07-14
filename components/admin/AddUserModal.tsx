@@ -88,6 +88,13 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
     setSuccessMessage(null);
 
     try {
+      console.log('🔍 Starting user creation with data:', {
+        email: formData.email,
+        full_name: formData.full_name,
+        role: formData.role,
+        company_id: formData.company_id
+      });
+
       // ולידציה: בדיקה שמנהלים ונציגים חייבים להיות משויכים לחברה
       if ((formData.role === 'manager' || formData.role === 'agent') && !formData.company_id) {
         setError('נציגים ומנהלים חייבים להיות משויכים לחברה. אנא בחר חברה.');
@@ -96,6 +103,7 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
       }
 
       // שימוש בפעולת השרת המשתמשת ב-service_role
+      console.log('📡 Calling createUserWithServiceRole...');
       const result = await createUserWithServiceRole({
         email: formData.email,
         password: formData.password,
@@ -104,7 +112,10 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
         company_id: formData.company_id || null,
       });
 
+      console.log('📊 Result from createUserWithServiceRole:', result);
+
       if (!result.success) {
+        console.error('❌ User creation failed:', result.error);
         throw new Error(result.error);
       }
       
@@ -117,6 +128,7 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
         setSuccessMessage(`משתמש ${formData.email} נוצר בהצלחה וממתין לאישור מנהל מערכת.`);
       }
       
+      console.log('✅ User creation completed successfully');
       onUserAdded();
       
       // Reset form for next entry
@@ -129,11 +141,53 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
       });
 
     } catch (err) {
-      console.error("Error creating user:", err);
+      console.error("❌ Error creating user:", err);
+      console.error("❌ Error stack:", err instanceof Error ? err.stack : 'No stack');
+      
       const errorMessage = err instanceof Error ? err.message : 'שגיאה לא ידועה';
       setError(`שגיאה ביצירת המשתמש: ${errorMessage}`);
     } finally {
       setSaving(false);
+    }
+  };
+
+  // פונקציה לבדיקת יצירת משתמש עם API פשוט
+  const testSimpleUserCreation = async () => {
+    console.log('🧪 Testing simple user creation...');
+    
+    try {
+      const response = await fetch('/api/admin/create-user-simple', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          full_name: formData.full_name,
+          role: formData.role,
+          company_id: formData.company_id || null,
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        setSuccessMessage(`✅ משתמש נוצר בהצלחה בAPI הפשוט: ${formData.email}`);
+        onUserAdded();
+        setFormData({
+          email: '',
+          password: '',
+          full_name: '',
+          role: 'agent',
+          company_id: '',
+        });
+      } else {
+        setError(`❌ שגיאה בAPI הפשוט: ${result.error} - ${result.details}`);
+      }
+    } catch (error) {
+      console.error('❌ Error in simple API:', error);
+      setError(`❌ שגיאה בקריאה לAPI הפשוט: ${error instanceof Error ? error.message : 'שגיאה לא ידועה'}`);
     }
   };
 
@@ -215,12 +269,32 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
               * משתמשים שנוספים על ידי מנהל מערכת יאושרו אוטומטית.
               משתמשים שנוספים על ידי מנהל רגיל ידרשו אישור של מנהל מערכת.
             </p>
-            <button type="submit" disabled={saving} className="btn-primary w-full disabled:bg-gray-400">
-              {saving ? 'יוצר משתמש...' : 'צור משתמש'}
-            </button>
-            <button type="button" onClick={onClose} disabled={saving} className="btn-secondary w-full mt-2 disabled:opacity-50">
-              סגור
-            </button>
+            <div className="flex space-x-4">
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                {saving ? 'שומר...' : 'צור משתמש'}
+              </button>
+              
+              <button
+                type="button"
+                onClick={testSimpleUserCreation}
+                disabled={saving}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                🧪 בדיקה פשוטה
+              </button>
+              
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+              >
+                ביטול
+              </button>
+            </div>
           </div>
         </form>
         <style jsx>{`

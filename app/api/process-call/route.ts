@@ -836,7 +836,7 @@ export async function POST(request: Request) {
         });
         
         const contentAnalysisResponse = await openai.chat.completions.create({
-          model: 'gpt-4.1-2025-04-14',
+          model: 'gpt-4o-2024-08-06',
           messages: [
             {
               role: 'system',
