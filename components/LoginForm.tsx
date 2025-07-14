@@ -409,7 +409,7 @@ export default function LoginForm() {
                 },
               },
             }}
-            providers={['google']}
+            providers={[]}
             redirectTo={`${window.location.origin}/api/auth/callback`}
             onlyThirdPartyProviders={false}
             magicLink={false}
