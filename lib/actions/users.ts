@@ -129,22 +129,97 @@ export async function createUserWithServiceRole(userData: {
     
     console.log('ℹ️ User exists in public.users:', !!existingPublicUser);
 
-    console.log('🔍 Upserting user to public.users...');
-    // שימוש ב-upsert כדי ליצור או לעדכן משתמש קיים
-    const { error: upsertError } = await supabaseAdmin
-      .from('users')
-      .upsert({
-        id: authUser.id,
-        email: userData.email,
-        full_name: userData.full_name,
-        role: userData.role,
-        company_id: userData.company_id || null,
-        is_approved: is_approved
-      }, { onConflict: 'id' })
+    // ולידציה נוספת לפני upsert
+    if (userData.company_id) {
+      console.log('🔍 Validating company_id exists...');
+      const { data: companyExists, error: companyError } = await supabaseAdmin
+        .from('companies')
+        .select('id')
+        .eq('id', userData.company_id)
+        .maybeSingle();
+      
+      if (companyError) {
+        console.error('❌ Error validating company:', companyError);
+        throw new Error(`שגיאה בבדיקת חברה: ${companyError.message}`);
+      }
+      
+      if (!companyExists) {
+        console.error('❌ Company not found:', userData.company_id);
+        throw new Error(`החברה שנבחרה לא קיימת במערכת`);
+      }
+      
+      console.log('✅ Company validation passed');
+    }
 
-    if (upsertError) {
-      console.error('❌ שגיאה בהוספת/עדכון משתמש בטבלת users:', upsertError);
-      throw new Error(`שגיאה בהוספת/עדכון משתמש: ${upsertError.message}`)
+    console.log('🔍 Upserting user to public.users...');
+    console.log('📋 Upsert data:', {
+      id: authUser.id,
+      email: userData.email,
+      full_name: userData.full_name,
+      role: userData.role,
+      company_id: userData.company_id || null,
+      is_approved: is_approved
+    });
+    
+    // בדיקה אם המשתמש כבר קיים ב-public.users
+    const { data: existingPublicUserCheck } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('id', authUser.id)
+      .maybeSingle();
+    
+    if (existingPublicUserCheck) {
+      console.log('🔄 Updating existing user in public.users...');
+      // עדכון משתמש קיים
+      const { error: updateError } = await supabaseAdmin
+        .from('users')
+        .update({
+          email: userData.email,
+          full_name: userData.full_name,
+          role: userData.role,
+          company_id: userData.company_id || null,
+          is_approved: is_approved
+        })
+        .eq('id', authUser.id);
+
+      if (updateError) {
+        console.error('❌ שגיאה בעדכון משתמש בטבלת users:', updateError);
+        console.error('❌ Update error details:', {
+          code: updateError.code,
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint
+        });
+        throw new Error(`Database error updating user: ${updateError.message}`)
+      }
+      
+      console.log('✅ User updated in public.users successfully');
+    } else {
+      console.log('➕ Inserting new user to public.users...');
+      // הוספת משתמש חדש
+      const { error: insertError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          id: authUser.id,
+          email: userData.email,
+          full_name: userData.full_name,
+          role: userData.role,
+          company_id: userData.company_id || null,
+          is_approved: is_approved
+        });
+
+      if (insertError) {
+        console.error('❌ שגיאה בהוספת משתמש בטבלת users:', insertError);
+        console.error('❌ Insert error details:', {
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint
+        });
+        throw new Error(`Database error creating user: ${insertError.message}`)
+      }
+      
+      console.log('✅ User inserted to public.users successfully');
     }
 
     console.log('✅ User upserted to public.users successfully');
