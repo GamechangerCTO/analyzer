@@ -1053,7 +1053,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                     </span>
                     {finalOverallScore < 8 && (
                       <div className="mt-2 text-xs text-gray-600">
-                        💡 <strong>זכור:</strong> הסטנדרטים שלנו גבוהים - רק 8+ נחשב מעולה
+                        💡 <strong>זכור:</strong> הסטנדרטים שלנו גבוהים - רק 8+ נחשב לטוב מאוד
                       </div>
                     )}
                   </div>
