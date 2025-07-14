@@ -78,9 +78,9 @@ export default function EditUserModal({ isOpen, onClose, userToEdit, onUserUpdat
     setError(null);
     
     try {
-      // ולידציה: בדיקה שמנהלים ונציגים חייבים להיות משויכים לחברה
-      if ((userToEdit.role === 'manager' || userToEdit.role === 'agent') && !formData.company_id) {
-        setError('נציגים ומנהלים חייבים להיות משויכים לחברה. אנא בחר חברה.');
+      // ולידציה: אדמינים לא צריכים להיות משויכים לחברה
+      if (userToEdit.role === 'admin' && formData.company_id) {
+        setError('מנהלי מערכת לא צריכים להיות משויכים לחברה ספציפית.');
         setSaving(false);
         return;
       }
@@ -108,12 +108,12 @@ export default function EditUserModal({ isOpen, onClose, userToEdit, onUserUpdat
 
   // פונקציה עזר לקביעת האם החברה חובה
   const isCompanyRequired = () => {
-    return userToEdit?.role === 'manager' || userToEdit?.role === 'agent';
+    return false; // אדמין יכול לערוך משתמשים עם או בלי חברה
   };
 
   // פונקציה עזר לקביעת טקסט התווית
   const getCompanyLabel = () => {
-    return isCompanyRequired() ? 'חברה (חובה)' : 'חברה (אופציונלי)';
+    return userToEdit?.role === 'admin' ? 'חברה (אדמינים ללא חברה)' : 'חברה (אופציונלי)';
   };
 
   return (

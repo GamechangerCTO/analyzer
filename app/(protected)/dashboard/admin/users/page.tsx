@@ -231,12 +231,11 @@ export default function AdminUsersPage() {
       return;
     }
     
-    // ולידציה: בדיקה שמנהלים ונציגים חייבים להיות משויכים לחברה
-    if ((newRole === 'manager' || newRole === 'agent')) {
-      // מציאת המשתמש ברשימה הנוכחית
+    // ולידציה: אדמינים לא צריכים להיות משויכים לחברה
+    if (newRole === 'admin') {
       const userToUpdate = allUsers.find(u => u.id === userId);
-      if (userToUpdate && !userToUpdate.company_id) {
-        setError(`לא ניתן לשנות תפקיד ל"${newRole === 'manager' ? 'מנהל' : 'נציג'}" כאשר המשתמש לא משויך לחברה. אנא ערוך תחילה את המשתמש ושייך אותו לחברה.`);
+      if (userToUpdate && userToUpdate.company_id) {
+        setError('מנהלי מערכת לא צריכים להיות משויכים לחברה. אנא ערוך תחילה את המשתמש והסר את השיוך לחברה.');
         return;
       }
     }

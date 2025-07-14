@@ -488,7 +488,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 <span className="text-sm font-semibold text-indigo-night mb-2 block">
                   סוג שיחה <span className="text-electric-coral">*</span>
                 </span>
-                <div className="relative">
+                <div className="relative" data-dropdown="call-type">
                   <button
                     type="button"
                     onClick={() => setIsCallTypeDropdownOpen(!isCallTypeDropdownOpen)}

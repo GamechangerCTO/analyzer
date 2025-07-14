@@ -95,9 +95,9 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
         company_id: formData.company_id
       });
 
-      // ולידציה: בדיקה שמנהלים ונציגים חייבים להיות משויכים לחברה
-      if ((formData.role === 'manager' || formData.role === 'agent') && !formData.company_id) {
-        setError('נציגים ומנהלים חייבים להיות משויכים לחברה. אנא בחר חברה.');
+      // ולידציה: רק אדמינים חדשים חייבים להיות ללא חברה, שאר התפקידים יכולים להיות עם או בלי חברה
+      if (formData.role === 'admin' && formData.company_id) {
+        setError('מנהלי מערכת לא צריכים להיות משויכים לחברה ספציפית.');
         setSaving(false);
         return;
       }
@@ -155,6 +155,12 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
   const testSimpleUserCreation = async () => {
     console.log('🧪 Testing simple user creation...');
     
+    // ולידציה מקומית לפני שליחה
+    if (formData.role === 'admin' && formData.company_id) {
+      setError('מנהלי מערכת לא צריכים להיות משויכים לחברה ספציפית.');
+      return;
+    }
+    
     try {
       const response = await fetch('/api/admin/create-user-simple', {
         method: 'POST',
@@ -173,7 +179,8 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
       const result = await response.json();
       
       if (response.ok) {
-        setSuccessMessage(`✅ משתמש נוצר בהצלחה בAPI הפשוט: ${formData.email}`);
+        const action = result.isExisting ? 'עודכן' : 'נוצר';
+        setSuccessMessage(`✅ משתמש ${action} בהצלחה בAPI הפשוט: ${formData.email}`);
         onUserAdded();
         setFormData({
           email: '',
@@ -193,12 +200,12 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
 
   // פונקציה עזר לקביעת האם החברה חובה
   const isCompanyRequired = () => {
-    return formData.role === 'manager' || formData.role === 'agent';
+    return false; // אדמין יכול להוסיף משתמשים עם או בלי חברה
   };
 
   // פונקציה עזר לקביעת טקסט התווית
   const getCompanyLabel = () => {
-    return isCompanyRequired() ? 'חברה (חובה)' : 'חברה (אופציונלי)';
+    return formData.role === 'admin' ? 'חברה (אדמינים ללא חברה)' : 'חברה (אופציונלי)';
   };
 
   return (
@@ -266,8 +273,9 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
           
           <div className="pt-3 border-t border-gray-200">
             <p className="text-sm text-gray-600 mb-2">
-              * משתמשים שנוספים על ידי מנהל מערכת יאושרו אוטומטית.
-              משתמשים שנוספים על ידי מנהל רגיל ידרשו אישור של מנהל מערכת.
+              * כמנהל מערכת אתה יכול להוסיף משתמשים עם או בלי שיוך לחברה.
+              אדמינים חדשים לא צריכים להיות משויכים לחברה.
+              כל המשתמשים יאושרו אוטומטית.
             </p>
             <div className="flex space-x-4">
               <button
