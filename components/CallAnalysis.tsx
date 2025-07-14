@@ -1037,7 +1037,15 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       }
     ];
 
-    return categories.map(category => {
+    // סנן קטגוריות לפי סוג השיחה - הסר "שלושת הלמה" משיחות שירות
+    const filteredCategories = categories.filter(category => {
+      if (category.key === 'שלושת_הלמה' && call.call_type === 'customer_service') {
+        return false;
+      }
+      return true;
+    });
+
+    return filteredCategories.map(category => {
       const categoryData = analysis_report[category.key] || {};
       
 
