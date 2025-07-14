@@ -53,85 +53,20 @@ interface Agent {
   full_name: string | null
 }
 
-interface UploadedCall {
-  id: string
-  fileName: string
-  status: 'uploading' | 'processing' | 'completed' | 'error'
-  progress: number
-  error?: string
-  callId?: string
-  selectedAgent?: string
-}
-
-const CALL_TYPE_OPTIONS = [
-  {
-    value: "sales_call",
-    label: "מכירה טלפונית",
-    icon: Phone,
-    emoji: "📞",
-    color: "lemon-mint",
-    description: "שיחת מכירה ישירה ללקוח פוטנציאלי"
-  },
-  {
-    value: "follow_up_before_offer",
-    label: "פולו אפ לפני הצעה",
-    icon: RefreshCw,
-    emoji: "📋",
-    color: "electric-coral",
-    description: "מעקב לאחר שיחה ראשונית לפני הגשת הצעה"
-  },
-  {
-    value: "follow_up_after_offer",
-    label: "פולו אפ אחרי הצעה",
-    icon: TrendingUp,
-    emoji: "✅",
-    color: "success",
-    description: "מעקב לאחר הגשת הצעת מחיר"
-  },
-  {
-    value: "appointment_scheduling",
-    label: "תאום פגישה",
-    icon: CalendarCheck,
-    emoji: "📅",
-    color: "indigo-night",
-    description: "קביעת פגישה עתידית עם לקוח"
-  },
-  {
-    value: "follow_up_appointment",
-    label: "פולו אפ תאום",
-    icon: Calendar,
-    emoji: "🔄",
-    color: "warning",
-    description: "מעקב אחרי תאום פגישה שנקבע"
-  },
-  {
-    value: "customer_service",
-    label: "שירות לקוחות",
-    icon: Headphones,
-    emoji: "🛠️",
-    color: "purple-500",
-    description: "שיחת תמיכה ושירות ללקוח קיים"
-  }
-]
-
 export default function UploadForm({ user, userData, callTypes }: UploadFormProps) {
   const router = useRouter()
   const supabase = createClient()
   const [isLoading, setIsLoading] = useState(false)
-  const [uploadMode, setUploadMode] = useState<'single' | 'multiple'>('single')
   const [uploadStep, setUploadStep] = useState<'upload' | 'processing' | 'completed'>('upload')
   const [progress, setProgress] = useState(0)
   const [callType, setCallType] = useState('')
+  const [customerName, setCustomerName] = useState('')
   const [agentNotes, setAgentNotes] = useState('')
   const [analysisNotes, setAnalysisNotes] = useState('')
   
-  // Single file upload
+  // Single file upload only
   const [file, setFile] = useState<File | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
-  
-  // Multiple files upload
-  const [files, setFiles] = useState<File[]>([])
-  const [uploadedCalls, setUploadedCalls] = useState<UploadedCall[]>([])
   
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -218,11 +153,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     setUploadCount(count => count + 1);
     
     if (e.target.files) {
-      if (uploadMode === 'single') {
-        validateAndSetFile(e.target.files[0]);
-      } else {
-        validateAndSetMultipleFiles(Array.from(e.target.files));
-      }
+      validateAndSetFile(e.target.files[0]);
     }
   };
   
@@ -270,31 +201,6 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     }
   };
   
-  const validateAndSetMultipleFiles = async (selectedFiles: File[]) => {
-    setError(null);
-    const supportedFormats = getSupportedFormats();
-    
-    const validFiles: File[] = [];
-    const maxSize = 100 * 1024 * 1024; // 100MB
-    
-    for (const file of selectedFiles) {
-      const fileExtension = file.name.split('.').pop()?.toLowerCase();
-      if (!fileExtension || !supportedFormats.includes(fileExtension)) {
-        setError(`הקובץ ${file.name} אינו נתמך. אנא בחר קבצים מהסוגים: ${supportedFormats.join(', ')}`);
-        return;
-      }
-      
-      if (file.size > maxSize) {
-        setError(`הקובץ ${file.name} גדול מדי. גודל מקסימלי: 100MB`);
-        return;
-      }
-      
-      validFiles.push(file);
-    }
-    
-    setFiles(validFiles);
-  };
-  
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragActive(true);
@@ -310,11 +216,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     setDragActive(false);
     
     if (e.dataTransfer.files) {
-      if (uploadMode === 'single') {
-        validateAndSetFile(e.dataTransfer.files[0]);
-      } else {
-        validateAndSetMultipleFiles(Array.from(e.dataTransfer.files));
-      }
+      validateAndSetFile(e.dataTransfer.files[0]);
     }
   };
   
@@ -326,13 +228,18 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     e.preventDefault();
     e.stopPropagation();
     
-    if (!file && !files.length) {
+    if (!file) {
       setError('אנא בחר קובץ להעלאה');
       return;
     }
     
     if (!callType) {
       setError('אנא בחר סוג שיחה');
+      return;
+    }
+
+    if (!customerName.trim()) {
+      setError('אנא הזן שם לקוח/חברה');
       return;
     }
     
@@ -368,14 +275,14 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     try {
       const freshSupabase = createClient()
       
-      const fileExt = file ? file.name.split('.').pop() : files[0].name.split('.').pop()
+      const fileExt = file.name.split('.').pop()
       const filePath = `${selectedAgent}/${Date.now()}.${fileExt}`
       
       setProgress(20)
       
       const { data: uploadData, error: uploadError } = await freshSupabase.storage
         .from('audio_files')
-        .upload(filePath, file ? file : files[0], {
+        .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
         })
@@ -386,11 +293,23 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
         throw new Error(`שגיאה בהעלאת הקובץ: ${uploadError.message}`)
       }
       
+      // חישוב משך האודיו לפני השמירה
+      let audioDurationSeconds = null;
+      try {
+        const { getAudioDuration } = await import('@/lib/audioConverter');
+        audioDurationSeconds = Math.round(await getAudioDuration(file));
+        console.log(`🕐 משך אודיו חושב: ${audioDurationSeconds} שניות`);
+      } catch (durationError) {
+        console.warn('לא הצלחתי לחשב משך אודיו:', durationError);
+      }
+
       const callRecord = {
         user_id: selectedAgent,
         company_id: userData?.companies?.id || null,
         call_type: callType,
+        customer_name: customerName.trim(),
         audio_file_path: filePath,
+        audio_duration_seconds: audioDurationSeconds,
         agent_notes: agentNotes || null,
         analysis_notes: analysisNotes || null,
         analysis_type: 'full',
@@ -465,228 +384,10 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     }
   }
   
-    // פונקציה לטיפול בהעלאת מספר שיחות
-  const handleMultipleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!files.length) {
-      setError('אנא בחר קבצים להעלאה');
-      return;
-    }
-    
-    if (!callType) {
-      setError('אנא בחר סוג שיחה');
-      return;
-    }
-
-    // בדיקה שכל שיחה הוקצתה לnaget (במצב מנהל)
-    if (isManager && agents.length > 1) {
-      const unassignedFiles = files.filter((file, index) => {
-        const assignedCall = uploadedCalls.find(call => call.fileName === file.name);
-        return !assignedCall?.selectedAgent;
-      });
-
-      if (unassignedFiles.length > 0) {
-        setError(`אנא בחר נציג עבור כל השיחות. חסר נציג עבור: ${unassignedFiles.map(f => f.name).join(', ')}`);
-        return;
-      }
-    }
-
-    // בדיקת שאלון החברה
-    if (userData?.companies?.id && userData?.role !== 'admin') {
-      const freshSupabase = createClient();
-      
-      const { data: questionnaireData, error: checkError } = await freshSupabase
-        .from('company_questionnaires')
-        .select('is_complete, completion_score')
-        .eq('company_id', userData.companies.id)
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        setError('שגיאה בבדיקת סטטוס השאלון');
-        return;
-      }
-      
-      const isComplete = questionnaireData?.is_complete || false;
-      
-      if (!isComplete) {
-        setError('לא ניתן להעלות שיחות - שאלון החברה לא מולא במלואו. אנא השלם את השאלון בעמוד השאלון.');
-        return;
-      }
-    }
-
-    setError(null);
-    setIsLoading(true);
-    setUploadStep('upload');
-    
-    // אתחול מערך השיחות המועלות
-    const initialCalls: UploadedCall[] = files.map((file, index) => ({
-      id: `temp-${index}-${Date.now()}`,
-      fileName: file.name,
-      status: 'uploading',
-      progress: 0
-    }));
-    
-    setUploadedCalls(initialCalls);
-
-    try {
-      const freshSupabase = createClient();
-      const uploadPromises = files.map(async (file, index) => {
-        // קבלת הagent המוקצה לשיחה זו (או default לעובד)
-        const assignedCall = uploadedCalls.find(call => call.fileName === file.name);
-        const fileAgentId = isManager && agents.length > 1 
-          ? assignedCall?.selectedAgent || selectedAgent 
-          : selectedAgent;
-        
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${fileAgentId}/${Date.now()}-${index}.${fileExt}`;
-        
-        // עדכון סטטוס העלאה
-        setUploadedCalls(prev => prev.map(call => 
-          call.id === initialCalls[index].id 
-            ? { ...call, progress: 20 }
-            : call
-        ));
-
-        // העלאת הקובץ
-        const { data: uploadData, error: uploadError } = await freshSupabase.storage
-          .from('audio_files')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) {
-          throw new Error(`שגיאה בהעלאת ${file.name}: ${uploadError.message}`);
-        }
-
-        // עדכון סטטוס
-        setUploadedCalls(prev => prev.map(call => 
-          call.id === initialCalls[index].id 
-            ? { ...call, progress: 60 }
-            : call
-        ));
-
-        // יצירת רשומה בבסיס הנתונים
-        const callRecord = {
-          user_id: fileAgentId,
-          company_id: userData?.companies?.id || null,
-          call_type: callType,
-          audio_file_path: filePath,
-          agent_notes: agentNotes || null,
-          analysis_notes: analysisNotes || null,
-          analysis_type: 'full',
-          processing_status: 'pending'
-        };
-
-        const { data: callData, error: callError } = await freshSupabase
-          .from('calls')
-          .insert(callRecord)
-          .select();
-
-        if (callError || !callData || callData.length === 0) {
-          throw new Error(`שגיאה ביצירת רשומת שיחה עבור ${file.name}`);
-        }
-
-        const callId = callData[0].id;
-
-        // עדכון סטטוס
-        setUploadedCalls(prev => prev.map(call => 
-          call.id === initialCalls[index].id 
-            ? { ...call, progress: 80, callId, status: 'processing' }
-            : call
-        ));
-
-        // התחלת עיבוד השיחה ברקע
-        processCall(callId).catch(processError => {
-          console.error('Background processing error:', processError);
-          setUploadedCalls(prev => prev.map(call => 
-            call.callId === callId 
-              ? { ...call, status: 'error', error: 'שגיאה בעיבוד השיחה' }
-              : call
-          ));
-        });
-
-        // עדכון סטטוס השלמה
-        setUploadedCalls(prev => prev.map(call => 
-          call.id === initialCalls[index].id 
-            ? { ...call, progress: 100, status: 'completed' }
-            : call
-        ));
-
-        return callId;
-      });
-
-      await Promise.all(uploadPromises);
-      setUploadStep('completed');
-      
-      // הודעת הצלחה מפורטת יותר למנהלים
-      if (isManager && agents.length > 1) {
-        const agentCounts = files.reduce((acc, file, index) => {
-          const assignedCall = uploadedCalls.find(call => call.fileName === file.name);
-          const agentId = assignedCall?.selectedAgent || selectedAgent;
-          const agentName = agents.find(a => a.id === agentId)?.full_name || 'נציג ללא שם';
-          acc[agentName] = (acc[agentName] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>);
-        
-        const agentSummary = Object.entries(agentCounts)
-          .map(([name, count]) => `${name}: ${count} שיחות`)
-          .join(', ');
-        
-        setSuccess(`${files.length} שיחות הועלו בהצלחה! פילוח: ${agentSummary}. הניתוח מתבצע ברקע.`);
-      } else {
-        setSuccess(`${files.length} שיחות הועלו בהצלחה! הניתוח מתבצע ברקע ותקבל התראות כשיושלמו.`);
-      }
-      
-    } catch (error: any) {
-      console.error('Error:', error);
-      setError(error.message || 'שגיאה לא ידועה בעת העלאת השיחות');
-      setUploadStep('upload');
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  // הסרת קובץ מהרשימה
-  const removeFileFromList = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-    // הסרת גם השיחה המתאימה מuploaded calls אם קיימת
-    setUploadedCalls(prev => prev.filter((_, i) => i !== index));
-  }
-
-  // עדכון agent נבחר לשיחה ספציפית
-  const updateCallAgent = (fileIndex: number, agentId: string) => {
-    const fileName = files[fileIndex]?.name;
-    if (!fileName) return;
-
-    setUploadedCalls(prev => {
-      const existingCallIndex = prev.findIndex(call => call.fileName === fileName);
-      if (existingCallIndex >= 0) {
-        // עדכון קיים
-        const updated = [...prev];
-        updated[existingCallIndex] = { ...updated[existingCallIndex], selectedAgent: agentId };
-        return updated;
-      } else {
-        // יצירת חדש
-        return [...prev, {
-          id: `temp-${fileIndex}-${Date.now()}`,
-          fileName,
-          status: 'uploading' as const,
-          progress: 0,
-          selectedAgent: agentId
-        }];
-      }
-    });
-  }
-
   const clearSelectedFile = (e: React.MouseEvent) => {
     e.stopPropagation();
     setFile(null);
     setFileName(null);
-    setFiles([]);
-    setUploadedCalls([]);
     setError(null);
     setUploadStep('upload');
   };
@@ -701,42 +402,8 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   
   return (
     <div className="space-y-8">
-      {/* בחירת מצב העלאה */}
-      <div className="flex justify-center">
-        <div className="flex choacee-glass rounded-clay p-2">
-          <button
-            type="button"
-            onClick={() => setUploadMode('single')}
-            className={`px-6 py-3 rounded-clay text-sm font-semibold transition-all duration-200 ${
-              uploadMode === 'single'
-                ? 'choacee-btn-clay-primary'
-                : 'choacee-interactive-clay text-neutral-600'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <FileAudio className="w-4 h-4" />
-              <span>שיחה בודדת</span>
-            </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => setUploadMode('multiple')}
-            className={`px-6 py-3 rounded-clay text-sm font-semibold transition-all duration-200 ${
-              uploadMode === 'multiple'
-                ? 'choacee-btn-clay-secondary'
-                : 'choacee-interactive-clay text-neutral-600'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <FolderOpen className="w-4 h-4" />
-              <span>שיחות מרובות</span>
-            </div>
-          </button>
-        </div>
-      </div>
-
       {uploadStep === 'upload' && (
-        <form onSubmit={uploadMode === 'single' ? handleSubmit : handleMultipleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8">
           
           {/* אזור העלאת קבצים */}
           <div className="space-y-6">
@@ -749,7 +416,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 choacee-card-clay-raised cursor-pointer p-12 text-center transition-all duration-300
                 ${dragActive 
                   ? 'shadow-clay-hover scale-105 border-2 border-clay-accent border-dashed' 
-                  : file || files.length > 0
+                  : file
                     ? 'shadow-clay-hover border-2 border-clay-success border-dashed'
                     : 'hover:shadow-clay-hover hover:-translate-y-1'
                 }
@@ -759,7 +426,6 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 ref={fileInputRef}
                 type="file"
                 onChange={handleFileChange}
-                multiple={uploadMode === 'multiple'}
                 accept=".mp3,.wav,.m4a,.aac,.flac,.ogg,.webm,.mp4,.mov,.avi"
                 className="hidden"
               />
@@ -770,14 +436,11 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                     <Loader2 className="w-16 h-16 text-clay-warning mx-auto animate-spin" />
                     <p className="text-lg font-semibold text-neutral-800 mt-4">{conversionStatus}</p>
                   </div>
-                ) : file || files.length > 0 ? (
+                ) : file ? (
                   <div className="text-clay-success">
                     <CheckCircle2 className="w-16 h-16 mx-auto choacee-smooth-appear" />
                     <p className="text-lg font-semibold text-neutral-800 mt-4">
-                      {uploadMode === 'single' 
-                        ? `נבחר: ${fileName}` 
-                        : `נבחרו ${files.length} קבצים`
-                      }
+                      נבחר: {fileName}
                     </p>
                   </div>
                 ) : (
@@ -792,7 +455,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                     
                     <div>
                       <h3 className="choacee-text-body text-xl font-bold text-neutral-800 mb-2">
-                        {uploadMode === 'single' ? 'גרור שיחה או לחץ להעלאה' : 'גרור קבצים או לחץ להעלאה'}
+                        גרור שיחה או לחץ להעלאה
                       </h3>
                       <p className="text-neutral-500">
                         נתמך: MP3, WAV, M4A, AAC ועוד | עד 100MB לקובץ
@@ -803,131 +466,73 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               </div>
             </div>
 
-            {/* רשימת קבצים שנבחרו (מצב מרובה) */}
-            {uploadMode === 'multiple' && files.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="text-lg font-semibold text-indigo-night">קבצים שנבחרו:</h4>
-                <div className="space-y-3 max-h-60 overflow-y-auto">
-                  {files.map((file, index) => (
-                    <div key={index} className="p-4 bg-cream-sand rounded-xl border border-ice-gray">
-                      {/* מידע הקובץ */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <FileAudio className="w-5 h-5 text-indigo-night" />
-                          <span className="text-sm font-medium text-indigo-night">{file.name}</span>
-                          <span className="text-xs text-indigo-night/60">
-                            {(file.size / (1024 * 1024)).toFixed(1)} MB
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeFileFromList(index);
-                          }}
-                          className="text-electric-coral hover:text-electric-coral-dark p-1 rounded"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                      
-                      {/* בחירת נציג לקובץ זה (רק למנהלים) */}
-                      {isManager && agents.length > 1 && (
-                        <div className="mt-3">
-                          <label className="block">
-                            <span className="text-sm font-semibold text-indigo-night mb-2 block">
-                              נציג לשיחה זו <span className="text-electric-coral">*</span>
-                            </span>
-                            <select
-                              value={uploadedCalls.find(call => call.fileName === file.name)?.selectedAgent || ''}
-                              onChange={(e) => updateCallAgent(index, e.target.value)}
-                              className="w-full p-3 border-2 border-ice-gray rounded-lg focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night text-sm"
-                              required
-                            >
-                              <option value="">בחר נציג...</option>
-                              {agents.map((agent) => (
-                                <option key={agent.id} value={agent.id}>
-                                  {agent.full_name || 'נציג ללא שם'}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        </div>
+            {/* שדה שם לקוח/חברה */}
+            <div className="space-y-2">
+              <label htmlFor="customerName" className="block text-sm font-medium text-gray-700">
+                שם הלקוח/החברה <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="customerName"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="הזן שם הלקוח או החברה"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
+
+            {/* בחירת סוג שיחה */}
+            <div className="space-y-4">
+              <label className="block">
+                <span className="text-sm font-semibold text-indigo-night mb-2 block">
+                  סוג שיחה <span className="text-electric-coral">*</span>
+                </span>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsCallTypeDropdownOpen(!isCallTypeDropdownOpen)}
+                    className="w-full p-3 border-2 border-ice-gray rounded-lg focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-right flex items-center justify-between bg-white hover:border-lemon-mint-dark"
+                  >
+                    <div className="flex items-center space-x-3">
+                      {callType ? (
+                        <span className="font-medium">{callType}</span>
+                      ) : (
+                        <span>בחר סוג שיחה...</span>
                       )}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* בחירת סוג שיחה */}
-          <div className="space-y-4">
-            <label className="block">
-              <span className="text-lg font-semibold text-indigo-night mb-3 block">
-                סוג השיחה <span className="text-electric-coral">*</span>
-              </span>
-              
-              <div className="relative" data-dropdown="call-type">
-                <button
-                  type="button"
-                  onClick={() => setIsCallTypeDropdownOpen(!isCallTypeDropdownOpen)}
-                  className={`
-                    w-full p-4 text-right rounded-xl border-2 transition-all duration-200 flex items-center justify-between
-                    ${callType 
-                      ? 'border-lemon-mint bg-lemon-mint/5 text-indigo-night' 
-                      : 'border-ice-gray hover:border-lemon-mint text-indigo-night/60'
-                    }
-                  `}
-                >
-                  <div className="flex items-center space-x-3">
-                    {callType && (
-                      <>
-                        <span className="text-xl">
-                          {CALL_TYPE_OPTIONS.find(option => option.value === callType)?.emoji}
-                        </span>
-                        <span className="font-medium">
-                          {CALL_TYPE_OPTIONS.find(option => option.value === callType)?.label}
-                        </span>
-                      </>
-                    )}
-                    {!callType && <span>בחר סוג שיחה...</span>}
-                  </div>
-                  <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${
-                    isCallTypeDropdownOpen ? 'rotate-180' : ''
-                  }`} />
-                </button>
-                
-                {isCallTypeDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-ice-gray shadow-xl z-50 py-2">
-                    {CALL_TYPE_OPTIONS.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleCallTypeSelect(option.value);
-                        }}
-                        className="w-full p-4 text-right hover:bg-lemon-mint/10 transition-colors duration-200 flex items-center space-x-4"
-                      >
-                        <div className="flex items-center space-x-3 flex-1">
-                          <span className="text-xl">{option.emoji}</span>
-                          <div className="text-right">
-                            <div className="font-semibold text-indigo-night">{option.label}</div>
-                            <div className="text-sm text-indigo-night/60">{option.description}</div>
+                    <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${
+                      isCallTypeDropdownOpen ? 'rotate-180' : ''
+                    }`} />
+                  </button>
+                  
+                  {isCallTypeDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-ice-gray shadow-xl z-50 py-2">
+                      {callTypes.map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleCallTypeSelect(type);
+                          }}
+                          className="w-full px-4 py-3 text-right hover:bg-lemon-mint/10 transition-colors duration-150 border-b border-ice-gray/50 last:border-b-0"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-indigo-night">{type}</span>
                           </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </label>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </label>
+            </div>
           </div>
 
           {/* בחירת נציג (למנהלים במצב שיחה בודדת) */}
-          {agents.length > 1 && uploadMode === 'single' && (
+          {agents.length > 1 && (
             <div className="space-y-4">
               <label className="block">
                 <span className="text-lg font-semibold text-indigo-night mb-3 block">
@@ -950,7 +555,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
           )}
 
           {/* הודעה הסברית למנהלים במצב מרובה */}
-          {agents.length > 1 && uploadMode === 'multiple' && files.length > 0 && (
+          {agents.length > 1 && (
             <div className="bg-lemon-mint/10 border border-lemon-mint/30 rounded-xl p-4">
               <div className="flex items-center space-x-3">
                 <Info className="w-5 h-5 text-lemon-mint-dark flex-shrink-0" />
@@ -1016,7 +621,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 isLoading || 
                 isConverting || 
                 !callType || 
-                (uploadMode === 'single' ? !file : files.length === 0)
+                !file
               }
               className="replayme-button-primary text-lg px-12 py-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -1029,10 +634,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 <div className="flex items-center space-x-3">
                   <Sparkles className="w-5 h-5" />
                   <span>
-                    {uploadMode === 'single' 
-                      ? 'התחל ניתוח 🚀' 
-                      : `נתח ${files.length} שיחות 🚀`
-                    }
+                    התחל ניתוח 🚀
                   </span>
                 </div>
               )}
@@ -1053,8 +655,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               מנתח את השיחה שלך... 🤖
             </h3>
             <p className="text-indigo-night/70 text-lg leading-relaxed">
-              הבינה המלאכותית שלנו עובדת כעת על ניתוח מעמיק של השיחה
-              <br />
+עובדים על ניתוח מעמיק של השיחה.              <br />
               <span className="text-lemon-mint-dark font-semibold">זה יקח בין 2-5 דקות</span>
             </p>
           </div>
@@ -1121,9 +722,9 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               onClick={() => {
                 setUploadStep('upload');
                 setFile(null);
-                setFiles([]);
                 setFileName(null);
                 setCallType('');
+                setCustomerName('');
                 setAgentNotes('');
                 setAnalysisNotes('');
                 setProgress(0);

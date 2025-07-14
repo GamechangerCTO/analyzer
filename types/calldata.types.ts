@@ -4,6 +4,7 @@ export interface CallData {
   user_id: string;
   company_id: string | null;
   call_type: string;
+  customer_name: string | null;
   audio_file_path: string;
   transcript: string | null;
   transcript_segments: Array<{ text: string; start: number }> | null; // רשימת segments עם timestamps מ-Whisper

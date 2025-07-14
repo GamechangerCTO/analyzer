@@ -23,6 +23,7 @@ interface DashboardStats {
 interface Call {
   id: string
   call_type: string
+  customer_name: string | null
   created_at: string
   overall_score: number | null
   processing_status: string | null
@@ -64,7 +65,7 @@ export default function AgentDashboardContent({ userId, companyId, targetUserInf
         // שליפת נתוני השיחות המלאים
         const { data: callsData, error: callsError } = await supabase
           .from('calls')
-          .select('id, call_type, overall_score, processing_status, created_at, red_flag')
+          .select('id, call_type, overall_score, processing_status, created_at, red_flag, customer_name')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
 

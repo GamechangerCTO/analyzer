@@ -9,6 +9,7 @@ import { he } from 'date-fns/locale'
 interface Call {
   id: string
   call_type: string
+  customer_name: string | null
   created_at: string
   overall_score: number | null
   red_flag: boolean | null
@@ -33,6 +34,8 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
   const [filterScore, setFilterScore] = useState<string>('all') // all, high, medium, low
   const [filterRedFlag, setFilterRedFlag] = useState<string>('all') // all, true, false
   const [searchTerm, setSearchTerm] = useState('')
+  const [dateFilter, setDateFilter] = useState('')
+  const [callTypeFilter, setCallTypeFilter] = useState('')
 
   const supabase = getSupabaseClient()
 
@@ -89,11 +92,13 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
     fetchCalls()
   }, [fetchCalls])
 
-  // פילטור השיחות
+  // פילטור השיחות עם חיפוש חכם משופר
   const filteredCalls = calls.filter(call => {
     const matchesSearch = searchTerm === '' || 
       call.agent_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      call.call_type.toLowerCase().includes(searchTerm.toLowerCase())
+      call.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      call.call_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      call.id.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesStatus = filterStatus === 'all' || call.processing_status === filterStatus
 
@@ -106,7 +111,14 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
       (filterRedFlag === 'true' && call.red_flag === true) ||
       (filterRedFlag === 'false' && call.red_flag === false)
 
-    return matchesSearch && matchesStatus && matchesScore && matchesRedFlag
+    // סינון לפי תאריך
+    const matchesDate = dateFilter === '' || 
+      new Date(call.created_at).toISOString().split('T')[0] === dateFilter
+
+    // סינון לפי סוג שיחה
+    const matchesCallType = callTypeFilter === '' || call.call_type === callTypeFilter
+
+    return matchesSearch && matchesStatus && matchesScore && matchesRedFlag && matchesDate && matchesCallType
   })
 
   const getStatusBadge = (status: string) => {
@@ -137,6 +149,26 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
     const remainingSeconds = seconds % 60
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
   }
+
+  // רשימת סוגי השיחות הייחודיים
+  const uniqueCallTypes = React.useMemo(() => {
+    const typeSet = new Set(calls.map(call => call.call_type).filter(Boolean))
+    const types = Array.from(typeSet)
+    return types.sort()
+  }, [calls])
+
+  // פונקציות ניקוי
+  const clearAllFilters = () => {
+    setSearchTerm('')
+    setDateFilter('')
+    setCallTypeFilter('')
+    setFilterStatus('all')
+    setFilterScore('all')
+    setFilterRedFlag('all')
+  }
+
+  const hasActiveFilters = searchTerm || dateFilter || callTypeFilter || 
+    filterStatus !== 'all' || filterScore !== 'all' || filterRedFlag !== 'all'
 
   if (loading) {
     return (
@@ -251,17 +283,43 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">פילטרים וחיפוש</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {/* חיפוש */}
+          <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+            {/* חיפוש כללי */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">חיפוש</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">חיפוש כללי</label>
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="חפש לפי שם נציג או סוג שיחה..."
+                placeholder="נציג, לקוח, סוג שיחה..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+            </div>
+
+            {/* סינון תאריך */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">תאריך</label>
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            {/* סינון סוג שיחה */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">סוג שיחה</label>
+              <select
+                value={callTypeFilter}
+                onChange={(e) => setCallTypeFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">כל הסוגים</option>
+                {uniqueCallTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
             </div>
 
             {/* סטטוס */}
@@ -310,18 +368,55 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
 
             {/* כפתור איפוס */}
             <div className="flex items-end">
-              <button
-                onClick={() => {
-                  setSearchTerm('')
-                  setFilterStatus('all')
-                  setFilterScore('all')
-                  setFilterRedFlag('all')
-                }}
-                className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
-              >
-                איפוס פילטרים
-              </button>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearAllFilters}
+                  className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex items-center justify-center"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  נקה הכל
+                </button>
+              )}
             </div>
+
+            {/* הצגת סינונים פעילים */}
+            {hasActiveFilters && (
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-gray-600">סינונים פעילים:</span>
+                {searchTerm && (
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                    חיפוש: {searchTerm}
+                  </span>
+                )}
+                {dateFilter && (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                    תאריך: {new Date(dateFilter).toLocaleDateString('he-IL')}
+                  </span>
+                )}
+                {callTypeFilter && (
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
+                    סוג: {callTypeFilter}
+                  </span>
+                )}
+                {filterStatus !== 'all' && (
+                  <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full">
+                    סטטוס: {filterStatus}
+                  </span>
+                )}
+                {filterScore !== 'all' && (
+                  <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full">
+                    ציון: {filterScore}
+                  </span>
+                )}
+                {filterRedFlag !== 'all' && (
+                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">
+                    דגל אדום: {filterRedFlag === 'true' ? 'יש' : 'אין'}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -348,6 +443,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
                   <tr>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">נציג</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג שיחה</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">שם לקוח</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תאריך</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">משך</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">ציון</th>
@@ -366,6 +462,9 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{call.call_type}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {call.customer_name || 'לא זמין'}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {format(new Date(call.created_at), 'dd/MM/yyyy HH:mm', { locale: he })}
                       </td>

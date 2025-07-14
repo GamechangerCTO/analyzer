@@ -259,6 +259,7 @@ export type Database = {
           call_type: string
           company_id: string | null
           created_at: string
+          customer_name: string | null
           error_message: string | null
           id: string
           overall_score: number | null
@@ -281,6 +282,7 @@ export type Database = {
           call_type: string
           company_id?: string | null
           created_at?: string
+          customer_name?: string | null
           error_message?: string | null
           id?: string
           overall_score?: number | null
@@ -303,6 +305,7 @@ export type Database = {
           call_type?: string
           company_id?: string | null
           created_at?: string
+          customer_name?: string | null
           error_message?: string | null
           id?: string
           overall_score?: number | null

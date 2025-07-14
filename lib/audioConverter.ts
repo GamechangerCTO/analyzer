@@ -18,6 +18,71 @@ async function loadFFmpeg() {
   return ffmpeg;
 }
 
+// פונקציה חדשה לחישוב משך אודיו
+export async function getAudioDuration(audioFile: File | Blob): Promise<number> {
+  return new Promise((resolve, reject) => {
+    try {
+      const audio = new Audio();
+      const url = URL.createObjectURL(audioFile);
+      
+      audio.addEventListener('loadedmetadata', () => {
+        URL.revokeObjectURL(url);
+        const duration = audio.duration;
+        
+        if (isNaN(duration) || duration === Infinity) {
+          // אם לא מצליח לקבל duration, נשתמש בהערכה לפי גודל הקובץ
+          const estimatedDuration = estimateDurationByFileSize(audioFile.size);
+          console.log(`🕐 לא הצלחתי לקבל משך אודיו מדויק, משתמש בהערכה: ${estimatedDuration} שניות`);
+          resolve(estimatedDuration);
+        } else {
+          console.log(`🕐 משך אודיו מדויק: ${duration} שניות`);
+          resolve(duration);
+        }
+      });
+      
+      audio.addEventListener('error', () => {
+        URL.revokeObjectURL(url);
+        // במקרה של שגיאה, נשתמש בהערכה לפי גודל הקובץ
+        const estimatedDuration = estimateDurationByFileSize(audioFile.size);
+        console.log(`🕐 שגיאה בחישוב משך אודיו, משתמש בהערכה: ${estimatedDuration} שניות`);
+        resolve(estimatedDuration);
+      });
+      
+      audio.src = url;
+      
+      // timeout כדי למנוע המתנה אינסופית
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        const estimatedDuration = estimateDurationByFileSize(audioFile.size);
+        console.log(`🕐 timeout בחישוב משך אודיו, משתמש בהערכה: ${estimatedDuration} שניות`);
+        resolve(estimatedDuration);
+      }, 10000); // 10 שניות timeout
+      
+    } catch (error) {
+      console.error('שגיאה בחישוב משך אודיו:', error);
+      const estimatedDuration = estimateDurationByFileSize(audioFile.size);
+      console.log(`🕐 שגיאה בחישוב משך אודיו, משתמש בהערכה: ${estimatedDuration} שניות`);
+      resolve(estimatedDuration);
+    }
+  });
+}
+
+// פונקציה להערכת משך אודיו לפי גודל הקובץ
+function estimateDurationByFileSize(fileSizeBytes: number): number {
+  // הערכה גסה: MP3 באיכות סטנדרטית (128kbps) = כ-1MB לדקה
+  // M4A/AAC באיכות סטנדרטית = כ-0.7MB לדקה
+  // WAV באיכות גבוהה = כ-10MB לדקה
+  
+  const fileSizeMB = fileSizeBytes / (1024 * 1024);
+  
+  // הערכה ממוצעת: 2MB לדקה (בין איכויות שונות)
+  const estimatedMinutes = fileSizeMB / 2;
+  const estimatedSeconds = Math.round(estimatedMinutes * 60);
+  
+  // גבולות סבירים: בין 10 שניות ל-30 דקות
+  return Math.max(10, Math.min(1800, estimatedSeconds));
+}
+
 export async function convertAudioToMp3(audioFile: File): Promise<File> {
   const fileExtension = audioFile.name.split('.').pop()?.toLowerCase();
   

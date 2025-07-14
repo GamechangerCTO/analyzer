@@ -16,6 +16,7 @@ interface CallData {
   agent_notes: string | null
   analysis_notes: string | null
   audio_duration_seconds: number | null
+  audio_file_path: string | null
   analysis_type: string | null
   error_message: string | null
   analyzed_at: string | null
@@ -48,30 +49,187 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   const [isPolling, setIsPolling] = useState(false)
   const [callLogs, setCallLogs] = useState<Array<{timestamp: string; message: string; data?: any}>>([])
   const [currentPlayingQuote, setCurrentPlayingQuote] = useState<string>('')
+  const [audioError, setAudioError] = useState<string | null>(null)
+  const [audioLoading, setAudioLoading] = useState(false)
+  const [retryAttempts, setRetryAttempts] = useState(0)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   
   const audioRef = useRef<HTMLAudioElement>(null)
   
+  // פונקציה לרענון URL חתום במקרה של פקיעה
+  const refreshAudioUrl = async () => {
+    if (!call.audio_file_path || audioLoading) return null;
+    
+    setAudioLoading(true);
+    setAudioError(null);
+    
+    try {
+      console.log('🔄 מרענן URL חתום לאודיו...');
+      
+      const { createClient } = require('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      );
+      
+      const { data, error } = await supabase.storage
+        .from('audio_files')
+        .createSignedUrl(call.audio_file_path, 3600); // 1 שעה
+        
+      if (error) {
+        console.error('שגיאה ברענון URL חתום:', error);
+        setAudioError(`שגיאה ברענון קישור האודיו: ${error.message}`);
+        return null;
+      }
+      
+      if (data?.signedUrl) {
+        console.log('✅ URL חתום חדש נוצר בהצלחה');
+        
+        // בדיקה שהקישור החדש עובד
+        try {
+          const testResponse = await fetch(data.signedUrl, { method: 'HEAD' });
+          if (!testResponse.ok) {
+            throw new Error(`קובץ האודיו לא נגיש (status: ${testResponse.status})`);
+          }
+          
+          console.log('✅ קובץ האודיו נגיש בקישור החדש');
+          setAudioError(null);
+          return data.signedUrl;
+          
+        } catch (testError) {
+          console.error('בדיקת הקישור החדש נכשלה:', testError);
+          setAudioError('קובץ האודיו לא נגיש');
+          return null;
+        }
+      }
+      
+      setAudioError('לא ניתן להשיג קישור לקובץ האודיו');
+      return null;
+      
+    } catch (error) {
+      console.error('שגיאה כללית ברענון URL חתום:', error);
+      setAudioError('שגיאה טכנית ברענון קישור האודיו');
+      return null;
+    } finally {
+      setAudioLoading(false);
+    }
+  };
+  
+  // פונקציה משופרת לטיפול בשגיאות אודיו
+  const handleAudioError = async () => {
+    console.error('שגיאה בנגן האודיו, מנסה לרענן URL חתום...');
+    
+    if (retryAttempts >= 2) {
+      setAudioError('לא ניתן לנגן את קובץ האודיו לאחר מספר ניסיונות');
+      return;
+    }
+    
+    setRetryAttempts(prev => prev + 1);
+    const newUrl = await refreshAudioUrl();
+    
+    if (newUrl && audioRef.current) {
+      audioRef.current.src = newUrl;
+      audioRef.current.load();
+    }
+  };
+  
   // ייצוג של זמן בפורמט של דקות:שניות
-  const formatTime = (timeInSeconds: number) => {
-    const minutes = Math.floor(timeInSeconds / 60)
-    const seconds = Math.floor(timeInSeconds % 60)
+  const formatTime = (timeInSeconds: number | null) => {
+    if (timeInSeconds === null || timeInSeconds === undefined || isNaN(timeInSeconds)) {
+      return 'לא זמין'
+    }
+    
+    const totalSeconds = Math.round(timeInSeconds)
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
   }
   
   // טיפול בלחיצה על ציטוט כדי לנגן את החלק הרלוונטי בשמע
-  const playQuote = (timeInSeconds: number, quoteText: string = '') => {
-    if (audioRef.current && audioUrl) {
-      audioRef.current.currentTime = timeInSeconds
-      audioRef.current.play()
-      setIsPlaying(true)
-      setCurrentPlayingQuote(quoteText)
+  const playQuote = async (timeInSeconds: number, quoteText: string = '') => {
+    if (!audioRef.current || !audioUrl) {
+      console.error('נגן האודיו או ה-URL לא זמינים');
+      setAudioError('נגן האודיו לא זמין כרגע');
+      return;
+    }
+    
+    try {
+      // בדיקה שהאודיו טעון וזמין
+      if (audioRef.current.readyState < 2) { // HAVE_CURRENT_DATA
+        console.log('🔄 ממתין לטעינת האודיו...');
+        setAudioLoading(true);
+        
+        // ממתין לטעינת האודיו
+        const waitForAudio = new Promise<void>((resolve, reject) => {
+          const audio = audioRef.current!;
+          
+          const onCanPlay = () => {
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.removeEventListener('error', onError);
+            setAudioLoading(false);
+            resolve();
+          };
+          
+          const onError = () => {
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.removeEventListener('error', onError);
+            setAudioLoading(false);
+            reject(new Error('שגיאה בטעינת האודיו'));
+          };
+          
+          audio.addEventListener('canplay', onCanPlay);
+          audio.addEventListener('error', onError);
+          
+          // timeout
+          setTimeout(() => {
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.removeEventListener('error', onError);
+            setAudioLoading(false);
+            reject(new Error('timeout בטעינת האודיו'));
+          }, 10000);
+        });
+        
+        await waitForAudio;
+      }
+      
+      // הגדרת הזמן והשמעה
+      audioRef.current.currentTime = timeInSeconds;
+      await audioRef.current.play();
+      
+      setIsPlaying(true);
+      setCurrentPlayingQuote(quoteText);
+      setAudioError(null);
+      
+      console.log(`▶️ מנגן ציטוט מזמן ${timeInSeconds} שניות: "${quoteText.substring(0, 50)}..."`);
       
       // הוספת אפקט ויזואלי קצר
-      const quoteBtns = document.querySelectorAll(`[data-quote="${quoteText}"]`)
+      const quoteBtns = document.querySelectorAll(`[data-quote="${quoteText}"]`);
       quoteBtns.forEach(btn => {
-        btn.classList.add('animate-pulse')
-        setTimeout(() => btn.classList.remove('animate-pulse'), 2000)
-      })
+        btn.classList.add('animate-pulse');
+        setTimeout(() => btn.classList.remove('animate-pulse'), 2000);
+      });
+      
+    } catch (error) {
+      console.error('שגיאה בהשמעת ציטוט:', error);
+      setIsPlaying(false);
+      setCurrentPlayingQuote('');
+      setAudioLoading(false);
+      
+      if (error instanceof Error && error.message.includes('play')) {
+        setAudioError('לא ניתן להשמיע את האודיו - ייתכן שהקישור פג');
+        
+        // ניסיון לרענן את ה-URL
+        const newUrl = await refreshAudioUrl();
+        if (newUrl && audioRef.current) {
+          audioRef.current.src = newUrl;
+          audioRef.current.load();
+          // ניסיון נוסף להשמיע
+          setTimeout(() => playQuote(timeInSeconds, quoteText), 1000);
+        }
+      } else {
+        setAudioError(`שגיאה בהשמעת הציטוט: ${error instanceof Error ? error.message : 'שגיאה לא ידועה'}`);
+      }
     }
   }
   
@@ -197,24 +355,88 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     
     const handlePlay = () => {
       setIsPlaying(true)
+      setAudioError(null) // איפוס שגיאה אם ההשמעה התחילה
+    }
+    
+    const handleError = (event: Event) => {
+      console.error('שגיאה בנגן האודיו:', event);
+      setIsPlaying(false);
+      setCurrentPlayingQuote('');
+      handleAudioError();
+    }
+    
+    const handleLoadStart = () => {
+      setAudioLoading(true);
+    }
+    
+    const handleCanPlay = () => {
+      setAudioLoading(false);
+      setAudioError(null);
+      console.log('✅ נגן האודיו מוכן להשמעה');
+    }
+    
+    const handleLoadError = () => {
+      setAudioLoading(false);
+      console.error('שגיאה בטעינת האודיו');
+      handleAudioError();
     }
     
     audioElement.addEventListener('timeupdate', updateTime)
     audioElement.addEventListener('pause', handlePause)
     audioElement.addEventListener('ended', handleEnded)
     audioElement.addEventListener('play', handlePlay)
+    audioElement.addEventListener('error', handleError)
+    audioElement.addEventListener('loadstart', handleLoadStart)
+    audioElement.addEventListener('canplay', handleCanPlay)
+    audioElement.addEventListener('abort', handleLoadError)
+    audioElement.addEventListener('stalled', handleLoadError)
     
     return () => {
       audioElement.removeEventListener('timeupdate', updateTime)
       audioElement.removeEventListener('pause', handlePause)
       audioElement.removeEventListener('ended', handleEnded)
       audioElement.removeEventListener('play', handlePlay)
+      audioElement.removeEventListener('error', handleError)
+      audioElement.removeEventListener('loadstart', handleLoadStart)
+      audioElement.removeEventListener('canplay', handleCanPlay)
+      audioElement.removeEventListener('abort', handleLoadError)
+      audioElement.removeEventListener('stalled', handleLoadError)
     }
   }, [])
   
   // ניקוי הציטוט הנוכחי כשמשנים טאב
   useEffect(() => {
     setCurrentPlayingQuote('')
+  }, [activeTab])
+
+  // פונקציה למעבר לטאב ניתוח מפורט עם פוקוס על קטגוריה ספציפית
+  const navigateToDetailedCategory = (categoryName: string) => {
+    setSelectedCategory(categoryName)
+    setActiveTab('content')
+    
+    // גלילה לקטגוריה אחרי מעבר קצר
+    setTimeout(() => {
+      const element = document.getElementById(`category-${categoryName.replace(/\s+/g, '-')}`)
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        })
+        // הוסף הדגשה זמנית
+        element.classList.add('ring-4', 'ring-blue-300', 'ring-opacity-75')
+        setTimeout(() => {
+          element.classList.remove('ring-4', 'ring-blue-300', 'ring-opacity-75')
+        }, 3000)
+      }
+    }, 100)
+  }
+
+  // איפוס הקטגוריה הנבחרת כשעוברים לטאב אחר
+  useEffect(() => {
+    if (activeTab !== 'content') {
+      setSelectedCategory(null)
+    }
   }, [activeTab])
   
   // Real-time subscription לעדכוני סטטוס (ללא פולינג מטורף!)
@@ -805,7 +1027,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         ]
       },
       {
-        category: 'שלושת הלמה',
+        category: '3 למה',
         key: 'שלושת_הלמה',
         subcategories: [
           { name: 'למה דווקא הפתרון שלנו', key: 'למה_דווקא_הפתרון_שלנו' },
@@ -880,6 +1102,70 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     if (score >= 6) return 'text-yellow-600';
     if (score >= 4) return 'text-orange-600';
     return 'text-red-600';
+  };
+
+  // פונקציה לחילוץ 3 נקודות עיקריות לשיפור
+  const getTop3ImprovementPoints = () => {
+    const allImprovements: string[] = [];
+    
+    // נקודות משיפור מהניתוח הכללי
+    if (improvement_points && improvement_points.length > 0) {
+      allImprovements.push(...improvement_points.slice(0, 2));
+    }
+    
+    // חילוץ נקודות מהניתוח המפורט - פרמטרים עם ציונים נמוכים
+    const detailedScores = getDetailedScores();
+    const lowScoringParams = detailedScores
+      .flatMap(category => category.subcategories || [])
+      .filter(param => param.score <= 6)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3);
+    
+    lowScoringParams.forEach(param => {
+      if (param.improvements && allImprovements.length < 3) {
+        allImprovements.push(`${param.name}: ${param.improvements}`);
+      }
+    });
+    
+    // אם עדיין חסרות נקודות, נוסיף מהמלצות דחופות
+    if (allImprovements.length < 3 && analysis_report.המלצות_דחופות_ביותר) {
+      const urgent = analysis_report.המלצות_דחופות_ביותר.slice(0, 3 - allImprovements.length);
+      allImprovements.push(...urgent);
+    }
+    
+    return allImprovements.slice(0, 3);
+  };
+
+  // פונקציה לחילוץ 3 נקודות עיקריות לשימור
+  const getTop3StrengthPoints = () => {
+    const allStrengths: string[] = [];
+    
+    // נקודות חוזק מהניתוח הכללי
+    if (strengths_and_preservation_points && strengths_and_preservation_points.length > 0) {
+      allStrengths.push(...strengths_and_preservation_points.slice(0, 2));
+    }
+    
+    // חילוץ נקודות מהניתוח המפורט - פרמטרים עם ציונים גבוהים
+    const detailedScores = getDetailedScores();
+    const highScoringParams = detailedScores
+      .flatMap(category => category.subcategories || [])
+      .filter(param => param.score >= 8)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+    
+    highScoringParams.forEach(param => {
+      if (param.insights && allStrengths.length < 3) {
+        allStrengths.push(`${param.name}: ${param.insights}`);
+      }
+    });
+    
+    // אם עדיין חסרות נקודות, נוסיף נקודות חוזק כלליות
+    if (allStrengths.length < 3 && analysis_report.נקודות_חוזקה) {
+      const generalStrengths = analysis_report.נקודות_חוזקה.slice(0, 3 - allStrengths.length);
+      allStrengths.push(...generalStrengths);
+    }
+    
+    return allStrengths.slice(0, 3);
   };
   
   const detailed_analysis = analysisReport.detailed_analysis || {};
@@ -1012,7 +1298,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         {/* Navigation Tabs */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <nav className="flex flex-wrap gap-4">
-            {['summary', 'tone', 'content', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
+            {['content', 'tone', 'summary', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -1074,7 +1360,12 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                     <div className="bg-green-50 p-4 rounded-lg card-hover">
                       <div className="text-sm text-green-600 font-medium">משך השיחה</div>
                       <div className="text-lg font-semibold text-green-800">
-                        {call.audio_duration_seconds ? formatTime(call.audio_duration_seconds) : 'לא זמין'}
+                        {formatTime(call.audio_duration_seconds)}
+                        {call.audio_duration_seconds && (
+                          <div className="text-xs text-green-600 mt-1">
+                            ({call.audio_duration_seconds} שניות)
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="bg-purple-50 p-4 rounded-lg card-hover">
@@ -1142,6 +1433,18 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               </div>
             </div>
 
+            {/* הסבר על קליקאביליות הקטגוריות */}
+            {detailed_scores && detailed_scores.length > 0 && (
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center">
+                  <span className="text-blue-500 text-lg mr-2">👆</span>
+                  <p className="text-blue-800 text-sm">
+                    <strong>טיפ:</strong> לחץ על כל קטגוריה להעברה ישירה לפירוט המלא שלה בטאב "ניתוח מפורט"
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* ציונים מפורטים */}
             {detailed_scores && detailed_scores.length > 0 && (
               <div className="space-y-6">
@@ -1152,12 +1455,22 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   // לא צריך ציטוטים במצב זה
 
                   return (
-                    <div key={idx} className="bg-white rounded-xl shadow-lg p-6 border-l-4" 
-                         style={{ borderLeftColor: scoreValue >= 8 ? '#10b981' : scoreValue >= 6 ? '#f59e0b' : '#ef4444' }}>
+                    <div 
+                      key={idx} 
+                      className="bg-white rounded-xl shadow-lg p-6 border-l-4 cursor-pointer hover:shadow-xl transition-all duration-200 hover:scale-[1.02] group" 
+                      style={{ borderLeftColor: scoreValue >= 8 ? '#10b981' : scoreValue >= 6 ? '#f59e0b' : '#ef4444' }}
+                      onClick={() => navigateToDetailedCategory(displayCategory)}
+                      title={`לחץ לצפייה בפירוט המלא של ${displayCategory}`}
+                    >
                       
                       {/* כותרת הפרמטר עם ציון */}
                       <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-xl font-semibold text-gray-800">{displayCategory}</h3>
+                        <h3 className="text-xl font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-200 flex items-center">
+                          {displayCategory}
+                          <svg className="w-5 h-5 mr-2 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                        </h3>
                         <div className="text-left">
                           <span className={`text-3xl font-bold ${getScoreColor(scoreValue)}`}>
                             {scoreValue}
@@ -1178,15 +1491,23 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                       </div>
 
                       {/* הערות והערכה - בצורת קצרה אבל שימושית */}
-                      {categoryData.subcategories && categoryData.subcategories.length > 0 && (
-                        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                          <h4 className="font-medium text-gray-700 mb-2">📝 סיכום מהיר:</h4>
-                          <p className="text-gray-700 leading-relaxed text-sm">
-                            {categoryData.subcategories.length} פרמטרים בקטגוריה זו - 
-                            ציון ממוצע: <span className="font-bold">{scoreValue}/10</span>
-                          </p>
-                        </div>
-                      )}
+                                                {categoryData.subcategories && categoryData.subcategories.length > 0 && (
+                            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                              <h4 className="font-medium text-gray-700 mb-2">📝 סיכום מהיר:</h4>
+                              <p className="text-gray-700 leading-relaxed text-sm">
+                                {categoryData.subcategories.length} פרמטרים בקטגוריה זו - 
+                                ציון ממוצע: <span className="font-bold">{scoreValue}/10</span>
+                              </p>
+                              <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
+                                <p className="text-blue-700 text-xs flex items-center">
+                                  <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                  </svg>
+                                  לחץ לצפייה בפירוט המלא בטאב "ניתוח מפורט"
+                                </p>
+                              </div>
+                            </div>
+                          )}
 
 
                     </div>
@@ -1195,13 +1516,79 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               </div>
             )}
 
+            {/* 3 נקודות עיקריות לשיפור */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-xl font-semibold mb-6 text-orange-700 flex items-center">
+                <span className="mr-2">🎯</span>
+                3 נקודות עיקריות לשיפור
+              </h3>
+              <div className="space-y-4">
+                {getTop3ImprovementPoints().map((improvement, index) => (
+                  <div key={index} className="flex items-start bg-orange-50 p-4 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors">
+                    <div className="flex items-center justify-center w-8 h-8 bg-orange-500 text-white rounded-full font-bold text-sm mr-4 mt-0.5">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-gray-700 leading-relaxed">
+                        {typeof improvement === 'string' ? improvement : JSON.stringify(improvement)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 3 נקודות עיקריות לשימור */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-xl font-semibold mb-6 text-green-700 flex items-center">
+                <span className="mr-2">✅</span>
+                3 נקודות עיקריות לשימור
+              </h3>
+              <div className="space-y-4">
+                {getTop3StrengthPoints().map((strength, index) => (
+                  <div key={index} className="flex items-start bg-green-50 p-4 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
+                    <div className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full font-bold text-sm mr-4 mt-0.5">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-gray-700 leading-relaxed">
+                        {typeof strength === 'string' ? strength : JSON.stringify(strength)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* נגן אודיו */}
             {audioUrl && (
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-800">🎧 הקלטת השיחה</h3>
-                  {currentPlayingQuote && (
-                    <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                  <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                    {audioLoading && (
+                      <div className="flex items-center text-blue-600">
+                        <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="text-sm">טוען אודיו...</span>
+                      </div>
+                    )}
+                    {audioError && (
+                      <button 
+                        onClick={refreshAudioUrl}
+                        className="flex items-center px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                        title="נסה לטעון את האודיו שוב"
+                        disabled={audioLoading}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        רענן אודיו
+                      </button>
+                    )}
+                    {currentPlayingQuote && (
                       <div className="flex items-center text-blue-600 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
                         <svg className="w-4 h-4 mr-2 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.817L4.906 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.906l3.477-2.817z" clipRule="evenodd"/>
@@ -1214,6 +1601,8 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                           </div>
                         </div>
                       </div>
+                    )}
+                    {currentPlayingQuote && (
                       <button 
                         onClick={stopQuote}
                         className="flex items-center px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
@@ -1224,16 +1613,34 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                         </svg>
                         עצור ציטוט
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
+                
+                {/* הצגת שגיאות אודיו */}
+                {audioError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center">
+                      <svg className="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-red-800">שגיאה בנגן האודיו</p>
+                        <p className="text-sm text-red-600">{audioError}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 <audio 
                   ref={audioRef}
                   controls 
-                  className="w-full h-12 bg-gray-100 rounded-lg"
+                  className={`w-full h-12 rounded-lg transition-opacity ${
+                    audioError ? 'bg-red-100 opacity-50' : 'bg-gray-100'
+                  }`}
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
+                  preload="metadata"
                 >
                   <source src={audioUrl} />
                   הדפדפן שלך אינו תומך בנגן האודיו.
@@ -1344,7 +1751,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                                 : 'text-green-700'
                             }`}>
                               {typeof value === 'boolean' 
-                                ? (value ? 'זוהה' : 'לא זוהה')
+                                ? (value ? 'כן' : 'לא')
                                 : String(value)}
                             </p>
                           </div>
@@ -1371,6 +1778,25 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
         {activeTab === 'content' && call.analysis_type === 'full' && (
           <div className="space-y-6">
+            {/* הודעה על קטגוריה שנבחרה */}
+            {selectedCategory && (
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-300 rounded-lg p-4 mb-6">
+                <div className="flex items-center">
+                  <span className="text-green-500 text-lg mr-2">🎯</span>
+                  <p className="text-green-800 text-sm">
+                    <strong>הגעת לכאן מקטגוריה:</strong> "{selectedCategory}" - גלול למטה לקטגוריה המודגשת
+                  </p>
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="mr-auto text-green-600 hover:text-green-800 transition-colors"
+                    title="סגור הודעה"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            )}
+            
             {/* הערה על הניתוח המקצועי */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center">
@@ -1442,10 +1868,29 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               if (!categoryData.subcategories || categoryData.subcategories.length === 0) return null;
               
               return (
-                <div key={categoryIndex} className="bg-white rounded-xl shadow-lg overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+                <div 
+                  key={categoryIndex} 
+                  id={`category-${categoryData.category.replace(/\s+/g, '-')}`}
+                  className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 ${
+                    selectedCategory === categoryData.category 
+                      ? 'ring-4 ring-blue-300 ring-opacity-75 shadow-2xl' 
+                      : ''
+                  }`}
+                >
+                  <div className={`bg-gradient-to-r px-6 py-4 ${
+                    selectedCategory === categoryData.category 
+                      ? 'from-blue-700 to-blue-800' 
+                      : 'from-blue-600 to-blue-700'
+                  }`}>
                     <h3 className="text-xl font-semibold text-white flex items-center justify-between">
-                      <span>{categoryData.category}</span>
+                      <span className="flex items-center">
+                        {selectedCategory === categoryData.category && (
+                          <svg className="w-5 h-5 ml-2 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        {categoryData.category}
+                      </span>
                       <span className={`px-3 py-1 rounded-full text-sm font-bold ${getScoreBg(categoryData.score)}`}>
                         {categoryData.score}/10
                       </span>

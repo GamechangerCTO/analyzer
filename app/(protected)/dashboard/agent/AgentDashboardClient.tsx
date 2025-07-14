@@ -13,6 +13,7 @@ import { format } from 'date-fns'
 interface Call {
   id: string
   call_type: string
+  customer_name: string | null
   created_at: string
   overall_score: number | null
   red_flag: boolean | null
@@ -59,6 +60,11 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
     ]
   })
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all')
+  
+  // State לחיפוש חכם
+  const [searchTerm, setSearchTerm] = useState('')
+  const [dateFilter, setDateFilter] = useState('')
+  const [callTypeFilter, setCallTypeFilter] = useState('')
   
   const supabase = useMemo(() => getSupabaseClient(), [])
   
@@ -161,7 +167,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
 
       const { data, error } = await supabase
         .from('calls')
-        .select('*, tone_analysis_report')
+        .select('*, tone_analysis_report, customer_name')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
 
@@ -225,21 +231,68 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
     fetchCallsLogic(() => true);
   }, [fetchCallsLogic])
 
-  // פונקציות לסינון שיחות
+  // פונקציות לסינון שיחות עם חיפוש חכם
   const getFilteredCalls = useCallback(() => {
+    let filteredCalls = calls;
+    
+    // סינון לפי ציון (המנגנון הקיים)
     switch (currentFilter) {
       case 'successful':
-        return calls.filter(call => call.overall_score !== null && call.overall_score >= 8)
+        filteredCalls = filteredCalls.filter(call => call.overall_score !== null && call.overall_score >= 8)
+        break;
       case 'needImprovement':
-        return calls.filter(call => call.overall_score !== null && call.overall_score > 0 && call.overall_score < 7)
+        filteredCalls = filteredCalls.filter(call => call.overall_score !== null && call.overall_score > 0 && call.overall_score < 7)
+        break;
       default:
-        return calls
+        // כל השיחות
+        break;
     }
-  }, [calls, currentFilter])
+    
+    // סינון לפי שם לקוח (חיפוש חכם)
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      filteredCalls = filteredCalls.filter(call => 
+        call.customer_name?.toLowerCase().includes(searchLower) ||
+        call.id.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // סינון לפי תאריך
+    if (dateFilter) {
+      filteredCalls = filteredCalls.filter(call => {
+        const callDate = new Date(call.created_at).toISOString().split('T')[0];
+        return callDate === dateFilter;
+      });
+    }
+    
+    // סינון לפי סוג שיחה
+    if (callTypeFilter) {
+      filteredCalls = filteredCalls.filter(call => call.call_type === callTypeFilter);
+    }
+    
+    return filteredCalls;
+  }, [calls, currentFilter, searchTerm, dateFilter, callTypeFilter])
 
   const handleFilterClick = (filterType: FilterType) => {
     setCurrentFilter(filterType)
   }
+
+  // פונקציות חיפוש
+  const clearAllFilters = () => {
+    setSearchTerm('')
+    setDateFilter('')
+    setCallTypeFilter('')
+    setCurrentFilter('all')
+  }
+
+  const hasActiveFilters = searchTerm || dateFilter || callTypeFilter || currentFilter !== 'all'
+
+  // רשימת סוגי השיחות הייחודיים
+  const uniqueCallTypes = useMemo(() => {
+    const typeSet = new Set(calls.map(call => call.call_type).filter(Boolean))
+    const types = Array.from(typeSet)
+    return types.sort()
+  }, [calls])
 
   const getFilterTitle = () => {
     switch (currentFilter) {
@@ -397,6 +450,107 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
               </div>
             </div>
           </div>
+
+          {/* שדות חיפוש חכם */}
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              {/* שדה חיפוש שם לקוח */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  חיפוש שם לקוח
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="הקלד שם לקוח..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* סינון תאריך */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  תאריך
+                </label>
+                <input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {/* סינון סוג שיחה */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  סוג שיחה
+                </label>
+                <select
+                  value={callTypeFilter}
+                  onChange={(e) => setCallTypeFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">כל הסוגים</option>
+                  {uniqueCallTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* כפתור ניקוי */}
+              <div className="flex items-end">
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="w-full px-4 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center"
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    נקה הכל
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* הצגת מספר התוצאות והסינונים הפעילים */}
+            {hasActiveFilters && (
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-gray-600">סינונים פעילים:</span>
+                {searchTerm && (
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                    שם: {searchTerm}
+                  </span>
+                )}
+                {dateFilter && (
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                    תאריך: {new Date(dateFilter).toLocaleDateString('he-IL')}
+                  </span>
+                )}
+                {callTypeFilter && (
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
+                    סוג: {callTypeFilter}
+                  </span>
+                )}
+                {currentFilter !== 'all' && (
+                  <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full">
+                    ציון: {getFilterTitle()}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
           
           <div className="overflow-hidden">
             <div className="overflow-x-auto">
@@ -405,6 +559,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
                   <tr>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תאריך ושעה</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג שיחה</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">שם לקוח</th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ציון</th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">טונציה</th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">דגל אדום</th>
@@ -423,6 +578,9 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div className="max-w-xs truncate">{call.call_type}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="max-w-xs truncate">{call.customer_name || 'לא זמין'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {call.overall_score ? (
@@ -466,7 +624,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
-                        {call.audio_duration_seconds ? `${Math.floor(call.audio_duration_seconds / 60)}:${(Math.floor(call.audio_duration_seconds % 60)).toString().padStart(2, '0')}` : '-'}
+                        {call.audio_duration_seconds ? `${Math.floor(call.audio_duration_seconds / 60)}:${(Math.floor(call.audio_duration_seconds % 60)).toString().padStart(2, '0')}` : <span className="text-gray-400">לא זמין</span>}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <Link 

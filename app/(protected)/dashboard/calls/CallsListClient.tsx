@@ -7,6 +7,7 @@ import Link from 'next/link'
 interface Call {
   id: string
   call_type: string
+  customer_name: string | null
   created_at: string
   overall_score: number | null
   processing_status: string
@@ -33,6 +34,7 @@ export default function CallsListClient({ userId, companyId, userRole, filterByA
         .select(`
           id, 
           call_type, 
+          customer_name,
           created_at, 
           overall_score, 
           processing_status,
@@ -188,6 +190,9 @@ export default function CallsListClient({ userId, companyId, userRole, filterByA
                 <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   סוג שיחה
                 </th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  שם לקוח
+                </th>
                 <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   ציון
                 </th>
@@ -213,6 +218,11 @@ export default function CallsListClient({ userId, companyId, userRole, filterByA
                   <td className="px-3 py-3 text-sm text-gray-900">
                     <div className="truncate max-w-xs" title={call.call_type}>
                       {call.call_type}
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <div className="truncate max-w-xs" title={call.customer_name || 'לא זמין'}>
+                      {call.customer_name || 'לא זמין'}
                     </div>
                   </td>
                   <td className="px-3 py-3 whitespace-nowrap text-center">
