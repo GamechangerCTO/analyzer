@@ -76,47 +76,99 @@ export async function createUserWithServiceRole(userData: {
     }
     
     console.log('🔍 Creating supabase admin client...');
-    // בדיקה אם המשתמש כבר קיים ב-Auth לפי האימייל
-    const { data: existingUsers, error: existingError } = await supabaseAdmin.auth.admin.listUsers()
     
-    if (existingError) {
-      console.error('❌ Error checking existing users:', existingError);
-      throw new Error(`שגיאה בבדיקת משתמשים קיימים: ${existingError.message}`)
-    }
-
-    console.log('✅ Checked existing users, found:', existingUsers.users.length);
+    // ניסיון להביא משתמש לפי אימייל (בדיקה יותר ישירה)
+    console.log('🔍 Checking if user exists by email...');
+    let authUser;
+    let userExists = false;
     
-    // חיפוש משתמש קיים לפי אימייל
-    const existingUser = existingUsers.users.find(user => user.email === userData.email)
-    let authUser
-
-    // אם המשתמש כבר קיים
-    if (existingUser) {
-      console.log('ℹ️ משתמש קיים במערכת Auth, מעדכן פרטים')
-      authUser = existingUser
-    } else {
-      console.log('🔍 Creating new user in Auth...');
-      // יצירת משתמש חדש ב-Auth
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: userData.email,
-        password: userData.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: userData.full_name,
-        }
-      })
-
-      if (authError) {
-        console.error('❌ Error creating user in Auth:', authError);
-        throw authError;
-      }
-      if (!authData.user) {
-        console.error('❌ Auth user creation returned no user');
-        throw new Error('משתמש לא נוצר ב-Auth');
+    try {
+      // ניסיון לחפש משתמש לפי אימייל
+      const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      
+      if (listError) {
+        console.error('❌ Error listing users:', listError);
+        throw new Error(`שגיאה בשליפת רשימת משתמשים: ${listError.message}`);
       }
       
-      console.log('✅ User created in Auth:', authData.user.id);
-      authUser = authData.user
+      console.log('✅ Listed existing users, found:', existingUsers.users.length);
+      
+      // חיפוש לפי אימייל
+      const existingUser = existingUsers.users.find(user => user.email === userData.email);
+      
+      if (existingUser) {
+        console.log('ℹ️ משתמש כבר קיים ב-Auth:', existingUser.id);
+        authUser = existingUser;
+        userExists = true;
+        
+        // עדכון סיסמה למשתמש קיים אם נדרש
+        if (userData.password) {
+          console.log('🔄 Updating password for existing user...');
+          const { error: updatePasswordError } = await supabaseAdmin.auth.admin.updateUserById(
+            authUser.id,
+            { password: userData.password }
+          );
+          
+          if (updatePasswordError) {
+            console.warn('⚠️ Warning updating password:', updatePasswordError.message);
+          } else {
+            console.log('✅ Password updated successfully');
+          }
+        }
+      }
+    } catch (listError) {
+      console.warn('⚠️ Could not list users, will try to create directly:', listError);
+    }
+    
+    // אם המשתמש לא קיים, ננסה ליצור חדש
+    if (!userExists) {
+      console.log('🔍 Creating new user in Auth...');
+      try {
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email: userData.email,
+          password: userData.password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: userData.full_name,
+          }
+        });
+
+        if (authError) {
+          console.error('❌ Error creating user in Auth:', authError);
+          
+          // אם השגיאה היא שהמשתמש כבר קיים, ננסה לחפש אותו שוב
+          if (authError.message.includes('already') || authError.message.includes('exists') || authError.code === 'duplicate_email') {
+            console.log('🔄 User might already exist, trying to find again...');
+            
+            // ניסיון נוסף לחפש
+            const { data: retryUsers } = await supabaseAdmin.auth.admin.listUsers();
+            const foundUser = retryUsers?.users.find(user => user.email === userData.email);
+            
+            if (foundUser) {
+              console.log('✅ Found existing user on retry:', foundUser.id);
+              authUser = foundUser;
+              userExists = true;
+            } else {
+              throw new Error(`המשתמש ${userData.email} כבר קיים במערכת אבל לא ניתן לגשת אליו`);
+            }
+          } else {
+            throw authError;
+          }
+        } else if (!authData.user) {
+          throw new Error('משתמש לא נוצר ב-Auth');
+        } else {
+          console.log('✅ User created in Auth:', authData.user.id);
+          authUser = authData.user;
+        }
+      } catch (createError) {
+        console.error('❌ Final error creating user:', createError);
+        throw createError;
+      }
+    }
+
+    // ולידציה שיש לנו authUser
+    if (!authUser) {
+      throw new Error('לא הצלחנו ליצור או למצוא משתמש ב-Auth');
     }
 
     console.log('🔍 Checking if user exists in public.users...');
@@ -224,8 +276,8 @@ export async function createUserWithServiceRole(userData: {
 
     console.log('✅ User upserted to public.users successfully');
     
-    // אם קיים כבר משתמש בטבלה הציבורית והוא עודכן, עדכן גם את הסיסמה
-    if (existingPublicUser) {
+    // אם קיים כבר משתמש בטבלה הציבורית והוא עודכן, עדכן גם את הסיסמה (רק אם לא עודכנו כבר)
+    if (existingPublicUser && !userExists && userData.password) {
       console.log('🔍 Updating password for existing user...');
       const { error: updatePasswordError } = await supabaseAdmin.auth.admin.updateUserById(
         authUser.id,
@@ -249,7 +301,7 @@ export async function createUserWithServiceRole(userData: {
       success: true, 
       user: authUser,
       is_approved: is_approved,
-      isExisting: !!existingPublicUser
+      isExisting: !!existingPublicUser || userExists
     }
   } catch (error) {
     console.error('❌ שגיאה ביצירת משתמש:', error);
