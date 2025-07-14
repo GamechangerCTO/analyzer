@@ -1138,9 +1138,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 </div>
               </div>
               <div className="mt-4 text-center">
-                <span className="text-blue-700 text-sm font-medium">
-                  💡 לצפייה בפירוט המלא של כל פרמטר עבור לטאב "תוכן"
-                </span>
+                
               </div>
             </div>
 
