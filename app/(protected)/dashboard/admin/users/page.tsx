@@ -239,6 +239,16 @@ export default function AdminUsersPage() {
         return;
       }
     }
+
+    // ולידציה: מנהלים ונציגים חייבים להיות משויכים לחברה
+    if (newRole === 'manager' || newRole === 'agent') {
+      const userToUpdate = allUsers.find(u => u.id === userId);
+      if (userToUpdate && !userToUpdate.company_id) {
+        const roleText = newRole === 'manager' ? 'מנהלים' : 'נציגים';
+        setError(`${roleText} חייבים להיות משויכים לחברה. אנא ערוך תחילה את המשתמש והוסף שיוך לחברה.`);
+        return;
+      }
+    }
     
     setActionLoading(`role-${userId}`);
     setError(null);

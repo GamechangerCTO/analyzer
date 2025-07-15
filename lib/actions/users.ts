@@ -181,6 +181,19 @@ export async function createUserWithServiceRole(userData: {
     
     console.log('ℹ️ User exists in public.users:', !!existingPublicUser);
 
+    // ולידציה: אדמינים לא צריכים להיות משויכים לחברה
+    if (userData.role === 'admin' && userData.company_id) {
+      console.error('❌ Admin user cannot have company association');
+      throw new Error('מנהלי מערכת לא צריכים להיות משויכים לחברה ספציפית');
+    }
+
+    // ולידציה: מנהלים ונציגים חייבים להיות משויכים לחברה
+    if ((userData.role === 'manager' || userData.role === 'agent') && !userData.company_id) {
+      const roleText = userData.role === 'manager' ? 'מנהלים' : 'נציגים';
+      console.error(`❌ ${userData.role} user must have company association`);
+      throw new Error(`${roleText} חייבים להיות משויכים לחברה. אנא בחר חברה`);
+    }
+
     // ולידציה נוספת לפני upsert
     if (userData.company_id) {
       console.log('🔍 Validating company_id exists...');

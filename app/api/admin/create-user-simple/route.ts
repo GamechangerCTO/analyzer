@@ -27,6 +27,23 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Environment variables found');
 
+    // ולידציה: אדמינים לא צריכים להיות משויכים לחברה
+    if (body.role === 'admin' && body.company_id) {
+      return NextResponse.json({ 
+        error: 'מנהלי מערכת לא צריכים להיות משויכים לחברה ספציפית',
+        details: 'Admin users should not have company association'
+      }, { status: 400 });
+    }
+
+    // ולידציה: מנהלים ונציגים חייבים להיות משויכים לחברה
+    if ((body.role === 'manager' || body.role === 'agent') && !body.company_id) {
+      const roleText = body.role === 'manager' ? 'מנהלים' : 'נציגים';
+      return NextResponse.json({ 
+        error: `${roleText} חייבים להיות משויכים לחברה`,
+        details: `${body.role} users must have company association`
+      }, { status: 400 });
+    }
+
     // יצירת קליינט סופאבייס עם service role
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

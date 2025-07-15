@@ -85,6 +85,14 @@ export default function EditUserModal({ isOpen, onClose, userToEdit, onUserUpdat
         return;
       }
 
+      // ולידציה: מנהלים ונציגים חייבים להיות משויכים לחברה
+      if ((userToEdit.role === 'manager' || userToEdit.role === 'agent') && !formData.company_id) {
+        const roleText = userToEdit.role === 'manager' ? 'מנהלים' : 'נציגים';
+        setError(`${roleText} חייבים להיות משויכים לחברה. אנא בחר חברה.`);
+        setSaving(false);
+        return;
+      }
+
       const { error: updateError } = await supabase
         .from('users')
         .update({
@@ -108,12 +116,20 @@ export default function EditUserModal({ isOpen, onClose, userToEdit, onUserUpdat
 
   // פונקציה עזר לקביעת האם החברה חובה
   const isCompanyRequired = () => {
-    return false; // אדמין יכול לערוך משתמשים עם או בלי חברה
+    return userToEdit?.role === 'manager' || userToEdit?.role === 'agent'; // מנהלים ונציגים חייבים להיות עם חברה
   };
 
   // פונקציה עזר לקביעת טקסט התווית
   const getCompanyLabel = () => {
-    return userToEdit?.role === 'admin' ? 'חברה (אדמינים ללא חברה)' : 'חברה (אופציונלי)';
+    if (userToEdit?.role === 'admin') {
+      return 'חברה (אדמינים ללא חברה)';
+    } else if (userToEdit?.role === 'manager') {
+      return 'חברה (חובה למנהלים)';
+    } else if (userToEdit?.role === 'agent') {
+      return 'חברה (חובה לנציגים)';
+    } else {
+      return 'חברה (אופציונלי)';
+    }
   };
 
   return (

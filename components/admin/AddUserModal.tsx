@@ -102,6 +102,14 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
         return;
       }
 
+      // ולידציה: מנהלים ונציגים חייבים להיות משויכים לחברה
+      if ((formData.role === 'manager' || formData.role === 'agent') && !formData.company_id) {
+        const roleText = formData.role === 'manager' ? 'מנהלים' : 'נציגים';
+        setError(`${roleText} חייבים להיות משויכים לחברה. אנא בחר חברה.`);
+        setSaving(false);
+        return;
+      }
+
       // שימוש בפעולת השרת המשתמשת ב-service_role
       console.log('📡 Calling createUserWithServiceRole...');
       const result = await createUserWithServiceRole({
@@ -160,6 +168,13 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
       setError('מנהלי מערכת לא צריכים להיות משויכים לחברה ספציפית.');
       return;
     }
+
+    // ולידציה: מנהלים ונציגים חייבים להיות משויכים לחברה
+    if ((formData.role === 'manager' || formData.role === 'agent') && !formData.company_id) {
+      const roleText = formData.role === 'manager' ? 'מנהלים' : 'נציגים';
+      setError(`${roleText} חייבים להיות משויכים לחברה. אנא בחר חברה.`);
+      return;
+    }
     
     try {
       const response = await fetch('/api/admin/create-user-simple', {
@@ -200,12 +215,20 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
 
   // פונקציה עזר לקביעת האם החברה חובה
   const isCompanyRequired = () => {
-    return false; // אדמין יכול להוסיף משתמשים עם או בלי חברה
+    return formData.role === 'manager' || formData.role === 'agent'; // מנהלים ונציגים חייבים להיות עם חברה
   };
 
   // פונקציה עזר לקביעת טקסט התווית
   const getCompanyLabel = () => {
-    return formData.role === 'admin' ? 'חברה (אדמינים ללא חברה)' : 'חברה (אופציונלי)';
+    if (formData.role === 'admin') {
+      return 'חברה (אדמינים ללא חברה)';
+    } else if (formData.role === 'manager') {
+      return 'חברה (חובה למנהלים)';
+    } else if (formData.role === 'agent') {
+      return 'חברה (חובה לנציגים)';
+    } else {
+      return 'חברה (אופציונלי)';
+    }
   };
 
   return (
