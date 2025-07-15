@@ -235,6 +235,15 @@ export async function createUserWithServiceRole(userData: {
     
     if (existingPublicUserCheck) {
       console.log('🔄 Updating existing user in public.users...');
+      console.log('📊 About to update user with data:', {
+        id: authUser.id,
+        email: userData.email,
+        full_name: userData.full_name,
+        role: userData.role,
+        company_id: userData.company_id || null,
+        is_approved: is_approved
+      });
+      
       // עדכון משתמש קיים
       const { error: updateError } = await supabaseAdmin
         .from('users')
@@ -255,6 +264,13 @@ export async function createUserWithServiceRole(userData: {
           details: updateError.details,
           hint: updateError.hint
         });
+        
+        // נסה לבדוק אם זה טריגר שגורם לבעיה
+        if (updateError.message.includes('trigger') || updateError.message.includes('function')) {
+          console.error('🚨 Potential trigger error detected!');
+          console.error('🔍 This might be related to update_company_user_count trigger');
+        }
+        
         throw new Error(`Database error updating user: ${updateError.message}`)
       }
       
@@ -262,6 +278,15 @@ export async function createUserWithServiceRole(userData: {
     } else {
       console.log('➕ Inserting new user to public.users...');
       // הוספת משתמש חדש
+      console.log('📊 About to insert user with data:', {
+        id: authUser.id,
+        email: userData.email,
+        full_name: userData.full_name,
+        role: userData.role,
+        company_id: userData.company_id || null,
+        is_approved: is_approved
+      });
+      
       const { error: insertError } = await supabaseAdmin
         .from('users')
         .insert({
@@ -281,6 +306,13 @@ export async function createUserWithServiceRole(userData: {
           details: insertError.details,
           hint: insertError.hint
         });
+        
+        // נסה לבדוק אם זה טריגר שגורם לבעיה
+        if (insertError.message.includes('trigger') || insertError.message.includes('function')) {
+          console.error('🚨 Potential trigger error detected!');
+          console.error('🔍 This might be related to update_company_user_count trigger');
+        }
+        
         throw new Error(`Database error creating user: ${insertError.message}`)
       }
       

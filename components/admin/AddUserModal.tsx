@@ -112,6 +112,13 @@ export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserMo
 
       // שימוש בפעולת השרת המשתמשת ב-service_role
       console.log('📡 Calling createUserWithServiceRole...');
+      console.log('📋 Exact data being sent:', {
+        email: formData.email,
+        full_name: formData.full_name,
+        role: formData.role,
+        company_id: formData.company_id,
+        has_password: !!formData.password
+      });
       const result = await createUserWithServiceRole({
         email: formData.email,
         password: formData.password,
