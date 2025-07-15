@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Avatar from '@/components/Avatar'
+import AgentSummary from '@/components/AgentSummary'
 
 interface AgentDashboardContentProps {
   userId: string
@@ -312,6 +313,13 @@ export default function AgentDashboardContent({ userId, companyId, targetUserInf
           </div>
         </div>
       </div>
+
+      {/* סיכום נציג */}
+      <AgentSummary 
+        agentId={userId} 
+        agentName={targetUserInfo?.full_name || agentInfo?.full_name || undefined}
+        isOwnSummary={!targetUserInfo}
+      />
 
       {/* המלצה יומית */}
       {!targetUserInfo && (

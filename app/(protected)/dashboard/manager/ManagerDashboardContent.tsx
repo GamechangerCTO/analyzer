@@ -23,6 +23,7 @@ import {
   Zap
 } from 'lucide-react'
 import Avatar from '@/components/Avatar'
+import AgentSummary from '@/components/AgentSummary'
 
 interface ManagerDashboardContentProps {
   userId: string
@@ -58,6 +59,7 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
     pendingCalls: 0
   })
   const [topAgents, setTopAgents] = useState<AgentPerformance[]>([])
+  const [allAgents, setAllAgents] = useState<AgentPerformance[]>([])
   const [managerInfo, setManagerInfo] = useState<{
     full_name: string | null
     email: string | null
@@ -150,6 +152,23 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
         }).sort((a, b) => b.avgScore - a.avgScore).slice(0, 5) || []
 
         setTopAgents(agentPerformance)
+        setAllAgents(agents?.map(agent => {
+          const agentCalls = calls?.filter(call => call.user_id === agent.id) || []
+          const agentCallsWithScore = agentCalls.filter(call => call.overall_score !== null)
+          const agentAvgScore = agentCallsWithScore.length > 0
+            ? agentCallsWithScore.reduce((sum, call) => sum + (call.overall_score || 0), 0) / agentCallsWithScore.length
+            : 0
+          const agentSuccessfulCalls = agentCallsWithScore.filter(call => (call.overall_score || 0) >= 8).length
+
+          return {
+            id: agent.id,
+            name: agent.full_name || 'נציג ללא שם',
+            totalCalls: agentCalls.length,
+            avgScore: agentAvgScore,
+            successfulCalls: agentSuccessfulCalls,
+            trend: 'stable' as const
+          }
+        }) || [])
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
@@ -485,6 +504,46 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
           </div>
         </div>
       </div>
+
+      {/* סיכומי נציגים */}
+      {allAgents.length > 0 && (
+        <div className="space-y-6">
+          <div className="choacee-card-clay-raised p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="choacee-text-display text-2xl font-bold text-clay-primary">
+                סיכומי נציגים 📋
+              </h3>
+              <p className="text-sm text-neutral-600">
+                נקודות לשיפור ושימור לכל נציג על סמך 5 השיחות האחרונות
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {allAgents
+                .filter(agent => agent.totalCalls > 0) // רק נציגים עם שיחות
+                .map(agent => (
+                  <div key={agent.id} className="space-y-4">
+                    <AgentSummary 
+                      agentId={agent.id} 
+                      agentName={agent.name}
+                      isOwnSummary={false}
+                    />
+                  </div>
+                ))}
+            </div>
+
+            {allAgents.filter(agent => agent.totalCalls > 0).length === 0 && (
+              <div className="text-center py-12">
+                <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-10 h-10 text-neutral-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-neutral-600 mb-2">אין עדיין נתונים</h3>
+                <p className="text-neutral-500">לא נמצאו נציגים עם שיחות מנותחות</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* הודעת עידוד */}
       <div className="choacee-card-glass p-8 border-r-4 border-clay-success">
