@@ -41,7 +41,7 @@ interface CallAnalysisProps {
 }
 
 export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisProps) {
-  const [activeTab, setActiveTab] = useState('summary')
+  const [activeTab, setActiveTab] = useState('content')
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [status, setStatus] = useState<string>(call.processing_status || 'pending')
@@ -1257,29 +1257,37 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+    <div className="p-6">
+      {/* Header פנימי עם גלס מורפיזם */}
+      <div className="relative mb-8">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-2xl"></div>
+        
+        {/* Header content */}
+        <div className="relative backdrop-blur-sm bg-white/50 border border-white/30 rounded-2xl shadow-xl p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
-              <div className={`flex items-center justify-center w-12 h-12 rounded-full ${getScoreBg(finalOverallScore)}`}>
-                <span className={`text-xl font-bold ${getScoreColor(finalOverallScore)}`}>
+              <div className={`flex items-center justify-center w-14 h-14 rounded-2xl shadow-xl border border-white/30 backdrop-blur-sm ${
+                finalOverallScore >= 8 ? 'bg-gradient-to-br from-green-400/20 to-emerald-500/20' :
+                finalOverallScore >= 6 ? 'bg-gradient-to-br from-yellow-400/20 to-orange-500/20' :
+                'bg-gradient-to-br from-red-400/20 to-pink-500/20'
+              }`}>
+                <span className={`text-2xl font-bold ${getScoreColor(finalOverallScore)}`}>
                   {finalOverallScore}
                 </span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">ניתוח שיחה מקצועי - {call.call_type}</h1>
-                <div className="flex items-center space-x-4 rtl:space-x-reverse text-sm text-gray-600">
-                  <span>📅 {new Date(call.created_at).toLocaleDateString('he-IL')}</span>
-                  <span>👤 {call.users?.full_name || call.users?.email}</span>
-                  {call.companies?.name && <span>🏢 {call.companies.name}</span>}
-                </div>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent">
+                  {call.call_type === 'sales' ? 'שיחת מכירות' : 
+                   call.call_type === 'customer_service' ? 'שיחת שירות' : 
+                   'ניתוח שיחה מקצועי'}
+                </h2>
+                <p className="text-slate-600 text-sm">תוצאות מפורטות מבוססות AI מתקדם</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 rtl:space-x-reverse">
               {finalRedFlag && (
-                <div className="flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium red-flag-pulse">
+                <div className="flex items-center px-4 py-2 bg-gradient-to-r from-red-500/20 to-pink-500/20 backdrop-blur-sm border border-red-300/30 text-red-700 rounded-xl text-sm font-medium shadow-lg animate-pulse">
                   🚨 דגל אדום
                 </div>
               )}
@@ -1287,7 +1295,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               {userRole === 'manager' && (
                 <a
                   href="/company-questionnaire"
-                  className="flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors shadow-md"
+                  className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl font-medium transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 backdrop-blur-sm border border-white/20"
                   title="עריכת שאלון החברה"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1296,96 +1304,115 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   שאלון חברה
                 </a>
               )}
-              <CallStatusBadge status={status} />
+              <div className="px-3 py-1 bg-white/50 backdrop-blur-sm rounded-xl border border-white/30 shadow-lg">
+                <CallStatusBadge status={status} />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Navigation Tabs */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <nav className="flex flex-wrap gap-4">
+      {/* Navigation Tabs עם גלס מורפיזם */}
+      <div className="mb-8">
+        <div className="backdrop-blur-xl bg-white/30 border border-white/30 rounded-2xl shadow-xl p-2">
+          <nav className="flex flex-wrap gap-2">
             {['content', 'tone', 'summary', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
+                className={`relative py-3 px-6 rounded-xl font-medium transition-all duration-300 overflow-hidden group ${
                   activeTab === tab
-                    ? 'bg-blue-600 text-white shadow-lg hover:bg-blue-700'
-                    : 'text-gray-600 bg-gray-50 hover:text-blue-600 hover:bg-blue-50'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl border border-white/20'
+                    : 'text-slate-600 bg-white/50 hover:bg-white/70 hover:text-blue-600 border border-white/30 hover:border-blue-300/50'
                 }`}
               >
-                {tab === 'summary' ? '📊 סיכום כללי' :
-                 tab === 'tone' ? '🎭 ניתוח טונציה' :
-                 tab === 'content' ? '📝 ניתוח מפורט' :
-                 '📄 תמליל'}
+                {activeTab === tab && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 animate-pulse"></div>
+                )}
+                <span className="relative z-10">
+                  {tab === 'summary' ? '📊 סיכום כללי' :
+                   tab === 'tone' ? '🎭 ניתוח טונציה' :
+                   tab === 'content' ? '📝 ניתוח מפורט' :
+                   '📄 תמליל'}
+                </span>
               </button>
             ))}
           </nav>
         </div>
+      </div>
 
-        {/* Tab Content */}
+      {/* Tab Content עם גלס מורפיזם */}
+      <div className="space-y-6">
         {activeTab === 'summary' && (
           <div className="space-y-6">
             {/* סיכום כללי */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* ציון כללי */}
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-xl shadow-lg p-6 text-center smooth-appear">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">ציון כללי</h3>
-                  <div className={`text-6xl font-bold mb-4 score-animation ${getScoreColor(finalOverallScore)}`}>
-                    {finalOverallScore}
-                  </div>
-                  <div className="text-gray-600">מתוך 10</div>
-                  <div className={`mt-4 p-3 rounded-lg ${getScoreBg(finalOverallScore)}`}>
-                    <span className={`text-sm font-medium ${getScoreColor(finalOverallScore)}`}>
-                      {finalOverallScore >= 8 ? 'ביצועים מעולים!' :
-                       finalOverallScore >= 6 ? 'ביצועים סבירים - יש מקום לשיפור' :
-                       finalOverallScore >= 4 ? 'דרוש שיפור משמעותי' :
-                       'ביצועים מתחת לסטנדרט'}
-                    </span>
-                    {finalOverallScore < 8 && (
-                      <div className="mt-2 text-xs text-gray-600">
-                        💡 <strong>זכור:</strong> הסטנדרטים שלנו גבוהים - רק 8+ נחשב לטוב מאוד
-                      </div>
-                    )}
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-2xl"></div>
+                  <div className="relative backdrop-blur-xl bg-white/80 border border-white/30 rounded-2xl shadow-xl p-6 text-center hover:shadow-2xl transition-all duration-300">
+                    <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-slate-700 to-blue-600 bg-clip-text text-transparent">ציון כללי</h3>
+                    <div className={`text-6xl font-bold mb-4 ${getScoreColor(finalOverallScore)} transition-all duration-500 hover:scale-110`}>
+                      {finalOverallScore}
+                    </div>
+                    <div className="text-slate-600 text-lg font-medium">מתוך 10</div>
+                    <div className={`mt-4 p-4 rounded-xl backdrop-blur-sm border shadow-inner ${
+                      finalOverallScore >= 8 ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-300/30' :
+                      finalOverallScore >= 6 ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-yellow-300/30' :
+                      'bg-gradient-to-br from-red-500/20 to-pink-500/20 border-red-300/30'
+                    }`}>
+                      <span className={`text-sm font-medium ${getScoreColor(finalOverallScore)}`}>
+                        {finalOverallScore >= 8 ? 'ביצועים מעולים! 🏆' :
+                         finalOverallScore >= 6 ? 'ביצועים סבירים - יש מקום לשיפור 📈' :
+                         finalOverallScore >= 4 ? 'דרוש שיפור משמעותי 💪' :
+                         'ביצועים מתחת לסטנדרט 🎯'}
+                      </span>
+                      {finalOverallScore < 8 && (
+                        <div className="mt-3 text-xs text-slate-600 bg-white/50 rounded-lg p-2 border border-white/30">
+                          💡 <strong>זכור:</strong> הסטנדרטים שלנו גבוהים - רק 8+ נחשב לטוב מאוד
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* נתוני שיחה */}
               <div className="lg:col-span-2">
-                <div className="bg-white rounded-xl shadow-lg p-6 smooth-appear">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">פרטי השיחה</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-blue-50 p-4 rounded-lg card-hover">
-                      <div className="text-sm text-blue-600 font-medium">סוג ניתוח</div>
-                      <div className="text-lg font-semibold text-blue-800">
-                        {call.analysis_type === 'full' ? 'ניתוח מלא' : 'ניתוח טונציה'}
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-500/10 to-blue-500/10 rounded-2xl"></div>
+                  <div className="relative backdrop-blur-xl bg-white/80 border border-white/30 rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300">
+                    <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-slate-700 to-blue-600 bg-clip-text text-transparent">פרטי השיחה</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="backdrop-blur-sm bg-blue-500/10 border border-blue-300/30 p-4 rounded-xl shadow-inner hover:bg-blue-500/20 transition-all duration-300">
+                        <div className="text-sm text-blue-700 font-medium">סוג ניתוח</div>
+                        <div className="text-lg font-semibold text-blue-800">
+                          {call.analysis_type === 'full' ? 'ניתוח מלא 🎯' : 'ניתוח טונציה 🎭'}
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-green-50 p-4 rounded-lg card-hover">
-                      <div className="text-sm text-green-600 font-medium">משך השיחה</div>
-                      <div className="text-lg font-semibold text-green-800">
-                        {formatTime(call.audio_duration_seconds)}
-                        {call.audio_duration_seconds && (
-                          <div className="text-xs text-green-600 mt-1">
-                            ({call.audio_duration_seconds} שניות)
-                          </div>
-                        )}
+                      <div className="backdrop-blur-sm bg-green-500/10 border border-green-300/30 p-4 rounded-xl shadow-inner hover:bg-green-500/20 transition-all duration-300">
+                        <div className="text-sm text-green-700 font-medium">משך השיחה</div>
+                        <div className="text-lg font-semibold text-green-800">
+                          {formatTime(call.audio_duration_seconds)} ⏱️
+                          {call.audio_duration_seconds && (
+                            <div className="text-xs text-green-600 mt-1">
+                              ({call.audio_duration_seconds} שניות)
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-purple-50 p-4 rounded-lg card-hover">
-                      <div className="text-sm text-purple-600 font-medium">תאריך ניתוח</div>
-                      <div className="text-lg font-semibold text-purple-800">
-                        {call.analyzed_at ? new Date(call.analyzed_at).toLocaleDateString('he-IL') : 'טרם נותח'}
+                      <div className="backdrop-blur-sm bg-purple-500/10 border border-purple-300/30 p-4 rounded-xl shadow-inner hover:bg-purple-500/20 transition-all duration-300">
+                        <div className="text-sm text-purple-700 font-medium">תאריך ניתוח</div>
+                        <div className="text-lg font-semibold text-purple-800">
+                          {call.analyzed_at ? new Date(call.analyzed_at).toLocaleDateString('he-IL') : 'טרם נותח'} 📅
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-orange-50 p-4 rounded-lg card-hover">
-                      <div className="text-sm text-orange-600 font-medium">סטטוס</div>
-                      <div className="text-lg font-semibold text-orange-800">
-                        {status === 'completed' ? 'הושלם' : status}
+                      <div className="backdrop-blur-sm bg-orange-500/10 border border-orange-300/30 p-4 rounded-xl shadow-inner hover:bg-orange-500/20 transition-all duration-300">
+                        <div className="text-sm text-orange-700 font-medium">סטטוס</div>
+                        <div className="text-lg font-semibold text-orange-800">
+                          {status === 'completed' ? 'הושלם ✅' : status}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1394,50 +1421,52 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
             </div>
 
             {/* הסבר על הפרמטרים */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-              <div className="flex items-center mb-4">
-                <span className="text-blue-500 text-2xl mr-3">📊</span>
-                <h3 className="text-xl font-semibold text-blue-800">8 קטגוריות ניתוח מקצועיות</h3>
-              </div>
-              <p className="text-blue-700 mb-4">
-                השיחה נותחה לפי 8 קטגוריות מקצועיות המכילות 32 פרמטרים מפורטים:
-              </p>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                <div className="bg-white p-3 rounded border border-blue-200">
-                  <div className="font-medium text-blue-800">1. פתיחת שיחה ובניית אמון</div>
-                  <div className="text-blue-600 text-xs">7 פרמטרים</div>
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-2xl"></div>
+              <div className="relative backdrop-blur-xl bg-white/70 border border-white/30 rounded-2xl shadow-xl p-6">
+                <div className="flex items-center mb-4">
+                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 backdrop-blur-sm border border-blue-300/30 rounded-xl mr-4">
+                    <span className="text-2xl">📊</span>
+                  </div>
+                  <h3 className="text-xl font-semibold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">8 קטגוריות ניתוח מקצועיות</h3>
                 </div>
-                <div className="bg-white p-3 rounded border border-blue-200">
-                  <div className="font-medium text-blue-800">2. איתור צרכים וזיהוי כאב</div>
-                  <div className="text-blue-600 text-xs">4 פרמטרים</div>
+                <p className="text-blue-700 mb-6 text-lg">
+                  השיחה נותחה לפי 8 קטגוריות מקצועיות המכילות 32 פרמטרים מפורטים:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                  <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
+                    <div className="font-semibold text-blue-800 mb-1">1. פתיחת שיחה ובניית אמון</div>
+                    <div className="text-blue-600 text-xs font-medium">7 פרמטרים מקצועיים</div>
+                  </div>
+                  <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
+                    <div className="font-semibold text-blue-800 mb-1">2. איתור צרכים וזיהוי כאב</div>
+                    <div className="text-blue-600 text-xs font-medium">4 פרמטרים מקצועיים</div>
+                  </div>
+                  <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
+                    <div className="font-semibold text-blue-800 mb-1">3. הקשבה ואינטראקציה</div>
+                    <div className="text-blue-600 text-xs font-medium">4 פרמטרים מקצועיים</div>
+                  </div>
+                  <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
+                    <div className="font-semibold text-blue-800 mb-1">4. הצגת פתרון והדגשת ערך</div>
+                    <div className="text-blue-600 text-xs font-medium">6 פרמטרים מקצועיים</div>
+                  </div>
+                  <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
+                    <div className="font-semibold text-blue-800 mb-1">5. טיפול בהתנגדויות</div>
+                    <div className="text-blue-600 text-xs font-medium">3 פרמטרים מקצועיים</div>
+                  </div>
+                  <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
+                    <div className="font-semibold text-blue-800 mb-1">6. הנעה לפעולה וסגירה</div>
+                    <div className="text-blue-600 text-xs font-medium">3 פרמטרים מקצועיים</div>
+                  </div>
+                  <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
+                    <div className="font-semibold text-blue-800 mb-1">7. שפת תקשורת ודינמיקה קולית</div>
+                    <div className="text-blue-600 text-xs font-medium">3 פרמטרים מקצועיים</div>
+                  </div>
+                  <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
+                    <div className="font-semibold text-blue-800 mb-1">8. סיכום שיחה</div>
+                    <div className="text-blue-600 text-xs font-medium">2 פרמטרים מקצועיים</div>
+                  </div>
                 </div>
-                <div className="bg-white p-3 rounded border border-blue-200">
-                  <div className="font-medium text-blue-800">3. הקשבה ואינטראקציה</div>
-                  <div className="text-blue-600 text-xs">4 פרמטרים</div>
-                </div>
-                <div className="bg-white p-3 rounded border border-blue-200">
-                  <div className="font-medium text-blue-800">4. הצגת פתרון והדגשת ערך</div>
-                  <div className="text-blue-600 text-xs">6 פרמטרים</div>
-                </div>
-                <div className="bg-white p-3 rounded border border-blue-200">
-                  <div className="font-medium text-blue-800">5. טיפול בהתנגדויות</div>
-                  <div className="text-blue-600 text-xs">3 פרמטרים</div>
-                </div>
-                <div className="bg-white p-3 rounded border border-blue-200">
-                  <div className="font-medium text-blue-800">6. הנעה לפעולה וסגירה</div>
-                  <div className="text-blue-600 text-xs">3 פרמטרים</div>
-                </div>
-                <div className="bg-white p-3 rounded border border-blue-200">
-                  <div className="font-medium text-blue-800">7. שפת תקשורת ודינמיקה קולית</div>
-                  <div className="text-blue-600 text-xs">3 פרמטרים</div>
-                </div>
-                <div className="bg-white p-3 rounded border border-blue-200">
-                  <div className="font-medium text-blue-800">8. סיכום שיחה</div>
-                  <div className="text-blue-600 text-xs">2 פרמטרים</div>
-                </div>
-              </div>
-              <div className="mt-4 text-center">
-                
               </div>
             </div>
 
@@ -1525,46 +1554,60 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
             )}
 
             {/* 3 נקודות עיקריות לשיפור */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-semibold mb-6 text-orange-700 flex items-center">
-                <span className="mr-2">🎯</span>
-                3 נקודות עיקריות לשיפור
-              </h3>
-              <div className="space-y-4">
-                {getTop3ImprovementPoints().map((improvement, index) => (
-                  <div key={index} className="flex items-start bg-orange-50 p-4 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors">
-                    <div className="flex items-center justify-center w-8 h-8 bg-orange-500 text-white rounded-full font-bold text-sm mr-4 mt-0.5">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-gray-700 leading-relaxed">
-                        {typeof improvement === 'string' ? improvement : JSON.stringify(improvement)}
-                      </p>
-                    </div>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-2xl"></div>
+              <div className="relative backdrop-blur-xl bg-white/80 border border-white/30 rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300">
+                <div className="flex items-center mb-6">
+                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-sm border border-orange-300/30 rounded-xl mr-4">
+                    <span className="text-2xl">🎯</span>
                   </div>
-                ))}
+                  <h3 className="text-xl font-semibold bg-gradient-to-r from-orange-700 to-red-600 bg-clip-text text-transparent">
+                    3 נקודות עיקריות לשיפור
+                  </h3>
+                </div>
+                <div className="space-y-4">
+                  {getTop3ImprovementPoints().map((improvement, index) => (
+                    <div key={index} className="group flex items-start backdrop-blur-sm bg-orange-500/10 border border-orange-300/30 p-5 rounded-xl shadow-inner hover:bg-orange-500/20 transition-all duration-300">
+                      <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl font-bold text-lg mr-4 mt-0.5 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-slate-700 leading-relaxed font-medium">
+                          {typeof improvement === 'string' ? improvement : JSON.stringify(improvement)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* 3 נקודות עיקריות לשימור */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-semibold mb-6 text-green-700 flex items-center">
-                <span className="mr-2">✅</span>
-                3 נקודות עיקריות לשימור
-              </h3>
-              <div className="space-y-4">
-                {getTop3StrengthPoints().map((strength, index) => (
-                  <div key={index} className="flex items-start bg-green-50 p-4 rounded-lg border border-green-200 hover:bg-green-100 transition-colors">
-                    <div className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full font-bold text-sm mr-4 mt-0.5">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-gray-700 leading-relaxed">
-                        {typeof strength === 'string' ? strength : JSON.stringify(strength)}
-                      </p>
-                    </div>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl"></div>
+              <div className="relative backdrop-blur-xl bg-white/80 border border-white/30 rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300">
+                <div className="flex items-center mb-6">
+                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-300/30 rounded-xl mr-4">
+                    <span className="text-2xl">✅</span>
                   </div>
-                ))}
+                  <h3 className="text-xl font-semibold bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
+                    3 נקודות עיקריות לשימור
+                  </h3>
+                </div>
+                <div className="space-y-4">
+                  {getTop3StrengthPoints().map((strength, index) => (
+                    <div key={index} className="group flex items-start backdrop-blur-sm bg-green-500/10 border border-green-300/30 p-5 rounded-xl shadow-inner hover:bg-green-500/20 transition-all duration-300">
+                      <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-xl font-bold text-lg mr-4 mt-0.5 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-slate-700 leading-relaxed font-medium">
+                          {typeof strength === 'string' ? strength : JSON.stringify(strength)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -2205,12 +2248,12 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
         {/* הערות נציג */}
         {call.agent_notes && (
-          <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-xl shadow-lg p-6">
+          <div className="mt-8 backdrop-blur-sm bg-yellow-50/80 border border-yellow-200/50 rounded-2xl shadow-xl p-6">
             <h3 className="text-lg font-semibold mb-4 text-yellow-800 flex items-center">
               <span className="mr-2">📝</span>
               הערות הנציג
             </h3>
-            <div className="bg-white p-4 rounded-lg border border-yellow-100">
+            <div className="bg-white/70 backdrop-blur-sm p-4 rounded-xl border border-yellow-100/30 shadow-inner">
               <p className="text-gray-700 leading-relaxed">{call.agent_notes}</p>
             </div>
           </div>

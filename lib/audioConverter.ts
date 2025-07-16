@@ -22,6 +22,18 @@ async function loadFFmpeg() {
 export async function getAudioDuration(audioFile: File | Blob): Promise<number> {
   return new Promise((resolve, reject) => {
     try {
+      // בדיקה אם אנחנו בסביבת דפדפן או שרת
+      const isServer = typeof window === 'undefined';
+      
+      if (isServer) {
+        // בסביבת שרת - השתמש רק בהערכה לפי גודל הקובץ
+        const estimatedDuration = estimateDurationByFileSize(audioFile.size);
+        console.log(`🕐 סביבת שרת: משתמש בהערכה לפי גודל קובץ: ${estimatedDuration} שניות`);
+        resolve(estimatedDuration);
+        return;
+      }
+      
+      // בסביבת דפדפן - נסה לקבל משך מדויק
       const audio = new Audio();
       const url = URL.createObjectURL(audioFile);
       
