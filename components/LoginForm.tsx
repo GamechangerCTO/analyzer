@@ -5,6 +5,7 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { AlertCircle, CheckCircle, User, Settings, Users, Crown, Loader2 } from 'lucide-react'
 
 // טיפוסים
 type Role = 'admin' | 'manager' | 'agent';
@@ -150,108 +151,146 @@ export default function LoginForm() {
                     full_name: session.user.user_metadata.full_name || null,
                     is_approved: false
                   });
-                
+
                 if (createError) {
                   console.error("[AUTH] Error creating user:", createError);
-                  setAuthError(`שגיאה ביצירת משתמש: ${createError.message}`)
-                  setAuthLoading(false)
+                  router.push(`/login?error=creation_error`);
                   return;
                 }
-                
-                router.push('/not-approved?reason=pending');
+
+                console.log("[AUTH] New user created, redirecting to approval page");
+                router.push('/not-approved');
+                setAuthLoading(false)
                 return;
               }
-              
+
               if (!userData.is_approved) {
-                router.push('/not-approved?reason=pending');
+                console.log("[AUTH] User not approved, redirecting to approval page");
+                router.push('/not-approved');
+                setAuthLoading(false)
                 return;
               }
-              
-              // משתמש מאושר - ניתוב לפי תפקיד
+
+              console.log("[AUTH] User approved, redirecting to dashboard");
+              router.push('/dashboard');
               setAuthLoading(false)
-              
-              const redirectPath = userData.role === 'admin' ? '/dashboard' :
-                                 userData.role === 'manager' ? '/dashboard/manager' :
-                                 '/dashboard/agent';
-              
-              console.log(`[AUTH] Redirecting approved user to: ${redirectPath}`);
-              router.push(redirectPath);
             }
+
           } catch (error) {
-            console.error("[AUTH] Error in auth handler:", error);
-            setAuthError(`שגיאה בעיבוד התחברות: ${error instanceof Error ? error.message : 'שגיאה לא ידועה'}`)
+            console.error("[AUTH] Unexpected error:", error);
+            setAuthError('שגיאה בלתי צפויה - אנא נסה שוב')
             setAuthLoading(false)
           }
-        } else if (event === 'SIGNED_OUT') {
-          console.log("[AUTH] User signed out");
-          setShowRoleSelector(false);
+        }
+
+        if (event === 'SIGNED_OUT') {
           setAuthError(null)
           setAuthLoading(false)
-          setAuthStatus('מוכן להתחברות')
-          router.push('/login');
+          setShowRoleSelector(false)
         }
       }
     )
-    
-    return () => {
-      subscription.unsubscribe()
-    }
+
+    return () => subscription.unsubscribe()
   }, [supabase, router])
 
+  const roleOptions = [
+    { 
+      value: 'admin' as Role, 
+      label: 'מנהל מערכת', 
+      description: 'גישה מלאה למערכת',
+      icon: Crown,
+      color: 'from-glacier-primary-500 to-glacier-accent-500'
+    },
+    { 
+      value: 'manager' as Role, 
+      label: 'מנהל צוות', 
+      description: 'ניהול נציגים וצפייה בדוחות',
+      icon: Users,
+      color: 'from-glacier-secondary-500 to-glacier-primary-500'
+    },
+    { 
+      value: 'agent' as Role, 
+      label: 'נציג מכירות', 
+      description: 'העלאת שיחות וצפייה בביצועים',
+      icon: User,
+      color: 'from-glacier-accent-500 to-glacier-secondary-500'
+    }
+  ]
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* הצגת שגיאות אותנטיקציה */}
-      {authError && (
-        <div className="choacee-card-glass p-4 bg-clay-danger/10 border border-clay-danger/30">
-          <div className="flex items-start justify-between">
-            <p className="text-clay-danger text-sm font-medium flex-1">{authError}</p>
-            <button
-              onClick={() => setAuthError(null)}
-              className="text-clay-danger hover:text-clay-danger/80 transition-colors ml-2"
-              title="סגור הודעה"
-            >
-              ✕
-            </button>
+    <div className="space-y-6">
+      {/* הודעת סטטוס */}
+      {authLoading && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-glacier-primary-50 to-glacier-accent-50 border border-glacier-primary-200/50 animate-in slide-in-from-top duration-500">
+          <div className="flex items-center gap-3 text-glacier-primary-700">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="font-medium">{authStatus}</span>
           </div>
         </div>
       )}
 
-      {/* הצגת סטטוס אותנטיקציה */}
-      {authLoading && (
-        <div className="choacee-card-glass p-4 bg-clay-success/10 border border-clay-success/30">
-          <div className="flex items-center gap-3">
-            <div className="w-4 h-4 animate-spin rounded-full border-2 border-clay-success border-t-transparent"></div>
-            <p className="text-clay-success text-sm font-medium">{authStatus}</p>
+      {/* הודעת שגיאה */}
+      {authError && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-red-50 to-red-100 border border-red-200/50 animate-in slide-in-from-top duration-500">
+          <div className="flex items-center gap-3 text-red-700">
+            <AlertCircle className="w-5 h-5" />
+            <span className="font-medium">{authError}</span>
           </div>
         </div>
       )}
 
       {/* בורר תפקידים לסופר אדמין */}
       {showRoleSelector && (
-        <div className="choacee-card-clay-raised p-6 bg-gradient-to-r from-clay-success/5 to-glass-light/5 border border-clay-success/20">
-          <h3 className="choacee-text-display text-lg font-semibold text-clay-primary mb-4">בחר תפקיד להתחברות</h3>
-          <div className="grid gap-3">
-            {(['admin', 'manager', 'agent'] as Role[]).map((role) => (
-              <button
-                key={role}
-                onClick={() => setSelectedRole(role)}
-                className={`p-3 rounded-clay border-2 transition-all duration-200 text-right choacee-interactive ${
-                  selectedRole === role
-                    ? 'border-clay-success bg-clay-success/10 text-clay-primary shadow-clay-soft'
-                    : 'border-neutral-200 hover:border-clay-success/50 text-neutral-600'
-                }`}
-              >
-                <div className="font-medium">
-                  {role === 'admin' && 'מנהל מערכת'}
-                  {role === 'manager' && 'מנהל חברה'}
-                  {role === 'agent' && 'סוכן מכירות'}
-                </div>
-              </button>
-            ))}
+        <div className="space-y-6 animate-in slide-in-from-bottom duration-500">
+          <div className="text-center space-y-2">
+            <h3 className="text-xl font-bold text-glacier-neutral-900">בחר תפקיד להתחברות</h3>
+            <p className="text-glacier-neutral-600">בחר את התפקיד שבו ברצונך להתחבר למערכת</p>
           </div>
+          
+          <div className="space-y-3">
+            {roleOptions.map((role) => {
+              const Icon = role.icon
+              return (
+                <button
+                  key={role.value}
+                  onClick={() => setSelectedRole(role.value)}
+                  className={`w-full p-4 rounded-2xl border-2 transition-all duration-300 group hover:scale-[1.02] ${
+                    selectedRole === role.value
+                      ? 'border-glacier-primary-500 bg-gradient-to-r from-glacier-primary-50 to-glacier-accent-50 shadow-lg shadow-glacier-primary-200/50'
+                      : 'border-glacier-neutral-200 bg-white hover:border-glacier-primary-300 hover:bg-glacier-primary-25'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-xl bg-gradient-to-r ${role.color} shadow-lg`}>
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1 text-right">
+                      <h4 className="font-bold text-glacier-neutral-900 group-hover:text-glacier-primary-700 transition-colors">
+                        {role.label}
+                      </h4>
+                      <p className="text-sm text-glacier-neutral-600 mt-1">
+                        {role.description}
+                      </p>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 transition-all ${
+                      selectedRole === role.value
+                        ? 'border-glacier-primary-500 bg-glacier-primary-500'
+                        : 'border-glacier-neutral-300 group-hover:border-glacier-primary-400'
+                    }`}>
+                      {selectedRole === role.value && (
+                        <CheckCircle className="w-3 h-3 text-white m-0.5" />
+                      )}
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          
           <button
             onClick={loginWithRole}
-            className="choacee-btn-clay-success w-full mt-4 py-3 px-4"
+            className="w-full py-4 px-6 bg-gradient-to-r from-glacier-primary-500 to-glacier-accent-500 text-white rounded-2xl font-bold shadow-lg shadow-glacier-primary-900/25 hover:shadow-xl hover:shadow-glacier-primary-900/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
           >
             המשך עם התפקיד הנבחר
           </button>
@@ -260,161 +299,171 @@ export default function LoginForm() {
 
       {/* טופס התחברות/הרשמה */}
       {!showRoleSelector && (
-        <div className="space-y-4">
-          <div className="flex gap-2 p-1 bg-glass-light rounded-clay shadow-clay-soft">
+        <div className="space-y-6">
+          {/* כפתורי החלפה בין התחברות והרשמה */}
+          <div className="flex p-1 bg-glacier-neutral-100 rounded-2xl shadow-inner">
             <button
               onClick={() => setView('sign_in')}
-              className={`flex-1 py-2 px-4 rounded-clay text-sm font-medium transition-colors duration-200 choacee-interactive ${
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
                 view === 'sign_in' 
-                  ? 'bg-white text-clay-primary shadow-clay-raised' 
-                  : 'text-neutral-500 hover:text-clay-primary'
+                  ? 'bg-white text-glacier-primary-600 shadow-lg shadow-glacier-primary-900/10' 
+                  : 'text-glacier-neutral-600 hover:text-glacier-primary-600'
               }`}
             >
               התחברות
             </button>
             <button
               onClick={() => setView('sign_up')}
-              className={`flex-1 py-2 px-4 rounded-clay text-sm font-medium transition-colors duration-200 choacee-interactive ${
+              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
                 view === 'sign_up' 
-                  ? 'bg-white text-clay-primary shadow-clay-raised' 
-                  : 'text-neutral-500 hover:text-clay-primary'
+                  ? 'bg-white text-glacier-primary-600 shadow-lg shadow-glacier-primary-900/10' 
+                  : 'text-glacier-neutral-600 hover:text-glacier-primary-600'
               }`}
             >
               הרשמה
             </button>
           </div>
 
-          <Auth
-            supabaseClient={supabase}
-            view={view}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: '#8B5FBF',
-                    brandAccent: '#7B4FAF',
-                    brandButtonText: 'white',
-                    defaultButtonBackground: 'transparent',
-                    defaultButtonBackgroundHover: '#F8F9FA',
-                    defaultButtonBorder: '#E9ECEF',
-                    defaultButtonText: '#495057',
-                    dividerBackground: '#E9ECEF',
-                    inputBackground: 'white',
-                    inputBorder: '#DEE2E6',
-                    inputBorderHover: '#8B5FBF',
-                    inputBorderFocus: '#8B5FBF',
-                    inputText: '#212529',
-                    inputLabelText: '#6C757D',
-                    inputPlaceholder: '#ADB5BD',
-                    messageText: '#EC7063',
-                    messageTextDanger: '#EC7063',
-                    anchorTextColor: '#8B5FBF',
-                    anchorTextHoverColor: '#7B4FAF',
+          {/* Auth component עם עיצוב מעודכן */}
+          <div className="auth-container">
+            <Auth
+              supabaseClient={supabase}
+              view={view}
+              appearance={{
+                theme: ThemeSupa,
+                variables: {
+                  default: {
+                    colors: {
+                      brand: '#2563EB', // glacier-primary-600
+                      brandAccent: '#1D4ED8', // glacier-primary-700
+                      brandButtonText: 'white',
+                      defaultButtonBackground: 'transparent',
+                      defaultButtonBackgroundHover: '#F8FAFC',
+                      defaultButtonBorder: '#E2E8F0',
+                      defaultButtonText: '#334155',
+                      dividerBackground: '#E2E8F0',
+                      inputBackground: 'white',
+                      inputBorder: '#CBD5E1',
+                      inputBorderHover: '#2563EB',
+                      inputBorderFocus: '#2563EB',
+                      inputText: '#0F172A',
+                      inputLabelText: '#475569',
+                      inputPlaceholder: '#94A3B8',
+                      messageText: '#EF4444',
+                      messageTextDanger: '#EF4444',
+                      anchorTextColor: '#2563EB',
+                      anchorTextHoverColor: '#1D4ED8',
+                    },
+                    space: {
+                      spaceSmall: '6px',
+                      spaceMedium: '12px',
+                      spaceLarge: '20px',
+                      labelBottomMargin: '8px',
+                      anchorBottomMargin: '6px',
+                      emailInputSpacing: '6px',
+                      socialAuthSpacing: '6px',
+                      buttonPadding: '14px 20px',
+                      inputPadding: '14px 20px',
+                    },
+                    fontSizes: {
+                      baseBodySize: '15px',
+                      baseInputSize: '15px',
+                      baseLabelSize: '14px',
+                      baseButtonSize: '15px',
+                    },
+                    fonts: {
+                      bodyFontFamily: `Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+                      buttonFontFamily: `Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+                      inputFontFamily: `Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+                      labelFontFamily: `Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+                    },
+                    borderWidths: {
+                      buttonBorderWidth: '1px',
+                      inputBorderWidth: '1px',
+                    },
+                    radii: {
+                      borderRadiusButton: '1rem',
+                      buttonBorderRadius: '1rem',
+                      inputBorderRadius: '1rem',
+                    },
                   },
-                  space: {
-                    spaceSmall: '4px',
-                    spaceMedium: '8px',
-                    spaceLarge: '16px',
-                    labelBottomMargin: '8px',
-                    anchorBottomMargin: '4px',
-                    emailInputSpacing: '4px',
-                    socialAuthSpacing: '4px',
-                    buttonPadding: '10px 15px',
-                    inputPadding: '10px 15px',
+                },
+                style: {
+                  button: {
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '1rem',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    fontWeight: '600',
+                    transition: 'all 0.2s ease-in-out',
                   },
-                  fontSizes: {
-                    baseBodySize: '14px',
-                    baseInputSize: '14px',
-                    baseLabelSize: '14px',
-                    baseButtonSize: '14px',
+                  anchor: {
+                    color: '#2563EB',
+                    textDecoration: 'none',
+                    fontWeight: '500',
                   },
-                  fonts: {
-                    bodyFontFamily: `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
-                    buttonFontFamily: `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
-                    inputFontFamily: `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
-                    labelFontFamily: `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
+                  container: {
+                    direction: 'rtl',
                   },
-                  borderWidths: {
-                    buttonBorderWidth: '1px',
-                    inputBorderWidth: '1px',
+                  input: {
+                    border: '1px solid #CBD5E1',
+                    borderRadius: '1rem',
+                    direction: 'rtl',
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    transition: 'all 0.2s ease-in-out',
                   },
-                  radii: {
-                    borderRadiusButton: '1.5rem',
-                    buttonBorderRadius: '1.5rem',
-                    inputBorderRadius: '1.5rem',
+                  label: {
+                    color: '#475569',
+                    direction: 'rtl',
+                    textAlign: 'right',
+                    fontWeight: '500',
+                  },
+                  message: {
+                    color: '#EF4444',
+                    direction: 'rtl',
+                    textAlign: 'right',
+                    fontWeight: '500',
                   },
                 },
-              },
-              style: {
-                button: {
-                  border: '1px solid #E9ECEF',
-                  borderRadius: '1.5rem',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              }}
+              localization={{
+                variables: {
+                  sign_in: {
+                    email_label: 'כתובת אימייל',
+                    password_label: 'סיסמה',
+                    email_input_placeholder: 'הכנס את כתובת האימייל שלך',
+                    password_input_placeholder: 'הכנס את הסיסמה שלך',
+                    button_label: 'התחבר',
+                    loading_button_label: 'מתחבר...',
+                    social_provider_text: 'התחבר עם {{provider}}',
+                    link_text: 'יש לך כבר חשבון? התחבר',
+                  },
+                  sign_up: {
+                    email_label: 'כתובת אימייל',
+                    password_label: 'סיסמה',
+                    email_input_placeholder: 'הכנס את כתובת האימייל שלך',
+                    password_input_placeholder: 'הכנס סיסמה',
+                    button_label: 'הירשם',
+                    loading_button_label: 'נרשם...',
+                    social_provider_text: 'הירשם עם {{provider}}',
+                    link_text: 'אין לך חשבון? הירשם',
+                  },
+                  forgotten_password: {
+                    email_label: 'כתובת אימייל',
+                    password_label: 'סיסמה',
+                    email_input_placeholder: 'הכנס את כתובת האימייל שלך',
+                    button_label: 'שלח הוראות איפוס',
+                    loading_button_label: 'שולח הוראות איפוס...',
+                    link_text: 'שכחת את הסיסמה?',
+                  },
                 },
-                anchor: {
-                  color: '#8B5FBF',
-                  textDecoration: 'none',
-                },
-                container: {
-                  direction: 'rtl',
-                },
-                input: {
-                  border: '1px solid #DEE2E6',
-                  borderRadius: '1.5rem',
-                  direction: 'rtl',
-                  boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)',
-                },
-                label: {
-                  color: '#6C757D',
-                  direction: 'rtl',
-                  textAlign: 'right',
-                },
-                message: {
-                  color: '#EC7063',
-                  direction: 'rtl',
-                  textAlign: 'right',
-                },
-              },
-            }}
-            localization={{
-              variables: {
-                sign_in: {
-                  email_label: 'כתובת אימייל',
-                  password_label: 'סיסמה',
-                  email_input_placeholder: 'הכנס את כתובת האימייל שלך',
-                  password_input_placeholder: 'הכנס את הסיסמה שלך',
-                  button_label: 'התחבר',
-                  loading_button_label: 'מתחבר...',
-                  social_provider_text: 'התחבר עם {{provider}}',
-                  link_text: 'יש לך כבר חשבון? התחבר',
-                },
-                sign_up: {
-                  email_label: 'כתובת אימייל',
-                  password_label: 'סיסמה',
-                  email_input_placeholder: 'הכנס את כתובת האימייל שלך',
-                  password_input_placeholder: 'הכנס סיסמה',
-                  button_label: 'הירשם',
-                  loading_button_label: 'נרשם...',
-                  social_provider_text: 'הירשם עם {{provider}}',
-                  link_text: 'אין לך חשבון? הירשם',
-                },
-                forgotten_password: {
-                  email_label: 'כתובת אימייל',
-                  password_label: 'סיסמה',
-                  email_input_placeholder: 'הכנס את כתובת האימייל שלך',
-                  button_label: 'שלח הוראות איפוס',
-                  loading_button_label: 'שולח הוראות איפוס...',
-                  link_text: 'שכחת את הסיסמה?',
-                },
-              },
-            }}
-            providers={[]}
-            redirectTo={`${window.location.origin}/api/auth/callback`}
-            onlyThirdPartyProviders={false}
-            magicLink={false}
-            showLinks={true}
-          />
+              }}
+              providers={[]}
+              redirectTo={`${window.location.origin}/api/auth/callback`}
+              onlyThirdPartyProviders={false}
+              magicLink={false}
+              showLinks={true}
+            />
+          </div>
         </div>
       )}
     </div>

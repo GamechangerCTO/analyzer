@@ -22,7 +22,12 @@ import {
   FileText,
   CreditCard,
   X,
-  Bell
+  Bell,
+  Sparkles,
+  ChevronRight,
+  Zap,
+  Eye,
+  Plus
 } from 'lucide-react'
 
 interface AdminStats {
@@ -152,14 +157,14 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-lemon-mint/20 rounded-2xl flex items-center justify-center mx-auto animate-lemon-pulse">
-            <Shield className="w-8 h-8 text-lemon-mint-dark animate-spin" />
+      <div className="flex justify-center items-center min-h-screen bg-white">
+        <div className="text-center space-y-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-glacier-primary to-glacier-accent rounded-3xl flex items-center justify-center mx-auto animate-pulse">
+            <Shield className="w-10 h-10 text-white animate-spin" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-indigo-night">טוען נתוני מערכת...</h3>
-            <p className="text-indigo-night/60">אוסף נתונים ממערכת ReplayMe</p>
+            <h3 className="text-2xl font-bold text-neutral-900 mb-2">טוען נתוני מערכת...</h3>
+            <p className="text-neutral-600">אוסף נתונים ממערכת Coachee</p>
           </div>
         </div>
       </div>
@@ -167,63 +172,69 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      {/* כותרת מנהל מערכת */}
-      <div className="replayme-card p-8 bg-gradient-to-l from-indigo-night to-indigo-night/80 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <div className="w-20 h-20 bg-lemon-mint/20 rounded-2xl flex items-center justify-center">
-              <Crown className="w-10 h-10 text-lemon-mint" />
+    <div className="min-h-screen bg-gradient-to-br from-white via-glacier-primary/5 to-glacier-accent/10 p-6 space-y-8">
+      {/* כותרת מנהל מערכת מחודשת */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-glacier-primary via-glacier-primary to-glacier-accent p-8 shadow-2xl backdrop-blur-xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
+        <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <div className="w-24 h-24 bg-white/20 backdrop-blur-xl rounded-3xl flex items-center justify-center shadow-lg">
+              <Crown className="w-12 h-12 text-white" />
             </div>
             <div>
-              <h1 className="text-display text-3xl font-bold mb-2">
-                בקרת מערכת ReplayMe 👑
-              </h1>
-              <p className="text-white/80 text-lg">
-                לוח בקרה מתקדם לניהול המערכת
+              <div className="flex items-center gap-2 mb-2">
+                <h1 className="text-4xl font-bold text-white">
+                  מרכז בקרה מתקדם
+                </h1>
+                <Sparkles className="w-6 h-6 text-white animate-pulse" />
+              </div>
+              <p className="text-white/90 text-lg">
+                לוח הבקרה הראשי לניהול פלטפורמת Coachee
               </p>
             </div>
           </div>
           
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <button 
               onClick={fetchQuickAnalytics}
-              className="px-4 py-2 bg-indigo-night/20 hover:bg-indigo-night/30 text-indigo-night rounded-lg transition-colors duration-200 flex items-center space-x-2"
+              className="group px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-xl text-white rounded-2xl transition-all duration-300 flex items-center gap-2 hover:scale-105 hover:shadow-lg transform-gpu"
             >
-              <BarChart3 className="w-4 h-4" />
-              <span>רענן אנליטיקס</span>
+              <BarChart3 className="w-5 h-5 group-hover:animate-pulse" />
+              <span className="font-medium">רענן אנליטיקס</span>
             </button>
             
             <button 
               onClick={fetchAdminStats}
-              className="px-6 py-3 bg-lemon-mint/20 hover:bg-lemon-mint/30 text-lemon-mint rounded-xl transition-colors duration-200 flex items-center space-x-2"
+              className="group px-6 py-3 bg-white/90 hover:bg-white text-glacier-primary rounded-2xl transition-all duration-300 flex items-center gap-2 hover:scale-105 hover:shadow-lg font-semibold transform-gpu"
             >
-              <RefreshCw className="w-5 h-5" />
+              <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
               <span>רענן נתונים</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* התראה דחופה */}
+      {/* התראה דחופה מעוצבת */}
       {showUrgentAlert && getTotalPendingItems() > 0 && (
-        <div className="replayme-card p-6 border-r-4 border-warning bg-warning/5">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-warning/20 rounded-xl flex items-center justify-center animate-coral-pulse">
-                <Bell className="w-6 h-6 text-warning" />
+        <div className="relative rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 p-6 shadow-lg backdrop-blur-xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-100/50 to-orange-100/50"></div>
+          <div className="relative flex items-start justify-between">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+                <Bell className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-indigo-night mb-2">
-                  🔔 יש לך {getTotalPendingItems()} פעולות ממתינות!
+                <h3 className="text-xl font-bold text-neutral-900 mb-2 flex items-center gap-2">
+                  פעולות ממתינות לטיפול
+                  <Zap className="w-5 h-5 text-amber-500" />
                 </h3>
                 <div className="space-y-2">
                   {stats.pendingUsers > 0 && (
-                    <div className="flex items-center space-x-3">
-                      <UserCheck className="w-4 h-4 text-warning" />
+                    <div className="flex items-center gap-3">
+                      <UserCheck className="w-5 h-5 text-amber-600" />
                       <Link 
                         href="/dashboard/admin/users" 
-                        className="text-indigo-night font-medium hover:text-lemon-mint-dark transition-colors underline"
+                        className="text-neutral-900 font-semibold hover:text-glacier-primary transition-colors underline decoration-glacier-primary/30 hover:decoration-glacier-primary decoration-2 underline-offset-4"
                       >
                         {stats.pendingUsers} משתמשים ממתינים לאישור
                       </Link>
@@ -235,126 +246,139 @@ export default function AdminDashboardPage() {
             
             <button
               onClick={() => setShowUrgentAlert(false)}
-              className="p-2 hover:bg-ice-gray rounded-lg transition-colors duration-200"
+              className="p-2 hover:bg-white/50 rounded-xl transition-colors duration-200 group"
             >
-              <X className="w-5 h-5 text-indigo-night/60" />
+              <X className="w-5 h-5 text-neutral-600 group-hover:text-neutral-800" />
             </button>
           </div>
         </div>
       )}
 
-      {/* סטטיסטיקות כלליות */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="replayme-card p-6 border-r-4 border-lemon-mint">
-          <div className="flex items-center justify-between">
+      {/* סטטיסטיקות כלליות מחודשות */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-glacier-primary/20 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-glacier-primary/5 to-glacier-accent/5"></div>
+          <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-indigo-night/60 text-sm font-medium mb-1">סה"כ משתמשים</p>
-              <p className="text-3xl font-bold text-indigo-night animate-score-bounce">{stats.totalUsers}</p>
-              <p className="text-sm text-lemon-mint-dark font-medium mt-1">
+              <p className="text-neutral-600 text-sm font-medium mb-2">סה"כ משתמשים</p>
+              <p className="text-3xl font-bold text-neutral-900 mb-1">{stats.totalUsers}</p>
+              <p className="text-sm text-glacier-primary font-semibold">
                 {stats.approvedUsers} מאושרים
               </p>
             </div>
-            <div className="w-12 h-12 bg-lemon-mint/20 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-lemon-mint-dark" />
+            <div className="w-14 h-14 bg-gradient-to-br from-glacier-primary to-glacier-accent rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <Users className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="replayme-card p-6 border-r-4 border-warning">
-          <div className="flex items-center justify-between">
+        <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-amber-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50"></div>
+          <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-indigo-night/60 text-sm font-medium mb-1">ממתינים לאישור</p>
-              <p className="text-3xl font-bold text-indigo-night animate-score-bounce">{stats.pendingUsers}</p>
-              <p className="text-sm text-warning font-medium mt-1">
+              <p className="text-neutral-600 text-sm font-medium mb-2">ממתינים לאישור</p>
+              <p className="text-3xl font-bold text-neutral-900 mb-1">{stats.pendingUsers}</p>
+              <p className="text-sm text-amber-600 font-semibold">
                 דורש פעולה
               </p>
             </div>
-            <div className="w-12 h-12 bg-warning/20 rounded-xl flex items-center justify-center">
-              <Clock className="w-6 h-6 text-warning" />
+            <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <Clock className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="replayme-card p-6 border-r-4 border-success">
-          <div className="flex items-center justify-between">
+        <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-emerald-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-green-50"></div>
+          <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-indigo-night/60 text-sm font-medium mb-1">משתמשים מאושרים</p>
-              <p className="text-3xl font-bold text-indigo-night animate-score-bounce">{stats.approvedUsers}</p>
-              <p className="text-sm text-success font-medium mt-1">
+              <p className="text-neutral-600 text-sm font-medium mb-2">משתמשים מאושרים</p>
+              <p className="text-3xl font-bold text-neutral-900 mb-1">{stats.approvedUsers}</p>
+              <p className="text-sm text-emerald-600 font-semibold">
                 פעילים במערכת
               </p>
             </div>
-            <div className="w-12 h-12 bg-success/20 rounded-xl flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-success" />
+            <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <CheckCircle className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="replayme-card p-6 border-r-4 border-electric-coral">
-          <div className="flex items-center justify-between">
+        <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-glacier-secondary/20 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-glacier-secondary/5 to-glacier-accent/5"></div>
+          <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-indigo-night/60 text-sm font-medium mb-1">חברות במערכת</p>
-              <p className="text-3xl font-bold text-indigo-night animate-score-bounce">{stats.totalCompanies}</p>
-              <p className="text-sm text-electric-coral font-medium mt-1">
+              <p className="text-neutral-600 text-sm font-medium mb-2">חברות במערכת</p>
+              <p className="text-3xl font-bold text-neutral-900 mb-1">{stats.totalCompanies}</p>
+              <p className="text-sm text-glacier-secondary font-semibold">
                 פעילות
               </p>
             </div>
-            <div className="w-12 h-12 bg-electric-coral/20 rounded-xl flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-electric-coral" />
+            <div className="w-14 h-14 bg-gradient-to-br from-glacier-secondary to-glacier-accent rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <Building2 className="w-7 h-7 text-white" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* אנליטיקס OpenAI */}
+      {/* אנליטיקס OpenAI מעוצב מחדש */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-display text-2xl font-bold text-indigo-night">
-            אנליטיקס OpenAI 📊
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-3xl font-bold text-neutral-900">
+              אנליטיקס OpenAI
+            </h2>
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-white" />
+            </div>
+          </div>
           <Link 
             href="/dashboard/admin/analytics" 
-            className="px-6 py-3 bg-indigo-night hover:bg-indigo-night/90 text-white rounded-xl transition-colors duration-200 flex items-center space-x-2"
+            className="group px-6 py-3 bg-gradient-to-r from-glacier-primary to-glacier-accent hover:from-glacier-accent hover:to-glacier-primary text-white rounded-2xl transition-all duration-300 flex items-center gap-2 hover:scale-105 hover:shadow-xl font-semibold transform-gpu"
           >
-            <BarChart3 className="w-5 h-5" />
+            <Eye className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
             <span>צפה בדוח מפורט</span>
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
           </Link>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* נתוני אנליטיקס בסיסיים - נתונים אמיתיים */}
-          <div className="replayme-card p-6 border-r-4 border-purple-500">
-            <div className="flex items-center justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* עלות חודשית */}
+          <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-purple-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-indigo-50"></div>
+            <div className="relative flex items-center justify-between">
               <div>
-                <p className="text-indigo-night/60 text-sm font-medium mb-1">עלות חודשית</p>
-                <p className="text-3xl font-bold text-indigo-night">
+                <p className="text-neutral-600 text-sm font-medium mb-2">עלות חודשית</p>
+                <p className="text-3xl font-bold text-neutral-900 mb-1">
                   {analytics.loading ? (
-                    <span className="animate-pulse">$--</span>
+                    <span className="animate-pulse bg-neutral-200 rounded px-4 py-1">--</span>
                   ) : analytics.error ? (
                     <span className="text-red-500 text-lg">שגיאה</span>
                   ) : (
                     `$${analytics.totalCosts.toFixed(2)}`
                   )}
                 </p>
-                <p className="text-sm text-purple-600 font-medium mt-1">
+                <p className="text-sm text-purple-600 font-semibold">
                   {analytics.loading ? 'טוען נתונים...' : 
                    analytics.error ? 'לא ניתן לטעון' : 
                    '30 ימים אחרונים'}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                <CreditCard className="w-6 h-6 text-purple-600" />
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <CreditCard className="w-7 h-7 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="replayme-card p-6 border-r-4 border-blue-500">
-            <div className="flex items-center justify-between">
+          {/* בקשות API */}
+          <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-blue-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-cyan-50"></div>
+            <div className="relative flex items-center justify-between">
               <div>
-                <p className="text-indigo-night/60 text-sm font-medium mb-1">בקשות API</p>
-                <p className="text-3xl font-bold text-indigo-night">
+                <p className="text-neutral-600 text-sm font-medium mb-2">בקשות API</p>
+                <p className="text-3xl font-bold text-neutral-900 mb-1">
                   {analytics.loading ? (
-                    <span className="animate-pulse">--</span>
+                    <span className="animate-pulse bg-neutral-200 rounded px-4 py-1">--</span>
                   ) : analytics.error ? (
                     <span className="text-red-500 text-lg">שגיאה</span>
                   ) : (
@@ -363,25 +387,27 @@ export default function AdminDashboardPage() {
                       analytics.totalRequests.toString()
                   )}
                 </p>
-                <p className="text-sm text-blue-600 font-medium mt-1">
+                <p className="text-sm text-blue-600 font-semibold">
                   {analytics.loading ? 'טוען נתונים...' : 
                    analytics.error ? 'לא ניתן לטעון' : 
                    'בקשות כוללות'}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                <Activity className="w-6 h-6 text-blue-600" />
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <Activity className="w-7 h-7 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="replayme-card p-6 border-r-4 border-green-500">
-            <div className="flex items-center justify-between">
+          {/* טוקנים */}
+          <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-emerald-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-green-50"></div>
+            <div className="relative flex items-center justify-between">
               <div>
-                <p className="text-indigo-night/60 text-sm font-medium mb-1">טוקנים</p>
-                <p className="text-3xl font-bold text-indigo-night">
+                <p className="text-neutral-600 text-sm font-medium mb-2">טוקנים</p>
+                <p className="text-3xl font-bold text-neutral-900 mb-1">
                   {analytics.loading ? (
-                    <span className="animate-pulse">--</span>
+                    <span className="animate-pulse bg-neutral-200 rounded px-4 py-1">--</span>
                   ) : analytics.error ? (
                     <span className="text-red-500 text-lg">שגיאה</span>
                   ) : (
@@ -392,81 +418,91 @@ export default function AdminDashboardPage() {
                       analytics.totalTokens.toString()
                   )}
                 </p>
-                <p className="text-sm text-green-600 font-medium mt-1">
+                <p className="text-sm text-emerald-600 font-semibold">
                   {analytics.loading ? 'טוען נתונים...' : 
                    analytics.error ? 'לא ניתן לטעון' : 
                    'סה"כ טוקנים'}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+              <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp className="w-7 h-7 text-white" />
               </div>
             </div>
           </div>
 
-          <div className="replayme-card p-6 border-r-4 border-orange-500">
-            <div className="flex items-center justify-between">
+          {/* עלות לבקשה */}
+          <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-orange-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-amber-50"></div>
+            <div className="relative flex items-center justify-between">
               <div>
-                <p className="text-indigo-night/60 text-sm font-medium mb-1">עלות לבקשה</p>
-                <p className="text-3xl font-bold text-indigo-night">
+                <p className="text-neutral-600 text-sm font-medium mb-2">עלות לבקשה</p>
+                <p className="text-3xl font-bold text-neutral-900 mb-1">
                   {analytics.loading ? (
-                    <span className="animate-pulse">$--</span>
+                    <span className="animate-pulse bg-neutral-200 rounded px-4 py-1">--</span>
                   ) : analytics.error ? (
                     <span className="text-red-500 text-lg">שגיאה</span>
                   ) : (
                     `$${analytics.averageRequestCost.toFixed(4)}`
                   )}
                 </p>
-                <p className="text-sm text-orange-600 font-medium mt-1">
+                <p className="text-sm text-orange-600 font-semibold">
                   {analytics.loading ? 'טוען נתונים...' : 
                    analytics.error ? 'לא ניתן לטעון' : 
                    'ממוצע לבקשה'}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center">
-                <Star className="w-6 h-6 text-orange-600" />
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <Star className="w-7 h-7 text-white" />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* תפריט ניהול */}
+      {/* תפריט ניהול מתקדם */}
       <div className="space-y-6">
-        <h2 className="text-display text-2xl font-bold text-indigo-night">
-          תפריט ניהול מתקדם ⚙️
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-3xl font-bold text-neutral-900">
+            תפריט ניהול מתקדם
+          </h2>
+          <div className="w-8 h-8 bg-gradient-to-br from-glacier-primary to-glacier-accent rounded-xl flex items-center justify-center">
+            <Settings className="w-5 h-5 text-white" />
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* ניהול משתמשים */}
           <Link 
             href="/dashboard/admin/users" 
-            className={`replayme-card p-6 card-hover block ${
-              stats.pendingUsers > 0 ? 'border-r-4 border-warning bg-warning/5' : ''
+            className={`group relative rounded-2xl bg-white/90 backdrop-blur-xl border p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden ${
+              stats.pendingUsers > 0 ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50' : 'border-glacier-primary/20'
             }`}
           >
-            <div className="space-y-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent"></div>
+            <div className="relative space-y-4">
               <div className="flex items-center justify-between">
-                <div className="w-12 h-12 bg-lemon-mint/20 rounded-xl flex items-center justify-center">
-                  <Users className="w-6 h-6 text-lemon-mint-dark" />
+                <div className="w-14 h-14 bg-gradient-to-br from-glacier-primary to-glacier-accent rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Users className="w-7 h-7 text-white" />
                 </div>
                 {stats.pendingUsers > 0 && (
-                  <div className="bg-warning text-white text-xs font-bold px-2 py-1 rounded-full animate-coral-pulse">
+                  <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-sm font-bold px-3 py-1 rounded-full animate-pulse shadow-lg">
                     {stats.pendingUsers}
                   </div>
                 )}
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-glacier-primary group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
               <div>
-                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">
                   ניהול משתמשים
                 </h3>
-                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                <p className="text-neutral-600 text-sm leading-relaxed mb-3">
                   אישור משתמשים חדשים, ניהול הרשאות ועריכת פרטים
                 </p>
                 {stats.pendingUsers > 0 && (
-                  <p className="text-warning text-sm font-medium mt-2">
-                    🔥 {stats.pendingUsers} משתמשים ממתינים לאישור
+                  <p className="text-amber-600 text-sm font-semibold flex items-center gap-2">
+                    <Zap className="w-4 h-4" />
+                    {stats.pendingUsers} משתמשים ממתינים לאישור
                   </p>
                 )}
               </div>
@@ -476,21 +512,26 @@ export default function AdminDashboardPage() {
           {/* ניהול חברות */}
           <Link 
             href="/dashboard/admin/companies" 
-            className="replayme-card p-6 card-hover block"
+            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-glacier-secondary/20 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
           >
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-electric-coral/20 rounded-xl flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-electric-coral" />
+            <div className="absolute inset-0 bg-gradient-to-br from-glacier-secondary/5 to-glacier-accent/5"></div>
+            <div className="relative space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-14 h-14 bg-gradient-to-br from-glacier-secondary to-glacier-accent rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Building2 className="w-7 h-7 text-white" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-glacier-secondary group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
               <div>
-                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">
                   ניהול חברות
                 </h3>
-                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                <p className="text-neutral-600 text-sm leading-relaxed mb-3">
                   הוספה, עריכה ומחיקה של חברות במערכת
                 </p>
-                <p className="text-electric-coral text-sm font-medium mt-2">
+                <p className="text-glacier-secondary text-sm font-semibold flex items-center gap-2">
+                  <Building2 className="w-4 h-4" />
                   {stats.totalCompanies} חברות רשומות
                 </p>
               </div>
@@ -500,21 +541,26 @@ export default function AdminDashboardPage() {
           {/* מכסות משתמשים */}
           <Link 
             href="/dashboard/admin/company-quotas" 
-            className="replayme-card p-6 card-hover block"
+            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-emerald-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
           >
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-success/20 rounded-xl flex items-center justify-center">
-                <Target className="w-6 h-6 text-success" />
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-green-50"></div>
+            <div className="relative space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Target className="w-7 h-7 text-white" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
               <div>
-                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">
                   מכסות משתמשים
                 </h3>
-                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                <p className="text-neutral-600 text-sm leading-relaxed mb-3">
                   ניהול מכסות ותוכניות מנוי לחברות שונות
                 </p>
-                <p className="text-success text-sm font-medium mt-2">
+                <p className="text-emerald-600 text-sm font-semibold flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
                   ניהול אוטומטי ומתקדם
                 </p>
               </div>
@@ -524,21 +570,26 @@ export default function AdminDashboardPage() {
           {/* בקשות נציגים */}
           <Link 
             href="/dashboard/admin/agent-requests" 
-            className="replayme-card p-6 card-hover block"
+            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-amber-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
           >
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-warning/20 rounded-xl flex items-center justify-center">
-                <UserCheck className="w-6 h-6 text-warning" />
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-50"></div>
+            <div className="relative space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <UserCheck className="w-7 h-7 text-white" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-amber-500 group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
               <div>
-                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">
                   בקשות נציגים
                 </h3>
-                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                <p className="text-neutral-600 text-sm leading-relaxed mb-3">
                   אישור בקשות הוספת נציגים חדשים מחברות
                 </p>
-                <p className="text-warning text-sm font-medium mt-2">
+                <p className="text-amber-600 text-sm font-semibold flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
                   מעקב אחר בקשות ממתינות
                 </p>
               </div>
@@ -548,21 +599,26 @@ export default function AdminDashboardPage() {
           {/* ניהול תמחור */}
           <Link 
             href="/dashboard/admin/pricing-management" 
-            className="replayme-card p-6 card-hover block"
+            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-blue-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
           >
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-indigo-night/20 rounded-xl flex items-center justify-center">
-                <CreditCard className="w-6 h-6 text-indigo-night" />
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50"></div>
+            <div className="relative space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <CreditCard className="w-7 h-7 text-white" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
               <div>
-                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">
                   ניהול תמחור
                 </h3>
-                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                <p className="text-neutral-600 text-sm leading-relaxed mb-3">
                   הגדרת מחירים ותוכניות מנוי למוצרי המערכת
                 </p>
-                <p className="text-indigo-night text-sm font-medium mt-2">
+                <p className="text-blue-600 text-sm font-semibold flex items-center gap-2">
+                  <Star className="w-4 h-4" />
                   מחירים ותוכניות
                 </p>
               </div>
@@ -572,21 +628,26 @@ export default function AdminDashboardPage() {
           {/* הגדרות מערכת */}
           <Link 
             href="/dashboard/admin/system-settings" 
-            className="replayme-card p-6 card-hover block"
+            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-neutral-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
           >
-            <div className="space-y-4">
-              <div className="w-12 h-12 bg-ice-gray/40 rounded-xl flex items-center justify-center">
-                <Settings className="w-6 h-6 text-indigo-night/80" />
+            <div className="absolute inset-0 bg-gradient-to-br from-neutral-50 to-neutral-100"></div>
+            <div className="relative space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-14 h-14 bg-gradient-to-br from-neutral-400 to-neutral-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Settings className="w-7 h-7 text-white" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-neutral-600 group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
               <div>
-                <h3 className="text-xl font-bold text-indigo-night mb-2">
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">
                   הגדרות מערכת
                 </h3>
-                <p className="text-indigo-night/70 text-sm leading-relaxed">
+                <p className="text-neutral-600 text-sm leading-relaxed mb-3">
                   הגדרות כלליות, הודעות מערכת ותצורות מתקדמות
                 </p>
-                <p className="text-indigo-night/80 text-sm font-medium mt-2">
+                <p className="text-neutral-600 text-sm font-semibold flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
                   תצורה מתקדמת
                 </p>
               </div>
@@ -595,104 +656,131 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* תובנות מהירות */}
+      {/* תובנות מהירות ופעולות מומלצות */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="replayme-card p-6">
-          <h3 className="text-display text-xl font-bold text-indigo-night mb-6">
-            תובנות מהירות 📊
-          </h3>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-cream-sand rounded-lg">
-              <div className="flex items-center space-x-3">
-                <TrendingUp className="w-5 h-5 text-success" />
-                <span className="text-sm font-medium text-indigo-night">קצב צמיחה</span>
+        <div className="relative rounded-2xl bg-white/90 backdrop-blur-xl border border-glacier-primary/20 p-6 shadow-lg overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-glacier-primary/5 to-glacier-accent/5"></div>
+          <div className="relative">
+            <h3 className="text-2xl font-bold text-neutral-900 mb-6 flex items-center gap-3">
+              תובנות מהירות
+              <div className="w-8 h-8 bg-gradient-to-br from-glacier-primary to-glacier-accent rounded-xl flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-white" />
               </div>
-              <div className="text-lg font-bold text-success">
-                {stats.totalUsers > 0 ? `+${Math.round((stats.approvedUsers / stats.totalUsers) * 100)}%` : '0%'}
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-emerald-200 hover:scale-[1.02] transition-transform duration-300">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-neutral-900">קצב צמיחה</span>
+                </div>
+                <div className="text-xl font-bold text-emerald-600">
+                  {stats.totalUsers > 0 ? `+${Math.round((stats.approvedUsers / stats.totalUsers) * 100)}%` : '0%'}
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center justify-between p-3 bg-cream-sand rounded-lg">
-              <div className="flex items-center space-x-3">
-                <Activity className="w-5 h-5 text-electric-coral" />
-                <span className="text-sm font-medium text-indigo-night">יעילות אישור</span>
+              <div className="flex items-center justify-between p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-glacier-secondary/20 hover:scale-[1.02] transition-transform duration-300">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-glacier-secondary to-glacier-accent rounded-xl flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-neutral-900">יעילות אישור</span>
+                </div>
+                <div className="text-xl font-bold text-glacier-secondary">
+                  {stats.totalUsers > 0 ? `${Math.round((stats.approvedUsers / stats.totalUsers) * 100)}%` : '0%'}
+                </div>
               </div>
-              <div className="text-lg font-bold text-electric-coral">
-                {stats.totalUsers > 0 ? `${Math.round((stats.approvedUsers / stats.totalUsers) * 100)}%` : '0%'}
-              </div>
-            </div>
 
-            <div className="flex items-center justify-between p-3 bg-cream-sand rounded-lg">
-              <div className="flex items-center space-x-3">
-                <Star className="w-5 h-5 text-warning" />
-                <span className="text-sm font-medium text-indigo-night">משתמשים לחברה</span>
-              </div>
-              <div className="text-lg font-bold text-warning">
-                {stats.totalCompanies > 0 ? Math.round(stats.totalUsers / stats.totalCompanies) : 0}
+              <div className="flex items-center justify-between p-4 bg-white/60 backdrop-blur-sm rounded-2xl border border-amber-200 hover:scale-[1.02] transition-transform duration-300">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center">
+                    <Star className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-sm font-semibold text-neutral-900">משתמשים לחברה</span>
+                </div>
+                <div className="text-xl font-bold text-amber-600">
+                  {stats.totalCompanies > 0 ? Math.round(stats.totalUsers / stats.totalCompanies) : 0}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="replayme-card p-6">
-          <h3 className="text-display text-xl font-bold text-indigo-night mb-6">
-            פעולות מומלצות 🎯
-          </h3>
-          
-          <div className="space-y-4">
-            {stats.pendingUsers > 0 && (
-              <div className="p-4 border border-warning/30 rounded-xl bg-warning/5">
-                <div className="flex items-start space-x-3">
-                  <AlertTriangle className="w-5 h-5 text-warning mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-indigo-night">בדוק משתמשים ממתינים</h4>
-                    <p className="text-sm text-indigo-night/70 mt-1">
-                      יש {stats.pendingUsers} משתמשים שממתינים לאישור שלך
+        <div className="relative rounded-2xl bg-white/90 backdrop-blur-xl border border-glacier-primary/20 p-6 shadow-lg overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-glacier-primary/5 to-glacier-accent/5"></div>
+          <div className="relative">
+            <h3 className="text-2xl font-bold text-neutral-900 mb-6 flex items-center gap-3">
+              פעולות מומלצות
+              <div className="w-8 h-8 bg-gradient-to-br from-glacier-primary to-glacier-accent rounded-xl flex items-center justify-center">
+                <Target className="w-5 h-5 text-white" />
+              </div>
+            </h3>
+            
+            <div className="space-y-4">
+              {stats.pendingUsers > 0 && (
+                <div className="p-4 border border-amber-300 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 hover:scale-[1.02] transition-transform duration-300">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center mt-0.5">
+                      <AlertTriangle className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-neutral-900 mb-1">בדוק משתמשים ממתינים</h4>
+                      <p className="text-sm text-neutral-700 mb-2">
+                        יש {stats.pendingUsers} משתמשים שממתינים לאישור שלך
+                      </p>
+                      <Link 
+                        href="/dashboard/admin/users"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-amber-600 hover:text-amber-700 transition-colors group"
+                      >
+                        <span>עבור לאישור</span>
+                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-4 border border-emerald-300 rounded-2xl bg-gradient-to-r from-emerald-50 to-green-50 hover:scale-[1.02] transition-transform duration-300">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl flex items-center justify-center mt-0.5">
+                    <BarChart3 className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-neutral-900 mb-1">בדוק ביצועים</h4>
+                    <p className="text-sm text-neutral-700 mb-2">
+                      עיין בדוחות שימוש ופעילות החברות
                     </p>
                     <Link 
-                      href="/dashboard/admin/users"
-                      className="inline-block mt-2 text-sm font-medium text-warning hover:underline"
+                      href="/dashboard/admin/analytics"
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors group"
                     >
-                      עבור לאישור →
+                      <span>צפה בדוחות</span>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                     </Link>
                   </div>
                 </div>
               </div>
-            )}
 
-            <div className="p-4 border border-success/30 rounded-xl bg-success/5">
-              <div className="flex items-start space-x-3">
-                <BarChart3 className="w-5 h-5 text-success mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-indigo-night">בדוק ביצועים</h4>
-                  <p className="text-sm text-indigo-night/70 mt-1">
-                    עיין בדוחות שימוש ופעילות החברות
-                  </p>
-                  <Link 
-                    href="/dashboard/admin/reports"
-                    className="inline-block mt-2 text-sm font-medium text-success hover:underline"
-                  >
-                    צפה בדוחות →
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 border border-electric-coral/30 rounded-xl bg-electric-coral/5">
-              <div className="flex items-start space-x-3">
-                <Settings className="w-5 h-5 text-electric-coral mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-indigo-night">עדכן הגדרות</h4>
-                  <p className="text-sm text-indigo-night/70 mt-1">
-                    וודא שהגדרות המערכת מעודכנות ומתאימות
-                  </p>
-                  <Link 
-                    href="/dashboard/admin/system-settings"
-                    className="inline-block mt-2 text-sm font-medium text-electric-coral hover:underline"
-                  >
-                    הגדרות מערכת →
-                  </Link>
+              <div className="p-4 border border-glacier-primary/30 rounded-2xl bg-gradient-to-r from-glacier-primary/5 to-glacier-accent/5 hover:scale-[1.02] transition-transform duration-300">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-glacier-primary to-glacier-accent rounded-xl flex items-center justify-center mt-0.5">
+                    <Settings className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-neutral-900 mb-1">עדכן הגדרות</h4>
+                    <p className="text-sm text-neutral-700 mb-2">
+                      וודא שהגדרות המערכת מעודכנות ומתאימות
+                    </p>
+                    <Link 
+                      href="/dashboard/admin/system-settings"
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-glacier-primary hover:text-glacier-accent transition-colors group"
+                    >
+                      <span>הגדרות מערכת</span>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

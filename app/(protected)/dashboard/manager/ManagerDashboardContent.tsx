@@ -30,6 +30,21 @@ interface ManagerDashboardContentProps {
   companyId: string | null
 }
 
+// פונקציה לברכה לפי שעה
+const getTimeBasedGreeting = () => {
+  const hour = new Date().getHours()
+  
+  if (hour >= 5 && hour < 12) {
+    return 'בוקר טוב'
+  } else if (hour >= 12 && hour < 17) {
+    return 'צהריים טובים'
+  } else if (hour >= 17 && hour < 22) {
+    return 'ערב טוב'
+  } else {
+    return 'לילה טוב'
+  }
+}
+
 interface DashboardStats {
   totalAgents: number
   totalCalls: number
@@ -64,6 +79,7 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
     full_name: string | null
     email: string | null
   } | null>(null)
+  const greeting = getTimeBasedGreeting()
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -200,44 +216,15 @@ export default function ManagerDashboardContent({ userId, companyId }: ManagerDa
 
   return (
     <div className="space-y-8">
-      {/* כותרת עליונה עם פרטי המנהל והחברה */}
-      <div className="choacee-card-clay-raised bg-gradient-to-r from-clay-primary to-clay-accent text-white p-6 mb-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div className="mb-4 lg:mb-0">
-              <h1 className="choacee-text-display text-3xl font-bold mb-2">דשבורד מנהל</h1>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-clay flex items-center justify-center">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-semibold">{managerInfo?.full_name || 'לא זמין'}</p>
-                    <p className="text-white/80 text-sm">{managerInfo?.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    <Building2 className="w-6 h-6" />
-                  </div>
-                  <p className="font-medium">ניהול צוות החברה</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/upload" className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2 font-semibold">
-                <Upload className="w-5 h-5" />
-                <span>העלאת שיחה</span>
-              </Link>
-              <Link href="/team" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-400 transition-colors flex items-center gap-2 font-semibold">
-                <Users className="w-5 h-5" />
-                <span>ניהול צוות</span>
-              </Link>
-            </div>
-          </div>
+      {/* כותרת עליונה פשוטה עם ברכה לפי שעה */}
+      <div className="choacee-card-clay-raised bg-gradient-to-r from-glacier-primary-500 via-glacier-accent-500 to-glacier-secondary-500 p-6 mb-6">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="choacee-text-display text-4xl font-bold mb-2 text-white">
+            {greeting}, {managerInfo?.full_name || 'מנהל'}!
+          </h1>
+          <p className="text-white/90 text-xl">
+            🚀 דשבורד ניהול Coachee
+          </p>
         </div>
       </div>
 

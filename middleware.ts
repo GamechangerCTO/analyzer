@@ -14,7 +14,6 @@ export async function middleware(request: NextRequest) {
   const isStaticResource = request.nextUrl.pathname.startsWith('/_next') || 
                             request.nextUrl.pathname.startsWith('/images') || 
                             request.nextUrl.pathname.startsWith('/favicon.ico') ||
-                            request.nextUrl.pathname.startsWith('/logo.webp') ||
                             request.nextUrl.pathname.startsWith('/avatars')
   
   // אם הנתיב ציבורי או משאב סטטי, אין צורך בבדיקת התחברות
@@ -44,5 +43,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|logo.webp|avatars).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|avatars).*)'],
 } 

@@ -1,364 +1,340 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { createUserWithServiceRole } from '@/lib/actions/users';
+import React, { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { X, User, Mail, Lock, Building2, AlertCircle, CheckCircle2 } from 'lucide-react'
 
 interface Company {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
-const AVAILABLE_ROLES = [
-  { value: 'admin', label: 'מנהל מערכת' },
-  { value: 'manager', label: 'מנהל' },
-  { value: 'agent', label: 'נציג' },
-];
-
 interface AddUserModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onUserAdded: () => void; // Callback to refresh the user list
+  isOpen: boolean
+  onClose: () => void
+  onUserAdded: () => void
 }
 
 export default function AddUserModal({ isOpen, onClose, onUserAdded }: AddUserModalProps) {
-  const supabase = createClient();
+  const supabase = createClient()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     full_name: '',
-    role: 'agent', // Default role
-    company_id: '',
-  });
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    role: 'agent',
+    company_id: ''
+  })
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [loading, setLoading] = useState(false)
+  const [loadingCompanies, setLoadingCompanies] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
 
   useEffect(() => {
     async function fetchCompanies() {
-      if (!isOpen) return;
-      setLoadingCompanies(true);
-      setError(null);
-      setSuccessMessage(null);
+      if (!isOpen) return
+      
+      setLoadingCompanies(true)
+      setError(null)
+      
       try {
-        const { data, error: companiesError } = await supabase.from('companies').select('id, name');
-        if (companiesError) throw companiesError;
-        setCompanies(data || []);
+        const { data, error } = await supabase
+          .from('companies')
+          .select('id, name')
+          .order('name')
+
+        if (error) throw error
+        setCompanies(data || [])
       } catch (e) {
-        console.error("Failed to fetch companies:", e);
-        setError("שגיאה בטעינת רשימת החברות.");
+        console.error("Failed to fetch companies:", e)
+        setError("שגיאה בטעינת רשימת החברות.")
       } finally {
-        setLoadingCompanies(false);
+        setLoadingCompanies(false)
       }
     }
-    fetchCompanies();
-  }, [isOpen, supabase]);
 
-  useEffect(() => {
-    // Reset form when modal is opened/closed or on error/success
     if (isOpen) {
-        setFormData({
-            email: '',
-            password: '',
-            full_name: '',
-            role: 'agent',
-            company_id: '',
-        });
-        setError(null);
-        setSuccessMessage(null);
+      fetchCompanies()
+      // Reset form when opening
+      setFormData({
+        email: '',
+        password: '',
+        full_name: '',
+        role: 'agent',
+        company_id: ''
+      })
+      setError(null)
+      setSuccessMessage(null)
+      setCreating(false)
     }
-  }, [isOpen]);
+  }, [isOpen, supabase])
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    setFormData(prev => ({ 
-        ...prev, 
-        [name]: value 
-    }));
-  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-    setSuccessMessage(null);
-
+    e.preventDefault()
+    setCreating(true)
+    setError(null)
+    setSuccessMessage(null)
+    
     try {
-      console.log('🔍 Starting user creation with data:', {
-        email: formData.email,
-        full_name: formData.full_name,
-        role: formData.role,
-        company_id: formData.company_id
-      });
+      // Validation
+      if (!formData.email.trim()) {
+        setError('אימייל הוא שדה חובה.')
+        setCreating(false)
+        return
+      }
 
-      // ולידציה: רק אדמינים חדשים חייבים להיות ללא חברה, שאר התפקידים יכולים להיות עם או בלי חברה
+      if (!formData.password || formData.password.length < 6) {
+        setError('סיסמה חייבת להכיל לפחות 6 תווים.')
+        setCreating(false)
+        return
+      }
+
+      if (!formData.full_name.trim()) {
+        setError('שם מלא הוא שדה חובה.')
+        setCreating(false)
+        return
+      }
+
+      // Admins don't need a company
+      if (formData.role !== 'admin' && !formData.company_id) {
+        setError('יש לבחור חברה עבור נציגים ומנהלים.')
+        setCreating(false)
+        return
+      }
+
+      // Admins shouldn't have a company
       if (formData.role === 'admin' && formData.company_id) {
-        setError('מנהלי מערכת לא צריכים להיות משויכים לחברה ספציפית.');
-        setSaving(false);
-        return;
+        setError('מנהלי מערכת לא צריכים להיות משויכים לחברה ספציפית.')
+        setCreating(false)
+        return
       }
 
-      // ולידציה: מנהלים ונציגים חייבים להיות משויכים לחברה
-      if ((formData.role === 'manager' || formData.role === 'agent') && !formData.company_id) {
-        const roleText = formData.role === 'manager' ? 'מנהלים' : 'נציגים';
-        setError(`${roleText} חייבים להיות משויכים לחברה. אנא בחר חברה.`);
-        setSaving(false);
-        return;
-      }
-
-      // שימוש בפעולת השרת המשתמשת ב-service_role
-      console.log('📡 Calling createUserWithServiceRole...');
-      console.log('📋 Exact data being sent:', {
-        email: formData.email,
-        full_name: formData.full_name,
-        role: formData.role,
-        company_id: formData.company_id,
-        has_password: !!formData.password
-      });
-      const result = await createUserWithServiceRole({
-        email: formData.email,
-        password: formData.password,
-        full_name: formData.full_name,
-        role: formData.role,
-        company_id: formData.company_id || null,
-      });
-
-      console.log('📊 Result from createUserWithServiceRole:', result);
-
-      if (!result.success) {
-        console.error('❌ User creation failed:', result.error);
-        throw new Error(result.error);
-      }
-      
-      // הצגת הודעה מתאימה בהתאם לסטטוס האישור ואם המשתמש קיים
-      if (result.isExisting) {
-        setSuccessMessage(`משתמש ${formData.email} עודכן בהצלחה.`);
-      } else if (result.is_approved) {
-        setSuccessMessage(`משתמש ${formData.email} נוצר בהצלחה ואושר אוטומטית.`);
-      } else {
-        setSuccessMessage(`משתמש ${formData.email} נוצר בהצלחה וממתין לאישור מנהל מערכת.`);
-      }
-      
-      console.log('✅ User creation completed successfully');
-      onUserAdded();
-      
-      // Reset form for next entry
-      setFormData({
-          email: '',
-          password: '',
-          full_name: '',
-          role: 'agent',
-          company_id: '',
-      });
-
-    } catch (err) {
-      console.error("❌ Error creating user:", err);
-      console.error("❌ Error stack:", err instanceof Error ? err.stack : 'No stack');
-      
-      const errorMessage = err instanceof Error ? err.message : 'שגיאה לא ידועה';
-      setError(`שגיאה ביצירת המשתמש: ${errorMessage}`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // פונקציה לבדיקת יצירת משתמש עם API פשוט
-  const testSimpleUserCreation = async () => {
-    console.log('🧪 Testing simple user creation...');
-    
-    // ולידציה מקומית לפני שליחה
-    if (formData.role === 'admin' && formData.company_id) {
-      setError('מנהלי מערכת לא צריכים להיות משויכים לחברה ספציפית.');
-      return;
-    }
-
-    // ולידציה: מנהלים ונציגים חייבים להיות משויכים לחברה
-    if ((formData.role === 'manager' || formData.role === 'agent') && !formData.company_id) {
-      const roleText = formData.role === 'manager' ? 'מנהלים' : 'נציגים';
-      setError(`${roleText} חייבים להיות משויכים לחברה. אנא בחר חברה.`);
-      return;
-    }
-    
-    try {
       const response = await fetch('/api/admin/create-user-simple', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: formData.email,
+          email: formData.email.trim(),
           password: formData.password,
-          full_name: formData.full_name,
+          full_name: formData.full_name.trim(),
           role: formData.role,
-          company_id: formData.company_id || null,
+          company_id: formData.role === 'admin' ? null : formData.company_id,
         }),
-      });
+      })
 
-      const result = await response.json();
-      
-      if (response.ok) {
-        const action = result.isExisting ? 'עודכן' : 'נוצר';
-        setSuccessMessage(`✅ משתמש ${action} בהצלחה בAPI הפשוט: ${formData.email}`);
-        onUserAdded();
-        setFormData({
-          email: '',
-          password: '',
-          full_name: '',
-          role: 'agent',
-          company_id: '',
-        });
-      } else {
-        setError(`❌ שגיאה בAPI הפשוט: ${result.error} - ${result.details}`);
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'שגיאה ביצירת המשתמש')
       }
-    } catch (error) {
-      console.error('❌ Error in simple API:', error);
-      setError(`❌ שגיאה בקריאה לAPI הפשוט: ${error instanceof Error ? error.message : 'שגיאה לא ידועה'}`);
-    }
-  };
 
-  // פונקציה עזר לקביעת האם החברה חובה
-  const isCompanyRequired = () => {
-    return formData.role === 'manager' || formData.role === 'agent'; // מנהלים ונציגים חייבים להיות עם חברה
-  };
+      setSuccessMessage('משתמש נוצר בהצלחה!')
+      
+      // Reset form
+      setFormData({
+        email: '',
+        password: '',
+        full_name: '',
+        role: 'agent',
+        company_id: ''
+      })
 
-  // פונקציה עזר לקביעת טקסט התווית
-  const getCompanyLabel = () => {
-    if (formData.role === 'admin') {
-      return 'חברה (אדמינים ללא חברה)';
-    } else if (formData.role === 'manager') {
-      return 'חברה (חובה למנהלים)';
-    } else if (formData.role === 'agent') {
-      return 'חברה (חובה לנציגים)';
-    } else {
-      return 'חברה (אופציונלי)';
+      // Notify parent component
+      onUserAdded()
+
+      // Close modal after delay
+      setTimeout(() => {
+        onClose()
+      }, 2000)
+
+    } catch (err) {
+      console.error('Error creating user:', err)
+      setError(err instanceof Error ? err.message : 'שגיאה לא ידועה')
+    } finally {
+      setCreating(false)
     }
-  };
+  }
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-      <div className="relative p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
-        <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">הוספת משתמש חדש</h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-                <span className="sr-only">Close</span>
-                &times;
-            </button>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-glacier-neutral-200/50 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center p-6 border-b border-glacier-neutral-200">
+          <h3 className="text-xl font-bold text-neutral-900 flex items-center gap-3">
+            <User className="w-6 h-6 text-glacier-primary" />
+            הוספת משתמש חדש
+          </h3>
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-glacier-neutral-100 rounded-xl transition-colors duration-200"
+          >
+            <X className="w-5 h-5 text-neutral-600" />
+          </button>
         </div>
         
-        {error && (
-          <div className="mb-3 p-3 bg-red-100 text-red-700 rounded-md">
-            <p>{error}</p>
-          </div>
-        )}
-        {successMessage && (
-          <div className="mb-3 p-3 bg-green-100 text-green-700 rounded-md">
-            <p>{successMessage}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email_add" className="block text-sm font-medium text-gray-700">אימייל</label>
-            <input type="email" name="email" id="email_add" value={formData.email} onChange={handleChange} required className="mt-1 input-class" />
-          </div>
-          <div>
-            <label htmlFor="password_add" className="block text-sm font-medium text-gray-700">סיסמה</label>
-            <input type="password" name="password" id="password_add" value={formData.password} onChange={handleChange} required minLength={6} className="mt-1 input-class" />
-          </div>
-          <div>
-            <label htmlFor="full_name_add" className="block text-sm font-medium text-gray-700">שם מלא</label>
-            <input type="text" name="full_name" id="full_name_add" value={formData.full_name} onChange={handleChange} required className="mt-1 input-class" />
-          </div>
-          <div>
-            <label htmlFor="role_add" className="block text-sm font-medium text-gray-700">תפקיד</label>
-            <select name="role" id="role_add" value={formData.role} onChange={handleChange} className="mt-1 select-class">
-              {AVAILABLE_ROLES.map(role => <option key={role.value} value={role.value}>{role.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="company_id_add" className={`block text-sm font-medium ${isCompanyRequired() ? 'text-red-700' : 'text-gray-700'}`}>
-              {getCompanyLabel()}
-              {isCompanyRequired() && <span className="text-red-500 mr-1">*</span>}
-            </label>
-            {loadingCompanies ? <p>טוען חברות...</p> : (
-              <select 
-                name="company_id" 
-                id="company_id_add" 
-                value={formData.company_id} 
-                onChange={handleChange} 
-                required={isCompanyRequired()}
-                className={`mt-1 select-class ${isCompanyRequired() && !formData.company_id ? 'border-red-300 focus:border-red-500' : ''}`}
-              >
-                <option value="">
-                  {isCompanyRequired() ? 'יש לבחור חברה...' : 'בחר חברה...'}
-                </option>
-                {companies.map(company => <option key={company.id} value={company.id}>{company.name}</option>)}
-              </select>
-            )}
-          </div>
+        <div className="p-6">
+          {error && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-2xl">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-4 h-4 text-white" />
+                </div>
+                <p className="text-red-700 font-medium">{error}</p>
+              </div>
+            </div>
+          )}
           
-          <div className="pt-3 border-t border-gray-200">
-            <p className="text-sm text-gray-600 mb-2">
-              * כמנהל מערכת אתה יכול להוסיף משתמשים עם או בלי שיוך לחברה.
-              אדמינים חדשים לא צריכים להיות משויכים לחברה.
-              כל המשתמשים יאושרו אוטומטית.
-            </p>
-            <div className="flex space-x-4">
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+          {successMessage && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-glacier-success-50 to-green-100 border border-glacier-success-200 rounded-2xl animate-in slide-in-from-top duration-500">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-glacier-success rounded-lg flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-4 h-4 text-white" />
+                </div>
+                <p className="text-glacier-success-700 font-bold">{successMessage}</p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Email */}
+            <div className="space-y-3">
+              <label htmlFor="email_add" className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                <Mail className="w-5 h-5 text-glacier-primary" />
+                אימייל
+                <span className="text-red-500">*</span>
+              </label>
+              <input 
+                type="email" 
+                name="email" 
+                id="email_add" 
+                value={formData.email} 
+                onChange={handleChange} 
+                required 
+                className="w-full p-4 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300 ease-out text-neutral-900 bg-white hover:border-glacier-primary-light hover:shadow-lg hover:scale-[1.02] focus:scale-[1.02] focus:shadow-xl transform-gpu"
+                placeholder="הכנס כתובת אימייל..."
+              />
+            </div>
+            
+            {/* Password */}
+            <div className="space-y-3">
+              <label htmlFor="password_add" className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                <Lock className="w-5 h-5 text-glacier-accent" />
+                סיסמה
+                <span className="text-red-500">*</span>
+              </label>
+              <input 
+                type="password" 
+                name="password" 
+                id="password_add" 
+                value={formData.password} 
+                onChange={handleChange} 
+                required 
+                minLength={6} 
+                className="w-full p-4 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300 ease-out text-neutral-900 bg-white hover:border-glacier-primary-light hover:shadow-lg hover:scale-[1.02] focus:scale-[1.02] focus:shadow-xl transform-gpu"
+                placeholder="הכנס סיסמה (לפחות 6 תווים)..."
+              />
+            </div>
+            
+            {/* Full Name */}
+            <div className="space-y-3">
+              <label htmlFor="full_name_add" className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                <User className="w-5 h-5 text-glacier-secondary" />
+                שם מלא
+                <span className="text-red-500">*</span>
+              </label>
+              <input 
+                type="text" 
+                name="full_name" 
+                id="full_name_add" 
+                value={formData.full_name} 
+                onChange={handleChange} 
+                required 
+                className="w-full p-4 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300 ease-out text-neutral-900 bg-white hover:border-glacier-primary-light hover:shadow-lg hover:scale-[1.02] focus:scale-[1.02] focus:shadow-xl transform-gpu"
+                placeholder="הכנס שם מלא..."
+              />
+            </div>
+            
+            {/* Role */}
+            <div className="space-y-3">
+              <label htmlFor="role_add" className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-glacier-warning" />
+                תפקיד
+                <span className="text-red-500">*</span>
+              </label>
+              <select 
+                name="role" 
+                id="role_add" 
+                value={formData.role} 
+                onChange={handleChange} 
+                required 
+                className="w-full p-4 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300 ease-out text-neutral-900 bg-white hover:border-glacier-primary-light hover:shadow-lg hover:scale-[1.02] focus:scale-[1.02] focus:shadow-xl transform-gpu"
               >
-                {saving ? 'שומר...' : 'צור משתמש'}
-              </button>
-              
-              <button
-                type="button"
-                onClick={testSimpleUserCreation}
-                disabled={saving}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                🧪 בדיקה פשוטה
-              </button>
-              
+                <option value="agent">נציג</option>
+                <option value="manager">מנהל</option>
+                <option value="admin">אדמין</option>
+              </select>
+            </div>
+            
+            {/* Company - Only for non-admin roles */}
+            {formData.role !== 'admin' && (
+              <div className="space-y-3">
+                <label htmlFor="company_id_add" className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-glacier-info" />
+                  חברה
+                  <span className="text-red-500">*</span>
+                </label>
+                {loadingCompanies ? (
+                  <div className="w-full p-4 border-2 border-glacier-neutral-200 rounded-xl bg-glacier-neutral-50 flex items-center justify-center">
+                    <span className="text-glacier-neutral-500">טוען חברות...</span>
+                  </div>
+                ) : (
+                  <select 
+                    name="company_id" 
+                    id="company_id_add" 
+                    value={formData.company_id} 
+                    onChange={handleChange} 
+                    required={formData.role !== 'admin'}
+                    className="w-full p-4 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300 ease-out text-neutral-900 bg-white hover:border-glacier-primary-light hover:shadow-lg hover:scale-[1.02] focus:scale-[1.02] focus:shadow-xl transform-gpu"
+                  >
+                    <option value="">בחר חברה...</option>
+                    {companies.map(company => (
+                      <option key={company.id} value={company.id}>{company.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            )}
+            
+            {/* Submit Button */}
+            <div className="flex gap-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                className="flex-1 px-6 py-4 bg-glacier-neutral-200 hover:bg-glacier-neutral-300 text-glacier-neutral-700 font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] transform-gpu"
               >
                 ביטול
               </button>
+              <button
+                type="submit"
+                disabled={creating || loadingCompanies}
+                className="flex-1 px-6 py-4 bg-glacier-primary hover:bg-glacier-primary-dark text-white font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] transform-gpu disabled:hover:scale-100"
+              >
+                {creating ? 'יוצר משתמש...' : 'צור משתמש'}
+              </button>
             </div>
-          </div>
-        </form>
-        <style jsx>{`
-          .input-class {
-            display: block; w-full; padding-left: 0.75rem; padding-right: 0.75rem; padding-top: 0.5rem; padding-bottom: 0.5rem; font-size: 0.875rem; line-height: 1.25rem; border-width: 1px; border-color: #D1D5DB; border-radius: 0.375rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-          }
-          .input-class:focus {
-            outline: 2px solid transparent; outline-offset: 2px; border-color: #6366F1; ring-color: #6366F1;
-          }
-          .select-class {
-            display: block; w-full; padding-left: 0.75rem; padding-right: 2.5rem; padding-top: 0.5rem; padding-bottom: 0.5rem; font-size: 1rem; line-height: 1.25rem; border-width: 1px; border-color: #D1D5DB; border-radius: 0.375rem;
-          }
-          .btn-primary {
-             padding-left: 1rem; padding-right: 1rem; padding-top: 0.5rem; padding-bottom: 0.5rem; background-color: #4F46E5; color: white; font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; border-radius: 0.375rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-          }
-          .btn-primary:hover {
-            background-color: #4338CA;
-          }
-          .btn-secondary {
-            padding-left: 1rem; padding-right: 1rem; padding-top: 0.5rem; padding-bottom: 0.5rem; background-color: #E5E7EB; color: #1F2937; font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; border-radius: 0.375rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-          }
-          .btn-secondary:hover {
-            background-color: #D1D5DB;
-          }
-        `}</style>
+          </form>
+        </div>
       </div>
     </div>
-  );
+  )
 } 

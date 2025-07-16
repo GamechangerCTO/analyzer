@@ -346,80 +346,173 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* כרטיסי סטטיסטיקה */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div 
-            onClick={() => handleFilterClick('all')}
-            className={`bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-all cursor-pointer ${currentFilter === 'all' ? 'ring-2 ring-primary' : ''}`}
-          >
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
+        {/* כרטיסי סטטיסטיקה עם אנימציות מתקדמות - Mobile Responsive */}
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8 px-4 md:px-0">
+                      <div 
+              onClick={() => handleFilterClick('all')}
+              className={`group relative overflow-hidden bg-white rounded-xl md:rounded-2xl shadow-lg p-3 md:p-6 border-2 transition-all duration-500 ease-out cursor-pointer transform hover:scale-105 hover:shadow-2xl touch-action-manipulation ${
+                currentFilter === 'all' 
+                  ? 'border-glacier-primary bg-gradient-to-br from-glacier-primary-light/20 to-white scale-105 shadow-2xl' 
+                  : 'border-neutral-200 hover:border-glacier-primary'
+              }`}
+            >
+              {/* Background shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-glacier-primary/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
+              
+              {/* Floating particles */}
+              {currentFilter === 'all' && (
+                <>
+                  <div className="absolute -top-1 -right-1 w-2 h-2 md:w-3 md:h-3 bg-glacier-primary rounded-full animate-ping opacity-75"></div>
+                  <div className="absolute -bottom-1 -left-1 w-1 h-1 md:w-2 md:h-2 bg-glacier-accent rounded-full animate-bounce opacity-75"></div>
+                </>
+              )}
+              
+              <div className="flex flex-col md:flex-row md:items-center relative z-10 space-y-2 md:space-y-0">
+                <div className="flex-shrink-0 self-center md:self-auto">
+                  <div className={`w-8 h-8 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 transform-gpu ${
+                    currentFilter === 'all' 
+                      ? 'bg-gradient-to-br from-glacier-primary to-glacier-accent shadow-lg' 
+                      : 'bg-gradient-to-br from-glacier-primary-light to-glacier-accent-light group-hover:from-glacier-primary group-hover:to-glacier-accent'
+                  }`}>
+                    <svg className={`w-4 h-4 md:w-6 md:h-6 transition-colors duration-300 ${
+                      currentFilter === 'all' ? 'text-white' : 'text-glacier-primary group-hover:text-white'
+                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="md:mr-4 flex-1 text-center md:text-right">
+                  <p className={`text-xs md:text-sm font-medium transition-colors duration-300 ${
+                    currentFilter === 'all' ? 'text-glacier-primary' : 'text-neutral-600 group-hover:text-glacier-primary'
+                  }`}>
+                    <span className="hidden md:inline">סה״כ שיחות</span>
+                    <span className="md:hidden">שיחות</span>
+                  </p>
+                  <p className={`text-lg md:text-2xl font-bold transition-all duration-300 ${
+                    currentFilter === 'all' ? 'text-neutral-900 animate-pulse' : 'text-neutral-900 group-hover:scale-110'
+                  }`}>{totalCalls}</p>
+                  <p className={`text-xs mt-1 transition-colors duration-300 hidden md:block ${
+                    currentFilter === 'all' ? 'text-glacier-accent' : 'text-neutral-500 group-hover:text-glacier-accent'
+                  }`}>לחץ לצפייה</p>
                 </div>
               </div>
-              <div className="mr-4 flex-1">
-                <p className="text-sm font-medium text-gray-600">סה״כ שיחות</p>
-                <p className="text-2xl font-bold text-gray-900">{totalCalls}</p>
-                <p className="text-xs text-gray-500 mt-1">לחץ לצפייה</p>
-              </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
+          <div className="group relative overflow-hidden bg-white rounded-2xl shadow-lg p-6 border-2 border-neutral-200 transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:border-glacier-success transform-gpu">
+            {/* Background shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-glacier-success/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
+            
+            <div className="flex items-center relative z-10">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 bg-gradient-to-br from-glacier-success-light to-glacier-success rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 transform-gpu group-hover:shadow-lg">
+                  <svg className="w-6 h-6 text-white transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
               <div className="mr-4 flex-1">
-                <p className="text-sm font-medium text-gray-600">ציון ממוצע</p>
-                <p className="text-2xl font-bold text-gray-900">{avgScore.toFixed(1)}</p>
+                <p className="text-sm font-medium text-neutral-600 group-hover:text-glacier-success transition-colors duration-300">ציון ממוצע</p>
+                <p className="text-2xl font-bold text-neutral-900 group-hover:scale-110 transition-all duration-300">{avgScore.toFixed(1)}</p>
+                
+                {/* Animated progress bar */}
+                <div className="mt-2 w-full bg-neutral-200 rounded-full h-1 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-glacier-success to-glacier-success-dark transition-all duration-1000 ease-out"
+                    style={{width: `${Math.min((avgScore / 10) * 100, 100)}%`}}
+                  ></div>
+                </div>
               </div>
             </div>
           </div>
 
           <div 
             onClick={() => handleFilterClick('successful')}
-            className={`bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-all cursor-pointer ${currentFilter === 'successful' ? 'ring-2 ring-green-500' : ''}`}
+            className={`group relative overflow-hidden bg-white rounded-2xl shadow-lg p-6 border-2 transition-all duration-500 ease-out cursor-pointer transform hover:scale-105 hover:shadow-2xl ${
+              currentFilter === 'successful' 
+                ? 'border-glacier-success bg-gradient-to-br from-glacier-success-light/20 to-white scale-105 shadow-2xl' 
+                : 'border-neutral-200 hover:border-glacier-success'
+            }`}
           >
-            <div className="flex items-center">
+            {/* Background shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-glacier-success/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
+            
+            {/* Floating particles */}
+            {currentFilter === 'successful' && (
+              <>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-glacier-success rounded-full animate-ping opacity-75"></div>
+                <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-glacier-success-dark rounded-full animate-bounce opacity-75"></div>
+              </>
+            )}
+            
+            <div className="flex items-center relative z-10">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 transform-gpu ${
+                  currentFilter === 'successful' 
+                    ? 'bg-gradient-to-br from-glacier-success to-glacier-success-dark shadow-lg' 
+                    : 'bg-gradient-to-br from-glacier-success-light to-glacier-success group-hover:from-glacier-success group-hover:to-glacier-success-dark'
+                }`}>
+                  <svg className={`w-6 h-6 transition-colors duration-300 ${
+                    currentFilter === 'successful' ? 'text-white' : 'text-white'
+                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
               </div>
               <div className="mr-4 flex-1">
-                <p className="text-sm font-medium text-gray-600">שיחות מוצלחות</p>
-                <p className="text-2xl font-bold text-gray-900">{successfulCalls}</p>
-                <p className="text-xs text-gray-500 mt-1">לחץ לצפייה</p>
+                <p className={`text-sm font-medium transition-colors duration-300 ${
+                  currentFilter === 'successful' ? 'text-glacier-success' : 'text-neutral-600 group-hover:text-glacier-success'
+                }`}>שיחות מוצלחות</p>
+                <p className={`text-2xl font-bold transition-all duration-300 ${
+                  currentFilter === 'successful' ? 'text-neutral-900 animate-pulse' : 'text-neutral-900 group-hover:scale-110'
+                }`}>{successfulCalls}</p>
+                <p className={`text-xs mt-1 transition-colors duration-300 ${
+                  currentFilter === 'successful' ? 'text-glacier-success-dark' : 'text-neutral-500 group-hover:text-glacier-success-dark'
+                }`}>לחץ לצפייה</p>
               </div>
             </div>
           </div>
 
           <div 
             onClick={() => handleFilterClick('needImprovement')}
-            className={`bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-all cursor-pointer ${currentFilter === 'needImprovement' ? 'ring-2 ring-red-500' : ''}`}
+            className={`group relative overflow-hidden bg-white rounded-2xl shadow-lg p-6 border-2 transition-all duration-500 ease-out cursor-pointer transform hover:scale-105 hover:shadow-2xl ${
+              currentFilter === 'needImprovement' 
+                ? 'border-red-500 bg-gradient-to-br from-red-50 to-white scale-105 shadow-2xl' 
+                : 'border-neutral-200 hover:border-red-400'
+            }`}
           >
-            <div className="flex items-center">
+            {/* Background shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
+            
+            {/* Floating particles */}
+            {currentFilter === 'needImprovement' && (
+              <>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping opacity-75"></div>
+                <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-red-600 rounded-full animate-bounce opacity-75"></div>
+              </>
+            )}
+            
+            <div className="flex items-center relative z-10">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:rotate-6 transform-gpu ${
+                  currentFilter === 'needImprovement' 
+                    ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-lg' 
+                    : 'bg-gradient-to-br from-red-400 to-red-500 group-hover:from-red-500 group-hover:to-red-600'
+                }`}>
+                  <svg className="w-6 h-6 text-white transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
                   </svg>
                 </div>
               </div>
               <div className="mr-4 flex-1">
-                <p className="text-sm font-medium text-gray-600">לשיפור</p>
-                <p className="text-2xl font-bold text-gray-900">{needImprovementCalls}</p>
-                <p className="text-xs text-gray-500 mt-1">לחץ לצפייה</p>
+                <p className={`text-sm font-medium transition-colors duration-300 ${
+                  currentFilter === 'needImprovement' ? 'text-red-600' : 'text-neutral-600 group-hover:text-red-600'
+                }`}>לשיפור</p>
+                <p className={`text-2xl font-bold transition-all duration-300 ${
+                  currentFilter === 'needImprovement' ? 'text-neutral-900 animate-pulse' : 'text-neutral-900 group-hover:scale-110'
+                }`}>{needImprovementCalls}</p>
+                <p className={`text-xs mt-1 transition-colors duration-300 ${
+                  currentFilter === 'needImprovement' ? 'text-red-500' : 'text-neutral-500 group-hover:text-red-500'
+                }`}>לחץ לצפייה</p>
               </div>
             </div>
           </div>
@@ -440,13 +533,10 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
                   </button>
                 )}
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center">
                 <span className="text-sm text-gray-500">
                   מציג {filteredCalls.length} מתוך {totalCalls} שיחות
                 </span>
-                <Link href="/upload" className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                  העלה שיחה חדשה
-                </Link>
               </div>
             </div>
           </div>
@@ -648,13 +738,10 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
                              currentFilter === 'needImprovement' ? 'אין שיחות לשיפור' : 
                              'אין שיחות עדיין'}
                           </h3>
-                          <p className="text-gray-500 mb-4">
-                            {currentFilter === 'all' ? 'התחל על ידי העלאת השיחה הראשונה שלך' : 
-                             'נסה לחזור לכל השיחות או להעלות שיחות חדשות'}
+                          <p className="text-gray-500">
+                            {currentFilter === 'all' ? 'התחל על ידי העלאת השיחה הראשונה שלך דרך התפריט הצדדי' : 
+                             'נסה לחזור לכל השיחות או להעלות שיחות חדשות דרך התפריט הצדדי'}
                           </p>
-                          <Link href="/upload" className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                            העלה שיחה חדשה
-                          </Link>
                         </div>
                       </td>
                     </tr>

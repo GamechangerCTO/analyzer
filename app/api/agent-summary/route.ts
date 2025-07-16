@@ -2,6 +2,41 @@ import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { addCallLog } from '@/lib/addCallLog'
 
+// פונקציית exponential backoff לקריאות OpenAI
+async function callOpenAIWithBackoff(openai: any, params: any, maxRetries = 5) {
+  let delay = 1000 // התחל עם שנייה אחת
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // הוסף delay לפני כל קריאה (מלבד הראשונה)
+      if (attempt > 1) {
+        console.log(`🔄 נסיון ${attempt}/${maxRetries} אחרי delay של ${delay}ms`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+      
+      const response = await openai.chat.completions.create(params)
+      console.log(`✅ קריאת OpenAI הצליחה בנסיון ${attempt}`)
+      return response
+      
+    } catch (error: any) {
+      console.error(`❌ נסיון ${attempt} נכשל:`, error.message)
+      
+      // אם זה rate limit error, המשך לנסות
+      if (error.status === 429 && attempt < maxRetries) {
+        // הכפל את הdelay עם jitter (רנדומיות)
+        const jitter = Math.random() * 0.5 + 0.75 // בין 0.75 ל-1.25
+        delay = Math.min(delay * 2 * jitter, 60000) // מקסימום 60 שניות
+        continue
+      }
+      
+      // אם זה לא rate limit או נגמרו הנסיונות - זרוק שגיאה
+      throw error
+    }
+  }
+  
+  throw new Error(`נכשלו כל ${maxRetries} הנסיונות לקריאת OpenAI`)
+}
+
 // פונקציית cleanOpenAIResponse העדכנית והקריטית
 function cleanOpenAIResponse(content: string): string {
   if (!content) return '{}';
@@ -191,7 +226,10 @@ export async function GET(request: NextRequest) {
 ⚠️ חובה: החזר JSON נקי בלבד ללא markdown או backticks!
 `
 
-    const openaiResponse = await openai.chat.completions.create({
+    console.log('🚀 מתחיל קריאה ל-OpenAI עם exponential backoff...')
+    
+    // שימוש בפונקציה החדשה עם backoff
+    const openaiResponse = await callOpenAIWithBackoff(openai, {
       model: 'gpt-4o-2024-08-06',
       messages: [
         {
@@ -204,7 +242,7 @@ export async function GET(request: NextRequest) {
         }
       ],
       temperature: 0.3
-    })
+    }, 5) // מקסימום 5 נסיונות
 
     const rawContent = openaiResponse.choices[0].message.content || '{}'
     

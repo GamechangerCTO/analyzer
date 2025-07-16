@@ -4,7 +4,6 @@ import UploadForm from '@/components/UploadForm'
 import React from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 
 export default async function UploadPage() {
   const supabase = createClient()
@@ -44,140 +43,110 @@ export default async function UploadPage() {
   ]
   
   return (
-    <div className="min-h-screen">
-      {/* Header עם breadcrumb מינימליסטי */}
-      <div className="choacee-card-clay-raised mb-8">
-        <div className="px-8 py-6">
-          <div className="flex items-center justify-between">
-            {/* Breadcrumb Navigation */}
-            <nav className="flex items-center space-x-2 text-sm text-neutral-500" aria-label="Breadcrumb">
-              <Link 
-                href="/dashboard" 
-                className="flex items-center hover:text-clay-primary transition-colors duration-200 font-medium choacee-interactive"
-              >
-                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                </svg>
-                דשבורד
-              </Link>
-              <svg className="w-4 h-4 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+    <div className="min-h-screen bg-gradient-to-br from-glacier-primary/20 via-glacier-accent/30 to-glacier-secondary/20">
+      {/* Main Container */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        {/* Header Navigation */}
+        <div className="flex items-center justify-between mb-8">
+          <nav className="flex items-center space-x-3 text-sm">
+            <Link 
+              href="/dashboard" 
+              className="flex items-center px-4 py-2 bg-white/90 hover:bg-white text-neutral-800 hover:text-neutral-900 rounded-full transition-all duration-200 font-semibold backdrop-blur-sm shadow-sm"
+            >
+              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
               </svg>
-              <span className="text-clay-primary font-semibold">העלאת שיחה</span>
-            </nav>
-            
-            {/* Company Info */}
-            {userData?.companies?.name && (
-              <div className="text-sm text-neutral-500">
-                חברה: <span className="font-semibold text-clay-primary">{userData.companies.name}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="space-y-8">
-        {/* Page Title */}
-        <div className="text-center choacee-smooth-appear">
-          <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-clay-success/20 rounded-clay flex items-center justify-center animate-clay-float shadow-clay-soft">
-              <svg className="w-10 h-10 text-clay-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
+              דשבורד
+            </Link>
+            <svg className="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+            <span className="px-4 py-2 bg-gradient-to-r from-glacier-primary to-glacier-accent text-neutral-900 rounded-full text-sm font-bold shadow-lg">העלאת שיחה</span>
+          </nav>
+          
+          {/* Company Badge */}
+          {userData?.companies?.name && (
+            <div className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm text-neutral-700 border-2 border-neutral-300 shadow-sm">
+              חברה: <span className="font-bold text-neutral-900">{userData.companies.name}</span>
             </div>
+          )}
+        </div>
+
+        {/* Main Hero Section */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-glacier-primary to-glacier-accent rounded-full shadow-2xl mb-8 relative border-4 border-white">
+            <div className="absolute inset-0 bg-gradient-to-br from-glacier-primary/80 to-glacier-accent/80 rounded-full animate-pulse opacity-75"></div>
+            <svg className="w-12 h-12 text-neutral-900 relative z-10 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
           </div>
-          <h1 className="choacee-text-display text-4xl font-bold text-clay-primary mb-4">
-            העלה שיחה חדשה 🎯
+          
+          <h1 className="text-6xl font-bold text-neutral-900 mb-6 drop-shadow-lg">
+            העלאת שיחה
           </h1>
-          <p className="choacee-text-body text-lg text-neutral-600 max-w-3xl mx-auto leading-relaxed">
-            העלה ונתח שיחות עם טכנולוגיות ניתוח מתקדמות לקבלת תובנות מעמיקות ומותאמות אישית
-            <br />
-            <span className="text-clay-success font-semibold">המערכת תכין עבורך דוח מפורט עם המלצות לשיפור</span>
+          
+          <p className="text-2xl text-neutral-800 max-w-3xl mx-auto leading-relaxed font-medium drop-shadow-sm">
+            העלה שיחה וקבל ניתוח מפורט עם תובנות מעשיות לשיפור הביצועים
           </p>
-        </div>
-
-        {/* Upload Form Component */}
-        <div className="choacee-card-clay-raised p-8">
-          <UploadForm 
-            user={user}
-            userData={userData}
-            callTypes={callTypes}
-          />
-        </div>
-
-        {/* Bottom Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="choacee-card-clay choacee-interactive border-r-4 border-clay-success">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-clay-success/20 rounded-clay flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-clay-success-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="choacee-text-display font-bold text-clay-primary">ניתוח מדויק</h3>
+          
+          {/* Floating Stats */}
+          <div className="flex items-center justify-center space-x-8 mt-10">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 border-2 border-glacier-primary/50 shadow-lg">
+              <div className="text-2xl font-bold text-neutral-900">2-5</div>
+              <div className="text-sm text-neutral-700 font-medium">דקות עיבוד</div>
             </div>
-            <p className="choacee-text-body text-neutral-600 leading-relaxed">
-              אלגוריתמים מתקדמים לניתוח שיחות עם דיוק גבוה ותובנות מעמיקות על ביצועים מכירתיים
-            </p>
-          </div>
-
-          <div className="choacee-card-clay choacee-interactive border-r-4 border-clay-danger">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-clay-danger/20 rounded-clay flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-clay-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="choacee-text-display font-bold text-clay-primary">עיבוד מהיר</h3>
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 border-2 border-glacier-accent/50 shadow-lg">
+              <div className="text-2xl font-bold text-neutral-900">100%</div>
+              <div className="text-sm text-neutral-700 font-medium">דיוק ניתוח</div>
             </div>
-            <p className="choacee-text-body text-neutral-600 leading-relaxed">
-              תוצאות ניתוח מוכנות תוך דקות ספורות עם דוחות מפורטים, מעשיים ומותאמים אישית
-            </p>
-          </div>
-
-          <div className="choacee-card-clay choacee-interactive border-r-4 border-clay-primary">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-clay-primary/20 rounded-clay flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-clay-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <h3 className="choacee-text-display font-bold text-clay-primary">תובנות מתקדמות</h3>
-            </div>
-            <p className="choacee-text-body text-neutral-600 leading-relaxed">
-              המלצות מותאמות אישית לשיפור ביצועי המכירות והשירות עם דגש על נקודות מפתח
-            </p>
-          </div>
-        </div>
-
-        {/* הוספת קטע עזרה */}
-        <div className="choacee-card-glass p-6">
-          <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 bg-clay-primary/10 rounded-clay flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-clay-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h3 className="choacee-text-display text-lg font-semibold text-clay-primary mb-2">💡 טיפים להעלאה מוצלחת</h3>
-              <ul className="choacee-text-body text-neutral-600 space-y-2 text-sm">
-                <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 bg-clay-success rounded-full"></span>
-                  <span>וודא שאיכות הקול ברורה וללא רעשי רקע</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 bg-clay-danger rounded-full"></span>
-                  <span>בחר את סוג השיחה המדויק לקבלת ניתוח מותאם</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 bg-clay-primary rounded-full"></span>
-                  <span>תוכל לצפות בתוצאות תוך 2-5 דקות</span>
-                </li>
-              </ul>
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 border-2 border-glacier-success/50 shadow-lg">
+              <div className="text-2xl font-bold text-neutral-900">AI</div>
+              <div className="text-sm text-neutral-700 font-medium">מתקדם</div>
             </div>
           </div>
         </div>
+
+        {/* Upload Form Section */}
+        <div className="relative">
+          {/* Background Decoration */}
+          <div className="absolute inset-0 bg-gradient-to-r from-glacier-primary/10 to-glacier-accent/10 rounded-3xl transform rotate-1"></div>
+          <div className="absolute inset-0 bg-gradient-to-l from-glacier-accent/15 to-glacier-secondary/15 rounded-3xl transform -rotate-1"></div>
+          
+          {/* Main Upload Container */}
+          <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-neutral-200 overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-glacier-primary via-glacier-accent to-glacier-secondary"></div>
+            
+            <div className="p-8">
+              <UploadForm 
+                user={user}
+                userData={userData}
+                callTypes={callTypes}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Tips */}
+        <div className="mt-16 text-center">
+          <div className="inline-flex items-center space-x-6 bg-neutral-800 text-white rounded-full px-8 py-4 shadow-xl">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-glacier-primary rounded-full animate-pulse"></div>
+              <span className="text-sm font-semibold">איכות שמע ברורה</span>
+            </div>
+            <div className="w-px h-6 bg-white/30"></div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-glacier-accent rounded-full animate-pulse delay-200"></div>
+              <span className="text-sm font-semibold">בחירת סוג שיחה מדויק</span>
+            </div>
+            <div className="w-px h-6 bg-white/30"></div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-glacier-success rounded-full animate-pulse delay-400"></div>
+              <span className="text-sm font-semibold">ניתוח תוך דקות</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   )

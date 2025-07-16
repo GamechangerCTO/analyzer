@@ -1,6 +1,6 @@
 {
-  "name": "sales-performance-gym",
-  "version": "0.1.0",
+  "name": "coachee-platform",
+  "version": "1.0.0",
   "private": true,
   "engines": {
     "node": ">=18.0.0",

@@ -4,8 +4,20 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['openai']
   },
-  
 
+  // הגדרות webpack עבור Supabase
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      }
+    }
+    return config
+  },
   
   // הגדרות תמונות מסופבייס
   images: {
@@ -36,9 +48,6 @@ const nextConfig = {
   
   // הגדרות אופטימיזציה
   swcMinify: true,
-  
-  // הגדרות output (אופציונלי - רק אם נחוץ)
-  output: 'standalone',
 }
 
 module.exports = nextConfig 

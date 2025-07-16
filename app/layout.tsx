@@ -25,10 +25,10 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'ReplayMe - חדר כושר למכירות',
-  description: 'פלטפורמת אימון דיגיטלית המיועדת לשפר ביצועים עסקיים (מכירות ושירות) באמצעות סימולציות דיגיטליות וניתוח שיחות מתקדם',
-  keywords: 'מכירות, אימון, סימולציות, ניתוח שיחות, חדר כושר מכירתי, טכנולוגיה מתקדמת',
-  authors: [{ name: 'ReplayMe Team' }],
+  title: 'Coachee - פלטפורמת אימון מכירות ושירות',
+  description: 'פלטפורמת אימון דיגיטלית חדשנית המיועדת לשפר ביצועים עסקיים במכירות ושירות באמצעות ניתוח שיחות חכם ובינה מלאכותית',
+  keywords: 'מכירות, אימון, ניתוח שיחות, שירות לקוחות, בינה מלאכותית, פלטפורמת אימון, coachee',
+  authors: [{ name: 'Coachee Team' }],
   viewport: 'width=device-width, initial-scale=1',
 }
 

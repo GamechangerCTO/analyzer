@@ -1,8 +1,9 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import Navbar from '@/components/Navbar'
+import Sidebar from '@/components/Sidebar'
 import React from 'react'
+import { Building } from 'lucide-react'
 
 export default async function ProtectedLayout({
   children,
@@ -64,41 +65,54 @@ export default async function ProtectedLayout({
   console.log('Protected Layout - Auth successful, rendering page for:', user.email)
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-glass-white via-white to-clay-accent/10">
-      <Navbar user={user} userData={userData} />
-      <main className="flex-grow container mx-auto px-4 pt-24 pb-8">
-        <div className="choacee-smooth-appear">
-          {children}
-        </div>
-      </main>
-      <footer className="choacee-glass border-t border-glass-white/20 py-6">
-        <div className="container mx-auto px-4 text-center text-neutral-600 text-sm">
-          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-6 mb-4">
-            <a 
-              href="/privacy-policy" 
-              className="text-neutral-500 hover:text-clay-primary underline decoration-clay-accent decoration-2 underline-offset-4 transition-colors duration-200 choacee-interactive"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              מדיניות פרטיות
-            </a>
-            <a 
-              href="/terms-of-service" 
-              className="text-neutral-500 hover:text-clay-primary underline decoration-clay-accent decoration-2 underline-offset-4 transition-colors duration-200 choacee-interactive"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              תנאי שירות
-            </a>
+    <div className="min-h-screen bg-gradient-to-br from-glacier-primary/5 via-white to-glacier-accent/5">
+      <Sidebar user={user} userData={userData} />
+      
+      {/* Mobile top spacer */}
+      <div className="lg:hidden h-16" />
+      
+      {/* Main content area - תיקון ל-RTL עם margin מימין במקום padding משמאל */}
+      <div className="lg:mr-72 min-h-screen">
+        <main className="min-h-screen p-4 sm:p-6 lg:p-8">
+          <div className="coachee-smooth-appear w-full max-w-7xl mx-auto">
+            {children}
           </div>
-          <div className="flex items-center justify-center space-x-2">
-            <span className="choacee-text-display font-semibold text-clay-primary">ReplayMe</span>
-            <span>&copy; {new Date().getFullYear()}</span>
-            <span className="text-clay-accent">•</span>
-            <span>חדר כושר למכירות</span>
+        </main>
+        
+        <footer className="coachee-glass border-t border-glacier-neutral-200/50 py-8 mx-4 sm:mx-6 lg:mx-8 mb-6 lg:mb-8 rounded-t-3xl">
+          <div className="text-center text-glacier-neutral-600 text-sm">
+            <div className="flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-8 mb-6">
+              <a 
+                href="/privacy-policy" 
+                className="text-glacier-neutral-500 hover:text-glacier-primary-600 underline decoration-glacier-accent decoration-2 underline-offset-4 transition-colors duration-200 coachee-interactive"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                מדיניות פרטיות
+              </a>
+              <a 
+                href="/terms-of-service" 
+                className="text-glacier-neutral-500 hover:text-glacier-primary-600 underline decoration-glacier-accent decoration-2 underline-offset-4 transition-colors duration-200 coachee-interactive"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                תנאי שירות
+              </a>
+            </div>
+            
+            <div className="flex justify-center items-center space-x-4 mb-4">
+              <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-glacier-primary-500 to-glacier-accent-500 flex items-center justify-center shadow-glacier-soft">
+                <Building className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-glacier-neutral-800 font-semibold">Coachee</span>
+            </div>
+            
+            <p className="text-xs text-glacier-neutral-500">
+              פלטפורמת אימון מכירות ושירות מתקדמת | © 2024 כל הזכויות שמורות
+            </p>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
     </div>
   )
 } 

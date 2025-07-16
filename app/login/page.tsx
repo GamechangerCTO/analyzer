@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import LoginForm from '@/components/LoginForm'
-import Image from 'next/image'
+import { Sparkles } from 'lucide-react'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -31,72 +31,68 @@ export default function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-glass-white via-white to-clay-accent/10">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-clay-primary"></div>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-glacier-primary-50 via-white to-glacier-accent-50">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-glacier-primary-200 border-t-glacier-primary-600"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <Sparkles className="w-5 h-5 text-glacier-primary-600 animate-pulse" />
+          </div>
+        </div>
       </div>
     )
   }
   
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-glass-white via-white to-clay-accent/10 p-4">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-glass-light/50 to-transparent"></div>
-      
-      <div className="relative w-full max-w-md">
-        {/* Logo Card */}
-        <div className="choacee-card-clay-raised p-8 mb-6">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <Image 
-                src="/logo.webp" 
-                alt="ReplayMe Logo" 
-                width={60} 
-                height={60}
-                className="w-15 h-15 rounded-clay shadow-clay-soft"
-              />
-              <div>
-                <h1 className="choacee-text-display text-3xl font-bold text-clay-primary">ReplayMe</h1>
-                <div className="text-sm text-neutral-500 font-medium">חדר כושר למכירות</div>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-glacier-primary-50 via-white to-glacier-accent-50 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-glacier-primary-200/30 to-glacier-accent-200/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-gradient-to-r from-glacier-secondary-200/30 to-glacier-primary-200/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-glacier-accent-200/20 to-glacier-secondary-200/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+      </div>
+
+      <div className="relative flex min-h-screen flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          {/* Login Form Card with enhanced glassmorphism */}
+          <div className="backdrop-blur-xl bg-white/80 border border-glacier-neutral-200/50 rounded-3xl p-8 shadow-2xl shadow-glacier-primary-900/10 animate-in slide-in-from-bottom duration-500">
+            <div className="mb-6 text-center">
+              <h3 className="text-2xl font-bold text-glacier-neutral-800 mb-2">ברוכים הבאים לCoachee</h3>
+              <p className="text-glacier-neutral-600 text-sm">התחבר כדי להתחיל את המסע שלך</p>
             </div>
-            <p className="choacee-text-body text-neutral-600 text-sm leading-relaxed">
-              התחבר כדי להתחיל את האימון הדיגיטלי שלך
-            </p>
-          </div>
-        </div>
-        
-        {/* Login Form Card */}
-        <div className="choacee-card-clay-raised p-8">
-          <LoginForm />
-        </div>
-        
-        {/* Footer Links */}
-        <div className="mt-8 text-center">
-          <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm">
-            <a 
-              href="/privacy-policy" 
-              className="text-neutral-500 hover:text-clay-primary underline decoration-clay-accent decoration-2 underline-offset-4 transition-colors duration-200 choacee-interactive"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              מדיניות פרטיות
-            </a>
-            <span className="hidden sm:inline text-clay-accent">•</span>
-            <a 
-              href="/terms-of-service" 
-              className="text-neutral-500 hover:text-clay-primary underline decoration-clay-accent decoration-2 underline-offset-4 transition-colors duration-200 choacee-interactive"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              תנאי שירות
-            </a>
+            <LoginForm />
           </div>
           
-          {/* Branding */}
-          <div className="mt-4 text-xs text-neutral-400">
-            <span>&copy; {new Date().getFullYear()} ReplayMe</span>
-            <span className="mx-2">•</span>
-                            <span>פלטפורמת אימון מכירות ושירות מתקדמת</span>
+          {/* Footer Links */}
+          <div className="mt-8 text-center animate-in slide-in-from-bottom duration-700 delay-400">
+            <div className="flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-6 text-sm">
+              <a 
+                href="/privacy-policy" 
+                className="group text-glacier-neutral-600 hover:text-glacier-primary-600 transition-all duration-300"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className="relative">
+                  מדיניות פרטיות
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-glacier-primary-500 to-glacier-accent-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right"></span>
+                </span>
+              </a>
+              <div className="hidden sm:block w-1 h-1 bg-glacier-neutral-300 rounded-full"></div>
+              <a 
+                href="/terms-of-service" 
+                className="group text-glacier-neutral-600 hover:text-glacier-primary-600 transition-all duration-300"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className="relative">
+                  תנאי שימוש
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-glacier-primary-500 to-glacier-accent-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right"></span>
+                </span>
+              </a>
+            </div>
+            
+            <div className="mt-4 text-xs text-glacier-neutral-500">
+              © 2025 Coachee. כל הזכויות שמורות.
+            </div>
           </div>
         </div>
       </div>

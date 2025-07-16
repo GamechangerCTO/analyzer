@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { User, Mail, Shield, Camera, Check, X, Upload, AlertCircle, CheckCircle2, Edit3, Save } from 'lucide-react'
 
 // אווטרים גיאומטריים יפים
 const DEFAULT_AVATARS = [
@@ -201,151 +202,291 @@ export default function ProfileForm({ userData, onDataUpdate }: ProfileFormProps
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* הודעות */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700 text-right">{error}</p>
+        <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-2xl">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-4 h-4 text-white" />
+            </div>
+            <p className="text-red-700 font-medium">{error}</p>
+          </div>
         </div>
       )}
       
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-md p-4">
-          <p className="text-green-700 text-right">{success}</p>
+        <div className="mb-6 p-4 bg-gradient-to-r from-glacier-success-50 to-green-100 border border-glacier-success-200 rounded-2xl animate-in slide-in-from-top duration-500">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-glacier-success rounded-lg flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-white" />
+            </div>
+            <p className="text-glacier-success-700 font-bold">{success}</p>
+          </div>
         </div>
       )}
 
       {/* תצוגת פרופיל */}
-      <div className="flex flex-col lg:flex-row lg:items-start lg:space-x-8 space-y-6 lg:space-y-0">
+      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-glacier-neutral-200/50 overflow-hidden">
         
-        {/* אווטר */}
-        <div className="flex flex-col items-center space-y-4">
-          {renderAvatar(selectedAvatar, 'w-32 h-32')}
-          
-          {isEditing && (
-            <div className="space-y-2">
-              <button
-                onClick={() => setShowAvatarPicker(!showAvatarPicker)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
-              >
-                בחר אווטר
-              </button>
-              
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm"
-              >
-                העלה תמונה
-              </button>
+        {/* Header עם כפתור עריכה */}
+        <div className="bg-gradient-to-r from-glacier-primary to-glacier-primary-dark p-6 md:p-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                <User className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">פרופיל משתמש</h2>
+                <p className="text-glacier-primary-100">נהל את פרטיך האישיים</p>
+              </div>
             </div>
-          )}
-
-          {/* בוחר אווטרים */}
-          {showAvatarPicker && isEditing && (
-            <div className="absolute z-10 bg-white border border-gray-200 rounded-lg shadow-lg p-4 grid grid-cols-4 gap-2">
-              {DEFAULT_AVATARS.map((avatar) => (
-                <button
-                  key={avatar.id}
-                  onClick={() => handleAvatarSelect(avatar.id)}
-                  className={`w-12 h-12 rounded-full ${avatar.style} flex items-center justify-center text-white hover:scale-110 transition-transform`}
-                >
-                  {avatar.icon}
-                </button>
-              ))}
-            </div>
-          )}
+            
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl transition-all duration-300 flex items-center gap-2 hover:scale-[1.02] transform-gpu"
+            >
+              {isEditing ? (
+                <>
+                  <X className="w-4 h-4" />
+                  <span>ביטול</span>
+                </>
+              ) : (
+                <>
+                  <Edit3 className="w-4 h-4" />
+                  <span>עריכה</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* פרטי המשתמש */}
-        <div className="flex-1 space-y-6">
-          
-          {/* שם מלא */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 text-right">שם מלא</label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
-                placeholder="הכנס שם מלא"
-              />
-            ) : (
-              <p className="text-gray-900 text-right">{userData.full_name || 'לא הוזן שם'}</p>
-            )}
-          </div>
+        <div className="p-6 md:p-8">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:space-x-8 space-y-8 lg:space-y-0">
+            
+            {/* אווטר */}
+            <div className="flex flex-col items-center space-y-6 lg:w-80">
+              <div className="relative">
+                {renderAvatar(selectedAvatar, 'w-32 h-32 border-4 border-glacier-primary/20 shadow-xl')}
+                
+                {isEditing && (
+                  <div className="absolute -bottom-2 -right-2">
+                    <button
+                      onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+                      className="w-10 h-10 bg-glacier-primary hover:bg-glacier-primary-dark text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110"
+                    >
+                      <Camera className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {isEditing && (
+                <div className="space-y-4 w-full">
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setShowAvatarPicker(!showAvatarPicker)}
+                      className="px-4 py-3 bg-glacier-primary hover:bg-glacier-primary-dark text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.02] transform-gpu"
+                    >
+                      <User className="w-4 h-4" />
+                      <span className="text-sm">בחר אווטר</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-4 py-3 bg-glacier-accent hover:bg-glacier-accent-dark text-white rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2 hover:scale-[1.02] transform-gpu"
+                    >
+                      <Upload className="w-4 h-4" />
+                      <span className="text-sm">העלה תמונה</span>
+                    </button>
+                  </div>
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </div>
+              )}
 
-          {/* אימייל */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 text-right">כתובת אימייל</label>
-            <p className="text-gray-600 text-right">{userData.email}</p>
-            <p className="text-xs text-gray-500 text-right">לא ניתן לשנות את כתובת האימייל</p>
-          </div>
-
-          {/* תפקיד */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 text-right">תפקיד</label>
-            <p className="text-gray-600 text-right">
-              {userData.role === 'agent' ? 'נציג' : 
-               userData.role === 'manager' ? 'מנהל' :
-               userData.role === 'admin' ? 'מנהל מערכת' : userData.role}
-            </p>
-          </div>
-
-          {/* חברה */}
-          {userData.companies && (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 text-right">חברה</label>
-              <p className="text-gray-600 text-right">{userData.companies.name}</p>
-              {userData.companies.sector && (
-                <p className="text-sm text-gray-500 text-right">תחום: {userData.companies.sector}</p>
+              {/* בוחר אווטרים */}
+              {showAvatarPicker && isEditing && (
+                <div className="relative z-10 bg-white border-2 border-glacier-neutral-200 rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-neutral-900">בחר אווטר</h3>
+                    <button
+                      onClick={() => setShowAvatarPicker(false)}
+                      className="p-1 hover:bg-glacier-neutral-100 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4 text-neutral-600" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-4 gap-3">
+                    {DEFAULT_AVATARS.map((avatar) => (
+                      <button
+                        key={avatar.id}
+                        onClick={() => handleAvatarSelect(avatar.id)}
+                        className={`w-12 h-12 rounded-xl ${avatar.style} flex items-center justify-center text-white hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl ${
+                          selectedAvatar === avatar.id ? 'ring-4 ring-glacier-primary scale-110' : ''
+                        }`}
+                      >
+                        {avatar.icon}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
-          )}
 
-          {/* תאריך הצטרפות */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 text-right">תאריך הצטרפות</label>
-            <p className="text-gray-600 text-right">
-              {new Date(userData.created_at).toLocaleDateString('he-IL')}
-            </p>
+            {/* פרטי המשתמש */}
+            <div className="flex-1 space-y-8">
+              
+              {/* שם מלא */}
+              <div className="space-y-3">
+                <label className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                  <User className="w-5 h-5 text-glacier-primary" />
+                  שם מלא
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full p-4 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300 ease-out text-neutral-900 bg-white hover:border-glacier-primary-light hover:shadow-lg hover:scale-[1.02] focus:scale-[1.02] focus:shadow-xl transform-gpu"
+                    placeholder="הכנס שם מלא"
+                  />
+                ) : (
+                  <div className="p-4 bg-glacier-neutral-50 rounded-xl border border-glacier-neutral-200">
+                    <p className="text-neutral-900 font-medium">{userData.full_name || 'לא הוזן שם'}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* אימייל */}
+              <div className="space-y-3">
+                <label className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-glacier-accent" />
+                  כתובת אימייל
+                </label>
+                <div className="p-4 bg-glacier-neutral-50 rounded-xl border border-glacier-neutral-200">
+                  <p className="text-neutral-800 font-medium">{userData.email}</p>
+                  <p className="text-xs text-glacier-neutral-500 mt-1">לא ניתן לשנות את כתובת האימייל</p>
+                </div>
+              </div>
+
+              {/* תפקיד */}
+              <div className="space-y-3">
+                <label className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-glacier-warning" />
+                  תפקיד במערכת
+                </label>
+                <div className="p-4 bg-glacier-neutral-50 rounded-xl border border-glacier-neutral-200">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${
+                      userData.role === 'admin' ? 'bg-red-500' :
+                      userData.role === 'manager' ? 'bg-glacier-warning' : 'bg-glacier-primary'
+                    }`}></div>
+                    <span className="text-neutral-900 font-medium">
+                      {userData.role === 'admin' ? 'מנהל מערכת' :
+                       userData.role === 'manager' ? 'מנהל' : 'נציג'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* חברה */}
+              {userData.companies && (
+                <div className="space-y-3">
+                  <label className="text-lg font-bold text-neutral-900 flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-glacier-secondary" />
+                    חברה
+                  </label>
+                  <div className="p-4 bg-glacier-neutral-50 rounded-xl border border-glacier-neutral-200">
+                    <p className="text-neutral-900 font-medium">{userData.companies.name}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* כפתורי פעולה */}
+              {isEditing && (
+                <div className="flex gap-4 pt-6 border-t border-glacier-neutral-200">
+                  <button
+                    onClick={handleSave}
+                    disabled={loading}
+                    className="flex-1 px-6 py-4 bg-gradient-to-r from-glacier-success to-glacier-success-dark text-white font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] transform-gpu shadow-lg hover:shadow-xl disabled:hover:scale-100 flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>שומר...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-5 h-5" />
+                        <span>שמור שינויים</span>
+                      </>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setIsEditing(false)
+                      setFullName(userData.full_name || '')
+                      setSelectedAvatar(userData.avatar_url || '')
+                      setError(null)
+                    }}
+                    className="flex-1 px-6 py-4 bg-glacier-neutral-200 hover:bg-glacier-neutral-300 text-glacier-neutral-700 font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] transform-gpu flex items-center justify-center gap-2"
+                  >
+                    <X className="w-5 h-5" />
+                    <span>ביטול</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
+        </div>
+      </div>
 
-          {/* כפתורי פעולה */}
-          <div className="flex justify-end space-x-3 pt-6">
-            {isEditing ? (
-              <>
-                <button
-                  onClick={handleCancel}
-                  disabled={loading}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50"
-                >
-                  ביטול
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={loading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {loading ? 'שומר...' : 'שמור שינויים'}
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                ערוך פרופיל
-              </button>
-            )}
+      {/* סטטיסטיקות מהירות */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg border-2 border-glacier-neutral-200/50 p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-glacier-primary rounded-xl flex items-center justify-center">
+              <User className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-neutral-900">סטטוס חשבון</h3>
+              <p className="text-glacier-neutral-600">פעיל ומאומת</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg border-2 border-glacier-neutral-200/50 p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-glacier-accent rounded-xl flex items-center justify-center">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-neutral-900">רמת גישה</h3>
+              <p className="text-glacier-neutral-600">
+                {userData.role === 'admin' ? 'מנהל מערכת' :
+                 userData.role === 'manager' ? 'מנהל צוות' : 'נציג מכירות'}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg border-2 border-glacier-neutral-200/50 p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-glacier-secondary rounded-xl flex items-center justify-center">
+              <CheckCircle2 className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-neutral-900">מצב אישור</h3>
+              <p className="text-glacier-neutral-600">מאושר ופעיל</p>
+            </div>
           </div>
         </div>
       </div>
