@@ -1031,66 +1031,6 @@ export type Database = {
         }
         Relationships: []
       }
-      company_subscriptions: {
-        Row: {
-          id: string
-          company_id: string
-          package_id: string
-          status: string
-          billing_cycle: string
-          current_agents: number
-          current_minutes: number
-          next_billing_date: string | null
-          trial_ends_at: string | null
-          cancelled_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          package_id: string
-          status?: string
-          billing_cycle?: string
-          current_agents?: number
-          current_minutes?: number
-          next_billing_date?: string | null
-          trial_ends_at?: string | null
-          cancelled_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          company_id?: string
-          package_id?: string
-          status?: string
-          billing_cycle?: string
-          current_agents?: number
-          current_minutes?: number
-          next_billing_date?: string | null
-          trial_ends_at?: string | null
-          cancelled_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "company_subscriptions_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: true
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "company_subscriptions_package_id_fkey"
-            columns: ["package_id"]
-            isOneToOne: false
-            referencedRelation: "subscription_packages"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
       billing_history: {
         Row: {
           id: string

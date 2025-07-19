@@ -78,7 +78,21 @@ export default function SignupPage() {
         .order('sort_order')
 
       if (error) throw error
-      setPlans(data || [])
+      
+      // Map database response to expected interface
+      const mappedPlans: SubscriptionPlan[] = (data || []).map(plan => ({
+        id: plan.id,
+        name: plan.name,
+        description: plan.description || '',
+        max_agents: plan.max_agents,
+        base_minutes: plan.max_agents * 240, // Calculate based on agents
+        price_monthly: plan.price_monthly,
+        yearly_price: null, // Not in current database schema
+        features: plan.features,
+        is_popular: false, // Not in current database schema
+        sort_order: 0 // Not in current database schema
+      }))
+      setPlans(mappedPlans)
     } catch (error) {
       console.error('Error fetching plans:', error)
       setError('שגיאה בטעינת החבילות')
