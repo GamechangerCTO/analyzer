@@ -1,6 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+// Force dynamic rendering for this page due to useSearchParams
+export const dynamic = 'force-dynamic'
+
+import React, { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { 
@@ -32,7 +35,7 @@ interface SubscriptionPlan {
   created_at?: string
 }
 
-export default function SubscriptionSetupPage() {
+function SubscriptionSetupContent() {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([])
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
@@ -160,21 +163,21 @@ export default function SubscriptionSetupPage() {
   }
 
   const getFeatureIcon = (feature: string) => {
-    if (feature.includes('ניתוח') || feature.includes('אנליטיקה')) return <BarChart3 className="w-4 h-4 text-glacier-primary" />
-    if (feature.includes('תמיכה') || feature.includes('שירות')) return <Headphones className="w-4 h-4 text-glacier-secondary" />
-    if (feature.includes('אבטחה') || feature.includes('הגנה')) return <Shield className="w-4 h-4 text-glacier-accent" />
-    if (feature.includes('מתקדם') || feature.includes('פרמיום')) return <Crown className="w-4 h-4 text-glacier-warning" />
-    return <CheckCircle className="w-4 h-4 text-glacier-success" />
+    if (feature.includes('ניתוח') || feature.includes('אנליטיקה')) return <BarChart3 className="w-4 h-4 text-brand-primary" />
+    if (feature.includes('תמיכה') || feature.includes('שירות')) return <Headphones className="w-4 h-4 text-brand-secondary" />
+    if (feature.includes('אבטחה') || feature.includes('הגנה')) return <Shield className="w-4 h-4 text-brand-accent" />
+    if (feature.includes('מתקדם') || feature.includes('פרמיום')) return <Crown className="w-4 h-4 text-brand-warning" />
+    return <CheckCircle className="w-4 h-4 text-brand-success" />
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-glacier-bright-1 via-glass-light to-glacier-bright-2 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-brand-bg via-brand-bg-light to-brand-accent-light flex items-center justify-center">
         <div className="coachee-card p-8 max-w-md w-full mx-4">
           <div className="animate-pulse text-center">
-            <div className="w-16 h-16 bg-glacier-primary rounded-3xl mx-auto mb-4"></div>
-            <div className="h-4 bg-glacier-primary rounded-xl mb-2"></div>
-            <div className="h-3 bg-glacier-secondary rounded-xl w-3/4 mx-auto"></div>
+            <div className="w-16 h-16 bg-brand-primary rounded-3xl mx-auto mb-4"></div>
+            <div className="h-4 bg-brand-primary rounded-xl mb-2"></div>
+            <div className="h-3 bg-brand-secondary rounded-xl w-3/4 mx-auto"></div>
           </div>
         </div>
       </div>
@@ -185,7 +188,7 @@ export default function SubscriptionSetupPage() {
     <div className="min-h-screen bg-gradient-to-br from-brand-bg via-brand-bg-light to-brand-accent-light">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/20 to-brand-secondary/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/20 to-brand-secondary/20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12 text-center">
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-md rounded-2xl px-4 py-2 mb-6 shadow-brand-soft">
@@ -194,10 +197,10 @@ export default function SubscriptionSetupPage() {
             </div>
             
             <h1 className="text-4xl lg:text-5xl font-bold text-neutral-800 mb-4">
-              שלום <span className="text-glacier-primary-dark">{companyInfo?.managerName}</span>!
+              שלום <span className="text-brand-primary-dark">{companyInfo?.managerName}</span>!
             </h1>
             <h2 className="text-2xl lg:text-3xl font-semibold text-neutral-700 mb-6">
-              בואו נגדיר את החבילה עבור <span className="text-glacier-secondary-dark">{companyInfo?.name}</span>
+              בואו נגדיר את החבילה עבור <span className="text-brand-secondary-dark">{companyInfo?.name}</span>
             </h2>
             <p className="text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
               {reason === 'no-subscription' 
@@ -217,7 +220,7 @@ export default function SubscriptionSetupPage() {
               onClick={() => setBillingCycle('monthly')}
               className={`px-8 py-3 rounded-2xl font-semibold transition-all duration-300 ${
                 billingCycle === 'monthly'
-                  ? 'bg-gradient-to-r from-glacier-primary to-glacier-primary-dark text-white shadow-glacier-soft'
+                  ? 'bg-gradient-to-r from-brand-primary to-brand-primary-dark text-white shadow-brand-soft'
                   : 'text-neutral-600 hover:text-neutral-800 hover:bg-white/50'
               }`}
             >
@@ -227,12 +230,12 @@ export default function SubscriptionSetupPage() {
               onClick={() => setBillingCycle('yearly')}
               className={`px-8 py-3 rounded-2xl font-semibold transition-all duration-300 relative ${
                 billingCycle === 'yearly'
-                  ? 'bg-gradient-to-r from-glacier-secondary to-glacier-secondary-dark text-white shadow-glacier-soft'
+                  ? 'bg-gradient-to-r from-brand-secondary to-brand-secondary-dark text-white shadow-brand-soft'
                   : 'text-neutral-600 hover:text-neutral-800 hover:bg-white/50'
               }`}
             >
               חיוב שנתי
-              <span className="absolute -top-2 -right-2 bg-gradient-to-r from-glacier-success to-glacier-success-dark text-white text-xs px-3 py-1 rounded-xl font-bold shadow-lg">
+              <span className="absolute -top-2 -right-2 bg-gradient-to-r from-brand-success to-brand-success-dark text-white text-xs px-3 py-1 rounded-xl font-bold shadow-lg">
                 חיסכון 17%
               </span>
             </button>
@@ -258,7 +261,7 @@ export default function SubscriptionSetupPage() {
                 {/* Popular Badge */}
                 {plan.is_popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                    <div className="bg-gradient-to-r from-glacier-warning to-glacier-warning-dark text-white px-6 py-2 rounded-2xl text-sm font-bold shadow-glacier-soft flex items-center gap-2">
+                    <div className="bg-gradient-to-r from-brand-warning to-brand-warning-dark text-white px-6 py-2 rounded-2xl text-sm font-bold shadow-brand-soft flex items-center gap-2">
                       <Star className="w-4 h-4" />
                       מומלץ ביותר
                     </div>
@@ -268,24 +271,24 @@ export default function SubscriptionSetupPage() {
                 {/* Card */}
                 <div className={`coachee-card-glass p-8 h-full border-2 transition-all duration-300 ${
                   isSelected 
-                    ? 'border-glacier-primary shadow-glacier-hover ring-4 ring-glacier-primary/20' 
+                    ? 'border-brand-primary shadow-brand-hover ring-4 ring-brand-primary/20' 
                     : plan.is_popular
-                    ? 'border-glacier-warning/50 shadow-glacier-soft'
-                    : 'border-white/50 hover:border-glacier-primary/50'
+                    ? 'border-brand-warning/50 shadow-brand-soft'
+                    : 'border-white/50 hover:border-brand-primary/50'
                 }`}>
                   <div className="text-center">
                     {/* Plan Header */}
                     <div className="mb-6">
                       <h3 className="text-2xl font-bold text-neutral-800 mb-3">{plan.name}</h3>
                       <div className="mb-4">
-                        <span className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-glacier-primary-dark to-glacier-secondary-dark bg-clip-text text-transparent">
+                        <span className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-brand-primary-dark to-brand-secondary-dark bg-clip-text text-transparent">
                           ${price}
                         </span>
                         <span className="text-neutral-500 text-lg mr-2">
                           /{billingCycle === 'yearly' ? 'שנה' : 'חודש'}
                         </span>
                         {billingCycle === 'yearly' && (
-                          <div className="text-sm text-glacier-success-dark mt-1">
+                          <div className="text-sm text-brand-success-dark mt-1">
                             חיסכון של ${(plan.price_monthly * 2).toLocaleString()} בשנה
                           </div>
                         )}
@@ -293,10 +296,10 @@ export default function SubscriptionSetupPage() {
                     </div>
 
                     {/* Agents & Minutes Display */}
-                    <div className="bg-gradient-to-r from-glacier-primary/10 to-glacier-secondary/10 rounded-3xl p-6 mb-6 border border-glacier-primary/20">
+                    <div className="bg-gradient-to-r from-brand-primary/10 to-brand-secondary/10 rounded-3xl p-6 mb-6 border border-brand-primary/20">
                       <div className="grid grid-cols-1 gap-4">
                         <div className="flex items-center justify-center gap-3">
-                          <div className="bg-gradient-to-r from-glacier-primary to-glacier-primary-dark p-3 rounded-2xl">
+                          <div className="bg-gradient-to-r from-brand-primary to-brand-primary-dark p-3 rounded-2xl">
                             <Users className="w-6 h-6 text-white" />
                           </div>
                           <div className="text-right">
@@ -308,7 +311,7 @@ export default function SubscriptionSetupPage() {
                         </div>
                         
                         <div className="flex items-center justify-center gap-3">
-                          <div className="bg-gradient-to-r from-glacier-secondary to-glacier-secondary-dark p-3 rounded-2xl">
+                          <div className="bg-gradient-to-r from-brand-secondary to-brand-secondary-dark p-3 rounded-2xl">
                             <Clock className="w-6 h-6 text-white" />
                           </div>
                           <div className="text-right">
@@ -338,7 +341,7 @@ export default function SubscriptionSetupPage() {
 
                     {/* Selection Indicator */}
                     {isSelected && (
-                      <div className="flex items-center justify-center gap-2 bg-gradient-to-r from-glacier-primary to-glacier-primary-dark text-white py-3 px-6 rounded-2xl mb-4 shadow-glacier-soft">
+                      <div className="flex items-center justify-center gap-2 bg-gradient-to-r from-brand-primary to-brand-primary-dark text-white py-3 px-6 rounded-2xl mb-4 shadow-brand-soft">
                         <CheckCircle className="w-5 h-5" />
                         <span className="font-semibold">חבילה נבחרה</span>
                       </div>
@@ -394,10 +397,28 @@ export default function SubscriptionSetupPage() {
         <div className="text-center mt-8">
           <p className="text-neutral-500 leading-relaxed">
             לאחר ההגדרה תוכלו להוסיף נציגים ולהתחיל להשתמש במערכת המתקדמת<br />
-            <span className="text-glacier-primary-dark font-medium">תמיכה זמינה 24/7 לכל שאלה</span>
+            <span className="text-brand-primary-dark font-medium">תמיכה זמינה 24/7 לכל שאלה</span>
           </p>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SubscriptionSetupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-brand-bg via-brand-bg-light to-brand-accent-light flex items-center justify-center">
+        <div className="coachee-card p-8 max-w-md w-full mx-4">
+          <div className="animate-pulse text-center">
+            <div className="w-16 h-16 bg-brand-primary rounded-3xl mx-auto mb-4"></div>
+            <div className="h-4 bg-brand-primary rounded-xl mb-2"></div>
+            <div className="h-3 bg-brand-secondary rounded-xl w-3/4 mx-auto"></div>
+          </div>
+        </div>
+      </div>
+    }>
+      <SubscriptionSetupContent />
+    </Suspense>
   )
 } 

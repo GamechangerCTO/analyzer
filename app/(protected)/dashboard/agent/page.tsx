@@ -1,5 +1,8 @@
 'use client'
 
+// Force dynamic rendering for this page due to useSearchParams
+export const dynamic = 'force-dynamic'
+
 import React, { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'

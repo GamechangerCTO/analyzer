@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { addCallLog } from '@/lib/addCallLog'
 
+// Force dynamic rendering for this API route due to searchParams usage
+export const dynamic = 'force-dynamic'
+
 // פונקציית exponential backoff לקריאות OpenAI
 async function callOpenAIWithBackoff(openai: any, params: any, maxRetries = 5) {
   let delay = 1000 // התחל עם שנייה אחת

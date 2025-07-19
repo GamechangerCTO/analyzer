@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openaiAnalytics } from '@/lib/openai-analytics';
 
+// Force dynamic rendering for this API route due to searchParams usage
+export const dynamic = 'force-dynamic'
+
 // Cache for analytics data (5 minutes)
 let analyticsCache: {
   data: any;
