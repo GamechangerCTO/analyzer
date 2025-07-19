@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
@@ -18,9 +19,9 @@ export async function POST(request: NextRequest) {
     const supabase = createClient()
     
     // קבלת משתמש נוכחי
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (userError || !user) {
+    if (authError || !user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -65,38 +66,45 @@ export async function POST(request: NextRequest) {
       skipQuotaCheck = true
     }
 
-    // בדיקת מכסה זמינה - רק למנהלים רגילים
+    // בדיקת מכסה זמינה למנהלים - בדיקה לפי מנוי במקום מכסות ישנות
     if (!skipQuotaCheck) {
-      const { data: quotaData, error: quotaError } = await supabase
-        .rpc('can_add_user_to_company', { p_company_id: companyId })
+      // קבלת פרטי המנוי של החברה
+      const { data: subscription, error: subError } = await supabase
+        .from('company_subscriptions')
+        .select('agents_count')
+        .eq('company_id', companyId)
+        .eq('is_active', true)
+        .single()
 
-      if (quotaError) {
-        console.error('Error checking quota:', quotaError)
+      if (subError || !subscription) {
         return NextResponse.json(
-          { error: 'Error checking quota' },
+          { error: 'לא נמצא מנוי פעיל לחברה. אנא הגדירו חבילה תחילה.' },
+          { status: 400 }
+        )
+      }
+
+      // ספירת נציגים קיימים
+      const { count: currentAgentsCount, error: countError } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyId)
+        .eq('role', 'agent')
+
+      if (countError) {
+        console.error('Error counting agents:', countError)
+        return NextResponse.json(
+          { error: 'שגיאה בבדיקת מספר נציגים' },
           { status: 500 }
         )
       }
 
-      if (!quotaData) {
-        // אין מכסה זמינה - מחזיר שגיאה ברורה
-        const { data: quotaInfo, error: quotaInfoError } = await supabase
-          .rpc('get_company_user_quota', { p_company_id: companyId })
-
-        if (quotaInfoError) {
-          console.error('Error getting quota info:', quotaInfoError)
-          return NextResponse.json(
-            { error: 'No available quota. Please contact admin to increase your user limit.' },
-            { status: 400 }
-          )
-        }
-
-        const quota = quotaInfo?.[0]
+      if ((currentAgentsCount || 0) >= subscription.agents_count) {
         return NextResponse.json(
           { 
-            error: 'No available quota',
-            message: `החברה שלכם הגיעה למכסה המקסימלית של ${quota?.total_users || 'לא ידוע'} משתמשים. כרגע יש ${quota?.used_users || 'לא ידוע'} משתמשים פעילים. אנא פנו למנהל המערכת להגדלת המכסה.`,
-            quota_info: quota
+            error: 'הגעתם למספר הנציגים המקסימלי',
+            message: `החבילה שלכם מאפשרת עד ${subscription.agents_count} נציגים. כרגע יש לכם ${currentAgentsCount || 0} נציגים. אנא שדרגו את החבילה להוספת נציגים נוספים.`,
+            current_agents: currentAgentsCount || 0,
+            max_agents: subscription.agents_count
           },
           { status: 400 }
         )
@@ -108,56 +116,96 @@ export async function POST(request: NextRequest) {
       .from('users')
       .select('id')
       .eq('email', email)
-      .single()
+      .maybeSingle()
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'User with this email already exists' },
+        { error: 'משתמש עם כתובת מייל זו כבר קיים במערכת' },
         { status: 400 }
       )
     }
 
-    // יש מכסה זמינה (או אדמין) - יוצר בקשה לאישור נציג (שתאושר אוטומטית)
-    const { data: newRequest, error: insertError } = await supabase
-      .from('agent_approval_requests')
-      .insert({
-        full_name,
-        email,
-        company_id: companyId,
-        requested_by: user.id,
-        status: 'approved' // מאושר אוטומטית כי יש מכסה או אדמין
-      })
-      .select()
-      .single()
+    // יצירת משתמש ישירות במערכת SaaS - ללא צורך באישור אדמין
+    
+    // יצירת סיסמה זמנית
+    const generateTempPassword = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+      let password = ''
+      for (let i = 0; i < 12; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length))
+      }
+      return password
+    }
 
-    if (insertError) {
-      console.error('Error creating agent request:', insertError)
+    const tempPassword = generateTempPassword()
+
+    // יצירת משתמש חדש ב-Supabase Auth
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    const { data: newUser, error: userCreateError } = await supabaseAdmin.auth.admin.createUser({
+      email: email,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: {
+        full_name: full_name,
+        role: 'agent',
+        company_id: companyId
+      }
+    })
+
+    if (userCreateError) {
+      console.error('Error creating user:', userCreateError)
       return NextResponse.json(
-        { error: 'Failed to create agent request' },
-        { status: 500 }
+        { error: `שגיאה ביצירת משתמש: ${userCreateError.message}` },
+        { status: 400 }
       )
     }
 
-    // קבלת מידע מעודכן על המכסה (אם לא אדמין)
-    if (!skipQuotaCheck) {
-      const { data: updatedQuota, error: updatedQuotaError } = await supabase
-        .rpc('get_company_user_quota', { p_company_id: companyId })
+    // הוספת המשתמש לטבלת users
+    if (newUser.user) {
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({
+          id: newUser.user.id,
+          email: email,
+          full_name: full_name,
+          role: 'agent',
+          company_id: companyId,
+          is_approved: true // נציג מאושר אוטומטית במערכת SaaS
+        })
 
-      const quota = updatedQuota?.[0]
-      return NextResponse.json({
-        success: true,
-        message: `נציג ${full_name} נוסף בהצלחה! המכסה שלכם עכשיו: ${quota?.used_users || 'לא ידוע'}/${quota?.total_users || 'לא ידוע'} משתמשים.`,
-        request: newRequest,
-        quota_info: quota
-      })
-    } else {
-      // אדמין - הודעה פשוטה
-      return NextResponse.json({
-        success: true,
-        message: `נציג ${full_name} נוסף בהצלחה! (מנהל מערכת - ללא מגבלות מכסה)`,
-        request: newRequest
-      })
+      if (insertError) {
+        // אם נכשל בהוספה לטבלה, נמחק את המשתמש מה-auth
+        await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
+        console.error('Error inserting user into table:', insertError)
+        return NextResponse.json(
+          { error: `שגיאה בהוספת משתמש לטבלה: ${insertError.message}` },
+          { status: 400 }
+        )
+      }
     }
+
+    // הצלחה - החזרת פרטים
+    return NextResponse.json({
+      success: true,
+      message: `נציג ${full_name} נוסף בהצלחה למערכת!`,
+      agent: {
+        id: newUser.user?.id,
+        email: email,
+        full_name: full_name,
+        temp_password: tempPassword // רק לפעם הראשונה - המשתמש יידרש לשנות
+      },
+      note: 'הנציג יקבל מייל עם פרטי הגישה ויידרש לשנות את הסיסמה בהתחברות הראשונה'
+    })
 
   } catch (error) {
     console.error('Error in add-agent API:', error)

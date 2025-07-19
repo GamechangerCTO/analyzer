@@ -256,6 +256,8 @@ export type Database = {
           analyzed_at: string | null
           audio_duration_seconds: number | null
           audio_file_path: string | null
+          duration_seconds: number | null
+          duration_minutes: number | null
           call_type: string
           company_id: string | null
           created_at: string
@@ -279,6 +281,8 @@ export type Database = {
           analyzed_at?: string | null
           audio_duration_seconds?: number | null
           audio_file_path?: string | null
+          duration_seconds?: number | null
+          duration_minutes?: number | null
           call_type: string
           company_id?: string | null
           created_at?: string
@@ -302,6 +306,8 @@ export type Database = {
           analyzed_at?: string | null
           audio_duration_seconds?: number | null
           audio_file_path?: string | null
+          duration_seconds?: number | null
+          duration_minutes?: number | null
           call_type?: string
           company_id?: string | null
           created_at?: string
@@ -430,6 +436,7 @@ export type Database = {
           product_types: string[] | null
           sector: string | null
           uploads_professional_materials: boolean | null
+          is_poc: boolean | null
         }
         Insert: {
           audience?: string | null
@@ -444,6 +451,7 @@ export type Database = {
           product_types?: string[] | null
           sector?: string | null
           uploads_professional_materials?: boolean | null
+          is_poc?: boolean | null
         }
         Update: {
           audience?: string | null
@@ -458,6 +466,7 @@ export type Database = {
           product_types?: string[] | null
           sector?: string | null
           uploads_professional_materials?: boolean | null
+          is_poc?: boolean | null
         }
         Relationships: []
       }
@@ -639,6 +648,49 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "company_questionnaire_status"
             referencedColumns: ["company_id"]
+          },
+        ]
+      }
+      company_minutes_quotas: {
+        Row: {
+          id: string
+          company_id: string
+          total_minutes: number
+          used_minutes: number
+          available_minutes: number | null
+          is_poc: boolean
+          poc_limit_minutes: number | null
+          can_purchase_additional: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          total_minutes?: number
+          used_minutes?: number
+          is_poc?: boolean
+          poc_limit_minutes?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          total_minutes?: number
+          used_minutes?: number
+          is_poc?: boolean
+          poc_limit_minutes?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_minutes_quotas_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -928,6 +980,222 @@ export type Database = {
           },
         ]
       }
+      subscription_packages: {
+        Row: {
+          id: string
+          name: string
+          display_name: string
+          description: string | null
+          base_agents: number
+          base_minutes: number
+          monthly_price: number
+          yearly_price: number | null
+          features: Json
+          is_active: boolean
+          is_popular: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          display_name: string
+          description?: string | null
+          base_agents?: number
+          base_minutes?: number
+          monthly_price: number
+          yearly_price?: number | null
+          features?: Json
+          is_active?: boolean
+          is_popular?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          display_name?: string
+          description?: string | null
+          base_agents?: number
+          base_minutes?: number
+          monthly_price?: number
+          yearly_price?: number | null
+          features?: Json
+          is_active?: boolean
+          is_popular?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      company_subscriptions: {
+        Row: {
+          id: string
+          company_id: string
+          package_id: string
+          status: string
+          billing_cycle: string
+          current_agents: number
+          current_minutes: number
+          next_billing_date: string | null
+          trial_ends_at: string | null
+          cancelled_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          package_id: string
+          status?: string
+          billing_cycle?: string
+          current_agents?: number
+          current_minutes?: number
+          next_billing_date?: string | null
+          trial_ends_at?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          package_id?: string
+          status?: string
+          billing_cycle?: string
+          current_agents?: number
+          current_minutes?: number
+          next_billing_date?: string | null
+          trial_ends_at?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_subscriptions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_packages"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      billing_history: {
+        Row: {
+          id: string
+          company_id: string
+          subscription_id: string
+          invoice_number: string
+          billing_period_start: string
+          billing_period_end: string
+          amount: number
+          agents_count: number
+          base_package_price: number
+          additional_agents_price: number
+          status: string
+          payment_method: string | null
+          payment_transaction_id: string | null
+          stripe_invoice_id: string | null
+          paid_at: string | null
+          due_date: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          subscription_id: string
+          invoice_number: string
+          billing_period_start: string
+          billing_period_end: string
+          amount: number
+          agents_count: number
+          base_package_price: number
+          additional_agents_price?: number
+          status?: string
+          payment_method?: string | null
+          payment_transaction_id?: string | null
+          stripe_invoice_id?: string | null
+          paid_at?: string | null
+          due_date: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          subscription_id?: string
+          invoice_number?: string
+          billing_period_start?: string
+          billing_period_end?: string
+          amount?: number
+          agents_count?: number
+          base_package_price?: number
+          additional_agents_price?: number
+          status?: string
+          payment_method?: string | null
+          payment_transaction_id?: string | null
+          stripe_invoice_id?: string | null
+          paid_at?: string | null
+          due_date?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_history_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "company_subscriptions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      agent_pricing_tiers: {
+        Row: {
+          id: string
+          min_agents: number
+          max_agents: number | null
+          price_per_agent: number
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          min_agents: number
+          max_agents?: number | null
+          price_per_agent: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          min_agents?: number
+          max_agents?: number | null
+          price_per_agent?: number
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       company_questionnaire_status: {
@@ -1014,6 +1282,55 @@ export type Database = {
         Args: { user_id: string; new_role: string }
         Returns: undefined
       }
+      can_process_call_duration: {
+        Args: { p_company_id: string; p_estimated_minutes?: number }
+        Returns: boolean
+      }
+      deduct_call_minutes: {
+        Args: { p_company_id: string; p_call_id: string; p_actual_duration_seconds: number }
+        Returns: boolean
+      }
+      get_company_minutes_quota: {
+        Args: { p_company_id: string }
+        Returns: {
+          total_minutes: number
+          used_minutes: number
+          available_minutes: number
+          is_poc: boolean
+          can_purchase_additional: boolean
+          usage_percentage: number
+        }[]
+      }
+      add_minutes_to_company: {
+        Args: { p_company_id: string; p_additional_minutes: number }
+        Returns: boolean
+      }
+      get_manager_dashboard_stats: {
+        Args: { company_uuid: string }
+        Returns: {
+          total_agents: number
+          weekly_calls: number
+          avg_score_weekly: number
+          successful_calls_weekly: number
+          today_calls: number
+          yesterday_calls: number
+          avg_score_overall: number
+        }[]
+      }
+      get_company_agents_performance: {
+        Args: { company_uuid: string }
+        Returns: {
+          id: string
+          full_name: string
+          avatar_url: string | null
+          total_calls: number
+          weekly_calls: number
+          avg_score: number
+          last_call_date: string | null
+          activity_status: string
+        }[]
+      }
+
     }
     Enums: {
       [_ in never]: never

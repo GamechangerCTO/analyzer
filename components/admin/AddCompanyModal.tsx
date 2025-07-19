@@ -46,6 +46,7 @@ export default function AddCompanyModal({ isOpen, onClose, onCompanyAdded }: Add
     customer_benefits: ['', '', ''],
     company_benefits: ['', '', ''],
     uploads_professional_materials: false,
+    is_poc: false,
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -80,6 +81,7 @@ export default function AddCompanyModal({ isOpen, onClose, onCompanyAdded }: Add
             customer_benefits: ['', '', ''],
             company_benefits: ['', '', ''],
             uploads_professional_materials: false,
+            is_poc: false,
         })
         setFiles([])
         setError(null)
@@ -192,6 +194,7 @@ export default function AddCompanyModal({ isOpen, onClose, onCompanyAdded }: Add
         .insert({
           name: formData.name.trim(),
           sector: formData.sector.trim(),
+          is_poc: formData.is_poc,
         })
         .select()
 
@@ -346,6 +349,27 @@ export default function AddCompanyModal({ isOpen, onClose, onCompanyAdded }: Add
                 className="w-full p-4 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300 ease-out text-neutral-900 bg-white hover:border-glacier-primary-light hover:shadow-lg hover:scale-[1.02] focus:scale-[1.02] focus:shadow-xl transform-gpu"
                 placeholder="למשל: טכנולוגיה, מזון, אופנה..."
               />
+            </div>
+
+            {/* סימון POC */}
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  name="is_poc"
+                  id="is_poc_add"
+                  checked={formData.is_poc}
+                  onChange={handleChange}
+                  className="w-5 h-5 text-blue-600 bg-white border-2 border-blue-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <label htmlFor="is_poc_add" className="text-lg font-bold text-blue-900 flex items-center gap-2">
+                  <Star className="w-5 h-5 text-blue-600" />
+                  חברת POC (Proof of Concept)
+                </label>
+              </div>
+              <p className="text-sm text-blue-700 mt-2 mr-8">
+                סמן את התיבה אם זוהי חברה במסגרת הדגמה. חברות POC יקבלו מכסה קבועה ללא יכולת רכישה נוספת.
+              </p>
             </div>
             
             {/* פרטים על המוצר/השירות */}

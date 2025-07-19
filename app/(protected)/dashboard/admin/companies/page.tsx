@@ -18,10 +18,17 @@ interface Company {
   customer_benefits?: any | null;
   company_benefits?: any | null;
   uploads_professional_materials?: boolean | null;
+  is_poc?: boolean | null;
   status?: string;
   users_count?: number;
   questionnaire_complete: boolean;
   questionnaire_score: number;
+  minutes_quota?: {
+    total_minutes: number;
+    used_minutes: number;
+    available_minutes: number;
+    usage_percentage: number;
+  } | null;
 }
 
 export default function AdminCompaniesPage() {
@@ -52,7 +59,7 @@ export default function AdminCompaniesPage() {
 
       if (error) throw new Error(error.message);
       
-      // הוספת מספר המשתמשים ומצב השאלון לכל חברה
+      // הוספת מספר המשתמשים, מצב השאלון ומכסת דקות לכל חברה
       const companiesWithMeta = await Promise.all(
         data.map(async (company) => {
           // ספירת משתמשים
@@ -82,6 +89,19 @@ export default function AdminCompaniesPage() {
             // אם יש שגיאה, נשתמש בערכי ברירת מחדל
             console.warn(`לא ניתן לטעון שאלון עבור חברה ${company.name}:`, err);
           }
+
+          // שליפת מכסת דקות
+          let minutesQuota = null;
+          try {
+            const { data: quotaData, error: quotaError } = await supabase
+              .rpc('get_company_minutes_quota', { p_company_id: company.id });
+              
+            if (!quotaError && quotaData && quotaData.length > 0) {
+              minutesQuota = quotaData[0];
+            }
+          } catch (err) {
+            console.warn(`לא ניתן לטעון מכסת דקות עבור חברה ${company.name}:`, err);
+          }
           
           return {
             ...company,
@@ -89,6 +109,7 @@ export default function AdminCompaniesPage() {
             users_count: usersError ? 0 : (usersData?.length || 0),
             questionnaire_complete: questionnaireComplete,
             questionnaire_score: questionnaireScore,
+            minutes_quota: minutesQuota,
             // נתונים מהשאלון החדש או מהטבלה הישנה
             sector: sectorFromQuestionnaire || company.sector || '-',
             audience: audienceFromQuestionnaire || company.audience || '-',
@@ -185,10 +206,10 @@ export default function AdminCompaniesPage() {
                     שם החברה
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    תחום עיסוק
+                    סוג חשבון
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    סוג מוצר
+                    תחום עיסוק
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     קהל יעד
@@ -198,6 +219,9 @@ export default function AdminCompaniesPage() {
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     משתמשים
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    דקות
                   </th>
                   <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     פעולות
@@ -215,13 +239,19 @@ export default function AdminCompaniesPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {company.sector || '-'}
+                    <td className="px-6 py-4 text-sm">
+                      {company.is_poc ? (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          ⭐ POC
+                        </span>
+                      ) : (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          🏢 מלא
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {company.product_types && Array.isArray(company.product_types) && company.product_types.length > 0 
-                        ? company.product_types[0] 
-                        : '-'}
+                      {company.sector || '-'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {company.audience || '-'}
@@ -240,6 +270,31 @@ export default function AdminCompaniesPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {company.users_count || 0}
                     </td>
+                    <td className="px-6 py-4 text-sm">
+                      {company.minutes_quota ? (
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span>בשימוש: {company.minutes_quota.used_minutes.toLocaleString()}</span>
+                            <span>זמין: {company.minutes_quota.available_minutes.toLocaleString()}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full transition-all ${
+                                company.minutes_quota.usage_percentage >= 90 ? 'bg-red-500' :
+                                company.minutes_quota.usage_percentage >= 75 ? 'bg-orange-500' :
+                                'bg-green-500'
+                              }`}
+                              style={{ width: `${Math.min(company.minutes_quota.usage_percentage, 100)}%` }}
+                            ></div>
+                          </div>
+                          <div className="text-xs text-center">
+                            {company.minutes_quota.usage_percentage.toFixed(1)}% ({company.minutes_quota.total_minutes.toLocaleString()} סה"כ)
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">לא הוגדר</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3 text-center">
                       <Link
                         href={`/dashboard/admin/companies/${company.id}/view-questionnaire`}
@@ -255,6 +310,13 @@ export default function AdminCompaniesPage() {
                       >
                         ערוך שאלון
                       </Link>
+                      <button 
+                        onClick={() => window.open(`/dashboard/admin/companies/${company.id}/manage-minutes`, '_blank')}
+                        className="text-green-600 hover:text-green-900 inline-block"
+                        title="נהל מכסת דקות"
+                      >
+                        {company.is_poc ? 'POC מכסה' : 'נהל דקות'}
+                      </button>
                       <button className="text-red-600 hover:text-red-900">מחיקה</button>
                     </td>
                   </tr>

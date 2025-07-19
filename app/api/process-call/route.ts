@@ -246,6 +246,94 @@ export async function POST(request: Request) {
           .eq('id', call_id);
           
         await addCallLog(call_id, '💾 משך האודיו נשמר במסד הנתונים', { duration_seconds: audioDurationSeconds });
+        
+        // 🎯 בדיקת מכסת דקות לפני עיבוד
+        await addCallLog(call_id, '🔍 בודק מכסת דקות זמינה');
+        const callDurationMinutes = Math.ceil(audioDurationSeconds / 60); // עיגול כלפי מעלה
+        
+        // בדיקה שיש company_id
+        if (!callData.company_id) {
+          await addCallLog(call_id, '❌ חסר מזהה חברה', { company_id: callData.company_id });
+          
+          await supabase
+            .from('calls')
+            .update({
+              processing_status: 'error',
+              error_message: 'חסר מזהה חברה - לא ניתן לבדוק מכסה'
+            })
+            .eq('id', call_id);
+            
+          return NextResponse.json(
+            { error: 'חסר מזהה חברה', details: 'לא ניתן לבדוק מכסה' },
+            { status: 400 }
+          );
+        }
+        
+        // בדיקה אם החברה יכולה לעבד שיחה בהיקף הנדרש
+        const { data: canProcessData, error: canProcessError } = await supabase
+          .rpc('can_process_call_duration', { 
+            p_company_id: callData.company_id,
+            p_estimated_minutes: callDurationMinutes
+          });
+          
+        if (canProcessError) {
+          await addCallLog(call_id, '❌ שגיאה בבדיקת מכסת דקות', { 
+            error: canProcessError.message,
+            duration_minutes: callDurationMinutes
+          });
+          
+          await supabase
+            .from('calls')
+            .update({
+              processing_status: 'error',
+              error_message: `שגיאה בבדיקת מכסת דקות: ${canProcessError.message}`
+            })
+            .eq('id', call_id);
+            
+          return NextResponse.json(
+            { error: 'שגיאה בבדיקת מכסת דקות', details: canProcessError.message },
+            { status: 500 }
+          );
+        }
+        
+        if (!canProcessData) {
+          await addCallLog(call_id, '❌ אין מספיק דקות זמינות לעיבוד השיחה', { 
+            duration_minutes: callDurationMinutes,
+            company_id: callData.company_id
+          });
+          
+          // קבלת מידע מכסה מפורט להודעת שגיאה
+          const { data: quotaInfo } = await supabase
+            .rpc('get_company_minutes_quota', { p_company_id: callData.company_id });
+            
+          const quota = quotaInfo?.[0];
+          const errorMessage = quota 
+            ? `אין מספיק דקות זמינות. השיחה דורשת ${callDurationMinutes} דקות, אך זמינות רק ${quota.available_minutes} דקות. (${quota.used_minutes}/${quota.total_minutes} דקות בשימוש)`
+            : `אין מספיק דקות זמינות לעיבוד שיחה של ${callDurationMinutes} דקות`;
+          
+          await supabase
+            .from('calls')
+            .update({
+              processing_status: 'quota_exceeded',
+              error_message: errorMessage
+            })
+            .eq('id', call_id);
+            
+          return NextResponse.json(
+            { 
+              error: 'חרגתם ממכסת הדקות', 
+              details: errorMessage,
+              quota_info: quota 
+            },
+            { status: 402 } // Payment Required
+          );
+        }
+        
+        await addCallLog(call_id, '✅ מכסת דקות מאושרת', { 
+          duration_minutes: callDurationMinutes,
+          quota_status: 'approved'
+        });
+        
       }
     } catch (durationError) {
       await addCallLog(call_id, '⚠️ שגיאה בחישוב משך האודיו - ממשיך בניתוח', { 
@@ -1231,6 +1319,63 @@ export async function POST(request: Request) {
         { error: 'הניתוח נכשל', details: analysisError.message },
         { status: 500 }
       );
+    }
+
+    // 💰 ניכוי דקות מהמכסה לאחר עיבוד מוצלח
+    try {
+      if (audioDurationSeconds && callData.company_id) {
+        await addCallLog(call_id, '💰 מנכה דקות מהמכסה', { 
+          duration_seconds: audioDurationSeconds,
+          company_id: callData.company_id
+        });
+        
+        const { data: deductionSuccess, error: deductionError } = await supabase
+          .rpc('deduct_call_minutes', {
+            p_company_id: callData.company_id,
+            p_call_id: call_id,
+            p_actual_duration_seconds: audioDurationSeconds
+          });
+          
+        if (deductionError) {
+          await addCallLog(call_id, '⚠️ שגיאה בניכוי דקות (ניתוח הושלם, אך הדקות לא נוכו)', { 
+            error: deductionError.message,
+            duration_seconds: audioDurationSeconds
+          });
+        } else if (deductionSuccess) {
+          const minutesDeducted = Math.ceil(audioDurationSeconds / 60);
+          await addCallLog(call_id, '✅ דקות נוכו בהצלחה מהמכסה', { 
+            minutes_deducted: minutesDeducted,
+            seconds_processed: audioDurationSeconds
+          });
+          
+          // קבלת מצב המכסה המעודכן
+          const { data: updatedQuota } = await supabase
+            .rpc('get_company_minutes_quota', { p_company_id: callData.company_id });
+            
+          if (updatedQuota?.[0]) {
+            await addCallLog(call_id, '📊 מצב מכסה מעודכן', { 
+              total_minutes: updatedQuota[0].total_minutes,
+              used_minutes: updatedQuota[0].used_minutes,
+              available_minutes: updatedQuota[0].available_minutes,
+              usage_percentage: updatedQuota[0].usage_percentage
+            });
+          }
+        } else {
+          await addCallLog(call_id, '⚠️ ניכוי דקות לא הצליח (סיבה לא ידועה)', { 
+            duration_seconds: audioDurationSeconds
+          });
+        }
+      } else {
+        await addCallLog(call_id, 'ℹ️ דילוג על ניכוי דקות', { 
+          reason: audioDurationSeconds ? 'חסר company_id' : 'חסר duration',
+          audio_duration_seconds: audioDurationSeconds,
+          company_id: callData.company_id
+        });
+      }
+    } catch (deductionError) {
+      await addCallLog(call_id, '❌ שגיאה בתהליך ניכוי דקות', { 
+        error: deductionError instanceof Error ? deductionError.message : 'שגיאה לא ידועה'
+      });
     }
 
     return NextResponse.json({

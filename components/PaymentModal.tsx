@@ -196,46 +196,43 @@ export default function PaymentModal({ package: pkg, isOpen, onClose, onSuccess 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-glacier-neutral-200/50 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="coachee-card-glass max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-white/30">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-glacier-primary to-glacier-primary-dark p-6">
-          <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between p-8 border-b border-white/20">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            <div className="bg-gradient-to-r from-glacier-primary to-glacier-primary-dark p-3 rounded-2xl">
                 <Package className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">רכישת חבילה</h2>
-                <p className="text-glacier-primary-100 text-sm">{pkg.name}</p>
-              </div>
+              <h2 className="text-2xl font-bold text-neutral-800">השלמת רכישה</h2>
+              <p className="text-neutral-600">בחירת חבילה ותשלום</p>
             </div>
-            
-            <button
-              onClick={handleClose}
-              className="p-2 hover:bg-white/20 rounded-xl transition-colors duration-200"
-            >
-              <X className="w-5 h-5 text-white" />
-            </button>
           </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-white/50 rounded-xl transition-all duration-200"
+          >
+            <X className="w-6 h-6" />
+          </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-8">
           
           {/* Package Step */}
           {currentStep === 'package' && (
-            <div className="space-y-6 animate-in slide-in-from-bottom duration-500">
+            <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
               
               {/* Package Info */}
-              <div className="bg-gradient-to-r from-glacier-accent-50 to-glacier-secondary-50 border border-glacier-accent-200 rounded-2xl p-6">
-                <div className="flex items-start justify-between mb-4">
+              <div className="bg-gradient-to-r from-glacier-accent-50 to-glacier-secondary-50 border-2 border-glacier-accent-200 rounded-3xl p-8">
+                <div className="flex items-start justify-between mb-6">
                   <div>
-                    <h3 className="text-xl font-bold text-neutral-900 mb-2">{pkg.name}</h3>
-                    <p className="text-glacier-neutral-600">{pkg.description}</p>
+                    <h3 className="text-2xl font-bold text-neutral-900 mb-3">{pkg.name}</h3>
+                    <p className="text-glacier-neutral-600 leading-relaxed">{pkg.description}</p>
                   </div>
                   {pkg.is_popular && (
-                    <div className="bg-glacier-warning text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1">
+                    <div className="bg-gradient-to-r from-glacier-warning to-glacier-warning-dark text-white px-4 py-2 rounded-2xl text-sm font-bold flex items-center gap-2 shadow-glacier-soft">
                       <Star className="w-4 h-4" />
                       פופולרי
                     </div>
@@ -243,34 +240,102 @@ export default function PaymentModal({ package: pkg, isOpen, onClose, onSuccess 
                 </div>
 
                 {/* Features */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="flex items-center gap-2 text-glacier-neutral-700">
-                    <Users className="w-4 h-4 text-glacier-primary" />
-                    <span className="text-sm">עד {pkg.users_count} משתמשים</span>
+                <div className="grid grid-cols-2 gap-6 mb-8">
+                  <div className="flex items-center gap-3 text-glacier-neutral-700">
+                    <div className="bg-gradient-to-r from-glacier-primary to-glacier-primary-dark p-2 rounded-xl">
+                      <Users className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="font-medium">עד {pkg.users_count} משתמשים</span>
                   </div>
-                  <div className="flex items-center gap-2 text-glacier-neutral-700">
-                    <Shield className="w-4 h-4 text-glacier-accent" />
-                    <span className="text-sm">תמיכה מלאה</span>
+                  <div className="flex items-center gap-3 text-glacier-neutral-700">
+                    <div className="bg-gradient-to-r from-glacier-accent to-glacier-accent-dark p-2 rounded-xl">
+                      <Shield className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="font-medium">תמיכה מלאה</span>
                   </div>
                 </div>
 
                 {/* Price */}
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-glacier-primary mb-1">
-                    ₪{pkg.base_price.toLocaleString()}
+                  <div className="mb-4">
+                    <span className="text-5xl font-bold bg-gradient-to-r from-glacier-primary-dark to-glacier-secondary-dark bg-clip-text text-transparent">
+                      ${pkg.base_price}
+                    </span>
+                    <span className="text-neutral-500 text-xl mr-2">/חודש</span>
                   </div>
-                  <div className="text-glacier-neutral-500 text-sm">תשלום חודשי</div>
+                  
+                  {appliedDiscount && (
+                    <div className="bg-gradient-to-r from-glacier-success/20 to-glacier-success/10 border border-glacier-success/30 rounded-2xl p-4 mb-6">
+                      <div className="flex items-center justify-between">
+                        <span className="text-glacier-success-dark font-semibold">
+                          הנחה: {appliedDiscount.name}
+                        </span>
+                        <span className="text-glacier-success-dark font-bold">
+                          חיסכון: ${getSavingsAmount()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="text-3xl font-bold text-neutral-800 mb-2">
+                    מחיר סופי: ${calculateFinalPrice()}
+                  </div>
                 </div>
               </div>
 
+              {/* Discount Section */}
+              <div className="coachee-card p-6">
+                <h4 className="text-lg font-bold text-neutral-800 mb-4 flex items-center gap-2">
+                  <Percent className="w-5 h-5 text-glacier-accent" />
+                  קוד הנחה (אופציונלי)
+                </h4>
+                
+                {!appliedDiscount ? (
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={discountCode}
+                      onChange={(e) => setDiscountCode(e.target.value)}
+                      placeholder="הזינו קוד הנחה"
+                      className="coachee-input flex-1"
+                    />
+                    <button
+                      onClick={handleApplyDiscount}
+                      disabled={!discountCode}
+                      className="coachee-btn-secondary disabled:opacity-50"
+                    >
+                      החל הנחה
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between bg-gradient-to-r from-glacier-success/10 to-glacier-success/5 border border-glacier-success/30 rounded-2xl p-4">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-glacier-success-dark" />
+                      <span className="text-glacier-success-dark font-medium">
+                        קוד {appliedDiscount.discount_code} הוחל בהצלחה
+                      </span>
+                    </div>
+                    <button
+                      onClick={removeDiscount}
+                      className="text-glacier-success-dark hover:text-red-600 transition-colors"
+                    >
+                      הסרה
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Continue Button */}
+              <div className="text-center">
               <button
-                onClick={() => setCurrentStep('discount')}
-                className="w-full px-6 py-4 bg-gradient-to-r from-glacier-primary to-glacier-primary-dark text-white font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] transform-gpu shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                  onClick={() => setCurrentStep('payment')}
+                  className="coachee-btn-primary text-lg px-8 py-4"
               >
-                <span>המשך לתשלום</span>
-                <Zap className="w-5 h-5" />
+                  <CreditCard className="w-5 h-5" />
+                  המשך לתשלום
+                  <span className="font-bold">${calculateFinalPrice()}</span>
               </button>
+              </div>
             </div>
           )}
 
@@ -364,125 +429,163 @@ export default function PaymentModal({ package: pkg, isOpen, onClose, onSuccess 
 
           {/* Payment Step */}
           {currentStep === 'payment' && (
-            <div className="space-y-6 animate-in slide-in-from-bottom duration-500">
+            <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
               
-              {/* Payment Method */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-neutral-900 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-glacier-primary" />
-                  אמצעי תשלום
-                </h3>
+              {/* Order Summary */}
+              <div className="coachee-card p-6">
+                <h4 className="text-lg font-bold text-neutral-800 mb-4 flex items-center gap-2">
+                  <Package className="w-5 h-5 text-glacier-primary" />
+                  סיכום הזמנה
+                </h4>
                 
-                <div className="grid grid-cols-1 gap-3">
-                  {[
-                    { id: 'credit', label: 'כרטיס אשראי', icon: CreditCard },
-                    { id: 'paypal', label: 'PayPal', icon: DollarSign },
-                    { id: 'bank', label: 'העברה בנקאית', icon: Shield }
-                  ].map(({ id, label, icon: Icon }) => (
-                    <label key={id} className="relative">
-                      <input
-                        type="radio"
-                        name="payment_method"
-                        value={id}
-                        checked={paymentMethod === id}
-                        onChange={(e) => setPaymentMethod(e.target.value as any)}
-                        className="sr-only"
-                      />
-                      <div className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
-                        paymentMethod === id
-                          ? 'border-glacier-primary bg-glacier-primary-light text-glacier-primary-600 shadow-lg'
-                          : 'border-glacier-neutral-200 bg-white hover:border-glacier-primary-light hover:shadow-md'
-                      }`}>
-                        <div className="flex items-center gap-3">
-                          <Icon className="w-5 h-5" />
-                          <span className="font-medium">{label}</span>
-                          {paymentMethod === id && (
-                            <CheckCircle2 className="w-5 h-5 text-glacier-primary mr-auto" />
-                          )}
-                        </div>
-                      </div>
-                    </label>
-                  ))}
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-600">חבילה:</span>
+                    <span className="font-semibold text-neutral-800">{pkg.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-600">מחיר בסיס:</span>
+                    <span className="font-semibold text-neutral-800">${pkg.base_price}</span>
+                  </div>
+                  {appliedDiscount && (
+                    <div className="flex justify-between text-glacier-success-dark">
+                      <span>הנחה ({appliedDiscount.discount_code}):</span>
+                      <span className="font-semibold">-${getSavingsAmount()}</span>
+                    </div>
+                  )}
+                  <div className="border-t border-neutral-200 pt-3">
+                    <div className="flex justify-between text-lg font-bold text-neutral-800">
+                      <span>סה"כ לתשלום:</span>
+                      <span className="text-glacier-primary-dark">${calculateFinalPrice()}</span>
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              {/* Payment Method Selection */}
+              <div className="coachee-card p-6">
+                <h4 className="text-lg font-bold text-neutral-800 mb-6 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-glacier-secondary" />
+                  אמצעי תשלום
+                </h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                  {[
+                    { id: 'credit', name: 'כרטיס אשראי', icon: CreditCard },
+                    { id: 'paypal', name: 'PayPal', icon: DollarSign },
+                    { id: 'bank', name: 'העברה בנקאית', icon: Shield }
+                  ].map((method) => (
+                    <button
+                      key={method.id}
+                      onClick={() => setPaymentMethod(method.id as any)}
+                      className={`p-4 rounded-2xl border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
+                        paymentMethod === method.id
+                          ? 'border-glacier-primary bg-gradient-to-r from-glacier-primary/10 to-glacier-primary/5 text-glacier-primary-dark'
+                          : 'border-neutral-200 hover:border-glacier-primary/50 text-neutral-600'
+                      }`}
+                    >
+                      <method.icon className="w-6 h-6" />
+                      <span className="font-medium text-sm">{method.name}</span>
+                    </button>
+                  ))}
               </div>
 
               {/* Credit Card Form */}
               {paymentMethod === 'credit' && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-glacier-neutral-700">מספר כרטיס</label>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        מספר כרטיס
+                      </label>
                       <input
                         type="text"
                         value={creditCardData.number}
                         onChange={(e) => setCreditCardData({...creditCardData, number: e.target.value})}
                         placeholder="1234 5678 9012 3456"
-                        className="w-full p-3 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300"
+                        className="coachee-input"
                       />
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-glacier-neutral-700">תוקף</label>
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-700 mb-2">
+                          תוקף (MM/YY)
+                        </label>
                         <input
                           type="text"
                           value={creditCardData.expiry}
                           onChange={(e) => setCreditCardData({...creditCardData, expiry: e.target.value})}
-                          placeholder="MM/YY"
-                          className="w-full p-3 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300"
+                          placeholder="12/25"
+                          className="coachee-input"
                         />
                       </div>
-                      
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-glacier-neutral-700">CVV</label>
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-700 mb-2">
+                          CVV
+                        </label>
                         <input
                           type="text"
                           value={creditCardData.cvv}
                           onChange={(e) => setCreditCardData({...creditCardData, cvv: e.target.value})}
                           placeholder="123"
-                          className="w-full p-3 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300"
+                          className="coachee-input"
                         />
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-glacier-neutral-700">שם בעל הכרטיס</label>
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        שם בעל הכרטיס
+                      </label>
                       <input
                         type="text"
                         value={creditCardData.name}
                         onChange={(e) => setCreditCardData({...creditCardData, name: e.target.value})}
-                        placeholder="שם מלא"
-                        className="w-full p-3 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300"
+                        placeholder="ישראל ישראלי"
+                        className="coachee-input"
                       />
                     </div>
+                  </div>
+                )}
+
+                {paymentMethod === 'paypal' && (
+                  <div className="text-center py-8">
+                    <div className="bg-gradient-to-r from-glacier-info/10 to-glacier-info/5 border border-glacier-info/30 rounded-2xl p-6">
+                      <DollarSign className="w-12 h-12 text-glacier-info-dark mx-auto mb-4" />
+                      <h5 className="font-bold text-neutral-800 mb-2">תשלום דרך PayPal</h5>
+                      <p className="text-neutral-600 text-sm">תועברו לאתר PayPal להשלמת התשלום</p>
                   </div>
                 </div>
               )}
 
-              {/* Final Price */}
-              <div className="bg-gradient-to-r from-glacier-primary-50 to-glacier-accent-50 border border-glacier-primary-200 rounded-xl p-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-glacier-primary mb-2">
-                    ₪{calculateFinalPrice().toLocaleString()}
+                {paymentMethod === 'bank' && (
+                  <div className="text-center py-8">
+                    <div className="bg-gradient-to-r from-glacier-accent/10 to-glacier-accent/5 border border-glacier-accent/30 rounded-2xl p-6">
+                      <Shield className="w-12 h-12 text-glacier-accent-dark mx-auto mb-4" />
+                      <h5 className="font-bold text-neutral-800 mb-2">העברה בנקאית</h5>
+                      <p className="text-neutral-600 text-sm mb-4">פרטי ההעברה יישלחו אליכם במייל</p>
+                      <div className="text-xs text-neutral-500 bg-neutral-50 rounded-xl p-3">
+                        תקופת אישור: 1-3 ימי עסקים
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-glacier-neutral-600 text-sm">תשלום חודשי עבור {pkg.users_count} משתמשים</div>
-                </div>
+                )}
               </div>
 
-              {/* Navigation */}
-              <div className="flex gap-3">
+              {/* Action Buttons */}
+              <div className="flex gap-4">
                 <button
-                  onClick={() => setCurrentStep('discount')}
-                  className="flex-1 px-6 py-4 bg-glacier-neutral-200 hover:bg-glacier-neutral-300 text-glacier-neutral-700 font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] transform-gpu"
+                  onClick={() => setCurrentStep('package')}
+                  className="coachee-btn-secondary flex-1"
                 >
-                  חזור
+                  חזרה
                 </button>
                 <button
                   onClick={handlePayment}
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] transform-gpu shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                  className="coachee-btn-primary flex-2 text-lg"
                 >
                   <CreditCard className="w-5 h-5" />
-                  <span>שלם עכשיו</span>
+                  בצע תשלום ${calculateFinalPrice()}
                 </button>
               </div>
             </div>
@@ -490,27 +593,85 @@ export default function PaymentModal({ package: pkg, isOpen, onClose, onSuccess 
 
           {/* Processing Step */}
           {currentStep === 'processing' && (
-            <div className="text-center py-12 animate-in slide-in-from-bottom duration-500">
-              <div className="w-16 h-16 bg-glacier-primary rounded-full flex items-center justify-center mx-auto mb-6">
-                <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <div className="text-center py-16 animate-in fade-in duration-500">
+              <div className="mb-8">
+                <div className="relative w-20 h-20 mx-auto mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-r from-glacier-primary to-glacier-secondary rounded-full animate-pulse"></div>
+                  <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+                    <CreditCard className="w-8 h-8 text-glacier-primary animate-bounce" />
+                  </div>
+                </div>
+                
+                <h3 className="text-2xl font-bold text-neutral-800 mb-3">מעבד תשלום...</h3>
+                <p className="text-neutral-600 mb-6">אנא המתינו, התשלום בביצוע</p>
+                
+                <div className="max-w-xs mx-auto">
+                  <div className="bg-neutral-200 rounded-full h-2 overflow-hidden">
+                    <div className="bg-gradient-to-r from-glacier-primary to-glacier-secondary h-full rounded-full animate-pulse" style={{width: '75%'}}></div>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-neutral-900 mb-2">מעבד תשלום...</h3>
-              <p className="text-glacier-neutral-600">אנא המתן, מעבדים את התשלום שלך</p>
+              
+              <div className="text-sm text-neutral-500">
+                <Clock className="w-4 h-4 inline mr-2" />
+                זמן עיבוד משוער: 30 שניות
+              </div>
             </div>
           )}
 
           {/* Success Step */}
           {currentStep === 'success' && (
-            <div className="text-center py-12 animate-in slide-in-from-bottom duration-500">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="w-8 h-8 text-white" />
+            <div className="text-center py-16 animate-in slide-in-from-bottom duration-500">
+              <div className="mb-8">
+                <div className="w-20 h-20 bg-gradient-to-r from-glacier-success to-glacier-success-dark rounded-full flex items-center justify-center mx-auto mb-6 shadow-glacier-soft">
+                  <CheckCircle2 className="w-10 h-10 text-white" />
+                </div>
+                
+                <h3 className="text-3xl font-bold text-neutral-800 mb-4">תשלום בוצע בהצלחה!</h3>
+                <p className="text-neutral-600 mb-8 leading-relaxed">
+                  החבילה שלכם פעילה והמערכת מוכנה לשימוש.<br />
+                  קבלה תישלח אליכם במייל תוך מספר דקות.
+                </p>
+                
+                <div className="coachee-card p-6 mb-8 max-w-md mx-auto">
+                  <h4 className="font-bold text-neutral-800 mb-4">פרטי הרכישה</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-600">חבילה:</span>
+                      <span className="font-semibold">{pkg.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-600">סכום:</span>
+                      <span className="font-semibold text-glacier-success-dark">${calculateFinalPrice()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-600">תאריך:</span>
+                      <span className="font-semibold">{new Date().toLocaleDateString('he-IL')}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-neutral-900 mb-2">תשלום הושלם בהצלחה!</h3>
-              <p className="text-glacier-neutral-600 mb-4">תודה על הרכישה. החבילה שלך מופעלת כעת.</p>
-              
-              <div className="flex items-center justify-center gap-2 text-glacier-neutral-500">
-                <Clock className="w-4 h-4" />
-                <span className="text-sm">חוזר אוטומטית בעוד {countdown} שניות</span>
+
+              <div className="space-y-4">
+                <button
+                  onClick={() => {
+                    onSuccess({
+                      package_id: pkg.id,
+                      package_name: pkg.name,
+                      users_count: pkg.users_count,
+                      final_price: calculateFinalPrice(),
+                      payment_method: paymentMethod
+                    })
+                  }}
+                  className="coachee-btn-primary text-lg px-8 py-4"
+                >
+                  <Zap className="w-5 h-5" />
+                  התחל להשתמש במערכת
+                </button>
+                
+                <p className="text-sm text-neutral-500">
+                  החלון יסגר אוטומטית בעוד {countdown} שניות...
+                </p>
               </div>
             </div>
           )}

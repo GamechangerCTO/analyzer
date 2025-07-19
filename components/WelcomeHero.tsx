@@ -13,6 +13,7 @@ interface WelcomeHeroProps {
     email: string 
   } | null
   isViewingOtherAgent?: boolean
+  isManagerDashboard?: boolean
 }
 
 // פונקציה לברכה לפי שעה
@@ -30,8 +31,8 @@ const getTimeBasedGreeting = () => {
   }
 }
 
-export default function WelcomeHero({ agentInfo, targetUserInfo, isViewingOtherAgent }: WelcomeHeroProps) {
-  const displayName = targetUserInfo?.full_name || agentInfo?.full_name || 'נציג'
+export default function WelcomeHero({ agentInfo, targetUserInfo, isViewingOtherAgent, isManagerDashboard }: WelcomeHeroProps) {
+  const displayName = targetUserInfo?.full_name || agentInfo?.full_name || (isManagerDashboard ? 'מנהל' : 'נציג')
   const isViewing = !!targetUserInfo
   const greeting = getTimeBasedGreeting()
 
@@ -60,7 +61,9 @@ export default function WelcomeHero({ agentInfo, targetUserInfo, isViewingOtherA
           <p className="text-glacier-neutral-700 text-xl mb-3 animate-in slide-in-from-bottom duration-500 delay-200">
             {isViewing 
               ? '📊 צפייה בדשבורד אג׳נט' 
-              : '🚀 פלטפורמת Coachee - חדר הכושר המכירתי שלך'
+              : isManagerDashboard 
+                ? '📈 דשבורד ניהול הצוות - סקירה מקיפה של ביצועי החברה'
+                : '🚀 פלטפורמת Coachee - חדר הכושר המכירתי שלך'
             }
           </p>
           

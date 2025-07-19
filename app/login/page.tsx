@@ -60,6 +60,20 @@ export default function LoginPage() {
               <p className="text-glacier-neutral-600 text-sm">התחבר כדי להתחיל את המסע שלך</p>
             </div>
             <LoginForm />
+            
+            {/* קישור להרשמה */}
+            <div className="mt-6 text-center">
+              <p className="text-glacier-neutral-600 text-sm mb-3">
+                עדיין אין לכם חשבון?
+              </p>
+              <a
+                href="/signup"
+                className="inline-flex items-center justify-center w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                <Sparkles className="w-4 h-4 ml-2" />
+                הרשמה והצטרפות
+              </a>
+            </div>
           </div>
           
           {/* Footer Links */}

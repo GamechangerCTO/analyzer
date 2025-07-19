@@ -14,13 +14,7 @@ export default async function ProtectedLayout({
   
   const { data: { user }, error } = await supabase.auth.getUser()
   
-  console.log('Protected Layout - Auth check:', { 
-    user: user ? `${user.email} (${user.id})` : 'null', 
-    error: error?.message 
-  })
-  
   if (!user || error) {
-    console.log('Protected Layout - Redirecting to login, no user or error:', error?.message)
     redirect('/login')
   }
 
@@ -37,7 +31,6 @@ export default async function ProtectedLayout({
   
   // אם לא נמצא לפי email, נסה לפי ID (דפוס משני)
   if (userError || !userData) {
-    console.log('Protected Layout - User not found by email, trying by ID')
     const { data: userDataById, error: idError } = await supabase
       .from('users')
       .select('id, role, is_approved, company_id')
@@ -46,23 +39,64 @@ export default async function ProtectedLayout({
     
     if (!idError && userDataById) {
       userData = userDataById
-      console.log('Protected Layout - User found by ID:', userDataById)
     } else {
-      console.log('Protected Layout - User not found in database, redirecting to not-found')
       // אם המשתמש לא קיים במערכת מפנים לדף שגיאה
       redirect('/not-approved?reason=not-found')
     }
-  } else {
-    console.log('Protected Layout - User found by email:', userData)
   }
   
   // בדיקה שהמשתמש מאושר
   if (!userData.is_approved && !isAdmin) {
-    console.log('Protected Layout - User not approved, redirecting to not-approved')
     redirect('/not-approved?reason=pending')
   }
 
-  console.log('Protected Layout - Auth successful, rendering page for:', user.email)
+  // בדיקה אם מנהל ללא חבילה - הפניה לבחירת חבילה
+  if ((userData.role === 'manager' || userData.role === 'owner') && userData.company_id) {
+    console.log('Protected Layout - Auth check:', {
+      user: `${user.email} (${user.id})`,
+      error: error || undefined
+    })
+    
+    console.log('Protected Layout - User found by email:', {
+      id: userData.id,
+      role: userData.role,
+      is_approved: userData.is_approved,
+      company_id: userData.company_id
+    })
+    
+    console.log('Protected Layout - Checking subscription for manager, company_id:', userData.company_id)
+    
+    // חיפוש מנוי פעיל (ללא .maybeSingle() שעלול לגרום לבעיות עקביות)
+    const { data: subscriptions, error: subError } = await supabase
+      .from('company_subscriptions')
+      .select('id, plan_id, is_active, starts_at, expires_at')
+      .eq('company_id', userData.company_id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+
+    console.log('Protected Layout - Subscription query result:', {
+      subscriptions,
+      subError: subError?.message,
+      hasSubscription: !!(subscriptions && subscriptions.length > 0)
+    })
+
+    if (subError) {
+      console.error('Protected Layout - Subscription query error:', subError)
+    }
+
+    // בדיקה שיש מנוי פעיל וכן תקף (לא פג תוקף)
+    const activeSubscription = subscriptions && subscriptions.length > 0 ? subscriptions[0] : null
+    const hasActiveSubscription = activeSubscription && 
+      activeSubscription.is_active && 
+      new Date(activeSubscription.expires_at) > new Date()
+
+    if (!hasActiveSubscription) {
+      console.log('Protected Layout - Manager without subscription, redirecting to subscription setup')
+      redirect('/subscription-setup?reason=no-subscription')
+    }
+    
+    console.log('Protected Layout - Subscription found, allowing access:', activeSubscription)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-glacier-primary/5 via-white to-glacier-accent/5">

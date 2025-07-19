@@ -1257,87 +1257,104 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   }, [])
 
   return (
-    <div className="p-6">
-      {/* Header פנימי עם גלס מורפיזם */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+      {/* Header פנימי עם גלס מורפיזם מתקדם */}
       <div className="relative mb-8">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-2xl"></div>
+        {/* Background layers עם אפקטי עומק */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-indigo-500/15 to-purple-500/20 rounded-3xl blur-xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10 rounded-3xl"></div>
         
         {/* Header content */}
-        <div className="relative backdrop-blur-sm bg-white/50 border border-white/30 rounded-2xl shadow-xl p-6">
+        <div className="relative backdrop-blur-xl bg-white/30 border border-white/40 rounded-3xl shadow-2xl p-8 hover:shadow-3xl transition-all duration-500">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 rtl:space-x-reverse">
-              <div className={`flex items-center justify-center w-14 h-14 rounded-2xl shadow-xl border border-white/30 backdrop-blur-sm ${
-                finalOverallScore >= 8 ? 'bg-gradient-to-br from-green-400/20 to-emerald-500/20' :
-                finalOverallScore >= 6 ? 'bg-gradient-to-br from-yellow-400/20 to-orange-500/20' :
-                'bg-gradient-to-br from-red-400/20 to-pink-500/20'
+            <div className="flex items-center space-x-6 rtl:space-x-reverse">
+              <div className={`relative flex items-center justify-center w-20 h-20 rounded-3xl shadow-2xl border-2 border-white/50 backdrop-blur-xl transition-all duration-500 hover:scale-110 ${
+                finalOverallScore >= 8 ? 'bg-gradient-to-br from-emerald-400/30 to-green-500/30' :
+                finalOverallScore >= 6 ? 'bg-gradient-to-br from-amber-400/30 to-orange-500/30' :
+                'bg-gradient-to-br from-red-400/30 to-pink-500/30'
               }`}>
-                <span className={`text-2xl font-bold ${getScoreColor(finalOverallScore)}`}>
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-3xl"></div>
+                <span className={`relative text-3xl font-bold ${getScoreColor(finalOverallScore)} animate-pulse`}>
                   {finalOverallScore}
                 </span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent">
-                  {call.call_type === 'sales' ? 'שיחת מכירות' : 
-                   call.call_type === 'customer_service' ? 'שיחת שירות' : 
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-800 via-blue-700 to-indigo-600 bg-clip-text text-transparent">
+                  {call.call_type === 'sales' ? 'שיחת מכירות מקצועית' : 
+                   call.call_type === 'customer_service' ? 'שיחת שירות מקצועית' : 
                    'ניתוח שיחה מקצועי'}
                 </h2>
-                <p className="text-slate-600 text-sm">תוצאות מפורטות מבוססות AI מתקדם</p>
+                <p className="text-slate-600 text-lg font-medium mt-1">תוצאות מפורטות מבוססות AI מתקדם ✨</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3 rtl:space-x-reverse">
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
               {finalRedFlag && (
-                <div className="flex items-center px-4 py-2 bg-gradient-to-r from-red-500/20 to-pink-500/20 backdrop-blur-sm border border-red-300/30 text-red-700 rounded-xl text-sm font-medium shadow-lg animate-pulse">
-                  🚨 דגל אדום
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/30 to-pink-500/30 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+                  <div className="relative flex items-center px-6 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 backdrop-blur-xl border border-red-300/40 text-red-700 rounded-2xl text-sm font-bold shadow-xl animate-pulse hover:shadow-2xl transition-all duration-300">
+                    🚨 דגל אדום
+                  </div>
                 </div>
               )}
               {/* כפתור שאלון חברה למנהלים */}
               {userRole === 'manager' && (
                 <a
                   href="/company-questionnaire"
-                  className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl font-medium transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 backdrop-blur-sm border border-white/20"
+                  className="relative group overflow-hidden"
                   title="עריכת שאלון החברה"
                 >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  שאלון חברה
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-indigo-600/30 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+                  <div className="relative flex items-center px-6 py-3 bg-gradient-to-r from-purple-500/80 to-indigo-600/80 hover:from-purple-600/90 hover:to-indigo-700/90 text-white rounded-2xl font-bold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 backdrop-blur-xl border border-white/30">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    שאלון חברה
+                  </div>
                 </a>
               )}
-              <div className="px-3 py-1 bg-white/50 backdrop-blur-sm rounded-xl border border-white/30 shadow-lg">
-                <CallStatusBadge status={status} />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-2xl blur-md"></div>
+                <div className="relative px-4 py-2 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/40 shadow-xl">
+                  <CallStatusBadge status={status} />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Navigation Tabs עם גלס מורפיזם */}
+      {/* Navigation Tabs עם גלס מורפיזם מתקדם */}
       <div className="mb-8">
-        <div className="backdrop-blur-xl bg-white/30 border border-white/30 rounded-2xl shadow-xl p-2">
-          <nav className="flex flex-wrap gap-2">
-            {['content', 'tone', 'summary', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`relative py-3 px-6 rounded-xl font-medium transition-all duration-300 overflow-hidden group ${
-                  activeTab === tab
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl border border-white/20'
-                    : 'text-slate-600 bg-white/50 hover:bg-white/70 hover:text-blue-600 border border-white/30 hover:border-blue-300/50'
-                }`}
-              >
-                {activeTab === tab && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-indigo-400/20 animate-pulse"></div>
-                )}
-                <span className="relative z-10">
-                  {tab === 'summary' ? '📊 סיכום כללי' :
-                   tab === 'tone' ? '🎭 ניתוח טונציה' :
-                   tab === 'content' ? '📝 ניתוח מפורט' :
-                   '📄 תמליל'}
-                </span>
-              </button>
-            ))}
-          </nav>
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-indigo-500/15 to-purple-500/20 rounded-3xl blur-xl"></div>
+          <div className="relative backdrop-blur-2xl bg-white/20 border border-white/40 rounded-3xl shadow-2xl p-3">
+            <nav className="flex flex-wrap gap-3">
+              {['content', 'tone', 'summary', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`relative py-4 px-8 rounded-2xl font-bold transition-all duration-500 overflow-hidden group ${
+                    activeTab === tab
+                      ? 'bg-gradient-to-r from-blue-600/90 to-indigo-600/90 text-white shadow-2xl border border-white/30 scale-105'
+                      : 'text-slate-700 bg-white/40 hover:bg-white/60 hover:text-blue-700 border border-white/40 hover:border-blue-400/60 hover:shadow-xl hover:scale-105'
+                  }`}
+                >
+                  {activeTab === tab && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/30 to-indigo-400/30 animate-pulse rounded-2xl"></div>
+                  )}
+                  <span className="relative z-10 flex items-center">
+                    {tab === 'summary' ? '📊 סיכום כללי' :
+                     tab === 'tone' ? '🎭 ניתוח טונציה' :
+                     tab === 'content' ? '📝 ניתוח מפורט' :
+                     '📄 תמליל'}
+                  </span>
+                  {activeTab !== tab && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/10 group-hover:to-indigo-500/10 rounded-2xl transition-all duration-300"></div>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
         </div>
       </div>
 

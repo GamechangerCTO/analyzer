@@ -7,10 +7,10 @@
   direction: rtl;
 }
 
-/* Custom Scrollbar - 2025 Design */
+/* Custom Scrollbar - 2025 Design with New Brand Colors */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #B5F9FF #f1f5f9;
+  scrollbar-color: #5336BF #f1f5f9;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -23,14 +23,14 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #B5F9FF, #C9FFEE);
+  background: linear-gradient(to bottom, #5336BF, #CFF2CE);
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #96E6F3, #B3F5E0);
-  box-shadow: 0 2px 8px rgba(181, 249, 255, 0.3);
+  background: linear-gradient(to bottom, #472DA6, #3DA61F);
+  box-shadow: 0 2px 8px rgba(71, 45, 166, 0.3);
 }
 
 /* Touch-friendly mobile interactions */
@@ -48,44 +48,44 @@
   }
 }
 
-/* קומפוננטים בסיסיים עם Glacier Design System */
+/* קומפוננטים בסיסיים עם Brand Design System */
 
 /* כפתורים מודרניים */
 .coachee-btn-primary {
-  @apply inline-flex items-center px-6 py-3 bg-gradient-to-r from-glacier-primary to-glacier-primary-dark 
-         text-white font-semibold rounded-2xl shadow-glacier-soft 
-         hover:from-glacier-primary-dark hover:to-glacier-primary-dark 
-         hover:scale-105 hover:-translate-y-1 hover:shadow-glacier-hover
+  @apply inline-flex items-center px-6 py-3 bg-gradient-to-r from-brand-primary to-brand-primary-light 
+         text-white font-semibold rounded-2xl shadow-brand-soft 
+         hover:from-brand-primary-dark hover:to-brand-primary 
+         hover:scale-105 hover:-translate-y-1 hover:shadow-brand-hover
          active:scale-95 transition-all duration-300 
-         focus:outline-none focus:ring-4 focus:ring-glacier-primary-light;
+         focus:outline-none focus:ring-4 focus:ring-brand-primary/30;
 }
 
 .coachee-btn-secondary {
   @apply inline-flex items-center px-6 py-3 bg-white border-2 border-neutral-200 
-         text-neutral-700 font-semibold rounded-2xl shadow-glacier-soft
-         hover:bg-glacier-primary-light hover:border-glacier-primary hover:scale-105 hover:-translate-y-1
+         text-neutral-700 font-semibold rounded-2xl shadow-brand-soft
+         hover:bg-brand-accent hover:border-brand-secondary hover:scale-105 hover:-translate-y-1
          active:scale-95 transition-all duration-300 
-         focus:outline-none focus:ring-4 focus:ring-glacier-primary-light;
+         focus:outline-none focus:ring-4 focus:ring-brand-secondary/30;
 }
 
 .coachee-btn-accent {
-  @apply inline-flex items-center px-6 py-3 bg-gradient-to-r from-glacier-secondary to-glacier-secondary-dark 
-         text-white font-semibold rounded-2xl shadow-glacier-soft 
-         hover:from-glacier-secondary-dark hover:to-glacier-secondary-dark 
-         hover:scale-105 hover:-translate-y-1 hover:shadow-glacier-hover
+  @apply inline-flex items-center px-6 py-3 bg-gradient-to-r from-brand-secondary to-brand-secondary-dark 
+         text-white font-semibold rounded-2xl shadow-brand-soft 
+         hover:from-brand-secondary-dark hover:to-brand-secondary 
+         hover:scale-105 hover:-translate-y-1 hover:shadow-brand-hover
          active:scale-95 transition-all duration-300 
-         focus:outline-none focus:ring-4 focus:ring-glacier-secondary-light;
+         focus:outline-none focus:ring-4 focus:ring-brand-secondary/30;
 }
 
 /* כרטיסים מעוצבים */
 .coachee-card {
-  @apply bg-white/90 backdrop-blur-md border border-neutral-200/50 rounded-3xl shadow-glacier-soft 
-         hover:shadow-glacier-hover hover:-translate-y-1 transition-all duration-500;
+  @apply bg-white/90 backdrop-blur-md border border-neutral-200/50 rounded-3xl shadow-brand-soft 
+         hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-500;
 }
 
 .coachee-card-glass {
-  @apply bg-white/80 backdrop-blur-md border border-neutral-200/50 rounded-3xl shadow-glacier-soft 
-         hover:shadow-glacier-hover hover:-translate-y-1 transition-all duration-500
+  @apply bg-white/80 backdrop-blur-md border border-neutral-200/50 rounded-3xl shadow-brand-soft 
+         hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-500
          relative overflow-hidden;
 }
 
@@ -103,38 +103,38 @@
 .coachee-input {
   @apply w-full px-4 py-3 bg-white/90 border border-neutral-200 rounded-2xl 
          text-neutral-900 placeholder-neutral-500
-         focus:outline-none focus:ring-4 focus:ring-glacier-primary-light focus:border-glacier-primary
+         focus:outline-none focus:ring-4 focus:ring-brand-primary/30 focus:border-brand-primary
          transition-all duration-300 backdrop-blur-sm;
 }
 
 .coachee-textarea {
   @apply w-full px-4 py-3 bg-white/90 border border-neutral-200 rounded-2xl 
          text-neutral-900 placeholder-neutral-500 resize-none
-         focus:outline-none focus:ring-4 focus:ring-glacier-primary-light focus:border-glacier-primary
+         focus:outline-none focus:ring-4 focus:ring-brand-primary/30 focus:border-brand-primary
          transition-all duration-300 backdrop-blur-sm;
 }
 
 /* ניווט מודרני */
 .coachee-nav-item {
   @apply flex items-center gap-3 px-4 py-3 text-neutral-700 rounded-2xl
-         hover:bg-glacier-primary-light hover:text-glacier-primary-dark 
+         hover:bg-brand-accent hover:text-brand-primary-dark 
          hover:scale-105 hover:-translate-y-0.5
          active:scale-95 transition-all duration-300 cursor-pointer;
 }
 
 .coachee-nav-item.active {
-  @apply bg-gradient-to-r from-glacier-primary to-glacier-primary-dark text-white shadow-glacier-soft;
+  @apply bg-gradient-to-r from-brand-primary to-brand-primary-light text-white shadow-brand-soft;
 }
 
 /* אינדיקטורי סטטוס */
 .success-indicator {
   @apply inline-flex items-center px-3 py-1 rounded-xl text-sm font-medium
-         bg-green-100 text-green-700 border border-green-200;
+         bg-brand-success-light text-brand-success-dark border border-brand-success/30;
 }
 
 .warning-indicator {
   @apply inline-flex items-center px-3 py-1 rounded-xl text-sm font-medium
-         bg-amber-100 text-amber-700 border border-amber-200;
+         bg-brand-warning-light text-brand-warning-dark border border-brand-warning/30;
 }
 
 .error-indicator {
@@ -144,424 +144,131 @@
 
 .red-flag-indicator {
   @apply inline-flex items-center px-3 py-1 rounded-xl text-sm font-medium
-         bg-red-100 text-red-700 border border-red-200 animate-glacier-pulse;
+         bg-red-100 text-red-700 border border-red-200 animate-brand-pulse;
 }
 
-/* דירוגי ציונים */
-.score-display {
-  @apply inline-flex items-center px-3 py-2 rounded-xl text-sm font-bold border;
+/* דירוגי ציונים עם הצבעים החדשים */
+.score-excellent {
+  @apply bg-gradient-to-r from-brand-success to-brand-success-dark text-white font-bold px-4 py-2 rounded-2xl shadow-brand-soft;
 }
 
-.score-high {
-  @apply bg-green-100 text-green-700 border-green-200;
+.score-good {
+  @apply bg-gradient-to-r from-brand-secondary-light to-brand-accent text-brand-secondary-dark font-bold px-4 py-2 rounded-2xl;
 }
 
-.score-medium {
-  @apply bg-amber-100 text-amber-700 border-amber-200;
+.score-average {
+  @apply bg-gradient-to-r from-brand-warning-light to-brand-warning text-brand-warning-dark font-bold px-4 py-2 rounded-2xl;
 }
 
-.score-low {
-  @apply bg-red-100 text-red-700 border-red-200;
+.score-poor {
+  @apply bg-gradient-to-r from-red-100 to-red-200 text-red-700 font-bold px-4 py-2 rounded-2xl;
 }
 
-/* טיפוגרפיה מותאמת */
-.coachee-text-display {
-  @apply text-neutral-900 font-bold leading-tight;
+/* טבלאות מודרניות */
+.coachee-table {
+  @apply w-full bg-white/90 backdrop-blur-md rounded-3xl shadow-brand-soft overflow-hidden;
 }
 
-.coachee-text-headline {
-  @apply text-neutral-800 font-semibold leading-snug;
+.coachee-table th {
+  @apply bg-gradient-to-r from-brand-primary to-brand-primary-light text-white font-semibold px-6 py-4 text-right;
 }
 
-.coachee-text-body {
-  @apply text-neutral-700 leading-relaxed;
+.coachee-table td {
+  @apply px-6 py-4 border-b border-neutral-100 text-neutral-700;
 }
 
-.coachee-text-caption {
-  @apply text-neutral-600 text-sm;
+.coachee-table tr:hover {
+  @apply bg-brand-accent/20 transition-colors duration-200;
 }
 
-/* אנימציות Glacier מתקדמות */
-@keyframes glacier-float {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-10px) scale(1.02); }
+/* מודלים וחלונות קופצים */
+.coachee-modal {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4;
 }
 
-@keyframes glacier-float-delayed {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-8px) scale(1.01); }
+.coachee-modal-content {
+  @apply bg-white/95 backdrop-blur-xl rounded-3xl shadow-brand-strong border border-neutral-200/50 
+         max-w-lg w-full max-h-[90vh] overflow-y-auto;
 }
 
-@keyframes glacier-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
+/* אנימציות מותאמות אישית */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes glacier-sparkle {
-  0%, 100% { opacity: 1; transform: rotate(0deg) scale(1); }
-  25% { opacity: 0.7; transform: rotate(90deg) scale(1.1); }
-  50% { opacity: 1; transform: rotate(180deg) scale(1); }
-  75% { opacity: 0.7; transform: rotate(270deg) scale(1.1); }
+@keyframes slideInFromBottom {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes glacier-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes glacier-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
 }
 
-@keyframes glacier-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(181, 249, 255, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(181, 249, 255, 0.6); }
+.animate-slide-in-bottom {
+  animation: slideInFromBottom 0.6s ease-out;
 }
 
-/* קלאסי עזר לאנימציות */
-.animate-glacier-float {
-  animation: glacier-float 6s ease-in-out infinite;
+.animate-scale-in {
+  animation: scaleIn 0.4s ease-out;
 }
 
-.animate-glacier-float-delayed {
-  animation: glacier-float-delayed 8s ease-in-out infinite 2s;
+/* גרדיאנטים לרקע */
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #472DA6 0%, #5336BF 50%, #3DA61F 100%);
 }
 
-.animate-glacier-pulse {
-  animation: glacier-pulse 3s ease-in-out infinite;
+.bg-brand-primary-gradient {
+  background: linear-gradient(135deg, #472DA6 0%, #5336BF 100%);
 }
 
-.animate-glacier-sparkle {
-  animation: glacier-sparkle 4s ease-in-out infinite;
+.bg-brand-secondary-gradient {
+  background: linear-gradient(135deg, #3DA61F 0%, #CFF2CE 100%);
 }
 
-.animate-glacier-shimmer {
-  animation: glacier-shimmer 2s linear infinite;
+/* טקסט בגרדיאנט */
+.text-brand-gradient {
+  background: linear-gradient(135deg, #472DA6 0%, #5336BF 50%, #3DA61F 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.animate-glacier-bounce {
-  animation: glacier-bounce 2s ease-in-out infinite;
-}
-
-.animate-glacier-glow {
-  animation: glacier-glow 3s ease-in-out infinite;
-}
-
-/* אפקטי Hover מתקדמים */
-.hover-glacier-lift {
-  @apply transition-all duration-300 hover:scale-105 hover:-translate-y-2 hover:shadow-glacier-hover;
-}
-
-.hover-glacier-glow {
-  @apply transition-all duration-300;
-}
-
-/* רכיבי טעינה מעוצבים */
-.coachee-loading-spinner {
-  @apply w-8 h-8 border-4 border-neutral-200 border-t-glacier-primary rounded-full animate-spin;
-}
-
-.coachee-loading-dots::after {
-    content: '';
-  @apply inline-block w-1 h-1 bg-glacier-primary rounded-full;
-  animation: glacier-bounce 2s ease-in-out infinite;
-  animation-delay: 0.1s;
-}
-
-/* מחלקות עזר לרקע */
-.bg-glacier-gradient {
-  background: linear-gradient(135deg, #B5F9FF 0%, #C9FFEE 25%, #E2FFE0 50%, #FEFFD6 75%, #FFF1CC 100%);
-}
-
-.bg-glacier-glass {
-  @apply bg-white/80 backdrop-blur-md;
-}
-
-/* עיצוב Sidebar מתקדם */
-.coachee-glass-sidebar {
-  @apply bg-white/95 backdrop-blur-xl;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(181, 249, 255, 0.05) 100%);
-  box-shadow: 
-    0 0 0 1px rgba(255, 255, 255, 0.3),
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    0 0 0 0.5px rgba(181, 249, 255, 0.2);
-  border-left: 1px solid rgba(181, 249, 255, 0.3);
-}
-
-/* עיצוב Navigation מתקדם */
-.coachee-nav-item {
-  @apply relative overflow-hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.coachee-nav-item::before {
-  content: '';
-  @apply absolute inset-0 opacity-0 transition-opacity duration-300;
-  background: linear-gradient(to right, rgba(31, 170, 219, 0.1), rgba(125, 211, 252, 0.1));
-}
-
-.coachee-nav-item:hover::before {
-  @apply opacity-100;
-}
-
-.coachee-nav-item-active {
-  @apply relative overflow-hidden;
-  background: linear-gradient(135deg, #1FAADB 0%, #7DD3FC 100%);
-  box-shadow: 
-    0 4px 14px rgba(31, 170, 219, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.2);
-}
-
-.coachee-nav-item-active::after {
-  content: '';
-  @apply absolute inset-0;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
-}
-
-/* שיפורי נגישות */
+/* מדיה קוורי לאופטימיזציה נוספת */
 @media (prefers-reduced-motion: reduce) {
-  .animate-glacier-float,
-  .animate-glacier-float-delayed,
-  .animate-glacier-pulse,
-  .animate-glacier-sparkle,
-  .animate-glacier-shimmer,
-  .animate-glacier-bounce,
-  .animate-glacier-glow {
-    animation: none;
+  .coachee-btn-primary,
+  .coachee-btn-secondary,
+  .coachee-btn-accent,
+  .coachee-card,
+  .coachee-card-glass,
+  .coachee-nav-item {
+    transition: none;
   }
   
-  .hover-glacier-lift {
-    @apply hover:scale-100 hover:translate-y-0;
+  .animate-brand-pulse,
+  .animate-brand-bounce,
+  .animate-fade-in,
+  .animate-slide-in-bottom,
+  .animate-scale-in {
+    animation: none;
   }
 }
 
-/* תמיכה במצב כהה */
+/* Dark mode support (future-ready) */
 @media (prefers-color-scheme: dark) {
-  .coachee-card {
+  .coachee-card,
+  .coachee-card-glass {
     @apply bg-neutral-800/90 border-neutral-700/50;
   }
   
-  .coachee-input {
-    @apply bg-neutral-800/90 border-neutral-700 text-white;
-  }
-  
-  .coachee-text-display {
-    @apply text-white;
-  }
-  
-  .coachee-text-headline {
-    @apply text-neutral-200;
-  }
-  
-  .coachee-text-body {
-    @apply text-neutral-300;
-  }
-}
-
-/* אפקטי הדפסה */
-@media print {
-  .coachee-card {
-    @apply shadow-none border border-gray-300;
-  }
-  
-  .animate-glacier-float,
-  .animate-glacier-float-delayed,
-  .animate-glacier-pulse,
-  .animate-glacier-sparkle,
-  .animate-glacier-shimmer,
-  .animate-glacier-bounce,
-  .animate-glacier-glow {
-    animation: none;
-  }
-}
-
-/* עיצובים ספציפיים לדף ניתוח שיחות */
-
-/* Header אלגנטי עם גלס מורפיזם */
-.call-analysis-header {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-/* ציון כללי עם אנימציה */
-.score-circle {
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-.score-circle:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-/* טאבים מתקדמים */
-.analysis-tab {
-  position: relative;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3));
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-}
-
-.analysis-tab::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(45deg, rgba(59, 130, 246, 0.1), rgba(79, 70, 229, 0.1));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.analysis-tab:hover::before {
-  opacity: 1;
-}
-
-.analysis-tab.active {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(79, 70, 229, 0.9));
-  box-shadow: 
-    0 10px 25px rgba(59, 130, 246, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.2);
-}
-
-.analysis-tab.active::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
-}
-
-/* כרטיסי ציונים מתקדמים */
-.score-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.score-card:hover {
-  transform: translateY(-2px);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-/* אנימציות ציונים */
-@keyframes score-reveal {
-  from {
-    opacity: 0;
-    transform: scale(0.8) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.score-animation {
-  animation: score-reveal 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-/* הדגשת קטגוריות */
-.category-highlight {
-  position: relative;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
-  backdrop-filter: blur(16px);
-  border: 2px solid rgba(59, 130, 246, 0.3);
-  box-shadow: 
-    0 20px 40px rgba(59, 130, 246, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.4);
-  animation: glacier-glow 2s ease-in-out infinite;
-}
-
-.category-highlight::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  background: linear-gradient(45deg, rgba(59, 130, 246, 0.3), rgba(79, 70, 229, 0.3));
-  border-radius: inherit;
-  z-index: -1;
-  animation: glacier-shimmer 3s linear infinite;
-}
-
-/* אפקטי טעינה לניתוח */
-.analysis-loading {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-}
-
-.progress-bar {
-  background: linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6);
-  background-size: 200% 100%;
-  animation: glacier-shimmer 2s linear infinite;
-  box-shadow: 
-    0 4px 12px rgba(59, 130, 246, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-/* ציטוטים אינטראקטיביים */
-.quote-button {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(244, 63, 94, 0.1));
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.quote-button:hover {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(244, 63, 94, 0.2));
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
-}
-
-.quote-playing {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(244, 63, 94, 0.3));
-  animation: glacier-pulse 2s ease-in-out infinite;
-  border-color: rgba(239, 68, 68, 0.5);
-}
-
-/* רספונסיביות מתקדמת */
-@media (max-width: 768px) {
-  .call-analysis-header {
-    backdrop-filter: blur(12px);
-  }
-  
-  .score-card {
-    backdrop-filter: blur(8px);
-  }
-  
-  .analysis-tab {
-    backdrop-filter: blur(6px);
-  }
-}
-
-/* אפקטי נגישות */
-@media (prefers-reduced-motion: reduce) {
-  .score-animation,
-  .category-highlight,
-  .progress-bar,
-  .quote-playing {
-    animation: none;
-  }
-  
-  .score-circle:hover,
-  .score-card:hover,
-  .quote-button:hover {
-    transform: none;
+  .coachee-input,
+  .coachee-textarea {
+    @apply bg-neutral-800/90 border-neutral-700 text-neutral-100;
   }
 }

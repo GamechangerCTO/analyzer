@@ -28,7 +28,10 @@ export async function POST(request: NextRequest) {
       packageId, 
       packageName, 
       additionalUsers, 
+      additionalMinutes,
+      additionalAgents,
       price, 
+      pricePerAgent,
       companyId, 
       requestedBy,
       originalPrice,
@@ -36,17 +39,29 @@ export async function POST(request: NextRequest) {
       savings,
       paymentMethod,
       transactionId,
-      isPaid
+      isPaid,
+      type // 'minutes' או 'agents' או 'users' (backward compatibility)
     } = body
 
     // בדיקת נתונים בסיסיים עם הודעות ספציפיות
     const missingFields = []
     if (!packageId) missingFields.push('packageId')
     if (!packageName) missingFields.push('packageName')
-    if (!additionalUsers || additionalUsers <= 0) missingFields.push('additionalUsers')
     if (!price || price <= 0) missingFields.push('price')
     if (!companyId) missingFields.push('companyId')
     if (!requestedBy) missingFields.push('requestedBy')
+    if (!type) missingFields.push('type')
+
+    // בדיקות ספציפיות לפי סוג הרכישה
+    if (type === 'minutes' && (!additionalMinutes || additionalMinutes <= 0)) {
+      missingFields.push('additionalMinutes')
+    }
+    if (type === 'agents' && (!additionalAgents || additionalAgents <= 0)) {
+      missingFields.push('additionalAgents')
+    }
+    if (type === 'users' && (!additionalUsers || additionalUsers <= 0)) {
+      missingFields.push('additionalUsers')
+    }
 
     if (missingFields.length > 0) {
       console.error('Missing required fields:', missingFields)
@@ -139,10 +154,14 @@ export async function POST(request: NextRequest) {
     // הכנת נתוני הבקשה
     const requestNotes = {
       type: 'quota_purchase',
+      purchase_type: type,
       package_id: packageId,
       package_name: packageName,
-      additional_users: additionalUsers,
+      additional_users: additionalUsers || null,
+      additional_minutes: additionalMinutes || null,
+      additional_agents: additionalAgents || null,
       price: price,
+      price_per_agent: pricePerAgent || null,
       original_price: originalPrice || price,
       discount: discount || null,
       savings: savings || 0,
@@ -184,8 +203,12 @@ export async function POST(request: NextRequest) {
         companyName: companyData.name,
         requesterName: userData.full_name || 'משתמש לא ידוע',
         packageName,
+        type,
         additionalUsers,
+        additionalMinutes,
+        additionalAgents,
         price,
+        pricePerAgent,
         requestId: purchaseRequest.id,
         isPaid: isPaid || false,
         transactionId: transactionId || null
@@ -239,8 +262,12 @@ async function createAdminNotification(
     companyName: string
     requesterName: string
     packageName: string
-    additionalUsers: number
+    type: string
+    additionalUsers?: number | null
+    additionalMinutes?: number | null
+    additionalAgents?: number | null
     price: number
+    pricePerAgent?: number | null
     requestId: string
     isPaid?: boolean
     transactionId?: string | null
@@ -253,13 +280,23 @@ async function createAdminNotification(
       .select('user_id')
 
     if (admins && admins.length > 0) {
-      const notificationTitle = data.isPaid 
-        ? 'תשלום התקבל - עדכון מכסה נדרש'
-        : 'בקשה לרכישת מכסת משתמשים'
+      let itemDescription = ''
+      let notificationTitle = ''
+      
+      if (data.type === 'minutes') {
+        itemDescription = `+${data.additionalMinutes} דקות`
+        notificationTitle = data.isPaid ? 'תשלום התקבל - עדכון דקות נדרש' : 'בקשה לרכישת דקות נוספות'
+      } else if (data.type === 'agents') {
+        itemDescription = `+${data.additionalAgents} נציגים (+${data.additionalMinutes || data.additionalAgents! * 240} דקות)`
+        notificationTitle = data.isPaid ? 'תשלום התקבל - עדכון נציגים נדרש' : 'בקשה לרכישת נציגים נוספים'
+      } else {
+        itemDescription = `+${data.additionalUsers} משתמשים`
+        notificationTitle = data.isPaid ? 'תשלום התקבל - עדכון מכסה נדרש' : 'בקשה לרכישת מכסת משתמשים'
+      }
       
       const notificationMessage = data.isPaid
-        ? `${data.requesterName} מחברת ${data.companyName} שילם עבור ${data.packageName} (+${data.additionalUsers} משתמשים) בסך ${data.price}₪. נדרש עדכון מכסה.`
-        : `${data.requesterName} מחברת ${data.companyName} ביקש לרכוש ${data.packageName} (+${data.additionalUsers} משתמשים) בעלות ${data.price}₪`
+        ? `${data.requesterName} מחברת ${data.companyName} שילם עבור ${data.packageName} (${itemDescription}) בסך ${data.price}₪. נדרש עדכון מכסה.`
+        : `${data.requesterName} מחברת ${data.companyName} ביקש לרכוש ${data.packageName} (${itemDescription}) בעלות ${data.price}₪`
 
       // יצירת התראה לכל מנהל מערכת
       const notifications = admins.map((admin: { user_id: string }) => ({
@@ -275,8 +312,12 @@ async function createAdminNotification(
           companyName: data.companyName,
           requesterName: data.requesterName,
           packageName: data.packageName,
-          additionalUsers: data.additionalUsers,
+          purchaseType: data.type,
+          additionalUsers: data.additionalUsers || null,
+          additionalMinutes: data.additionalMinutes || null,
+          additionalAgents: data.additionalAgents || null,
           price: data.price,
+          pricePerAgent: data.pricePerAgent || null,
           type: 'quota_purchase',
           isPaid: data.isPaid || false,
           transactionId: data.transactionId || null

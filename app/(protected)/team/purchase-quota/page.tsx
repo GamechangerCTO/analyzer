@@ -3,84 +3,117 @@
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Database } from '@/types/database.types'
-import PaymentModal from '@/components/PaymentModal'
+import { Clock, Zap, AlertCircle, ArrowLeft, Star, Target, CheckCircle } from 'lucide-react'
 
-interface QuotaPackage {
+interface MinutesPackage {
   id: string
   name: string
-  users: number
+  minutes: number
   price: number
   description: string
   popular?: boolean
+  per_minute_cost: number
+  savings?: string
 }
 
-interface PaymentPackage {
+interface AgentPackage {
   id: string
   name: string
-  users_count: number
-  base_price: number
+  agents: number
+  price_per_agent: number
   description: string
-  is_popular: boolean
+  popular?: boolean
+  total_minutes: number
+  savings?: string
 }
 
-const quotaPackages: QuotaPackage[] = [
+const minutesPackages: MinutesPackage[] = [
   {
-    id: 'basic',
-    name: 'BASIC',
-    users: 3, // ממוצע יוזרים בחברה
-    price: 29, // מחיר חודשי למשתמש בדולרים
-    description: 'ניתוחי שיחות, דוחות - מחיר למשתמש לחודש'
+    id: 'small_pack',
+    name: 'חבילה קטנה',
+    minutes: 200,
+    price: 29,
+    description: '200 דקות נוספות - מושלם לחברות קטנות',
+    per_minute_cost: 0.145
   },
   {
-    id: 'professional',
-    name: 'PROFESSIONAL',
-    users: 3, // ממוצע יוזרים בחברה
-    price: 89, // מחיר חודשי למשתמש בדולרים
-    description: 'ניתוחי שיחות, דוחות, סימולציות - מחיר למשתמש לחודש',
-    popular: true
+    id: 'standard_pack', 
+    name: 'חבילה סטנדרטית',
+    minutes: 500,
+    price: 69,
+    description: '500 דקות נוספות - הכי פופולרי לחברות בינוניות',
+    popular: true,
+    per_minute_cost: 0.138,
+    savings: 'חיסכון של 5%'
   },
   {
-    id: 'premium',
-    name: 'PREMIUM',
-    users: 3, // ממוצע יוזרים בחברה
-    price: 109, // מחיר חודשי למשתמש בדולרים
-    description: 'ניתוחי שיחות, דוחות, סימולציות, יועץ מלווה שעה בחודש - מחיר למשתמש לחודש'
+    id: 'large_pack',
+    name: 'חבילה גדולה', 
+    minutes: 1000,
+    price: 129,
+    description: '1,000 דקות נוספות - מושלם לחברות גדולות',
+    per_minute_cost: 0.129,
+    savings: 'חיסכון של 11%'
+  },
+  {
+    id: 'mega_pack',
+    name: 'חבילה ענקית',
+    minutes: 2000,
+    price: 239,
+    description: '2,000 דקות נוספות - החיסכון הגדול ביותר',
+    per_minute_cost: 0.1195,
+    savings: 'חיסכון של 18%'
   }
 ]
 
-export default function PurchaseQuotaPage() {
-  const [currentQuota, setCurrentQuota] = useState<{total_users: number, used_users: number, available_users: number} | null>(null)
-  const [selectedPackage, setSelectedPackage] = useState<string | null>(null)
+const agentPackages: AgentPackage[] = [
+  {
+    id: 'agents_1_to_5',
+    name: 'חבילת נציגים קטנה',
+    agents: 3,
+    price_per_agent: 69,
+    description: '3 נציגים נוספים עם 240 דקות לכל נציג (720 דקות סה"כ)',
+    total_minutes: 720, // 3 * 240
+  },
+  {
+    id: 'agents_6_to_10',
+    name: 'חבילת נציגים בינונית',
+    agents: 5,
+    price_per_agent: 59,
+    description: '5 נציגים נוספים עם 240 דקות לכל נציג (1,200 דקות סה"כ)',
+    popular: true,
+    total_minutes: 1200, // 5 * 240
+    savings: 'חיסכון של $50 לנציג'
+  },
+  {
+    id: 'agents_11_plus',
+    name: 'חבילת נציגים גדולה',
+    agents: 10,
+    price_per_agent: 49,
+    description: '10 נציגים נוספים עם 240 דקות לכל נציג (2,400 דקות סה"כ)',
+    total_minutes: 2400, // 10 * 240
+    savings: 'חיסכון של $200 לנציג'
+  }
+]
+
+export default function PurchaseMinutesPage() {
+  const [currentQuota, setCurrentQuota] = useState<{
+    total_minutes: number
+    used_minutes: number
+    available_minutes: number
+    is_poc: boolean
+    can_purchase_additional: boolean
+    usage_percentage: number
+  } | null>(null)
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null)
   const [userInfo, setUserInfo] = useState<{userId: string, companyId: string} | null>(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [selectedPackageForPayment, setSelectedPackageForPayment] = useState<PaymentPackage | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly') // תמחור חודשי/שנתי
-  const [userCount, setUserCount] = useState(3) // ברירת מחדל 3 משתמשים
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'minutes' | 'agents'>('minutes')
 
   const supabase = createClient()
-
-  // פונקציה לחישוב מחיר לפי מספר משתמשים וסוג תמחור
-  const calculatePrice = (packagePrice: number, users: number, period: 'monthly' | 'yearly') => {
-    const totalMonthlyPrice = packagePrice * users
-    if (period === 'yearly') {
-      // 15% הנחה על תמחור שנתי
-      const yearlyPrice = totalMonthlyPrice * 12
-      const discountedPrice = yearlyPrice * 0.85 // 15% הנחה
-      return Math.round(discountedPrice)
-    }
-    return totalMonthlyPrice
-  }
-
-  // פונקציה לחישוב חיסכון שנתי
-  const calculateYearlySavings = (packagePrice: number, users: number) => {
-    const monthlyTotal = packagePrice * users * 12
-    const yearlyTotal = calculatePrice(packagePrice, users, 'yearly')
-    return monthlyTotal - yearlyTotal
-  }
 
   useEffect(() => {
     fetchUserData()
@@ -91,38 +124,25 @@ export default function PurchaseQuotaPage() {
       // קבלת המשתמש הנוכחי
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       
-      if (userError) {
-        console.error('Error getting user:', userError)
-        setSuccessMessage('❌ שגיאה באימות המשתמש')
-        setTimeout(() => setSuccessMessage(null), 3000)
-        return
-      }
-
-      if (!user) {
-        console.error('No user found')
-        setSuccessMessage('❌ משתמש לא מחובר')
-        setTimeout(() => setSuccessMessage(null), 3000)
+      if (userError || !user) {
+        setErrorMessage('שגיאה באימות המשתמש')
         return
       }
 
       // קבלת פרטי המשתמש
       const { data: userData, error: userDataError } = await supabase
         .from('users')
-        .select('company_id')
+        .select('company_id, role')
         .eq('id', user.id)
         .single()
 
-      if (userDataError) {
-        console.error('Error getting user data:', userDataError)
-        setSuccessMessage('❌ שגיאה בקבלת נתוני המשתמש')
-        setTimeout(() => setSuccessMessage(null), 3000)
+      if (userDataError || !userData) {
+        setErrorMessage('לא נמצאו פרטי משתמש')
         return
       }
 
-      if (!userData || !userData.company_id) {
-        console.error('User data incomplete:', userData)
-        setSuccessMessage('❌ נתוני המשתמש לא שלמים')
-        setTimeout(() => setSuccessMessage(null), 3000)
+      if (!userData.company_id) {
+        setErrorMessage('משתמש לא משויך לחברה')
         return
       }
 
@@ -131,133 +151,43 @@ export default function PurchaseQuotaPage() {
         companyId: userData.company_id
       })
 
-      // קבלת מכסה נוכחית עם retry mechanism
-      let retryCount = 0
-      const maxRetries = 3
-      
-      while (retryCount < maxRetries) {
-        try {
-          const { data: quotaData, error: quotaError } = await supabase
-            .rpc('get_company_user_quota', { p_company_id: userData.company_id })
+      // קבלת מכסת דקות נוכחית
+      const { data: quotaData, error: quotaError } = await supabase
+        .rpc('get_company_minutes_quota', { p_company_id: userData.company_id })
 
-          if (quotaError) {
-            console.error(`Error getting quota (attempt ${retryCount + 1}):`, quotaError)
-            if (retryCount === maxRetries - 1) {
-              setSuccessMessage('❌ שגיאה בקבלת נתוני המכסה')
-              setTimeout(() => setSuccessMessage(null), 3000)
-            }
-            retryCount++
-            await new Promise(resolve => setTimeout(resolve, 1000)) // המתנה של שנייה
-            continue
-          }
-
-          if (quotaData && quotaData.length > 0) {
-            setCurrentQuota(quotaData[0])
-          }
-          break // יציאה מהלולאה אם הצלחנו
-        } catch (error) {
-          console.error(`Quota fetch error (attempt ${retryCount + 1}):`, error)
-          retryCount++
-          if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000))
-          }
-        }
+      if (quotaError) {
+        console.error('Error getting minutes quota:', quotaError)
+        setErrorMessage('שגיאה בקבלת נתוני מכסת הדקות')
+      } else if (quotaData && quotaData.length > 0) {
+        setCurrentQuota(quotaData[0])
       }
 
     } catch (error) {
       console.error('Error fetching user data:', error)
-      setSuccessMessage('❌ שגיאה כללית בטעינת הנתונים')
-      setTimeout(() => setSuccessMessage(null), 3000)
+      setErrorMessage('שגיאה כללית בטעינת הנתונים')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handlePurchaseClick = (packageId: string) => {
-    const selectedPkg = quotaPackages.find(pkg => pkg.id === packageId)
-    if (!selectedPkg) return
-
-    // חישוב המחיר הסופי
-    const totalPrice = calculatePrice(selectedPkg.price, userCount, billingPeriod)
-
-    // המרת הפורמט לפורמט של הפופאפ
-    const paymentPackage = {
-      id: selectedPkg.id,
-      name: `${selectedPkg.name} - ${userCount} משתמשים (${billingPeriod === 'monthly' ? 'חודשי' : 'שנתי'})`,
-      users_count: userCount,
-      base_price: totalPrice,
-      description: selectedPkg.description,
-      is_popular: selectedPkg.popular || false
-    }
-
-    setSelectedPackageForPayment(paymentPackage)
-    setShowPaymentModal(true)
-  }
-
-  const handlePaymentSuccess = async (paymentData: any) => {
-    if (!userInfo) return
-
-    try {
-      // שליחת הזמנה לאדמין עם פרטי התשלום
-      const response = await fetch('/api/quota/purchase-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          packageId: paymentData.package_id,
-          packageName: paymentData.package_name,
-          additionalUsers: paymentData.users_count,
-          price: paymentData.final_price,
-          originalPrice: paymentData.original_price,
-          discount: paymentData.discount_applied,
-          savings: paymentData.savings,
-          paymentMethod: paymentData.payment_method,
-          transactionId: paymentData.transaction_id,
-          companyId: userInfo.companyId,
-          requestedBy: userInfo.userId,
-          isPaid: true // מסמן שהתשלום בוצע
-        })
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        setShowPaymentModal(false)
-        setSelectedPackageForPayment(null)
-        setSuccessMessage('✅ הרכישה הושלמה בהצלחה! המכסה שלכם תעודכן תוך מספר דקות.')
-        // רענון הנתונים
-        fetchUserData()
-        // סגירה אוטומטית לאחר 3 שניות
-        setTimeout(() => {
-          setSuccessMessage(null)
-        }, 3000)
-      } else {
-        throw new Error(result.error || 'שגיאה בעיבוד הרכישה')
-      }
-
-    } catch (error) {
-      console.error('Error processing purchase:', error)
-      const errorMessage = '❌ שגיאה בעיבוד הרכישה: ' + (error as Error).message
-      setSuccessMessage(errorMessage)
-      // סגירה אוטומטית לאחר 3 שניות
-      setTimeout(() => {
-        setSuccessMessage(null)
-      }, 3000)
     }
   }
 
   const handlePurchase = async (packageId: string) => {
     if (!userInfo || !currentQuota) return
 
+    // בדיקה אם החברה יכולה לרכוש (לא POC)
+    if (!currentQuota.can_purchase_additional) {
+      setErrorMessage('חברות POC לא יכולות לרכוש דקות נוספות. פנו אלינו לשדרוג.')
+      return
+    }
+
     setPurchasing(true)
     setSelectedPackage(packageId)
+    setErrorMessage(null)
 
     try {
-      const selectedPkg = quotaPackages.find(pkg => pkg.id === packageId)
+      const selectedPkg = minutesPackages.find(pkg => pkg.id === packageId)
       if (!selectedPkg) return
 
-      // בקשה ישירה לאדמין ללא תשלום (המודל הישן)
+      // שליחת בקשה לרכישת דקות
       const response = await fetch('/api/quota/purchase-request', {
         method: 'POST',
         headers: {
@@ -266,33 +196,80 @@ export default function PurchaseQuotaPage() {
         body: JSON.stringify({
           packageId: packageId,
           packageName: selectedPkg.name,
-          additionalUsers: selectedPkg.users,
+          additionalMinutes: selectedPkg.minutes,
           price: selectedPkg.price,
           companyId: userInfo.companyId,
-          requestedBy: userInfo.userId
+          requestedBy: userInfo.userId,
+          type: 'minutes'
         })
       })
 
       const result = await response.json()
 
       if (response.ok) {
-        setSuccessMessage('✅ בקשה לרכישת מכסה נשלחה בהצלחה! נחזור אליכם בהקדם עם פרטי התשלום.')
-        // סגירה אוטומטית לאחר 3 שניות
-        setTimeout(() => {
-          setSuccessMessage(null)
-        }, 3000)
+        setSuccessMessage(`✅ בקשה לרכישת ${selectedPkg.minutes.toLocaleString()} דקות נשלחה בהצלחה! נחזור אליכם בהקדם עם פרטי התשלום.`)
       } else {
         throw new Error(result.error || 'שגיאה בשליחת הבקשה')
       }
 
     } catch (error) {
-      console.error('Error purchasing quota:', error)
-      const errorMessage = '❌ שגיאה בשליחת הבקשה: ' + (error as Error).message
-      setSuccessMessage(errorMessage)
-      // סגירה אוטומטית לאחר 3 שניות
-      setTimeout(() => {
-        setSuccessMessage(null)
-      }, 3000)
+      console.error('Error purchasing minutes:', error)
+      setErrorMessage(`❌ שגיאה בשליחת הבקשה: ${error instanceof Error ? error.message : 'שגיאה לא ידועה'}`)
+    } finally {
+      setPurchasing(false)
+      setSelectedPackage(null)
+    }
+  }
+
+  const handlePurchaseAgents = async (packageId: string) => {
+    if (!userInfo || !currentQuota) return
+
+    // בדיקה אם החברה יכולה לרכוש (לא POC)
+    if (!currentQuota.can_purchase_additional) {
+      setErrorMessage('חברות POC לא יכולות לרכוש נציגים נוספים. פנו אלינו לשדרוג.')
+      return
+    }
+
+    setPurchasing(true)
+    setSelectedPackage(packageId)
+    setErrorMessage(null)
+
+    try {
+      const selectedPkg = agentPackages.find(pkg => pkg.id === packageId)
+      if (!selectedPkg) return
+
+      const totalPrice = selectedPkg.agents * selectedPkg.price_per_agent
+
+      // שליחת בקשה לרכישת נציגים
+      const response = await fetch('/api/quota/purchase-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          packageId: packageId,
+          packageName: selectedPkg.name,
+          additionalAgents: selectedPkg.agents,
+          additionalMinutes: selectedPkg.total_minutes,
+          price: totalPrice,
+          pricePerAgent: selectedPkg.price_per_agent,
+          companyId: userInfo.companyId,
+          requestedBy: userInfo.userId,
+          type: 'agents'
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setSuccessMessage(`✅ בקשה לרכישת ${selectedPkg.agents} נציגים נשלחה בהצלחה! נחזור אליכם בהקדם עם פרטי התשלום.`)
+      } else {
+        throw new Error(result.error || 'שגיאה בשליחת הבקשה')
+      }
+
+    } catch (error) {
+      console.error('Error purchasing agents:', error)
+      setErrorMessage(`❌ שגיאה בשליחת הבקשה: ${error instanceof Error ? error.message : 'שגיאה לא ידועה'}`)
     } finally {
       setPurchasing(false)
       setSelectedPackage(null)
@@ -307,244 +284,411 @@ export default function PurchaseQuotaPage() {
     )
   }
 
+  if (errorMessage && !currentQuota) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-md">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-800 mb-2">שגיאה</h2>
+            <p className="text-gray-600 mb-4">{errorMessage}</p>
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800">
+              <ArrowLeft className="w-4 h-4" />
+              חזרה לדשבורד
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      {/* הודעת הצלחה/שגיאה */}
-      {successMessage && (
-        <div className="fixed top-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 max-w-md">
-          <div className="flex items-start">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">{successMessage}</p>
-            </div>
-            <button
-              onClick={() => setSuccessMessage(null)}
-              className="ml-3 text-gray-400 hover:text-gray-600"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="max-w-6xl mx-auto px-4">
-        {/* כותרת */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">בחירת חבילת תמחור</h1>
-          <p className="text-lg text-gray-600 mb-6">בחרו חבילה המתאימה לכם - מינימום 2 משתמשים</p>
-          
-          {/* בורר תמחור */}
-          <div className="bg-white rounded-xl shadow-md p-6 max-w-2xl mx-auto mb-6">
-            <div className="flex items-center justify-center space-x-4 mb-6">
-              <button
-                onClick={() => setBillingPeriod('monthly')}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                  billingPeriod === 'monthly'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                תמחור חודשי
-              </button>
-              <button
-                onClick={() => setBillingPeriod('yearly')}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors relative ${
-                  billingPeriod === 'yearly'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                תמחור שנתי
-                <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
-                  15% הנחה
-                </span>
-              </button>
-            </div>
-            
-            {/* בורר מספר משתמשים */}
-            <div className="flex items-center justify-center space-x-4">
-              <label className="font-medium text-gray-700">מספר משתמשים:</label>
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => setUserCount(Math.max(2, userCount - 1))}
-                  className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center"
-                >
-                  -
-                </button>
-                <span className="w-12 text-center font-bold text-lg">{userCount}</span>
-                <button
-                  onClick={() => setUserCount(userCount + 1)}
-                  className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* מכסה נוכחית */}
-          {currentQuota && (
-            <div className="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">המכסה הנוכחית שלכם</h3>
-              <div className="text-3xl font-bold text-blue-600">
-                {currentQuota.used_users}/{currentQuota.total_users}
-              </div>
-              <p className="text-sm text-gray-500 mt-1">
-                זמינים: {currentQuota.available_users} משתמשים
-              </p>
-              <div className="w-full bg-gray-200 rounded-full h-3 mt-4">
-                <div 
-                  className="bg-blue-600 h-3 rounded-full transition-all duration-300"
-                  style={{ width: `${(currentQuota.used_users / currentQuota.total_users) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* חבילות */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          {quotaPackages.map((pkg) => {
-            const totalPrice = calculatePrice(pkg.price, userCount, billingPeriod)
-            const yearlySavings = calculateYearlySavings(pkg.price, userCount)
-            
-            return (
-              <div 
-                key={pkg.id}
-                className={`bg-white rounded-xl shadow-lg border-2 transition-all duration-300 ${
-                  pkg.popular ? 'border-blue-500 scale-105' : 'border-gray-200 hover:border-blue-300'
-                }`}
-              >
-                {pkg.popular && (
-                  <div className="bg-blue-500 text-white text-center py-2 text-sm font-medium rounded-t-xl">
-                    🔥 הכי פופולרי
-                  </div>
-                )}
-                
-                <div className="p-6">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{pkg.name}</h3>
-                  
-                  {/* מחיר */}
-                  <div className="text-center mb-4">
-                    <div className="text-4xl font-bold text-blue-600 mb-2">
-                      ${totalPrice.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {billingPeriod === 'monthly' ? 'לחודש' : 'לשנה'}
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      ${pkg.price} למשתמש {billingPeriod === 'monthly' ? 'לחודש' : 'לשנה ($' + Math.round(pkg.price * 0.85) + ' עם הנחה)'}
-                    </div>
-                    {billingPeriod === 'yearly' && yearlySavings > 0 && (
-                      <div className="text-sm text-green-600 font-medium mt-2">
-                        💰 חוסכים ${yearlySavings.toLocaleString()} בשנה!
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* תכונות */}
-                  <div className="space-y-3 mb-6">
-                    <h4 className="font-semibold text-gray-800">מה כולל:</h4>
-                    {pkg.id === 'basic' && (
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>✅ ניתוחי שיחות</li>
-                        <li>✅ דוחות</li>
-                      </ul>
-                    )}
-                    {pkg.id === 'professional' && (
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>✅ ניתוחי שיחות</li>
-                        <li>✅ דוחות</li>
-                        <li>✅ סימולציות</li>
-                      </ul>
-                    )}
-                    {pkg.id === 'premium' && (
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li>✅ ניתוחי שיחות</li>
-                        <li>✅ דוחות</li>
-                        <li>✅ סימולציות</li>
-                        <li>✅ יועץ מלווה שעה בחודש</li>
-                      </ul>
-                    )}
-                  </div>
-                  
-                  {/* פרטי הזמנה */}
-                  <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                    <p className="text-sm text-gray-600 text-center">
-                      {userCount} משתמשים × ${pkg.price} = ${(pkg.price * userCount).toLocaleString()} {billingPeriod === 'monthly' ? 'לחודש' : 'לשנה'}
-                      {billingPeriod === 'yearly' && (
-                        <span className="block text-green-600 font-medium">
-                          עם 15% הנחה: ${totalPrice.toLocaleString()}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => handlePurchaseClick(pkg.id)}
-                      className="w-full py-3 px-4 rounded-lg font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                    >
-                      💳 בחר חבילה זו
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* מידע נוסף */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">❓ שאלות נפוצות</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-semibold text-gray-800 mb-2">איך עובד התמחור החדש?</h4>
-              <p className="text-gray-600 text-sm">המחיר הוא למשתמש לחודש. מינימום 2 משתמשים. תמחור שנתי כולל 15% הנחה. ממוצע יוזרים בחברה הוא 3.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-800 mb-2">מה ההבדל בין החבילות?</h4>
-              <p className="text-gray-600 text-sm">BASIC כולל ניתוחי שיחות ודוחות. PROFESSIONAL מוסיף סימולציות. PREMIUM מוסיף יועץ מלווה שעה בחודש.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-800 mb-2">מה יותר כדאי - חודשי או שנתי?</h4>
-              <p className="text-gray-600 text-sm">תמחור שנתי חוסך 15% הנחה מהמחיר החודשי, ומתאים לחברות שמחויבות לטווח הארוך.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-800 mb-2">איך מוסיפים או מחסירים משתמשים?</h4>
-              <p className="text-gray-600 text-sm">ניתן לשנות את מספר המשתמשים בכל עת בהתאם לצרכי החברה. החיוב יתעדכן בהתאם.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* כפתורי ניווט */}
-        <div className="text-center">
-          <Link 
-            href="/team"
-            className="inline-flex items-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors mr-4"
-          >
-            ← חזרה לניהול צוות
-          </Link>
-          <Link 
-            href="/dashboard"
-            className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
+    <div className="min-h-screen bg-gradient-to-br from-brand-bg via-brand-bg-light to-brand-accent-light">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Navigation */}
+        <div className="mb-8">
+          <Link href="/dashboard/manager" className="coachee-btn-secondary inline-flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" />
             חזרה לדשבורד
           </Link>
         </div>
-      </div>
 
-      {/* פופאפ תשלום */}
-      {selectedPackageForPayment && (
-        <PaymentModal
-          package={selectedPackageForPayment}
-          isOpen={showPaymentModal}
-          onClose={() => {
-            setShowPaymentModal(false)
-            setSelectedPackageForPayment(null)
-          }}
-          onSuccess={handlePaymentSuccess}
-        />
-      )}
+        {/* כותרת */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-md rounded-2xl px-4 py-2 mb-6 shadow-brand-soft">
+            <Zap className="w-5 h-5 text-brand-primary" />
+            <span className="text-sm font-medium text-brand-primary-dark">הרחבת המערכת</span>
+          </div>
+          
+          <h1 className="text-4xl lg:text-5xl font-bold text-neutral-800 mb-4">
+            רכישת <span className="text-brand-primary-dark">דקות נוספות</span>
+          </h1>
+          <p className="text-lg text-neutral-600 max-w-2xl mx-auto leading-relaxed">
+            הרחיבו את היכולות שלכם עם דקות נוספות או נציגים חדשים
+          </p>
+        </div>
+
+        {/* תפריט טאבים */}
+        <div className="flex justify-center mb-8">
+          <div className="coachee-card p-2 flex">
+          <button
+            onClick={() => setActiveTab('minutes')}
+                            className={`px-8 py-3 rounded-2xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                activeTab === 'minutes'
+                  ? 'bg-gradient-to-r from-brand-primary to-brand-primary-dark text-white shadow-brand-soft'
+                  : 'text-neutral-600 hover:text-neutral-800 hover:bg-white/50'
+              }`}
+          >
+              <Clock className="w-5 h-5" />
+              רכישת דקות
+          </button>
+          <button
+            onClick={() => setActiveTab('agents')}
+                            className={`px-8 py-3 rounded-2xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                activeTab === 'agents'
+                  ? 'bg-gradient-to-r from-brand-secondary to-brand-secondary-dark text-white shadow-brand-soft'
+                  : 'text-neutral-600 hover:text-neutral-800 hover:bg-white/50'
+              }`}
+          >
+              <Target className="w-5 h-5" />
+              רכישת נציגים
+          </button>
+          </div>
+          </div>
+
+        {/* סטטוס מכסה נוכחית */}
+        {currentQuota && (
+          <div className="coachee-card p-8 mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-gradient-to-r from-brand-primary to-brand-primary-dark p-3 rounded-2xl">
+                <Clock className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-neutral-800">המכסה הנוכחית שלכם</h2>
+                <p className="text-neutral-600">מצב השימוש במערכת</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+              <div className="bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 rounded-2xl p-6 border border-brand-primary/20">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-brand-primary-dark mb-2">
+                    {currentQuota.total_minutes.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-neutral-600">סה"כ דקות</div>
+                </div>
+              </div>
+
+                            <div className="bg-gradient-to-r from-brand-secondary/10 to-brand-secondary/5 rounded-2xl p-6 border border-brand-secondary/20">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-brand-secondary-dark mb-2">
+                    {currentQuota.used_minutes.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-neutral-600">דקות בשימוש</div>
+                </div>
+              </div>
+
+                            <div className="bg-gradient-to-r from-brand-accent/10 to-brand-accent/5 rounded-2xl p-6 border border-brand-accent/20">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-brand-accent-dark mb-2">
+                    {currentQuota.available_minutes.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-neutral-600">דקות זמינות</div>
+                </div>
+              </div>
+
+                            <div className="bg-gradient-to-r from-brand-warning/10 to-brand-warning/5 rounded-2xl p-6 border border-brand-warning/20">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-brand-warning-dark mb-2">
+                    {Math.round(currentQuota.usage_percentage)}%
+                  </div>
+                  <div className="text-sm text-neutral-600">אחוז שימוש</div>
+                </div>
+              </div>
+            </div>
+
+            {/* פס התקדמות */}
+            <div className="mb-6">
+              <div className="flex justify-between text-sm text-neutral-600 mb-2">
+                <span>שימוש במכסה</span>
+                <span>{Math.round(currentQuota.usage_percentage)}%</span>
+              </div>
+              <div className="w-full bg-neutral-200 rounded-2xl h-3 overflow-hidden">
+                <div 
+                  className={`h-full rounded-2xl transition-all duration-1000 ${
+                    currentQuota.usage_percentage > 80 
+                      ? 'bg-gradient-to-r from-red-400 to-red-500' 
+                      : currentQuota.usage_percentage > 60
+                      ? 'bg-gradient-to-r from-brand-warning to-brand-warning-dark'
+                      : 'bg-gradient-to-r from-brand-primary to-brand-primary-dark'
+                  }`}
+                  style={{ width: `${Math.min(currentQuota.usage_percentage, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* הודעות אזהרה */}
+            {currentQuota.is_poc && (
+              <div className="bg-glacier-info/10 border-2 border-glacier-info/30 rounded-2xl p-4 flex items-center gap-3">
+                <Star className="w-5 h-5 text-glacier-info-dark" />
+                <p className="text-sm text-glacier-info-dark">
+                  <strong>POC:</strong> אתם במסגרת הדגמה. פנו אלינו לשדרוג לחבילה מלאה.
+                </p>
+              </div>
+            )}
+
+            {!currentQuota.can_purchase_additional && (
+              <div className="bg-red-50/80 border-2 border-red-200 rounded-2xl p-4 flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+                <p className="text-sm text-red-800">
+                  <strong>הגבלה:</strong> לא ניתן לרכוש דקות נוספות במסגרת POC.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* הודעות הצלחה ושגיאה */}
+        {successMessage && (
+          <div className="coachee-card bg-gradient-to-r from-glacier-success/10 to-glacier-success/5 border-2 border-glacier-success/30 p-6 mb-8">
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-r from-glacier-success to-glacier-success-dark p-2 rounded-xl">
+                <CheckCircle className="w-5 h-5 text-white" />
+              </div>
+              <p className="text-glacier-success-dark font-medium">{successMessage}</p>
+            </div>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="coachee-card bg-red-50/80 border-2 border-red-200 p-6 mb-8">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <p className="text-red-800 font-medium">{errorMessage}</p>
+            </div>
+          </div>
+        )}
+
+        {/* חבילות דקות */}
+        {activeTab === 'minutes' && currentQuota?.can_purchase_additional && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+            {minutesPackages.map((pkg, index) => (
+              <div 
+                key={pkg.id} 
+                className={`relative group cursor-pointer transition-all duration-500 hover:-translate-y-2 ${
+                  pkg.popular ? 'lg:scale-105' : ''
+                }`}
+              >
+                {pkg.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <div className="bg-gradient-to-r from-glacier-warning to-glacier-warning-dark text-white px-4 py-2 rounded-2xl text-sm font-bold shadow-glacier-soft flex items-center gap-2">
+                      <Star className="w-4 h-4" />
+                      מומלץ
+                    </div>
+                  </div>
+                )}
+
+                <div className={`coachee-card-glass p-8 h-full border-2 transition-all duration-300 ${
+                  pkg.popular
+                    ? 'border-glacier-warning/50 shadow-glacier-soft'
+                    : 'border-white/50 hover:border-glacier-primary/50'
+                }`}>
+                <div className="text-center">
+                    <h3 className="text-xl font-bold text-neutral-800 mb-4">{pkg.name}</h3>
+                    
+                    <div className="mb-6">
+                      <span className="text-4xl font-bold bg-gradient-to-r from-glacier-primary-dark to-glacier-secondary-dark bg-clip-text text-transparent">
+                        ${pkg.price}
+                      </span>
+                      <span className="text-neutral-500 text-sm mr-2">חד פעמי</span>
+                    </div>
+                    
+                    <div className="bg-gradient-to-r from-glacier-primary/10 to-glacier-secondary/10 rounded-3xl p-6 mb-6 border border-glacier-primary/20">
+                      <div className="flex items-center justify-center gap-3 mb-2">
+                        <div className="bg-gradient-to-r from-glacier-primary to-glacier-primary-dark p-3 rounded-2xl">
+                          <Clock className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-neutral-800">
+                            {pkg.minutes.toLocaleString()}
+                          </div>
+                          <div className="text-sm text-neutral-600">דקות נוספות</div>
+                        </div>
+                  </div>
+                    </div>
+
+                    <p className="text-sm text-neutral-600 mb-6 leading-relaxed">{pkg.description}</p>
+
+                    <div className="space-y-3 mb-8">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-neutral-500">עלות לדקה:</span>
+                        <span className="font-semibold text-neutral-700">${pkg.per_minute_cost.toFixed(3)}</span>
+                      </div>
+                      {pkg.savings && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-glacier-success-dark">חיסכון:</span>
+                          <span className="font-semibold text-glacier-success-dark">{pkg.savings}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => handlePurchase(pkg.id)}
+                    disabled={purchasing}
+                      className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                      purchasing && selectedPackage === pkg.id
+                          ? 'bg-neutral-400 text-neutral-600 cursor-not-allowed'
+                        : pkg.popular
+                          ? 'coachee-btn-primary'
+                          : 'coachee-btn-secondary'
+                    }`}
+                  >
+                    {purchasing && selectedPackage === pkg.id ? (
+                      <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                        מעבד...
+                      </>
+                    ) : (
+                      <>
+                          <Zap className="w-5 h-5" />
+                        רכישה
+                      </>
+                    )}
+                  </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* חבילות נציגים */}
+        {activeTab === 'agents' && currentQuota?.can_purchase_additional && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {agentPackages.map((pkg, index) => (
+              <div 
+                key={pkg.id} 
+                className={`relative group cursor-pointer transition-all duration-500 hover:-translate-y-2 ${
+                  pkg.popular ? 'lg:scale-105' : ''
+                }`}
+              >
+                {pkg.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <div className="bg-gradient-to-r from-glacier-warning to-glacier-warning-dark text-white px-6 py-2 rounded-2xl text-sm font-bold shadow-glacier-soft flex items-center gap-2">
+                      <Star className="w-4 h-4" />
+                      מומלץ ביותר
+                    </div>
+                  </div>
+                )}
+
+                <div className={`coachee-card-glass p-8 h-full border-2 transition-all duration-300 ${
+                  pkg.popular
+                    ? 'border-glacier-warning/50 shadow-glacier-soft'
+                    : 'border-white/50 hover:border-glacier-secondary/50'
+                }`}>
+                <div className="text-center">
+                    <h3 className="text-xl font-bold text-neutral-800 mb-4">{pkg.name}</h3>
+                    
+                    <div className="mb-6">
+                      <span className="text-4xl font-bold bg-gradient-to-r from-glacier-secondary-dark to-glacier-accent-dark bg-clip-text text-transparent">
+                        ${(pkg.agents * pkg.price_per_agent).toLocaleString()}
+                      </span>
+                      <span className="text-neutral-500 text-sm mr-2">סה"כ</span>
+                    </div>
+                    
+                    <div className="bg-gradient-to-r from-glacier-secondary/10 to-glacier-accent/10 rounded-3xl p-6 mb-6 border border-glacier-secondary/20">
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="bg-gradient-to-r from-glacier-secondary to-glacier-secondary-dark p-3 rounded-2xl">
+                            <Target className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-neutral-800">{pkg.agents}</div>
+                            <div className="text-sm text-neutral-600">נציגים חדשים</div>
+                    </div>
+                  </div>
+
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="bg-gradient-to-r from-glacier-accent to-glacier-accent-dark p-3 rounded-2xl">
+                            <Clock className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xl font-bold text-neutral-800">
+                              {pkg.total_minutes.toLocaleString()}
+                            </div>
+                            <div className="text-sm text-neutral-600">דקות נוספות</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-neutral-600 mb-6 leading-relaxed">{pkg.description}</p>
+
+                    <div className="space-y-3 mb-8">
+                    <div className="flex justify-between text-sm">
+                        <span className="text-neutral-500">מחיר לנציג:</span>
+                        <span className="font-semibold text-neutral-700">${pkg.price_per_agent}</span>
+                    </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-neutral-500">דקות לנציג:</span>
+                        <span className="font-semibold text-neutral-700">240</span>
+                      </div>
+                      {pkg.savings && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-glacier-success-dark">חיסכון:</span>
+                          <span className="font-semibold text-glacier-success-dark">{pkg.savings}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => handlePurchaseAgents(pkg.id)}
+                    disabled={purchasing}
+                      className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                      purchasing && selectedPackage === pkg.id
+                          ? 'bg-neutral-400 text-neutral-600 cursor-not-allowed'
+                        : pkg.popular
+                          ? 'coachee-btn-accent'
+                          : 'coachee-btn-secondary'
+                    }`}
+                  >
+                    {purchasing && selectedPackage === pkg.id ? (
+                      <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                        מעבד...
+                      </>
+                    ) : (
+                      <>
+                          <Target className="w-5 h-5" />
+                        רכישה
+                      </>
+                    )}
+                  </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* הודעת POC */}
+        {currentQuota && !currentQuota.can_purchase_additional && (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <Star className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-800 mb-2">במסגרת POC</h3>
+            <p className="text-gray-600 mb-4">
+              אתם במסגרת הדגמת המוצר. לרכישת {activeTab === 'minutes' ? 'דקות נוספות' : 'נציגים נוספים'} נא פנו אלינו לשדרוג החשבון.
+            </p>
+            <a 
+              href="mailto:support@coachee.co.il"
+              className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Target className="w-4 h-4" />
+              צור קשר לשדרוג
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   )
 } 
