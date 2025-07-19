@@ -118,10 +118,24 @@ export default function SubscriptionPage() {
         return
       }
 
-      if (subInfo && subInfo.length > 0) {
-        setSubscriptionInfo(subInfo[0])
-        setAgentCount(subInfo[0].current_agents)
-        setNewAgentCount(subInfo[0].current_agents)
+      if (subInfo) {
+        // Map database fields to expected interface
+        const mappedSubInfo: SubscriptionInfo = {
+          subscription_id: subInfo.id,
+          package_name: 'Unknown', // This needs to be fetched from plan
+          package_display_name: 'Unknown', // This needs to be fetched from plan  
+          status: subInfo.is_active ? 'active' : 'inactive',
+          billing_cycle: 'monthly',
+          current_agents: subInfo.agents_count,
+          current_minutes: 0, // This needs to be calculated
+          monthly_price: 0, // This needs to be fetched from plan
+          next_billing_date: subInfo.expires_at || '',
+          is_trial: false,
+          trial_days_left: 0
+        }
+        setSubscriptionInfo(mappedSubInfo)
+        setAgentCount(subInfo.agents_count)
+        setNewAgentCount(subInfo.agents_count)
       }
 
       // קבלת חבילות זמינות
@@ -134,7 +148,19 @@ export default function SubscriptionPage() {
       if (plansError) {
         console.error('Plans error:', plansError)
       } else {
-        setAvailablePlans(plans || [])
+        // Map database response to expected interface
+        const mappedPlans: SubscriptionPlan[] = (plans || []).map(plan => ({
+          id: plan.id,
+          name: plan.name,
+          description: plan.description || '',
+          max_agents: plan.max_agents,
+          price_monthly: plan.price_monthly,
+          yearly_price: null, // Not in current database schema
+          features: plan.features,
+          is_popular: false, // Not in current database schema
+          sort_order: 0 // Not in current database schema
+        }))
+        setAvailablePlans(mappedPlans)
       }
 
       // קבלת היסטוריית חיובים
