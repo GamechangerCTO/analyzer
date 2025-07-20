@@ -1,0 +1,1197 @@
+/*
+ * Professional CSS Architecture 2025
+ * Ultra-Modern, Performance-Optimized Stylesheet
+ * Following latest industry standards and best practices
+ */
+
+/* ================================
+   LAYER MANAGEMENT & ARCHITECTURE
+   ================================ */
+
+@layer reset, base, layout, components, utilities, animations;
+
+/* ================================
+   CRITICAL CSS VARIABLES
+   ================================ */
+
+@layer base {
+    :root {
+        /* Color System - Modern Palette */
+        --primary-h: 260;
+        --primary-s: 51%;
+        --primary-l: 42%;
+        --primary: hsl(var(--primary-h) var(--primary-s) var(--primary-l));
+        --primary-50: hsl(var(--primary-h) var(--primary-s) 98%);
+        --primary-100: hsl(var(--primary-h) var(--primary-s) 95%);
+        --primary-200: hsl(var(--primary-h) var(--primary-s) 87%);
+        --primary-300: hsl(var(--primary-h) var(--primary-s) 77%);
+        --primary-400: hsl(var(--primary-h) var(--primary-s) 65%);
+        --primary-500: var(--primary);
+        --primary-600: hsl(var(--primary-h) var(--primary-s) 35%);
+        --primary-700: hsl(var(--primary-h) var(--primary-s) 28%);
+        --primary-800: hsl(var(--primary-h) var(--primary-s) 22%);
+        --primary-900: hsl(var(--primary-h) var(--primary-s) 15%);
+        
+        /* Secondary Colors */
+        --secondary: hsl(253 37% 60%);
+        --accent: hsl(253 37% 80%);
+        --success: hsl(142 76% 36%);
+        --success-light: hsl(142 76% 85%);
+        
+        /* Neutral Scale - Proper Contrast Ratios */
+        --neutral-0: hsl(0 0% 100%);
+        --neutral-50: hsl(210 40% 98%);
+        --neutral-100: hsl(210 40% 96%);
+        --neutral-200: hsl(214 32% 91%);
+        --neutral-300: hsl(213 27% 84%);
+        --neutral-400: hsl(215 20% 65%);
+        --neutral-500: hsl(215 16% 47%);
+        --neutral-600: hsl(215 19% 35%);
+        --neutral-700: hsl(215 25% 27%);
+        --neutral-800: hsl(217 33% 17%);
+        --neutral-900: hsl(222 84% 5%);
+        
+        /* Typography Scale - Perfect Fourth (1.333) */
+        --text-xs: clamp(0.694rem, 0.02vi + 0.688rem, 0.703rem);
+        --text-sm: clamp(0.833rem, 0.067vi + 0.817rem, 0.875rem);
+        --text-base: clamp(1rem, 0.143vi + 0.964rem, 1.094rem);
+        --text-lg: clamp(1.2rem, 0.267vi + 1.133rem, 1.375rem);
+        --text-xl: clamp(1.44rem, 0.467vi + 1.317rem, 1.719rem);
+        --text-2xl: clamp(1.728rem, 0.784vi + 1.518rem, 2.156rem);
+        --text-3xl: clamp(2.074rem, 1.294vi + 1.741rem, 2.7rem);
+        --text-4xl: clamp(2.488rem, 2.118vi + 1.995rem, 3.375rem);
+        --text-5xl: clamp(2.986rem, 3.432vi + 2.286rem, 4.219rem);
+        
+        /* Spacing Scale - Perfect Fourth */
+        --space-3xs: clamp(0.25rem, 0.036vi + 0.241rem, 0.273rem);
+        --space-2xs: clamp(0.5rem, 0.071vi + 0.482rem, 0.547rem);
+        --space-xs: clamp(0.75rem, 0.107vi + 0.723rem, 0.82rem);
+        --space-sm: clamp(1rem, 0.143vi + 0.964rem, 1.094rem);
+        --space-md: clamp(1.5rem, 0.214vi + 1.446rem, 1.641rem);
+        --space-lg: clamp(2rem, 0.286vi + 1.929rem, 2.188rem);
+        --space-xl: clamp(3rem, 0.429vi + 2.893rem, 3.281rem);
+        --space-2xl: clamp(4rem, 0.571vi + 3.857rem, 4.375rem);
+        --space-3xl: clamp(6rem, 0.857vi + 5.786rem, 6.563rem);
+        
+        /* Advanced Spacing Pairs */
+        --space-3xs-2xs: clamp(0.25rem, 0.107vi + 0.223rem, 0.32rem);
+        --space-2xs-xs: clamp(0.5rem, 0.179vi + 0.446rem, 0.625rem);
+        --space-xs-sm: clamp(0.75rem, 0.25vi + 0.679rem, 0.938rem);
+        --space-sm-md: clamp(1rem, 0.357vi + 0.911rem, 1.25rem);
+        --space-md-lg: clamp(1.5rem, 0.5vi + 1.357rem, 1.875rem);
+        --space-lg-xl: clamp(2rem, 0.714vi + 1.821rem, 2.5rem);
+        --space-xl-2xl: clamp(3rem, 1rem + 2.714rem, 3.75rem);
+        --space-2xl-3xl: clamp(4rem, 1.429vi + 3.571rem, 5rem);
+        
+        /* Modern Shadow System */
+        --shadow-color: var(--primary-h) var(--primary-s) 15%;
+        --shadow-elevation-low: 
+            0.3px 0.5px 0.7px hsl(var(--shadow-color) / 0.34),
+            0.4px 0.8px 1px -1.2px hsl(var(--shadow-color) / 0.34),
+            1px 2px 2.5px -2.5px hsl(var(--shadow-color) / 0.34);
+        --shadow-elevation-medium: 
+            0.3px 0.5px 0.7px hsl(var(--shadow-color) / 0.36),
+            0.8px 1.6px 2px -0.8px hsl(var(--shadow-color) / 0.36),
+            2.1px 4.1px 5.2px -1.7px hsl(var(--shadow-color) / 0.36),
+            5px 10px 12.6px -2.5px hsl(var(--shadow-color) / 0.36);
+        --shadow-elevation-high: 
+            0.3px 0.5px 0.7px hsl(var(--shadow-color) / 0.34),
+            1.5px 2.9px 3.7px -0.4px hsl(var(--shadow-color) / 0.34),
+            2.7px 5.4px 6.8px -0.7px hsl(var(--shadow-color) / 0.34),
+            4.5px 8.9px 11.2px -1.1px hsl(var(--shadow-color) / 0.34),
+            7.1px 14.3px 18px -1.4px hsl(var(--shadow-color) / 0.34),
+            11.2px 22.3px 28.1px -1.8px hsl(var(--shadow-color) / 0.34),
+            17px 33.9px 42.7px -2.1px hsl(var(--shadow-color) / 0.34),
+            25px 50px 62.9px -2.5px hsl(var(--shadow-color) / 0.34);
+        
+        /* Border Radius Scale */
+        --radius-xs: 0.125rem;
+        --radius-sm: 0.25rem;
+        --radius-md: 0.375rem;
+        --radius-lg: 0.5rem;
+        --radius-xl: 0.75rem;
+        --radius-2xl: 1rem;
+        --radius-3xl: 1.5rem;
+        --radius-full: 9999px;
+        
+        /* Animation & Transition */
+        --ease-in: cubic-bezier(0.4, 0, 1, 1);
+        --ease-out: cubic-bezier(0, 0, 0.2, 1);
+        --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+        --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        
+        --duration-fast: 150ms;
+        --duration-base: 250ms;
+        --duration-slow: 350ms;
+        --duration-slower: 500ms;
+        
+        /* Layout */
+        --container-xs: 20rem;
+        --container-sm: 24rem;
+        --container-md: 28rem;
+        --container-lg: 32rem;
+        --container-xl: 36rem;
+        --container-2xl: 42rem;
+        --container-3xl: 48rem;
+        --container-4xl: 56rem;
+        --container-5xl: 64rem;
+        --container-6xl: 72rem;
+        --container-7xl: 80rem;
+        --container-full: 100%;
+        
+        /* Z-Index Scale */
+        --z-hide: -1;
+        --z-base: 0;
+        --z-docked: 10;
+        --z-dropdown: 1000;
+        --z-sticky: 1100;
+        --z-banner: 1200;
+        --z-overlay: 1300;
+        --z-modal: 1400;
+        --z-popover: 1500;
+        --z-skipLink: 1600;
+        --z-toast: 1700;
+        --z-tooltip: 1800;
+    }
+    
+    /* Color Scheme Support */
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --neutral-0: hsl(222 84% 5%);
+            --neutral-50: hsl(217 33% 17%);
+            --neutral-100: hsl(215 25% 27%);
+            --neutral-200: hsl(215 19% 35%);
+            --neutral-300: hsl(215 16% 47%);
+            --neutral-400: hsl(215 20% 65%);
+            --neutral-500: hsl(213 27% 84%);
+            --neutral-600: hsl(214 32% 91%);
+            --neutral-700: hsl(210 40% 96%);
+            --neutral-800: hsl(210 40% 98%);
+            --neutral-900: hsl(0 0% 100%);
+        }
+    }
+}
+
+/* ================================
+   MODERN CSS RESET
+   ================================ */
+
+@layer reset {
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    
+    html {
+        /* Prevent font size inflation */
+        text-size-adjust: none;
+        /* Remove gaps in links underline */
+        text-underline-offset: 0.2em;
+        /* Improve consistency of default fonts */
+        font-family: system-ui, sans-serif;
+        /* Enable smooth scrolling */
+        scroll-behavior: smooth;
+        /* Optimize scrolling on iOS */
+        -webkit-overflow-scrolling: touch;
+        /* Better text rendering */
+        text-rendering: optimizeLegibility;
+        /* Font smoothing */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        /* Prevent horizontal scroll */
+        overflow-x: hidden;
+    }
+    
+    /* RTL Support */
+    html:dir(rtl) {
+        direction: rtl;
+    }
+    
+    body {
+        /* Prevent font size inflation */
+        text-size-adjust: none;
+        /* Remove default margins */
+        margin: 0;
+        /* Set line height */
+        line-height: 1.5;
+        /* Improve text rendering */
+        font-synthesis: none;
+        /* Prevent horizontal scroll */
+        overflow-x: hidden;
+        /* Modern font stack */
+        font-family: 'Assistant', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        /* Base colors */
+        color: var(--neutral-800);
+        background-color: var(--neutral-0);
+        /* Better font rendering */
+        font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    }
+    
+    /* Remove list styles on ul, ol elements with a list role */
+    ul[role='list'],
+    ol[role='list'] {
+        list-style: none;
+    }
+    
+    /* Set core body defaults */
+    body {
+        min-height: 100vh;
+        text-rendering: optimizeSpeed;
+    }
+    
+    /* A elements that don't have a class get default styles */
+    a:not([class]) {
+        text-decoration-skip-ink: auto;
+        color: currentColor;
+    }
+    
+    /* Make images easier to work with */
+    img,
+    picture,
+    video,
+    canvas,
+    svg {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+    
+    /* Inherit fonts for inputs and buttons */
+    input,
+    button,
+    textarea,
+    select {
+        font: inherit;
+        color: inherit;
+    }
+    
+    /* Remove all animations, transitions and smooth scroll for people that prefer not to see them */
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto;
+        }
+        
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+    
+    /* Focus management */
+    :focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+        border-radius: var(--radius-sm);
+    }
+    
+    :focus:not(:focus-visible) {
+        outline: none;
+    }
+}
+
+/* ================================
+   LAYOUT LAYER
+   ================================ */
+
+@layer layout {
+    /* Container Query Context */
+    .container {
+        container-type: inline-size;
+        width: 100%;
+        max-width: var(--container-7xl);
+        margin-inline: auto;
+        padding-inline: var(--space-md);
+        
+        /* GPU Optimization */
+        will-change: transform;
+        transform: translate3d(0, 0, 0);
+    }
+    
+    /* Container Variants */
+    .container--sm { max-width: var(--container-sm); }
+    .container--md { max-width: var(--container-md); }
+    .container--lg { max-width: var(--container-lg); }
+    .container--xl { max-width: var(--container-xl); }
+    .container--2xl { max-width: var(--container-2xl); }
+    .container--3xl { max-width: var(--container-3xl); }
+    .container--4xl { max-width: var(--container-4xl); }
+    .container--5xl { max-width: var(--container-5xl); }
+    .container--6xl { max-width: var(--container-6xl); }
+    .container--full { max-width: var(--container-full); }
+    
+    /* Modern Grid System */
+    .grid {
+        display: grid;
+        gap: var(--space-md);
+        grid-template-columns: repeat(12, 1fr);
+    }
+    
+    .grid--auto-fit {
+        grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    }
+    
+    .grid--auto-fill {
+        grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    }
+    
+    /* Flexbox Utilities */
+    .flex {
+        display: flex;
+        gap: var(--space-md);
+    }
+    
+    .flex--column { flex-direction: column; }
+    .flex--wrap { flex-wrap: wrap; }
+    .flex--center { align-items: center; justify-content: center; }
+    .flex--between { justify-content: space-between; }
+    .flex--around { justify-content: space-around; }
+    .flex--evenly { justify-content: space-evenly; }
+    
+    /* Skip Link */
+    .skip-link {
+        position: absolute;
+        top: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--primary);
+        color: var(--neutral-0);
+        padding: var(--space-sm) var(--space-md);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        font-weight: 600;
+        z-index: var(--z-skipLink);
+        transition: top var(--duration-fast) var(--ease-out);
+        
+        &:focus {
+            top: var(--space-md);
+        }
+    }
+}
+
+/* ================================
+   COMPONENTS LAYER
+   ================================ */
+
+@layer components {
+    /* Modern Button System */
+    .btn {
+        /* Layout */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2xs);
+        
+        /* Sizing */
+        padding: var(--space-sm) var(--space-md);
+        min-height: 44px; /* Touch target */
+        
+        /* Typography */
+        font-family: inherit;
+        font-size: var(--text-base);
+        font-weight: 600;
+        line-height: 1;
+        text-decoration: none;
+        text-align: center;
+        white-space: nowrap;
+        
+        /* Visual */
+        border: 0;
+        border-radius: var(--radius-lg);
+        cursor: pointer;
+        user-select: none;
+        
+        /* Interaction */
+        transition: all var(--duration-fast) var(--ease-out);
+        
+        /* GPU Optimization */
+        will-change: transform, box-shadow;
+        transform: translate3d(0, 0, 0);
+        
+        /* States */
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        &:hover:not(:disabled) {
+            transform: translate3d(0, -2px, 0);
+        }
+        
+        &:active:not(:disabled) {
+            transform: translate3d(0, 0, 0);
+            transition-duration: calc(var(--duration-fast) / 2);
+        }
+    }
+    
+    /* Button Variants */
+    .btn--primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-400));
+        color: var(--neutral-0);
+        box-shadow: var(--shadow-elevation-medium);
+        
+        &:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--primary-600), var(--primary));
+            box-shadow: var(--shadow-elevation-high);
+        }
+    }
+    
+    .btn--secondary {
+        background: transparent;
+        color: var(--primary);
+        border: 2px solid var(--primary);
+        
+        &:hover:not(:disabled) {
+            background: var(--primary);
+            color: var(--neutral-0);
+        }
+    }
+    
+    .btn--ghost {
+        background: transparent;
+        color: var(--primary);
+        
+        &:hover:not(:disabled) {
+            background: var(--primary-50);
+        }
+    }
+    
+    /* Button Sizes */
+    .btn--sm {
+        padding: var(--space-2xs) var(--space-xs);
+        font-size: var(--text-sm);
+        min-height: 36px;
+    }
+    
+    .btn--lg {
+        padding: var(--space-md) var(--space-lg);
+        font-size: var(--text-lg);
+        min-height: 52px;
+    }
+    
+    /* Card Component */
+    .card {
+        background: var(--neutral-0);
+        border-radius: var(--radius-2xl);
+        box-shadow: var(--shadow-elevation-medium);
+        border: 1px solid var(--neutral-200);
+        padding: var(--space-lg);
+        transition: all var(--duration-base) var(--ease-out);
+        container-type: inline-size;
+        
+        /* GPU Optimization */
+        will-change: transform, box-shadow;
+        transform: translate3d(0, 0, 0);
+        
+        &:hover {
+            transform: translate3d(0, -4px, 0);
+            box-shadow: var(--shadow-elevation-high);
+        }
+    }
+    
+    /* Header Component */
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: var(--z-sticky);
+        
+        /* Modern Backdrop */
+        background: color-mix(in srgb, var(--neutral-0) 85%, transparent);
+        backdrop-filter: blur(12px) saturate(200%);
+        border-bottom: 1px solid var(--neutral-200);
+        
+        /* GPU Optimization */
+        will-change: transform, background-color;
+        transform: translate3d(0, 0, 0);
+        
+        /* Transition */
+        transition: all var(--duration-base) var(--ease-out);
+        
+        /* Container Query */
+        container-type: inline-size;
+        
+        &.scrolled {
+            background: color-mix(in srgb, var(--neutral-0) 95%, transparent);
+            box-shadow: var(--shadow-elevation-low);
+        }
+    }
+    
+    .header__content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 4rem;
+        padding-inline: var(--space-md);
+        max-width: var(--container-7xl);
+        margin-inline: auto;
+    }
+    
+    /* Navigation */
+    .nav {
+        display: none;
+        align-items: center;
+        gap: var(--space-lg);
+        
+        @container (width >= 768px) {
+            display: flex;
+        }
+    }
+    
+    .nav__link {
+        color: var(--neutral-700);
+        text-decoration: none;
+        font-weight: 500;
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--radius-md);
+        transition: all var(--duration-fast) var(--ease-out);
+        position: relative;
+        
+        /* GPU Optimization */
+        will-change: transform, color;
+        transform: translate3d(0, 0, 0);
+        
+        &:hover {
+            color: var(--primary);
+            transform: translate3d(0, -1px, 0);
+        }
+        
+        &::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            border-radius: var(--radius-full);
+            transition: all var(--duration-fast) var(--ease-out);
+            transform: translateX(-50%);
+        }
+        
+        &:hover::after {
+            width: 100%;
+        }
+    }
+    
+    /* Mobile Menu Toggle */
+    .menu-toggle {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 2rem;
+        height: 2rem;
+        padding: var(--space-2xs);
+        border: none;
+        background: none;
+        cursor: pointer;
+        
+        @container (width >= 768px) {
+            display: none;
+        }
+        
+        span {
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            border-radius: var(--radius-full);
+            transition: all var(--duration-fast) var(--ease-out);
+            transform-origin: center;
+        }
+        
+        &.active {
+            span:nth-child(1) {
+                transform: rotate(45deg) translate(6px, 6px);
+            }
+            
+            span:nth-child(2) {
+                opacity: 0;
+                transform: scale(0);
+            }
+            
+            span:nth-child(3) {
+                transform: rotate(-45deg) translate(6px, -6px);
+            }
+        }
+    }
+    
+    /* Hero Section */
+    .hero {
+        padding-block: var(--space-3xl) var(--space-2xl);
+        background: linear-gradient(135deg, var(--neutral-0) 0%, var(--neutral-50) 100%);
+        position: relative;
+        container-type: inline-size;
+        overflow: hidden;
+        
+        /* Modern CSS containment for performance */
+        contain: layout style paint;
+    }
+    
+    .hero__content {
+        display: grid;
+        gap: var(--space-2xl);
+        align-items: center;
+        
+        @container (width >= 1024px) {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    
+    .hero__text {
+        container-type: inline-size;
+        
+        @container (width >= 1024px) {
+            order: 1;
+        }
+    }
+    
+    .hero__visual {
+        display: flex;
+        justify-content: center;
+        
+        @container (width >= 1024px) {
+            order: 2;
+        }
+    }
+    
+    /* Typography Components */
+    .title {
+        font-size: var(--text-4xl);
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: var(--space-lg);
+        color: var(--neutral-900);
+        
+        /* Text rendering optimization */
+        text-wrap: balance;
+        
+        @container (width >= 768px) {
+            font-size: var(--text-5xl);
+        }
+    }
+    
+    .subtitle {
+        font-size: var(--text-lg);
+        color: var(--neutral-600);
+        margin-bottom: var(--space-xl);
+        line-height: 1.6;
+        
+        /* Text rendering optimization */
+        text-wrap: pretty;
+    }
+    
+    /* Modern gradient text */
+    .gradient-text {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: inline-block;
+    }
+    
+    /* Stats Component */
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: var(--space-lg);
+        margin-bottom: var(--space-2xl);
+    }
+    
+    .stat {
+        text-align: center;
+        
+        &__number {
+            font-size: var(--text-3xl);
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: var(--space-sm);
+            display: block;
+            
+            /* Counter animation ready */
+            font-variant-numeric: tabular-nums;
+        }
+        
+        &__label {
+            font-size: var(--text-sm);
+            color: var(--neutral-600);
+            font-weight: 500;
+        }
+    }
+    
+    /* Feature Cards */
+    .feature-grid {
+        display: grid;
+        gap: var(--space-xl);
+        
+        @container (width >= 640px) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        @container (width >= 1024px) {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    .feature-card {
+        @extend .card;
+        text-align: center;
+        container-type: inline-size;
+        
+        /* Modern CSS hover using :has() */
+        &:has(.feature-icon:hover) {
+            transform: translate3d(0, -8px, 0);
+            box-shadow: var(--shadow-elevation-high);
+        }
+    }
+    
+    .feature-icon {
+        width: 4rem;
+        height: 4rem;
+        border-radius: var(--radius-full);
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: var(--neutral-0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto var(--space-lg);
+        font-size: var(--text-xl);
+        font-weight: bold;
+        
+        /* Modern animation */
+        transition: all var(--duration-base) var(--ease-elastic);
+        
+        /* GPU Optimization */
+        will-change: transform;
+        transform: translate3d(0, 0, 0);
+        
+        &:hover {
+            transform: translate3d(0, 0, 0) scale(1.1);
+        }
+    }
+    
+    /* Contact Form */
+    .form {
+        display: grid;
+        gap: var(--space-md);
+        container-type: inline-size;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2xs);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--neutral-700);
+        font-size: var(--text-sm);
+    }
+    
+    .form-control {
+        padding: var(--space-sm) var(--space-md);
+        border: 2px solid var(--neutral-300);
+        border-radius: var(--radius-lg);
+        font-family: inherit;
+        font-size: var(--text-base);
+        background: var(--neutral-0);
+        transition: all var(--duration-fast) var(--ease-out);
+        
+        /* Modern focus state */
+        &:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+        }
+        
+        /* Invalid state */
+        &:invalid:not(:placeholder-shown) {
+            border-color: hsl(0 84% 60%);
+        }
+    }
+    
+    /* Notification System */
+    .notification {
+        position: fixed;
+        top: var(--space-xl);
+        right: var(--space-md);
+        background: var(--success);
+        color: var(--neutral-0);
+        padding: var(--space-md) var(--space-lg);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-elevation-high);
+        z-index: var(--z-toast);
+        max-width: 400px;
+        
+        /* Modern backdrop */
+        backdrop-filter: blur(8px);
+        
+        /* GPU Optimization */
+        will-change: transform, opacity;
+        transform: translate3d(100%, 0, 0);
+        transition: transform var(--duration-base) var(--ease-out);
+        
+        &.show {
+            transform: translate3d(0, 0, 0);
+        }
+        
+        &--error {
+            background: hsl(0 84% 60%);
+        }
+    }
+}
+
+/* ================================
+   UTILITIES LAYER
+   ================================ */
+
+@layer utilities {
+    /* Visibility */
+    .sr-only {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+    }
+    
+    .hidden { display: none !important; }
+    .invisible { visibility: hidden !important; }
+    
+    /* Spacing Utilities */
+    .m-0 { margin: 0 !important; }
+    .m-auto { margin: auto !important; }
+    .mx-auto { margin-inline: auto !important; }
+    .my-auto { margin-block: auto !important; }
+    
+    .p-0 { padding: 0 !important; }
+    
+    /* Text Utilities */
+    .text-center { text-align: center !important; }
+    .text-left { text-align: left !important; }
+    .text-right { text-align: right !important; }
+    .text-start { text-align: start !important; }
+    .text-end { text-align: end !important; }
+    
+    /* Modern text wrapping */
+    .text-balance { text-wrap: balance !important; }
+    .text-pretty { text-wrap: pretty !important; }
+    .text-nowrap { white-space: nowrap !important; }
+    
+    /* Display Utilities */
+    .block { display: block !important; }
+    .inline { display: inline !important; }
+    .inline-block { display: inline-block !important; }
+    .flex { display: flex !important; }
+    .grid { display: grid !important; }
+    
+    /* Flex Utilities */
+    .items-center { align-items: center !important; }
+    .justify-center { justify-content: center !important; }
+    .justify-between { justify-content: space-between !important; }
+    
+    /* Color Utilities */
+    .text-primary { color: var(--primary) !important; }
+    .text-secondary { color: var(--secondary) !important; }
+    .text-success { color: var(--success) !important; }
+    .text-muted { color: var(--neutral-600) !important; }
+    
+    /* Performance Utilities */
+    .gpu-accelerated {
+        will-change: transform !important;
+        transform: translate3d(0, 0, 0) !important;
+    }
+    
+    .contain-layout { contain: layout !important; }
+    .contain-style { contain: style !important; }
+    .contain-paint { contain: paint !important; }
+    .contain-strict { contain: strict !important; }
+}
+
+/* ================================
+   ANIMATIONS LAYER
+   ================================ */
+
+@layer animations {
+    /* Modern entrance animations */
+    .fade-in {
+        opacity: 0;
+        transform: translate3d(0, 20px, 0);
+        animation: fadeIn var(--duration-slow) var(--ease-out) forwards;
+    }
+    
+    @keyframes fadeIn {
+        to {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+    }
+    
+    /* Gentle float animation */
+    .float {
+        animation: gentleFloat 6s var(--ease-in-out) infinite;
+    }
+    
+    @keyframes gentleFloat {
+        0%, 100% { 
+            transform: translate3d(0, 0, 0); 
+        }
+        50% { 
+            transform: translate3d(0, -10px, 0); 
+        }
+    }
+    
+    /* Progress animation */
+    .progress-fill {
+        background: linear-gradient(90deg, var(--success), var(--primary));
+        transition: width var(--duration-slower) var(--ease-out);
+        
+        /* Shimmer effect */
+        position: relative;
+        overflow: hidden;
+        
+        &::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                color-mix(in srgb, var(--neutral-0) 30%, transparent),
+                transparent
+            );
+            animation: shimmer 2s ease-in-out infinite;
+        }
+    }
+    
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+    
+    /* Pulse animation for loading states */
+    .pulse {
+        animation: pulse 2s var(--ease-in-out) infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { 
+            opacity: 1; 
+            transform: scale(1);
+        }
+        50% { 
+            opacity: 0.7; 
+            transform: scale(1.05);
+        }
+    }
+}
+
+/* ================================
+   CONTAINER QUERIES
+   ================================ */
+
+/* Navigation responsive behavior using container queries */
+@container (width < 768px) {
+    .nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--neutral-0);
+        border-top: 1px solid var(--neutral-200);
+        box-shadow: var(--shadow-elevation-medium);
+        padding: var(--space-lg);
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-md);
+        
+        /* Hidden by default on mobile */
+        transform: translate3d(0, -100%, 0);
+        opacity: 0;
+        visibility: hidden;
+        transition: all var(--duration-base) var(--ease-out);
+        
+        &.open {
+            transform: translate3d(0, 0, 0);
+            opacity: 1;
+            visibility: visible;
+        }
+    }
+}
+
+/* ================================
+   MEDIA QUERIES FOR LEGACY SUPPORT
+   ================================ */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --neutral-200: hsl(0 0% 80%);
+        --neutral-300: hsl(0 0% 60%);
+        --neutral-400: hsl(0 0% 40%);
+        --neutral-600: hsl(0 0% 20%);
+        --neutral-700: hsl(0 0% 10%);
+    }
+}
+
+/* Reduced data mode */
+@media (prefers-reduced-data: reduce) {
+    /* Disable animations that are not essential */
+    .float,
+    .pulse,
+    .progress-fill::after {
+        animation: none !important;
+    }
+    
+    /* Remove heavy visual effects */
+    .card {
+        box-shadow: var(--shadow-elevation-low) !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    :root {
+        --neutral-0: white;
+        --neutral-900: black;
+    }
+    
+    * {
+        background: transparent !important;
+        color: black !important;
+        box-shadow: none !important;
+    }
+    
+    .header,
+    .nav,
+    .btn,
+    .notification {
+        display: none !important;
+    }
+    
+    .container {
+        max-width: none !important;
+        padding: 0 !important;
+    }
+    
+    h1, h2, h3 {
+        page-break-after: avoid;
+    }
+    
+    p, li {
+        page-break-inside: avoid;
+    }
+}
+
+/* ================================
+   CUSTOM SCROLLBAR
+   ================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--neutral-100);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--primary), var(--secondary));
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--primary-600), var(--primary));
+}
+
+/* Firefox scrollbar */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) var(--neutral-100);
+}
+
+/* ================================
+   ADVANCED SELECTORS (2025)
+   ================================ */
+
+/* Style parent based on child state using :has() */
+.card:has(.feature-icon:hover) {
+    transform: translate3d(0, -8px, 0);
+    box-shadow: var(--shadow-elevation-high);
+}
+
+/* Style form based on validation state */
+.form:has(input:invalid) .btn {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Modern focus management */
+.nav:has(:focus-visible) .nav__link:not(:focus-visible) {
+    opacity: 0.5;
+}
+
+/* Group selectors efficiently with :is() */
+:is(h1, h2, h3, h4, h5, h6) {
+    color: var(--neutral-900);
+    text-wrap: balance;
+}
+
+/* Zero specificity grouping with :where() */
+:where(button, .btn) {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* ================================
+   PERFORMANCE OPTIMIZATIONS
+   ================================ */
+
+/* Critical CSS containment */
+.hero,
+.feature-grid,
+.contact-section {
+    contain: layout style paint;
+}
+
+/* Modern loading states */
+.loading {
+    background: linear-gradient(
+        90deg,
+        var(--neutral-200) 25%,
+        var(--neutral-100) 50%,
+        var(--neutral-200) 75%
+    );
+    background-size: 200% 100%;
+    animation: loading 2s ease-in-out infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* GPU layer promotion for animated elements */
+.btn,
+.card,
+.nav__link,
+.feature-icon {
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+}

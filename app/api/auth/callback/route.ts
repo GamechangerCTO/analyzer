@@ -83,23 +83,9 @@ export async function GET(request: NextRequest) {
             }
             
             if (!userData) {
-              // משתמש חדש - יצירת רשומה
-              const { error: createError } = await supabase
-                .from('users')
-                .insert({
-                  id: user.id,
-                  email: currentEmail,
-                  role: 'agent',
-                  full_name: user.user_metadata.full_name || null,
-                  is_approved: false
-                });
-              
-              if (createError) {
-                console.error("[CALLBACK] Error creating user:", createError);
-                return NextResponse.redirect(`${origin}/login?error=creation_error`)
-              }
-              
-              return NextResponse.redirect(`${origin}/not-approved?reason=pending`);
+              // משתמש חדש - הפנייה לפלואו הרשמה מלא
+              console.log("[CALLBACK] New user detected, redirecting to complete signup");
+              return NextResponse.redirect(`${origin}/signup-complete`);
             }
             
             if (!userData.is_approved) {

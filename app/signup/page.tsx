@@ -67,7 +67,28 @@ export default function SignupPage() {
 
   useEffect(() => {
     fetchPlans()
+    checkExistingUser()
   }, [])
+
+  const checkExistingUser = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (session?.user) {
+        // משתמש כבר מחובר - אכלוס נתונים אוטומטי
+        setSignupData(prev => ({
+          ...prev,
+          email: session.user.email || '',
+          fullName: session.user.user_metadata?.full_name || '',
+          companyName: session.user.user_metadata?.company_name || ''
+        }))
+        
+        console.log('Found existing auth user:', session.user.email)
+      }
+    } catch (error) {
+      console.error('Error checking existing user:', error)
+    }
+  }
 
   const fetchPlans = async () => {
     try {
@@ -137,50 +158,66 @@ export default function SignupPage() {
     setError(null)
 
     try {
-      // יצירת חשבון משתמש
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: signupData.email,
-        password: signupData.password,
-        options: {
-          data: {
-            full_name: signupData.fullName,
-            company_name: signupData.companyName
+      // בדיקה אם המשתמש כבר מחובר
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      let userId: string
+      let userEmail: string
+      
+      if (session?.user) {
+        // משתמש כבר מחובר - שימוש בפרטים הקיימים
+        userId = session.user.id
+        userEmail = session.user.email!
+        console.log('Using existing auth user:', userId)
+      } else {
+        // יצירת חשבון משתמש חדש
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: signupData.email,
+          password: signupData.password,
+          options: {
+            data: {
+              full_name: signupData.fullName,
+              company_name: signupData.companyName
+            }
           }
-        }
-      })
-
-      if (authError) throw authError
-
-      if (authData.user) {
-        // קריאה ל-API ליצירת החברה והמנוי
-        const response = await fetch('/api/signup', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId: authData.user.id,
-            companyName: signupData.companyName,
-            companySize: signupData.companySize,
-            companySector: signupData.companySector,
-            fullName: signupData.fullName,
-            jobTitle: signupData.jobTitle,
-            email: signupData.email,
-            phone: signupData.phone,
-            selectedPlan: signupData.selectedPlan,
-            billingCycle: signupData.billingCycle
-          })
         })
 
-        const result = await response.json()
-
-        if (!response.ok) {
-          throw new Error(result.error || 'שגיאה ביצירת החשבון')
-        }
-
-        // הצלחה - הפניה לדשבורד
-        router.push('/dashboard?welcome=true')
+        if (authError) throw authError
+        if (!authData.user) throw new Error('לא ניתן ליצור משתמש')
+        
+        userId = authData.user.id
+        userEmail = authData.user.email!
+        console.log('Created new auth user:', userId)
       }
+
+      // קריאה ל-API ליצירת החברה והמנוי
+      const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          companyName: signupData.companyName,
+          companySize: signupData.companySize,
+          companySector: signupData.companySector,
+          fullName: signupData.fullName,
+          jobTitle: signupData.jobTitle,
+          email: userEmail,
+          phone: signupData.phone,
+          selectedPlan: signupData.selectedPlan,
+          billingCycle: signupData.billingCycle
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'שגיאה ביצירת החשבון')
+      }
+
+      // הצלחה - הפניה לדשבורד
+      router.push('/dashboard?welcome=true')
 
     } catch (error: any) {
       console.error('Signup error:', error)

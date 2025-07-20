@@ -141,25 +141,9 @@ export default function LoginForm() {
               }
               
               if (!userData) {
-                // משתמש חדש - יצירת רשומה
-                const { error: createError } = await supabase
-                  .from('users')
-                  .insert({
-                    id: session.user.id,
-                    email: currentEmail,
-                    role: 'agent',
-                    full_name: session.user.user_metadata.full_name || null,
-                    is_approved: false
-                  });
-
-                if (createError) {
-                  console.error("[AUTH] Error creating user:", createError);
-                  router.push(`/login?error=creation_error`);
-                  return;
-                }
-
-                console.log("[AUTH] New user created, redirecting to approval page");
-                router.push('/not-approved');
+                // משתמש חדש - הפנייה לפלואו הרשמה מלא
+                console.log("[AUTH] New user detected, redirecting to complete signup");
+                router.push('/signup-complete');
                 setAuthLoading(false)
                 return;
               }

@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coachee - פלטפורמת האימון המכירתי המתקדמת</title>
+    <meta name="description" content="פלטפורמת טכנולוגיה מתקדמת לניתוח שיחות מכירה, שיפור ביצועי נציגים וחדר כושר מכירתי יומי">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles-new.css">
+    <link rel="icon" href="https://res.cloudinary.com/dsoh3yteb/image/upload/v1753009883/5f808c4c789e44d79f22be7dfa3d3924_xskb0v.png" type="image/png">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="nav-brand">
+                <img src="https://res.cloudinary.com/dsoh3yteb/image/upload/v1753009883/5f808c4c789e44d79f22be7dfa3d3924_xskb0v.png" alt="Coachee Logo" class="logo">
+                <span class="brand-name">Coachee</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#features" class="nav-link">תכונות</a>
+                <a href="#analytics" class="nav-link">אנליטיקה</a>
+                <a href="#pricing" class="nav-link">מחירים</a>
+                <a href="#contact" class="nav-link">צור קשר</a>
+                <a href="https://coachee.co.il" class="cta-btn primary">כניסה למערכת</a>
+            </nav>
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">
+                        חדר הכושר המכירתי שלך
+                        <span class="gradient-text">מופעל בטכנולוגיה מתקדמת</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        פלטפורמת האימון המתקדמת לניתוח שיחות מכירה, שיפור ביצועי נציגים והגדלת המרות בצורה מדעית ומוכחת
+                    </p>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" data-target="34">0</div>
+                            <div class="stat-label">%שיפור ממוצע במכירות</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" data-target="89">0</div>
+                            <div class="stat-label">%מדויקות בניתוח</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" data-target="5">0</div>
+                            <div class="stat-label">שניות להוספת נציג</div>
+                        </div>
+                    </div>
+                    <div class="hero-cta">
+                        <a href="https://coachee.co.il" class="cta-btn primary large">התחל עכשיו בחינם</a>
+                        <a href="#demo" class="cta-btn secondary large">צפה בדמו</a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="dashboard-preview">
+                        <div class="chart-container">
+                            <canvas id="heroChart" width="400" height="300"></canvas>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-value" data-animate="85">0%</div>
+                                <div class="metric-label">ציון איכות</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value" data-animate="12">0</div>
+                                <div class="metric-label">שיחות היום</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value" data-animate="67">0%</div>
+                                <div class="metric-label">שיפור שבועי</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-bg-elements">
+            <div class="floating-element" style="top: 10%; left: 10%;"></div>
+            <div class="floating-element" style="top: 60%; right: 15%;"></div>
+            <div class="floating-element" style="bottom: 20%; left: 20%;"></div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">האתגר שכל מנהל מכירות מכיר</h2>
+                <p class="section-subtitle">איך אתה יודע אם הנציגים שלך מבצעים שיחות איכותיות?</p>
+            </div>
+            <div class="problems-grid">
+                <div class="problem-card">
+                    <div class="problem-icon" role="img" aria-label="בעיה">×</div>
+                    <h3>חוסר שקיפות</h3>
+                    <p>אתה לא יודע מה באמת קורה בשיחות של הנציגים</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon" role="img" aria-label="בעיה">⏱</div>
+                    <h3>אימון לא יעיל</h3>
+                    <p>אימון מסורתי לוקח זמן רב ולא תמיד מגיע לנקודה</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon" role="img" aria-label="בעיה">↘</div>
+                    <h3>ביצועים לא עקביים</h3>
+                    <p>פערים גדולים בין נציגים ללא הבנה מדוע</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon" role="img" aria-label="בעיה">☐</div>
+                    <h3>חוסר משוב מיידי</h3>
+                    <p>נציגים לא יודעים איך לשפר את עצמם</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="solution-section">
+        <div class="container">
+            <div class="solution-content">
+                <div class="solution-text">
+                    <h2 class="section-title">הפתרון: <span class="gradient-text">Coachee Pro</span></h2>
+                    <p class="section-subtitle">
+                        פלטפורמה מתקדמת שמנתחת כל שיחה, מזהה הזדמנויות שיפור ומספקת משוב מקצועי מיידי
+                    </p>
+                    <div class="solution-features">
+                        <div class="feature-item">
+                            <div class="feature-icon" role="img" aria-label="תכונה">✓</div>
+                            <div class="feature-content">
+                                <h4>תמלול וניתוח אוטומטי</h4>
+                                <p>מנוע עיבוד שפה מתקדם מנתח כל שיחה ומספק תובנות מעמיקות</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon" role="img" aria-label="תכונה">✓</div>
+                            <div class="feature-content">
+                                <h4>דוחות מפורטים וציונים</h4>
+                                <p>ציונים מדויקים לכל פרמטר עם המלצות לשיפור</p>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon" role="img" aria-label="תכונה">✓</div>
+                            <div class="feature-content">
+                                <h4>שיפור מתמיד וקבוע</h4>
+                                <p>מעקב אחר התקדמות וזיהוי מגמות בזמן אמת</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="solution-visual">
+                    <div class="phone-mockup">
+                        <div class="phone-content">
+                            <div class="analysis-preview">
+                                <div class="analysis-header">
+                                    <h4>ניתוח שיחה #247</h4>
+                                    <div class="score-badge">8.7/10</div>
+                                </div>
+                                <div class="analysis-metrics">
+                                    <div class="metric-bar">
+                                        <span>איכות פתיחה</span>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 85%"></div>
+                                        </div>
+                                        <span>85%</span>
+                                    </div>
+                                    <div class="metric-bar">
+                                        <span>זיהוי צרכים</span>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 92%"></div>
+                                        </div>
+                                        <span>92%</span>
+                                    </div>
+                                    <div class="metric-bar">
+                                        <span>טיפול בהתנגדויות</span>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 78%"></div>
+                                        </div>
+                                        <span>78%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">תכונות מתקדמות</h2>
+                <p class="section-subtitle">כל מה שאתה צריך כדי להפוך את הצוות שלך למכונת מכירות</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon-large" role="img" aria-label="תכונה מתקדמת">★</div>
+                    <h3>ניתוח טונאלי מתקדם</h3>
+                    <p>ניתוח הטון, הרגשות והאנרגיה בשיחה ישירות מהאודיו הגולמי</p>
+                    <ul class="feature-benefits">
+                        <li>זיהוי רמת ביטחון הנציג</li>
+                        <li>מדידת מעורבות הלקוח</li>
+                        <li>התראות על מתח או אי נוחות</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-large" role="img" aria-label="תכונה מתקדמת">★</div>
+                    <h3>הוספת נציגים ב-5 שניות</h3>
+                    <p>יתרון מהפכני - הוסף נציגים חדשים מיידית ללא המתנה</p>
+                    <ul class="feature-benefits">
+                        <li>ללא תלות באדמין</li>
+                        <li>גמישות מלאה בניהול</li>
+                        <li>חיסכון זמן משמעותי</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-large" role="img" aria-label="תכונה מתקדמת">★</div>
+                    <h3>תמיכה בכל פורמטי האודיו</h3>
+                    <p>המרה אוטומטית של כל סוגי הקבצים כולל WMA</p>
+                    <ul class="feature-benefits">
+                        <li>MP3, WAV, M4A, MP4, AAC</li>
+                        <li>WebM, OGG, WMA</li>
+                        <li>המרה מהירה בצד הלקוח</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-large" role="img" aria-label="תכונה מתקדמת">★</div>
+                    <h3>דשבורדים מתקדמים</h3>
+                    <p>ממשקים מותאמים לכל תפקיד עם גרפים ומגמות</p>
+                    <ul class="feature-benefits">
+                        <li>מעקב אישי לנציגים</li>
+                        <li>תובנות צוותיות למנהלים</li>
+                        <li>סטטיסטיקות עסקיות למנמ"ר</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-large" role="img" aria-label="תכונה מתקדמת">★</div>
+                    <h3>אבטחה ופרטיות מלאה</h3>
+                    <p>הגנה מקסימלית על נתוני החברה והלקוחות</p>
+                    <ul class="feature-benefits">
+                        <li>הפרדה מלאה בין חברות</li>
+                        <li>הצפנת קבצים מתקדמת</li>
+                        <li>הרשאות מבוססות תפקיד</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-large" role="img" aria-label="תכונה מתקדמת">★</div>
+                    <h3>המלצות מותאמות אישית</h3>
+                    <p>כל נציג מקבל המלצות ספציפיות לשיפור הביצועים שלו</p>
+                    <ul class="feature-benefits">
+                        <li>זיהוי נקודות חולשה</li>
+                        <li>תוכניות אימון מותאמות</li>
+                        <li>מעקב אחר התקדמות</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section id="analytics" class="analytics-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">אנליטיקה שמניעה תוצאות</h2>
+                <p class="section-subtitle">נתונים מדויקים שמספרים את הסיפור האמיתי של הצוות שלך</p>
+            </div>
+            <div class="analytics-content">
+                <div class="analytics-visual">
+                    <div class="charts-container">
+                        <div class="chart-wrapper">
+                            <h4>שיפור ביצועים לאורך זמן</h4>
+                            <canvas id="performanceChart" width="500" height="300"></canvas>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h4>התפלגות ציונים בצוות</h4>
+                            <canvas id="distributionChart" width="300" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="analytics-insights">
+                    <div class="insight-card">
+                        <div class="insight-icon"></div>
+                        <h4>ניתוח מגמות</h4>
+                        <p>זיהוי דפוסים ומגמות בביצועי הצוות לאורך זמן</p>
+                        <div class="insight-metrics">
+                            <div class="metric">
+                                <span class="metric-value">+23%</span>
+                                <span class="metric-label">שיפור חודשי</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">8.4/10</span>
+                                <span class="metric-label">ציון ממוצע</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-icon"></div>
+                        <h4>זיהוי הזדמנויות</h4>
+                        <p>איתור אזורים לשיפור והכוונה מדויקת לאימון</p>
+                        <div class="insight-metrics">
+                            <div class="metric">
+                                <span class="metric-value">5</span>
+                                <span class="metric-label">נציגים זקוקים לאימון</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">12</span>
+                                <span class="metric-label">המלצות פעילות</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-icon"></div>
+                        <h4>בנצ'מרקינג</h4>
+                        <p>השוואה לסטנדרטים בתעשייה ולנציגים מובילים</p>
+                        <div class="insight-metrics">
+                            <div class="metric">
+                                <span class="metric-value">Top 15%</span>
+                                <span class="metric-label">דירוג בתעשייה</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">3</span>
+                                <span class="metric-label">נציגי TOP</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">מה אומרים הלקוחות שלנו</h2>
+                <p class="section-subtitle">תוצאות מוכחות מחברות מובילות בישראל</p>
+            </div>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="quote-icon">"</div>
+                        <p>"תוך שלושה חודשים הצלחנו להעלות את הממוצע של הצוות ב-34%. הניתוח מדויק והמלצות מעשיות לחלוטין."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-info">
+                            <h4>רחל כהן</h4>
+                            <p>מנהלת מכירות, חברת טכנולוגיה</p>
+                        </div>
+                        <div class="company-logo"></div>
+                    </div>
+                    <div class="testimonial-stats">
+                        <span class="stat">+34% מכירות</span>
+                        <span class="stat">95% שביעות רצון</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="quote-icon">"</div>
+                        <p>"החיסכון בזמן אימון ענק. במקום להקשיב לשעות של הקלטות, אני מקבל תמצית מדויקת עם נקודות לשיפור."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-info">
+                            <h4>יוסי לוי</h4>
+                            <p>מנהל מוקד, חברת שירותים</p>
+                        </div>
+                        <div class="company-logo"></div>
+                    </div>
+                    <div class="testimonial-stats">
+                        <span class="stat">75% חיסכון בזמן</span>
+                        <span class="stat">8.7/10 ציון ממוצע</span>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <div class="quote-icon">"</div>
+                        <p>"הנציגים שלי סוף סוף מקבלים משוב קונקרטי. זה משנה לחלוטין את האופן שבו הם מתייחסים לשיחות."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-info">
+                            <h4>מיכל דוד</h4>
+                            <p>סמנכ"לית מכירות, חברת נדלן</p>
+                        </div>
+                        <div class="company-logo"></div>
+                    </div>
+                    <div class="testimonial-stats">
+                        <span class="stat">+28% סגירות</span>
+                        <span class="stat">91% שמירה על נציגים</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">החבילות שלנו</h2>
+                <p class="section-subtitle">פתרון מותאם לכל גודל צוות וצורך עסקי</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="plan-header">
+                        <h3>קטן</h3>
+                        <div class="plan-price">
+                            <span class="currency">₪</span>
+                            <span class="amount">299</span>
+                            <span class="period">/חודש</span>
+                        </div>
+                        <p class="plan-description">מושלם לצוותים קטנים</p>
+                    </div>
+                    <div class="plan-features">
+                        <div class="feature">5 משתמשים</div>
+                        <div class="feature"> ניתוח שיחות אוטומטי</div>
+                        <div class="feature"> דוחות בסיסיים</div>
+                        <div class="feature"> תמיכה באימייל</div>
+                        <div class="feature"> גישה לאפליקציה</div>
+                    </div>
+                    <a href="#contact" class="plan-cta">התחל עכשיו</a>
+                </div>
+                <div class="pricing-card popular">
+                    <div class="popular-badge">הכי פופולרי</div>
+                    <div class="plan-header">
+                        <h3>בינוני</h3>
+                        <div class="plan-price">
+                            <span class="currency">₪</span>
+                            <span class="amount">499</span>
+                            <span class="period">/חודש</span>
+                        </div>
+                        <p class="plan-description">לצוותים צומחים</p>
+                    </div>
+                    <div class="plan-features">
+                        <div class="feature"> 10 משתמשים</div>
+                        <div class="feature"> ניתוח מתקדם</div>
+                        <div class="feature"> דשבורדים מפורטים</div>
+                        <div class="feature"> אנליטיקה מתקדמת</div>
+                        <div class="feature"> תמיכה בטלפון</div>
+                        <div class="feature"> ניהול מכסות</div>
+                    </div>
+                    <a href="#contact" class="plan-cta">התחל עכשיו</a>
+                </div>
+                <div class="pricing-card">
+                    <div class="plan-header">
+                        <h3>גדול</h3>
+                        <div class="plan-price">
+                            <span class="currency">₪</span>
+                            <span class="amount">899</span>
+                            <span class="period">/חודש</span>
+                        </div>
+                        <p class="plan-description">לחברות מתקדמות</p>
+                    </div>
+                    <div class="plan-features">
+                        <div class="feature"> 20 משתמשים</div>
+                        <div class="feature"> כל התכונות המתקדמות</div>
+                        <div class="feature"> ניתוח טונאלי</div>
+                        <div class="feature"> דוחות מותאמים</div>
+                        <div class="feature"> אינטגרציות</div>
+                        <div class="feature"> תמיכה VIP</div>
+                    </div>
+                    <a href="#contact" class="plan-cta">התחל עכשיו</a>
+                </div>
+                <div class="pricing-card enterprise">
+                    <div class="plan-header">
+                        <h3>ארגוני</h3>
+                        <div class="plan-price">
+                            <span class="currency">₪</span>
+                            <span class="amount">1999</span>
+                            <span class="period">/חודש</span>
+                        </div>
+                        <p class="plan-description">לארגונים גדולים</p>
+                    </div>
+                    <div class="plan-features">
+                        <div class="feature"> 50 משתמשים</div>
+                        <div class="feature"> כל התכונות</div>
+                        <div class="feature"> ייעוץ מתמשך</div>
+                        <div class="feature"> הטמעה מלאה</div>
+                        <div class="feature"> אבטחה מתקדמת</div>
+                        <div class="feature"> תמיכה 24/7</div>
+                    </div>
+                    <a href="#contact" class="plan-cta">צור קשר</a>
+                </div>
+            </div>
+            <div class="pricing-note">
+                <p>כל החבילות כוללות ניסיון חינם למשך 14 יום • ללא התחייבות • ביטול בכל עת</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <div class="contact-content">
+                <div class="contact-info">
+                    <h2 class="section-title">בואו נתחיל</h2>
+                    <p class="section-subtitle">מוכנים לשנות את הדרך שבה הצוות שלכם מבצע מכירות?</p>
+                    <div class="contact-methods">
+                        <div class="contact-method">
+                            <div class="method-icon" role="img" aria-label="אמצעי יצירת קשר">⌘</div>
+                            <div class="method-content">
+                                <h4>כניסה למערכת</h4>
+                                <p>התחילו מיד עם גישה מלאה למערכת</p>
+                                <a href="https://coachee.co.il" class="method-link">coachee.co.il</a>
+                            </div>
+                        </div>
+                        <div class="contact-method">
+                            <div class="method-icon" role="img" aria-label="אמצעי יצירת קשר">✉</div>
+                            <div class="method-content">
+                                <h4>וואטסאפ</h4>
+                                <p>דברו איתנו ישירות לקבלת ייעוץ מקצועי</p>
+                                <a href="https://wa.me/972583288666?text=שלום,%20אני%20מעוניין%20לשמוע%20על%20Coachee%20-%20פלטפורמת%20האימון%20המכירתי" class="method-link" target="_blank">שלח הודעה</a>
+                            </div>
+                        </div>
+                        <div class="contact-method">
+                            <div class="method-icon" role="img" aria-label="אמצעי יצירת קשר">@</div>
+                            <div class="method-content">
+                                <h4>אימייל</h4>
+                                <p>נחזור אליכם תוך שעה בימי עבודה</p>
+                                <a href="mailto:gamechngercto@gmail.com" class="method-link">gamechngercto@gmail.com</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <h3>השאירו פרטים ונחזור אליכם</h3>
+                    <form id="contactForm" class="form">
+                        <div class="form-group">
+                            <label for="name">שם מלא</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">אימייל</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">טלפון</label>
+                            <input type="tel" id="phone" name="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="company">שם החברה</label>
+                            <input type="text" id="company" name="company" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="teamSize">גודל הצוות</label>
+                            <select id="teamSize" name="teamSize" required>
+                                <option value="">בחר גודל צוות</option>
+                                <option value="5-10">5-10 נציגים</option>
+                                <option value="10-20">10-20 נציגים</option>
+                                <option value="20-50">20-50 נציגים</option>
+                                <option value="50+">50+ נציגים</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">הודעה (אופציונלי)</label>
+                            <textarea id="message" name="message" rows="4"></textarea>
+                        </div>
+                        <button type="submit" class="form-submit">שלח הודעה</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="https://res.cloudinary.com/dsoh3yteb/image/upload/v1753009883/5f808c4c789e44d79f22be7dfa3d3924_xskb0v.png" alt="Coachee Logo" class="footer-logo">
+                    <span class="footer-brand-name">Coachee</span>
+                    <p class="footer-tagline">פלטפורמת האימון המכירתי המתקדמת</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>המוצר</h4>
+                        <a href="#features">תכונות</a>
+                        <a href="#analytics">אנליטיקה</a>
+                        <a href="#pricing">מחירים</a>
+                        <a href="https://coachee.co.il">כניסה למערכת</a>
+                    </div>
+                    <div class="footer-section">
+                        <h4>תמיכה</h4>
+                        <a href="#contact">צור קשר</a>
+                        <a href="https://wa.me/972583288666?text=שלום,%20רוצה%20לשמוע%20על%20Coachee" target="_blank">וואטסאפ</a>
+                        <a href="mailto:gamechngercto@gmail.com">אימייל</a>
+                        <a href="#faq">שאלות נפוצות</a>
+                    </div>
+                    <div class="footer-section">
+                        <h4>החברה</h4>
+                        <a href="#about">אודותינו</a>
+                        <a href="#privacy">מדיניות פרטיות</a>
+                        <a href="#terms">תנאי שימוש</a>
+                        <a href="#security">אבטחה</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Coachee. כל הזכויות שמורות.</p>
+                <div class="footer-social">
+                    <a href="#" class="social-link">LinkedIn</a>
+                    <a href="#" class="social-link">Facebook</a>
+                    <a href="https://wa.me/972583288666?text=שלום,%20אני%20מעוניין%20לשמוע%20על%20Coachee%20-%20פלטפורמת%20האימון%20המכירתי" class="social-link" target="_blank">WhatsApp</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script-new.js"></script>
+</body>
+</html>

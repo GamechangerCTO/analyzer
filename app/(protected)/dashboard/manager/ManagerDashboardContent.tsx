@@ -549,7 +549,10 @@ export default function ManagerDashboardContent() {
                   <Users className="w-5 h-5 ml-2 text-blue-600" />
                   סקירת הצוות
                 </h3>
-                <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                <button 
+                  onClick={() => router.push('/team')}
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline transition-all duration-200"
+                >
                   צפה בכולם →
                 </button>
               </div>
@@ -569,11 +572,17 @@ export default function ManagerDashboardContent() {
               </h3>
               
               <div className="grid grid-cols-2 gap-4">
-                <button className="flex items-center justify-center space-x-3 p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors">
+                <button 
+                  onClick={() => router.push('/team/add-agent')}
+                  className="flex items-center justify-center space-x-3 p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors"
+                >
                   <UserPlus className="w-5 h-5 text-blue-600" />
                   <span className="font-medium text-gray-900">הוסף נציג</span>
                 </button>
-                <button className="flex items-center justify-center space-x-3 p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors">
+                <button 
+                  onClick={() => router.push('/dashboard/manager/all-calls')}
+                  className="flex items-center justify-center space-x-3 p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors"
+                >
                   <Eye className="w-5 h-5 text-green-600" />
                   <span className="font-medium text-gray-900">צפה בשיחות</span>
                 </button>
