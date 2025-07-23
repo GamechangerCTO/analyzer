@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -185,9 +186,10 @@ const AIInsightCard: React.FC<AIInsightCardProps> = ({ insight }) => {
 // Agent Status Card Component
 interface AgentStatusCardProps {
   agent: AgentData;
+  onClick?: () => void;
 }
 
-const AgentStatusCard: React.FC<AgentStatusCardProps> = ({ agent }) => {
+const AgentStatusCard: React.FC<AgentStatusCardProps> = ({ agent, onClick }) => {
   const getStatusColor = () => {
     switch (agent.activityStatus) {
       case 'active':
@@ -217,7 +219,12 @@ const AgentStatusCard: React.FC<AgentStatusCardProps> = ({ agent }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-md transition-all duration-200">
+    <div 
+      className={`bg-white rounded-2xl p-5 border border-gray-100 transition-all duration-200 ${
+        onClick ? 'hover:shadow-md cursor-pointer hover:border-blue-200' : 'hover:shadow-md'
+      }`}
+      onClick={onClick}
+    >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
@@ -247,6 +254,11 @@ const AgentStatusCard: React.FC<AgentStatusCardProps> = ({ agent }) => {
           <p className="text-xs text-gray-500">ציון</p>
         </div>
       </div>
+      {onClick && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <p className="text-xs text-center text-blue-600 font-medium">לחץ לצפייה בפרטים →</p>
+        </div>
+      )}
     </div>
   );
 };
@@ -547,21 +559,39 @@ export default function ManagerDashboardContent() {
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <Users className="w-5 h-5 ml-2 text-blue-600" />
-                  סקירת הצוות
+                  הנציגים שלי ({agents.length})
                 </h3>
-                <button 
-                  onClick={() => router.push('/team')}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline transition-all duration-200"
+                <Link
+                  href="/team"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline transition-all duration-200 flex items-center space-x-1"
                 >
-                  צפה בכולם →
-                </button>
+                  <Users className="w-4 h-4" />
+                  <span>ניהול מלא</span>
+                </Link>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {agents.map((agent) => (
-                  <AgentStatusCard key={agent.id} agent={agent} />
-                ))}
-              </div>
+              {agents.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm">אין נציגים רשומים בצוות</p>
+                  <Link
+                    href="/team/add-agent"
+                    className="text-blue-600 hover:text-blue-700 text-sm font-medium mt-2 inline-block"
+                  >
+                    הוסף נציג ראשון →
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {agents.map((agent) => (
+                    <AgentStatusCard 
+                      key={agent.id} 
+                      agent={agent} 
+                      onClick={() => router.push(`/dashboard/agent?user=${agent.id}`)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Quick Actions */}
@@ -584,7 +614,7 @@ export default function ManagerDashboardContent() {
                   className="flex items-center justify-center space-x-3 p-4 border border-gray-200 rounded-2xl hover:bg-gray-50 transition-colors"
                 >
                   <Eye className="w-5 h-5 text-green-600" />
-                  <span className="font-medium text-gray-900">צפה בשיחות</span>
+                  <span className="font-medium text-gray-900">כל השיחות</span>
                 </button>
               </div>
             </div>
