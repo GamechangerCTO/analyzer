@@ -50,7 +50,7 @@ export default async function ProtectedLayout({
     redirect('/not-approved?reason=pending')
   }
 
-  // בדיקה אם מנהל ללא חבילה - הפניה לבחירת חבילה
+  // בדיקה אם מנהל ללא חבילה - הפניה לבחירת חבילה (רק אם זה לא POC)
   if ((userData.role === 'manager' || userData.role === 'owner') && userData.company_id) {
     console.log('Protected Layout - Auth check:', {
       user: `${user.email} (${user.id})`,
@@ -66,36 +66,55 @@ export default async function ProtectedLayout({
     
     console.log('Protected Layout - Checking subscription for manager, company_id:', userData.company_id)
     
-    // חיפוש מנוי פעיל (ללא .maybeSingle() שעלול לגרום לבעיות עקביות)
-    const { data: subscriptions, error: subError } = await supabase
-      .from('company_subscriptions')
-      .select('id, plan_id, is_active, starts_at, expires_at')
-      .eq('company_id', userData.company_id)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
+    // בדיקה אם החברה היא POC - POC לא צריכות מנוי
+    const { data: companyData, error: companyError } = await supabase
+      .from('companies')
+      .select('is_poc')
+      .eq('id', userData.company_id)
+      .single()
 
-    console.log('Protected Layout - Subscription query result:', {
-      subscriptions,
-      subError: subError?.message,
-      hasSubscription: !!(subscriptions && subscriptions.length > 0)
-    })
-
-    if (subError) {
-      console.error('Protected Layout - Subscription query error:', subError)
+    if (companyError) {
+      console.error('Protected Layout - Company query error:', companyError)
     }
 
-    // בדיקה שיש מנוי פעיל וכן תקף (לא פג תוקף)
-    const activeSubscription = subscriptions && subscriptions.length > 0 ? subscriptions[0] : null
-    const hasActiveSubscription = activeSubscription && 
-      activeSubscription.is_active && 
-      new Date(activeSubscription.expires_at) > new Date()
+    const isPocCompany = companyData?.is_poc || false
+    console.log('Protected Layout - Company POC status:', { isPocCompany })
 
-    if (!hasActiveSubscription) {
-      console.log('Protected Layout - Manager without subscription, redirecting to subscription setup')
-      redirect('/subscription-setup?reason=no-subscription')
+    // אם זה חברת POC, לא צריך לבדוק מנוי
+    if (isPocCompany) {
+      console.log('Protected Layout - POC company detected, skipping subscription check')
+    } else {
+      // חיפוש מנוי פעיל רק עבור חברות שאינן POC
+      const { data: subscriptions, error: subError } = await supabase
+        .from('company_subscriptions')
+        .select('id, plan_id, is_active, starts_at, expires_at')
+        .eq('company_id', userData.company_id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+
+      console.log('Protected Layout - Subscription query result:', {
+        subscriptions,
+        subError: subError?.message,
+        hasSubscription: !!(subscriptions && subscriptions.length > 0)
+      })
+
+      if (subError) {
+        console.error('Protected Layout - Subscription query error:', subError)
+      }
+
+      // בדיקה שיש מנוי פעיל וכן תקף (לא פג תוקף)
+      const activeSubscription = subscriptions && subscriptions.length > 0 ? subscriptions[0] : null
+      const hasActiveSubscription = activeSubscription && 
+        activeSubscription.is_active && 
+        new Date(activeSubscription.expires_at) > new Date()
+
+      if (!hasActiveSubscription) {
+        console.log('Protected Layout - Non-POC manager without subscription, redirecting to subscription setup')
+        redirect('/subscription-setup?reason=no-subscription')
+      }
+      
+      console.log('Protected Layout - Subscription found, allowing access:', activeSubscription)
     }
-    
-    console.log('Protected Layout - Subscription found, allowing access:', activeSubscription)
   }
 
   return (

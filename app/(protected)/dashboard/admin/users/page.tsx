@@ -292,21 +292,36 @@ export default function AdminUsersPage() {
   };
  
   const deleteUser = async (userId: string, userEmail: string | null) => {
-    if (!window.confirm(`האם אתה בטוח שברצונך למחוק את המשתמש ${userEmail || userId}? פעולה זו אינה הפיכה וכרגע תמחק רק את הרשומה מטבלת הנתונים הציבורית.`)) {
+    if (!window.confirm(`האם אתה בטוח שברצונך למחוק את המשתמש ${userEmail || userId}? פעולה זו אינה הפיכה ותמחק את כל הנתונים הקשורים למשתמש.`)) {
       return;
     }
     setActionLoading(`delete-${userId}`);
     setError(null);
     setSuccessMessage(null);
     try {
-      const { error: publicDeleteError } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', userId);
-      if (publicDeleteError) {
-        throw new Error(`שגיאה במחיקת משתמש מטבלת users: ${publicDeleteError.message}`);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('לא ניתן לזהות את המשתמש הנוכחי');
       }
-      setSuccessMessage(`המשתמש (מרשומת public.users) ${userEmail || userId} נמחק בהצלחה.`);
+
+      const response = await fetch('/api/admin/delete-user', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          adminId: user.id
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'שגיאה במחיקת המשתמש');
+      }
+
+      setSuccessMessage(result.message);
       await fetchUsersAndCompanies(); 
     } catch (err) {
       console.error("Error deleting user:", err);
