@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,12 +10,14 @@ export async function POST(request: NextRequest) {
       companySize,
       companySector, 
       fullName,
-      jobTitle, 
+      jobTitle,
       email,
       phone, 
       selectedPlan, 
       billingCycle = 'monthly' 
     } = body
+
+    console.log('Received signup request:', { userId, companyName, fullName, email, selectedPlan })
 
     // בדיקת נתונים בסיסיים
     if (!userId || !companyName || !companySize || !companySector || !fullName || !jobTitle || !email || !selectedPlan) {
@@ -25,15 +27,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createClient()
+    // יצירת Supabase client עם service role key לעקיפת RLS
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
-    // שלב 1: יצירת החברה
+    if (!supabaseServiceKey || !supabaseUrl) {
+      console.error('Missing Supabase configuration')
+      return NextResponse.json(
+        { error: 'שגיאה בתצורת השרת' },
+        { status: 500 }
+      )
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+
+    // 1. יצירת החברה
+    console.log('Creating company...', { companyName, companySector, companySize })
     const { data: company, error: companyError } = await supabase
       .from('companies')
       .insert({
-        name: companyName.trim(),
+        name: companyName,
         sector: companySector,
-        is_poc: false // חברות חדשות לא POC
+        product_info: `חברה בתחום ${companySector} עם ${companySize} עובדים`,
+        is_poc: true
       })
       .select()
       .single()
@@ -46,66 +67,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // שלב 2: קבלת פרטי החבילה שנבחרה
-    const { data: plan, error: planError } = await supabase
-      .from('subscription_plans')
-      .select('*')
-      .eq('id', selectedPlan)
-      .eq('is_active', true)
-      .single()
+    console.log('Company created successfully:', company.id)
 
-    if (planError || !plan) {
-      console.error('Plan fetch error:', planError)
-      return NextResponse.json(
-        { error: 'חבילה לא נמצאה' },
-        { status: 400 }
-      )
-    }
-
-    // שלב 3: יצירת המנוי
-    const nextBillingDate = new Date()
-    if (billingCycle === 'yearly') {
-      nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1)
-    } else {
-      nextBillingDate.setMonth(nextBillingDate.getMonth() + 1)
-    }
-
-    const planMinutes = plan.max_agents * 240 // חישוב דקות לפי נציגים
-
-    const { data: subscription, error: subscriptionError } = await supabase
-      .from('company_subscriptions')
-      .insert({
-        company_id: company.id,
-        plan_id: plan.id,
-        agents_count: plan.max_agents,
-        // עדכון: השתמש בטבלה הקיימת
-        is_active: true,
-        starts_at: new Date().toISOString(),
-        expires_at: nextBillingDate.toISOString()
-      })
-      .select()
-      .single()
-
-    if (subscriptionError) {
-      console.error('Subscription creation error:', subscriptionError)
-      return NextResponse.json(
-        { error: 'שגיאה ביצירת המנוי' },
-        { status: 500 }
-      )
-    }
-
-    // שלב 4: יצירת משתמש ראשי (מנהל החברה)
+    // 2. יצירת המשתמש (עכשיו users ללא RLS אז זה יעבוד)
+    console.log('Creating user...', { userId, companyId: company.id, fullName, email })
     const { data: user, error: userError } = await supabase
       .from('users')
       .insert({
         id: userId,
         company_id: company.id,
-        role: 'manager', // הוא יהיה המנהל הראשי
-        full_name: fullName.trim(),
-        email: email.trim(),
-        phone: phone || null,
-        job_title: jobTitle.trim(),
-        is_approved: true // מנהל ראשי מאושר אוטומטית
+        role: 'owner',
+        full_name: fullName,
+        job_title: jobTitle,
+        email: email,
+        phone: phone,
+        is_approved: true
       })
       .select()
       .single()
@@ -118,65 +94,54 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // שלב 5: יצירת מכסת דקות
+    console.log('User created successfully:', user.id)
+
+    // 3. יצירת מכסת דקות לחברה
     const { error: quotaError } = await supabase
       .from('company_minutes_quotas')
       .insert({
         company_id: company.id,
-        total_minutes: planMinutes,
+        total_minutes: 240,
         used_minutes: 0,
-        is_poc: false
+        is_poc: true,
+        poc_limit_minutes: 240
       })
 
     if (quotaError) {
       console.error('Quota creation error:', quotaError)
-      // לא נכשל בגלל זה אבל נלוג
+      // לא נכשיל את כל התהליך בגלל זה
     }
 
-    // שלב 6: חישוב מחיר לפי מדרגות (ידני)
-    let monthlyPrice = 0
-    let remainingAgents = plan.max_agents
-    
-    // מדרגה 1: 1-5 נציגים = $69 לכל אחד
-    if (remainingAgents > 0) {
-      const agentsInTier = Math.min(remainingAgents, 5)
-      monthlyPrice += agentsInTier * 69
-      remainingAgents -= agentsInTier
-    }
-    
-    // מדרגה 2: 6-10 נציגים = $59 לכל אחד
-    if (remainingAgents > 0) {
-      const agentsInTier = Math.min(remainingAgents, 5)
-      monthlyPrice += agentsInTier * 59
-      remainingAgents -= agentsInTier
-    }
-    
-    // מדרגה 3: 11+ נציגים = $49 לכל אחד
-    if (remainingAgents > 0) {
-      monthlyPrice += remainingAgents * 49
+    // 4. יצירת מכסת משתמשים לחברה
+    const { error: userQuotaError } = await supabase
+      .from('company_user_quotas')
+      .insert({
+        company_id: company.id,
+        total_users: 5, // ברירת מחדל ל-POC
+        used_users: 1   // כולל את המשתמש שיצרנו
+      })
+
+    if (userQuotaError) {
+      console.error('User quota creation error:', userQuotaError)
+      // לא נכשיל את כל התהליך בגלל זה
     }
 
-    const finalPrice = billingCycle === 'yearly' ? monthlyPrice * 10 : monthlyPrice
-
+    console.log('Signup completed successfully')
+    
     return NextResponse.json({
       success: true,
-      message: 'החשבון נוצר בהצלחה!',
+      message: 'ההרשמה הושלמה בהצלחה',
       data: {
-        companyId: company.id,
-        subscriptionId: subscription.id,
         userId: user.id,
-        planMinutes: planMinutes,
-        monthlyPrice: finalPrice
+        companyId: company.id,
+        companyName: company.name
       }
     })
 
   } catch (error) {
-    console.error('Signup API error:', error)
+    console.error('Signup error:', error)
     return NextResponse.json(
-      { 
-        error: 'שגיאה פנימית בשרת', 
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { error: 'שגיאה כללית בהרשמה' },
       { status: 500 }
     )
   }

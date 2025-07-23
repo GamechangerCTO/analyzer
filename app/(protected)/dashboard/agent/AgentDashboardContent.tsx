@@ -189,15 +189,20 @@ export default function AgentDashboardContent({ userId, companyId, targetUserInf
             </div>
             <div>
               <h2 className="text-2xl font-bold text-glacier-neutral-900">ניתוח ביצועים מתקדם</h2>
-              <p className="text-glacier-neutral-600">תובנות מבוססות AI מ-5 השיחות האחרונות</p>
+              <p className="text-glacier-neutral-600">תובנות מבוססות AI מ-5 השיחות האחרונות (זמנית מושבת)</p>
           </div>
         </div>
 
-          <AgentSummary 
-            agentId={userId} 
-            agentName={targetUserInfo?.full_name || agentInfo?.full_name || undefined}
-            isOwnSummary={!targetUserInfo}
-          />
+          {/* הסרה זמנית של AgentSummary כדי לחסוך quota */}
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-200">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">סיכום AI זמנית מושבת</h3>
+              <p className="text-gray-600">התכונה תחזור בקרוב - אנחנו עובדים על שיפורים</p>
+            </div>
+          </div>
         </div>
 
         {/* רשימת שיחות מעוצבת */}

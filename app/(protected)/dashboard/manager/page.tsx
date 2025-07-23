@@ -34,5 +34,21 @@ export default async function ManagerDashboardPage() {
     redirect('/not-approved');
   }
 
+  if (!userData.company_id) {
+    redirect('/dashboard');
+  }
+
+  // Check if company questionnaire is complete
+  const { data: questionnaireData, error: questionnaireError } = await supabase
+    .from('company_questionnaires')
+    .select('is_complete, completion_score')
+    .eq('company_id', userData.company_id)
+    .maybeSingle();
+
+  // If no questionnaire exists or it's not complete, redirect to questionnaire
+  if (!questionnaireData || !questionnaireData.is_complete) {
+    redirect('/company-questionnaire?first_login=true');
+  }
+
   return <ManagerDashboardContent />;
 } 

@@ -9,9 +9,17 @@ interface CompanyQuestionnaireFormProps {
   companyId: string
   companyData: any
   isAdminEdit?: boolean
+  isFirstLogin?: boolean
+  isView?: boolean
 }
 
-export default function CompanyQuestionnaireForm({ companyId, companyData, isAdminEdit = false }: CompanyQuestionnaireFormProps) {
+export default function CompanyQuestionnaireForm({ 
+  companyId, 
+  companyData, 
+  isAdminEdit = false,
+  isFirstLogin = false,
+  isView = false
+}: CompanyQuestionnaireFormProps) {
   const supabase = getSupabaseClient()
   const router = useRouter()
   
@@ -243,6 +251,8 @@ export default function CompanyQuestionnaireForm({ companyId, companyData, isAdm
           company_benefits: [],
           uploads_professional_materials: formData.uploads_professional_materials,
           professional_materials_files: uploadedFiles,
+          is_complete: true,
+          completion_score: 100,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'company_id'
@@ -281,7 +291,11 @@ export default function CompanyQuestionnaireForm({ companyId, companyData, isAdm
 
       console.log('🔍 Verification of saved questionnaire data:', { verifyData, verifyError })
       
-      setSuccessMessage(`שאלון החברה "${formData.name}" עודכן בהצלחה!`)
+      if (isFirstLogin) {
+        setSuccessMessage(`ברוך הבא! פרטי החברה "${formData.name}" נשמרו בהצלחה. מעבר לדשבורד...`)
+      } else {
+        setSuccessMessage(`שאלון החברה "${formData.name}" עודכן בהצלחה!`)
+      }
       
       // חזרה לדשבורד לאחר 2 שניות
       setTimeout(() => {
@@ -602,23 +616,36 @@ export default function CompanyQuestionnaireForm({ companyId, companyData, isAdm
             disabled={saving} 
             className="w-full bg-glacier-primary hover:bg-glacier-primary-dark text-white font-bold py-4 px-6 rounded-xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {saving ? 'שומר שאלון...' : 'שמור שאלון'}
+            {saving 
+              ? (isFirstLogin ? 'משלים הרשמה...' : 'שומר שאלון...') 
+              : (isFirstLogin ? 'השלמת ההרשמה' : 'שמור שאלון')
+            }
           </button>
           
-          <button 
-            type="button" 
-            onClick={() => {
-              if (isAdminEdit) {
-                router.push('/dashboard/admin/companies')
-              } else {
-                router.push('/dashboard/manager')
-              }
-            }} 
-            disabled={saving} 
-            className="w-full mt-4 bg-glacier-neutral-200 hover:bg-glacier-neutral-300 text-glacier-700 font-bold py-4 px-6 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isAdminEdit ? 'חזור לרשימת החברות' : 'חזור לדשבורד'}
-          </button>
+          {!isFirstLogin && (
+            <button 
+              type="button" 
+              onClick={() => {
+                if (isAdminEdit) {
+                  router.push('/dashboard/admin/companies')
+                } else {
+                  router.push('/dashboard/manager')
+                }
+              }} 
+              disabled={saving} 
+              className="w-full mt-4 bg-glacier-neutral-200 hover:bg-glacier-neutral-300 text-glacier-700 font-bold py-4 px-6 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAdminEdit ? 'חזור לרשימת החברות' : 'חזור לדשבורד'}
+            </button>
+          )}
+          
+          {isFirstLogin && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                ⚠️ עליך להשלים את השאלון כדי להמשיך למערכת
+              </p>
+            </div>
+          )}
         </div>
       </form>
     </div>
