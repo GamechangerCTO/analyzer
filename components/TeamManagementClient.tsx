@@ -31,6 +31,7 @@ import {
   Shield
 } from 'lucide-react'
 import Avatar from '@/components/Avatar'
+import AdvancedDataTable from '@/components/AdvancedDataTable'
 
 type Agent = Database['public']['Tables']['users']['Row']
 type Subscription = Database['public']['Tables']['company_subscriptions']['Row'] & {
@@ -52,9 +53,16 @@ interface AddAgentFormData {
   notes?: string
 }
 
+interface AgentWithStats extends Agent {
+  total_calls?: number
+  weekly_calls?: number
+  avg_score?: number
+  last_call_date?: string
+  activity_status?: 'active' | 'moderate' | 'inactive'
+}
+
 export default function TeamManagementClient({ userId, companyId, userRole, userFullName }: TeamManagementClientProps) {
-  const [agents, setAgents] = useState<Agent[]>([])
-  const [filteredAgents, setFilteredAgents] = useState<Agent[]>([])
+  const [agents, setAgents] = useState<AgentWithStats[]>([])
   const [company, setCompany] = useState<Company | null>(null)
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [myRequests, setMyRequests] = useState<AgentRequest[]>([])
@@ -63,9 +71,6 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [userQuota, setUserQuota] = useState<{total_users: number, used_users: number, available_users: number} | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [roleFilter, setRoleFilter] = useState<'all' | 'agent' | 'manager'>('all')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending'>('all')
   const [formData, setFormData] = useState<AddAgentFormData>({
     fullName: '',
     email: '',
@@ -80,48 +85,20 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
     fetchData()
   }, [companyId])
 
-  // סינון נציגים
-  useEffect(() => {
-    let filtered = agents
-
-    if (searchTerm) {
-      filtered = filtered.filter(agent => 
-        agent.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        agent.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
-
-    if (roleFilter !== 'all') {
-      filtered = filtered.filter(agent => agent.role === roleFilter)
-    }
-
-    if (statusFilter !== 'all') {
-      if (statusFilter === 'approved') {
-        filtered = filtered.filter(agent => agent.is_approved === true)
-      } else {
-        filtered = filtered.filter(agent => agent.is_approved === false)
-      }
-    }
-
-    setFilteredAgents(filtered)
-  }, [agents, searchTerm, roleFilter, statusFilter])
-
   const fetchData = async () => {
     try {
       setLoading(true)
-
-      // קבלת פרטי החברה
+      
+      // טעינת פרטי החברה
       const { data: companyData } = await supabase
         .from('companies')
         .select('*')
         .eq('id', companyId)
         .single()
+      
+      setCompany(companyData)
 
-      if (companyData) {
-        setCompany(companyData)
-      }
-
-      // קבלת פרטי המנוי
+      // טעינת מנוי
       const { data: subscriptionData } = await supabase
         .from('company_subscriptions')
         .select(`
@@ -129,46 +106,88 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
           subscription_plans(*)
         `)
         .eq('company_id', companyId)
-        .order('created_at', { ascending: false })
-        .limit(1)
+        .eq('is_active', true)
         .single()
+      
+      setSubscription(subscriptionData)
 
-      if (subscriptionData) {
-        setSubscription(subscriptionData as Subscription)
-      }
+      // טעינת מכסת משתמשים
+      const { data: quotaData } = await supabase
+        .from('company_user_quotas')
+        .select('*')
+        .eq('company_id', companyId)
+        .single()
+      
+      setUserQuota(quotaData)
 
-      // קבלת רשימת הנציגים
+      // טעינת נציגים עם נתוני ביצועים
       const { data: agentsData } = await supabase
         .from('users')
         .select('*')
         .eq('company_id', companyId)
+        .in('role', ['agent', 'manager', 'owner'])
         .order('created_at', { ascending: false })
 
       if (agentsData) {
-        setAgents(agentsData)
+        // הוספת נתוני ביצועים לכל נציג
+        const agentsWithStats = await Promise.all(
+          agentsData.map(async (agent) => {
+            // שליפת נתוני שיחות
+            const { data: callsData } = await supabase
+              .from('calls')
+              .select('id, overall_score, created_at')
+              .eq('user_id', agent.id)
+
+            const totalCalls = callsData?.length || 0
+            
+            // שיחות השבוע
+            const oneWeekAgo = new Date()
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+            const weeklyCalls = callsData?.filter(call => 
+              new Date(call.created_at) >= oneWeekAgo
+            ).length || 0
+
+            // ציון ממוצע
+            const callsWithScore = callsData?.filter(call => call.overall_score !== null) || []
+            const avgScore = callsWithScore.length > 0 
+              ? callsWithScore.reduce((sum, call) => sum + (call.overall_score || 0), 0) / callsWithScore.length
+              : 0
+
+            // תאריך שיחה אחרונה
+            const lastCallDate = callsData && callsData.length > 0 
+              ? callsData[0].created_at 
+              : null
+
+            // סטטוס פעילות
+            let activityStatus: 'active' | 'moderate' | 'inactive' = 'inactive'
+            if (weeklyCalls >= 10) activityStatus = 'active'
+            else if (weeklyCalls >= 3) activityStatus = 'moderate'
+
+            return {
+              ...agent,
+              total_calls: totalCalls,
+              weekly_calls: weeklyCalls,
+              avg_score: Number(avgScore.toFixed(1)),
+              last_call_date: lastCallDate,
+              activity_status: activityStatus
+            }
+          })
+        )
+
+        setAgents(agentsWithStats)
       }
 
-      // קבלת הבקשות שהמנהל הנוכחי שלח
+      // טעינת בקשות הנציגים שלי
       const { data: requestsData } = await supabase
         .from('agent_approval_requests')
         .select('*')
         .eq('requested_by', userId)
         .order('created_at', { ascending: false })
-
-      if (requestsData) {
-        setMyRequests(requestsData)
-      }
-
-      // קבלת נתוני מכסת המשתמשים
-      const { data: quotaData } = await supabase
-        .rpc('get_company_user_quota', { p_company_id: companyId })
-
-      if (quotaData && quotaData.length > 0) {
-        setUserQuota(quotaData[0])
-      }
+      
+      setMyRequests(requestsData || [])
 
     } catch (error) {
-      console.error('Error fetching team data:', error)
+      console.error('שגיאה בטעינת נתונים:', error)
     } finally {
       setLoading(false)
     }
@@ -179,422 +198,523 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
     setIsSubmitting(true)
 
     try {
-      // קריאה ל-API החדש שבודק מכסה
       const response = await fetch('/api/team/add-agent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          fullName: formData.fullName,
           email: formData.email,
-          full_name: formData.fullName
-        })
+          companyId,
+          requestedBy: userId,
+          notes: formData.notes
+        }),
       })
 
       const result = await response.json()
 
-      if (!response.ok) {
-        // אם אין מכסה זמינה - הצג הודעה מפורטת
-        if (result.error === 'No available quota') {
-          alert(`❌ לא ניתן להוסיף נציג חדש\n\n${result.message}`)
-        } else {
-          throw new Error(result.error || 'שגיאה בהוספת הנציג')
-        }
-        return
+      if (response.ok) {
+        setSuccessMessage(result.message)
+        setShowSuccessNotification(true)
+        setShowAddAgentModal(false)
+        setFormData({ fullName: '', email: '', notes: '' })
+        
+        // רענון הנתונים
+        fetchData()
+        
+        setTimeout(() => {
+          setShowSuccessNotification(false)
+        }, 5000)
+      } else {
+        alert(result.error || 'שגיאה בהוספת הנציג')
       }
-
-      // אפס טופס וסגור מודל
-      setFormData({ fullName: '', email: '', notes: '' })
-      setShowAddAgentModal(false)
-
-      // הנציג נוסף בהצלחה
-      setSuccessMessage(`✅ ${result.message}`)
-      setShowSuccessNotification(true)
-
-      // רענן נתונים
-      await fetchData()
-
-      // הסתר התראת הצלחה אחרי 7 שניות
-      setTimeout(() => {
-        setShowSuccessNotification(false)
-        setSuccessMessage('')
-      }, 7000)
-
     } catch (error) {
-      console.error('Error submitting agent request:', error)
-      alert('שגיאה בהוספת הנציג: ' + (error as Error).message)
+      console.error('שגיאה בהוספת נציג:', error)
+      alert('שגיאה בהוספת הנציג')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return 'text-success bg-success/10 border-success/20'
-      case 'pending': return 'text-warning bg-warning/10 border-warning/20'
-      case 'rejected': return 'text-error bg-error/10 border-error/20'
-      default: return 'text-indigo-night/60 bg-ice-gray border-ice-gray'
-    }
+  // Helper functions
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'לא ידוע'
+    return new Date(dateString).toLocaleDateString('he-IL')
   }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'approved': return 'מאושר'
-      case 'pending': return 'ממתין'
-      case 'rejected': return 'נדחה'
-      default: return 'לא ידוע'
+  const getRoleName = (role: string) => {
+    const roleNames = {
+      'owner': 'בעלים',
+      'manager': 'מנהל',
+      'agent': 'נציג'
     }
+    return roleNames[role as keyof typeof roleNames] || role
   }
 
   const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'manager': return Crown
-      case 'agent': return Users
-      default: return Users
+    const roleIcons = {
+      'owner': <Crown className="w-4 h-4" />,
+      'manager': <Shield className="w-4 h-4" />,
+      'agent': <Users className="w-4 h-4" />
+    }
+    return roleIcons[role as keyof typeof roleIcons] || <Users className="w-4 h-4" />
+  }
+
+  const getStatusBadge = (isApproved: boolean | null) => {
+    if (isApproved === true) {
+      return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">מאושר</span>
+    } else if (isApproved === false) {
+      return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">נדחה</span>
+    } else {
+      return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">ממתין</span>
     }
   }
 
-  const getRoleText = (role: string) => {
-    switch (role) {
-      case 'manager': return 'מנהל'
-      case 'agent': return 'נציג'
-      default: return 'לא ידוע'
+  const getActivityBadge = (status: 'active' | 'moderate' | 'inactive') => {
+    const statusConfig = {
+      'active': { color: 'bg-green-100 text-green-800', text: 'פעיל' },
+      'moderate': { color: 'bg-yellow-100 text-yellow-800', text: 'בינוני' },
+      'inactive': { color: 'bg-red-100 text-red-800', text: 'לא פעיל' }
     }
-  }
-
-  if (loading) {
+    
+    const config = statusConfig[status]
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-lemon-mint/20 rounded-2xl flex items-center justify-center mx-auto animate-lemon-pulse">
-            <Users className="w-8 h-8 text-lemon-mint-dark animate-spin" />
-          </div>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+        {config.text}
+      </span>
+    )
+  }
+
+  // Define table columns
+  const columns = [
+    {
+      key: 'full_name',
+      title: 'שם מלא',
+      sortable: true,
+      filterable: true,
+      render: (value: string, row: AgentWithStats) => (
+        <div className="flex items-center gap-3">
+          <Avatar
+            src={row.avatar_url}
+            alt={value || 'משתמש'}
+            size="sm"
+            fallback={value?.charAt(0) || '?'}
+          />
           <div>
-            <h3 className="text-lg font-semibold text-indigo-night">טוען נתוני הצוות...</h3>
-            <p className="text-indigo-night/60">אוסף את כל פרטי החברים</p>
+            <div className="font-medium text-gray-900">{value}</div>
+            <div className="text-sm text-gray-500">{row.email}</div>
           </div>
         </div>
-      </div>
-    )
+      )
+    },
+    {
+      key: 'role',
+      title: 'תפקיד',
+      sortable: true,
+      filterable: true,
+      filterType: 'select' as const,
+      filterOptions: [
+        { value: 'owner', label: 'בעלים' },
+        { value: 'manager', label: 'מנהל' },
+        { value: 'agent', label: 'נציג' }
+      ],
+      render: (value: string) => (
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white">
+            {getRoleIcon(value)}
+          </div>
+          <span className="font-medium">{getRoleName(value)}</span>
+        </div>
+      )
+    },
+    {
+      key: 'is_approved',
+      title: 'סטטוס',
+      sortable: true,
+      filterable: true,
+      filterType: 'select' as const,
+      filterOptions: [
+        { value: 'true', label: 'מאושר' },
+        { value: 'false', label: 'נדחה' },
+        { value: 'null', label: 'ממתין' }
+      ],
+      render: (value: boolean | null) => getStatusBadge(value)
+    },
+    {
+      key: 'activity_status',
+      title: 'פעילות',
+      sortable: true,
+      filterable: true,
+      filterType: 'select' as const,
+      filterOptions: [
+        { value: 'active', label: 'פעיל' },
+        { value: 'moderate', label: 'בינוני' },
+        { value: 'inactive', label: 'לא פעיל' }
+      ],
+      render: (value: 'active' | 'moderate' | 'inactive') => getActivityBadge(value)
+    },
+    {
+      key: 'total_calls',
+      title: 'סה"כ שיחות',
+      sortable: true,
+      filterable: true,
+      filterType: 'number' as const,
+      render: (value: number) => (
+        <div className="flex items-center gap-2">
+          <Phone className="w-4 h-4 text-gray-400" />
+          <span className="font-medium">{value || 0}</span>
+        </div>
+      )
+    },
+    {
+      key: 'weekly_calls',
+      title: 'שיחות השבוע',
+      sortable: true,
+      filterable: true,
+      filterType: 'number' as const,
+      render: (value: number) => (
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-gray-400" />
+          <span className="font-medium">{value || 0}</span>
+        </div>
+      )
+    },
+    {
+      key: 'avg_score',
+      title: 'ציון ממוצע',
+      sortable: true,
+      filterable: true,
+      filterType: 'number' as const,
+      render: (value: number) => {
+        if (!value) return <span className="text-gray-400">אין נתונים</span>
+        
+        let colorClass = ''
+        if (value >= 8) colorClass = 'text-green-600 bg-green-100'
+        else if (value >= 6) colorClass = 'text-yellow-600 bg-yellow-100'
+        else if (value >= 4) colorClass = 'text-orange-600 bg-orange-100'
+        else colorClass = 'text-red-600 bg-red-100'
+        
+        return (
+          <div className="flex items-center gap-2">
+            <Star className="w-4 h-4 text-gray-400" />
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
+              {value.toFixed(1)}
+            </span>
+          </div>
+        )
+      }
+    },
+    {
+      key: 'last_call_date',
+      title: 'שיחה אחרונה',
+      sortable: true,
+      filterable: true,
+      filterType: 'date' as const,
+      render: (value: string | null) => (
+        <div className="flex items-center gap-2">
+          <Clock className="w-4 h-4 text-gray-400" />
+          <span>{formatDate(value)}</span>
+        </div>
+      )
+    },
+    {
+      key: 'created_at',
+      title: 'תאריך הצטרפות',
+      sortable: true,
+      filterable: true,
+      filterType: 'date' as const,
+      render: (value: string) => formatDate(value)
+    },
+    {
+      key: 'id',
+      title: 'פעולות',
+      sortable: false,
+      filterable: false,
+      searchable: false,
+      render: (value: string, row: AgentWithStats) => (
+        <div className="flex items-center gap-2">
+          <Link 
+            href={`/dashboard/agent?user=${value}`}
+            className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-xs font-medium"
+            title="צפה בדשבורד"
+          >
+            <Eye className="w-3 h-3" />
+            <span>צפה</span>
+          </Link>
+          
+          {userRole === 'manager' && row.role === 'agent' && (
+            <Link 
+              href={`/team/edit-agent/${value}`}
+              className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs font-medium"
+              title="ערוך נציג"
+            >
+              <Edit className="w-3 h-3" />
+              <span>ערוך</span>
+            </Link>
+          )}
+        </div>
+      )
+    }
+  ]
+
+  // Export function
+  const handleExport = () => {
+    const headers = [
+      'שם מלא',
+      'אימייל',
+      'תפקיד',
+      'סטטוס אישור',
+      'פעילות',
+      'סה"כ שיחות',
+      'שיחות השבוע',
+      'ציון ממוצע',
+      'שיחה אחרונה',
+      'תאריך הצטרפות'
+    ].join(',')
+    
+    const rows = agents.map(agent => [
+      agent.full_name || '',
+      agent.email || '',
+      getRoleName(agent.role || ''),
+      agent.is_approved === true ? 'מאושר' : agent.is_approved === false ? 'נדחה' : 'ממתין',
+      agent.activity_status === 'active' ? 'פעיל' : agent.activity_status === 'moderate' ? 'בינוני' : 'לא פעיל',
+      agent.total_calls || 0,
+      agent.weekly_calls || 0,
+      agent.avg_score || 0,
+      formatDate(agent.last_call_date),
+      formatDate(agent.created_at)
+    ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')).join('\n')
+    
+    const csv = `${headers}\n${rows}`
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `team_management_${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
   }
 
   return (
     <div className="space-y-8">
-      {/* כותרת וסטטיסטיקות */}
-      <div className="choacee-card-clay-raised p-8 bg-gradient-to-l from-clay-primary to-clay-primary/80 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <div className="w-20 h-20 bg-clay-success/20 rounded-clay flex items-center justify-center">
-              <Users className="w-10 h-10 text-clay-success" />
-            </div>
-            <div>
-              <h1 className="choacee-text-display text-3xl font-bold mb-2">
-                צוות {company?.name || 'החברה'} 👥
-              </h1>
-              <p className="text-white/80 text-lg">
-                ניהול והוספת חברי צוות חדשים
-              </p>
-            </div>
-          </div>
-          
-          <div className="text-center">
-            <div className="text-3xl font-bold text-clay-success mb-1">
-              {agents.length}
-            </div>
-            <div className="text-white/60 text-sm">
-              חברי צוות
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* מכסת משתמשים */}
-      {userQuota && (
-        <div className="choacee-card-clay p-6 border-r-4 border-clay-danger">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <Target className="w-6 h-6 text-clay-danger" />
-              <h3 className="choacee-text-display text-xl font-bold text-clay-primary">
-                מכסת משתמשים
-              </h3>
-            </div>
-            <div className="text-2xl font-bold text-clay-danger">
-              {userQuota.used_users}/{userQuota.total_users}
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="choacee-progress-bar">
-              <div 
-                className="choacee-progress-fill bg-clay-danger" 
-                style={{ width: `${(userQuota.used_users / userQuota.total_users) * 100}%` }}
-              ></div>
-            </div>
-            
-            <div className="flex justify-between text-sm">
-              <span className="text-neutral-500">בשימוש: {userQuota.used_users}</span>
-              <span className="text-clay-success font-medium">זמינים: {userQuota.available_users}</span>
-            </div>
+      {/* Success Notification */}
+      {showSuccessNotification && (
+        <div className="fixed top-4 right-4 z-50 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg">
+          <div className="flex items-center">
+            <CheckCircle className="w-5 h-5 text-green-400" />
+            <p className="mr-3 text-sm font-medium text-green-800">{successMessage}</p>
+            <button
+              type="button"
+              className="mr-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-400 p-1.5 hover:bg-green-100"
+              onClick={() => setShowSuccessNotification(false)}
+            >
+              <X className="w-3 h-3" />
+            </button>
           </div>
         </div>
       )}
 
-      {/* סרגל פעולות */}
-      <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
-        <div className="flex flex-col sm:flex-row gap-4 flex-1">
-          {/* חיפוש */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="חיפוש לפי שם או אימייל..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="choacee-input-clay w-full pl-4 pr-12 py-3"
+      {/* Header */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">ניהול צוות</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            נהל את הנציגים שלך, צפה בביצועים והוסף חברי צוות חדשים
+          </p>
+        </div>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowAddAgentModal(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            הוסף נציג
+          </button>
+        </div>
+      </div>
+
+      {/* Quota Display */}
+      {userQuota && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Users className="w-5 h-5 text-blue-600 mr-2" />
+              <span className="text-sm font-medium text-blue-900">
+                מכסת משתמשים: {userQuota.used_users} / {userQuota.total_users}
+              </span>
+            </div>
+            <div className="text-sm text-blue-700">
+              זמינים: {userQuota.available_users}
+            </div>
+          </div>
+          <div className="mt-2 w-full bg-blue-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(userQuota.used_users / userQuota.total_users) * 100}%` }}
             />
           </div>
+        </div>
+      )}
 
-          {/* פילטרים */}
-          <div className="flex gap-3">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value as 'all' | 'agent' | 'manager')}
-              className="choacee-input-clay px-4 py-3"
-            >
-              <option value="all">כל התפקידים</option>
-              <option value="agent">נציגים</option>
-              <option value="manager">מנהלים</option>
-            </select>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'approved' | 'pending')}
-              className="choacee-input-clay px-4 py-3"
-            >
-              <option value="all">כל הסטטוסים</option>
-              <option value="approved">מאושרים</option>
-              <option value="pending">ממתינים</option>
-            </select>
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="flex items-center">
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <Users className="w-6 h-6 text-blue-600" />
+            </div>
+            <div className="mr-4">
+              <p className="text-sm font-medium text-gray-600">סה"כ חברי צוות</p>
+              <p className="text-2xl font-bold text-gray-900">{agents.length}</p>
+            </div>
           </div>
         </div>
 
-        {/* כפתור הוספת נציג */}
-        <button
-          onClick={() => setShowAddAgentModal(true)}
-          className="choacee-btn-clay-primary"
-        >
-          <div className="flex items-center space-x-2">
-            <UserPlus className="w-5 h-5" />
-            <span>הוסף חבר צוות</span>
-          </div>
-        </button>
-      </div>
-
-      {/* רשימת חברי הצוות */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredAgents.map((agent) => {
-          const RoleIcon = getRoleIcon(agent.role)
-          return (
-            <div key={agent.id} className="choacee-card-clay choacee-interactive">
-              <div className="space-y-4">
-                {/* כותרת הכרטיס */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                                         <Avatar avatarUrl={`geom${(parseInt(agent.id.slice(-2), 16) % 12) + 1}`} fullName={agent.full_name} className="w-12 h-12" />
-                    <div>
-                      <h3 className="font-semibold text-clay-primary text-lg">
-                        {agent.full_name || 'ללא שם'}
-                      </h3>
-                      <div className="flex items-center space-x-2">
-                        <RoleIcon className="w-4 h-4 text-neutral-500" />
-                        <span className="text-sm text-neutral-500">
-                          {getRoleText(agent.role)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* סטטוס */}
-                  <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(agent.is_approved ? 'approved' : 'pending')}`}>
-                    {agent.is_approved ? (
-                      <div className="flex items-center space-x-1">
-                        <CheckCircle className="w-3 h-3" />
-                        <span>פעיל</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-3 h-3" />
-                        <span>ממתין</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* פרטי קשר */}
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-3 text-sm text-neutral-600">
-                    <Mail className="w-4 h-4" />
-                    <span>{agent.email}</span>
-                  </div>
-                  <div className="flex items-center space-x-3 text-sm text-neutral-600">
-                    <Calendar className="w-4 h-4" />
-                    <span>הצטרף ב-{new Date(agent.created_at).toLocaleDateString('he-IL')}</span>
-                  </div>
-                </div>
-
-                {/* פעולות */}
-                <div className="flex gap-2 pt-2">
-                  <Link 
-                    href={`/team/edit-agent/${agent.id}`}
-                    className="flex-1 py-2 px-3 rounded-clay border border-neutral-200 hover:bg-clay-secondary/10 transition-colors duration-200 text-center text-sm font-medium text-clay-primary"
-                  >
-                    <div className="flex items-center justify-center space-x-1">
-                      <Edit className="w-4 h-4" />
-                      <span>עריכה</span>
-                    </div>
-                  </Link>
-                  
-                  <Link 
-                    href={`/dashboard/agent?userId=${agent.id}`}
-                    className="flex-1 py-2 px-3 rounded-clay bg-clay-secondary/20 hover:bg-clay-secondary/30 transition-colors duration-200 text-center text-sm font-medium text-clay-secondary-dark"
-                  >
-                    <div className="flex items-center justify-center space-x-1">
-                      <BarChart3 className="w-4 h-4" />
-                      <span>ביצועים</span>
-                    </div>
-                  </Link>
-                </div>
-              </div>
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="flex items-center">
+            <div className="p-3 bg-green-100 rounded-xl">
+              <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
-          )
-        })}
+            <div className="mr-4">
+              <p className="text-sm font-medium text-gray-600">נציגים פעילים</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {agents.filter(agent => agent.activity_status === 'active').length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="flex items-center">
+            <div className="p-3 bg-purple-100 rounded-xl">
+              <BarChart3 className="w-6 h-6 text-purple-600" />
+            </div>
+            <div className="mr-4">
+              <p className="text-sm font-medium text-gray-600">ציון ממוצע צוות</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {agents.filter(a => a.avg_score).length > 0 
+                  ? (agents.reduce((sum, a) => sum + (a.avg_score || 0), 0) / agents.filter(a => a.avg_score).length).toFixed(1)
+                  : 'אין נתונים'
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <div className="flex items-center">
+            <div className="p-3 bg-yellow-100 rounded-xl">
+              <Clock className="w-6 h-6 text-yellow-600" />
+            </div>
+            <div className="mr-4">
+              <p className="text-sm font-medium text-gray-600">בקשות ממתינות</p>
+              <p className="text-2xl font-bold text-gray-900">{myRequests.length}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* מודל הוספת נציג */}
+      {/* Advanced Team Table */}
+      <AdvancedDataTable
+        data={agents}
+        columns={columns}
+        loading={loading}
+        title="רשימת חברי הצוות"
+        subtitle={`${agents.length} חברי צוות עם נתוני ביצועים מפורטים`}
+        onRefresh={fetchData}
+        onExport={handleExport}
+        globalSearch={true}
+        pagination={true}
+        pageSize={15}
+        className="shadow-xl"
+      />
+
+      {/* Add Agent Modal */}
       {showAddAgentModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="replayme-card max-w-md w-full p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-display text-2xl font-bold text-indigo-night">
-                הוסף חבר צוות חדש
-              </h3>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-xl shadow-xl max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">הוסף נציג חדש</h3>
               <button
                 onClick={() => setShowAddAgentModal(false)}
-                className="p-2 hover:bg-ice-gray rounded-lg transition-colors duration-200"
+                className="text-gray-400 hover:text-gray-600"
               >
-                <X className="w-5 h-5 text-indigo-night/60" />
+                <X className="w-6 h-6" />
               </button>
             </div>
-
-            <form onSubmit={handleAddAgent} className="space-y-6">
+            
+            <form onSubmit={handleAddAgent} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-indigo-night mb-2">
-                  שם מלא <span className="text-electric-coral">*</span>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  שם מלא *
                 </label>
                 <input
                   type="text"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                   required
-                  className="w-full p-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="הכנס שם מלא"
                 />
               </div>
-
+              
               <div>
-                <label className="block text-sm font-medium text-indigo-night mb-2">
-                  כתובת אימייל <span className="text-electric-coral">*</span>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  כתובת אימייל *
                 </label>
                 <input
                   type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
                   required
-                  className="w-full p-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="הכנס כתובת אימייל"
                 />
               </div>
-
+              
               <div>
-                <label className="block text-sm font-medium text-indigo-night mb-2">
-                  הערות נוספות
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  הערות (אופציונלי)
                 </label>
                 <textarea
                   value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                   rows={3}
-                  className="w-full p-3 border-2 border-ice-gray rounded-xl focus:border-lemon-mint focus:outline-none transition-colors duration-200 text-indigo-night resize-none"
-                  placeholder="הערות אופציונליות..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="הערות נוספות על הנציג..."
                 />
               </div>
-
-              <div className="flex gap-3">
+              
+              <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowAddAgentModal(false)}
-                  className="flex-1 replayme-button-secondary"
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
                 >
                   ביטול
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 replayme-button-primary disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isSubmitting ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>שולח...</span>
-                    </div>
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      שולח...
+                    </>
                   ) : (
-                    'הוסף חבר צוות'
+                    <>
+                      <UserPlus className="w-4 h-4" />
+                      הוסף נציג
+                    </>
                   )}
                 </button>
               </div>
             </form>
           </div>
-        </div>
-      )}
-
-      {/* הודעת הצלחה */}
-      {showSuccessNotification && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="success-indicator p-4 rounded-xl shadow-lg max-w-md">
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="w-5 h-5 flex-shrink-0" />
-              <p className="font-medium">{successMessage}</p>
-              <button
-                onClick={() => setShowSuccessNotification(false)}
-                className="p-1 hover:bg-white/20 rounded"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* הודעה כשאין תוצאות */}
-      {filteredAgents.length === 0 && !loading && (
-        <div className="replayme-card p-12 text-center">
-          <div className="w-16 h-16 bg-indigo-night/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Users className="w-8 h-8 text-indigo-night/60" />
-          </div>
-          <h3 className="text-xl font-semibold text-indigo-night mb-2">
-            לא נמצאו חברי צוות
-          </h3>
-          <p className="text-indigo-night/60 mb-6">
-            {searchTerm || roleFilter !== 'all' || statusFilter !== 'all' 
-              ? 'נסה לשנות את הפילטרים או החיפוש'
-              : 'התחל בהוספת חברי צוות חדשים לחברה'
-            }
-          </p>
-          <button
-            onClick={() => setShowAddAgentModal(true)}
-            className="replayme-button-primary"
-          >
-            הוסף חבר צוות ראשון
-          </button>
         </div>
       )}
     </div>
