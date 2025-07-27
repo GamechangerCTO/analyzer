@@ -101,8 +101,8 @@ export default async function UploadPage() {
               <div className="text-sm text-neutral-700 font-medium">דיוק ניתוח</div>
             </div>
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl px-6 py-4 border-2 border-glacier-success/50 shadow-lg">
-              <div className="text-2xl font-bold text-neutral-900">AI</div>
-              <div className="text-sm text-neutral-700 font-medium">מתקדם</div>
+              <div className="text-2xl font-bold text-neutral-900">מקצועי</div>
+              <div className="text-sm text-neutral-700 font-medium">ביותר</div>
             </div>
           </div>
         </div>

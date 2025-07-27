@@ -1284,7 +1284,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                    call.call_type === 'customer_service' ? 'שיחת שירות מקצועית' : 
                    'ניתוח שיחה מקצועי'}
                 </h2>
-                <p className="text-slate-600 text-lg font-medium mt-1">תוצאות מפורטות מבוססות AI מתקדם ✨</p>
+                <p className="text-slate-600 text-lg font-medium mt-1">תוצאות מפורטות מבוססות נתונים מתקדמים ✨</p>
               </div>
             </div>
             <div className="flex items-center space-x-4 rtl:space-x-reverse">

@@ -1021,7 +1021,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 מעבד את השיחה שלך...
               </h2>
               <p className="text-xl text-glacier-neutral-600">
-                הניתוח החכם מתבצע כעת - זה יכול לקחת דקה או שתיים
+                הניתוח המתקדם מתבצע כעת - זה יכול לקחת דקה או שתיים
               </p>
             </div>
             
