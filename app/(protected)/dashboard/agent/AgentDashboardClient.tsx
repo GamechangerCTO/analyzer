@@ -66,6 +66,10 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
   const [dateFilter, setDateFilter] = useState('')
   const [callTypeFilter, setCallTypeFilter] = useState('')
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
+  
   const supabase = useMemo(() => getSupabaseClient(), [])
   
   // הסרת לוגים ו-useMemo של שאילתות תאריכים
@@ -275,6 +279,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
 
   const handleFilterClick = (filterType: FilterType) => {
     setCurrentFilter(filterType)
+    setCurrentPage(1) // Reset to first page when filtering
   }
 
   // פונקציות חיפוש
@@ -283,6 +288,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
     setDateFilter('')
     setCallTypeFilter('')
     setCurrentFilter('all')
+    setCurrentPage(1)
   }
 
   const hasActiveFilters = searchTerm || dateFilter || callTypeFilter || currentFilter !== 'all'
@@ -304,6 +310,49 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
         return 'כל השיחות'
     }
   }
+
+  // Pagination calculations
+  const filteredCalls = getFilteredCalls()
+  const totalItems = filteredCalls.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedCalls = filteredCalls.slice(startIndex, endIndex)
+
+  // Pagination controls
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+    }
+  }
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+    }
+  }
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = []
+    const maxPages = 5
+    let startPage = Math.max(1, currentPage - Math.floor(maxPages / 2))
+    let endPage = Math.min(totalPages, startPage + maxPages - 1)
+    
+    if (endPage - startPage + 1 < maxPages) {
+      startPage = Math.max(1, endPage - maxPages + 1)
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i)
+    }
+    
+    return pages
+  }
   
   if (isLoading) {
     return (
@@ -320,7 +369,6 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
   const avgScore = summaryData['כלל שיחות']?.avgScore || 0
   const successfulCalls = summaryData['כלל שיחות']?.successfulCalls || 0
   const needImprovementCalls = summaryData['כלל שיחות']?.needImprovementCalls || 0
-  const filteredCalls = getFilteredCalls()
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -350,7 +398,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8 px-4 md:px-0">
                       <div 
               onClick={() => handleFilterClick('all')}
-              className={`group relative overflow-hidden bg-white rounded-xl md:rounded-2xl shadow-lg p-3 md:p-6 border-2 transition-all duration-500 ease-out cursor-pointer transform hover:scale-105 hover:shadow-2xl touch-action-manipulation ${
+              className={`group relative overflow-hidden bg-white rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-lg p-3 md:p-6 border-2 transition-all duration-500 ease-out cursor-pointer transform hover:scale-105 hover:shadow-2xl touch-action-manipulation ${
                 currentFilter === 'all' 
                   ? 'border-glacier-primary bg-gradient-to-br from-glacier-primary-light/20 to-white scale-105 shadow-2xl' 
                   : 'border-neutral-200 hover:border-glacier-primary'
@@ -398,7 +446,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
               </div>
             </div>
 
-          <div className="group relative overflow-hidden bg-white rounded-2xl shadow-lg p-6 border-2 border-neutral-200 transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:border-glacier-success transform-gpu">
+          <div className="group relative overflow-hidden bg-white rounded-tr-3xl rounded-bl-3xl rounded-tl-lg rounded-br-lg shadow-lg p-6 border-2 border-neutral-200 transition-all duration-500 ease-out hover:scale-105 hover:shadow-2xl hover:border-glacier-success transform-gpu">
             {/* Background shimmer effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-glacier-success/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
             
@@ -427,7 +475,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
 
           <div 
             onClick={() => handleFilterClick('successful')}
-            className={`group relative overflow-hidden bg-white rounded-2xl shadow-lg p-6 border-2 transition-all duration-500 ease-out cursor-pointer transform hover:scale-105 hover:shadow-2xl ${
+            className={`group relative overflow-hidden bg-white rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-lg p-6 border-2 transition-all duration-500 ease-out cursor-pointer transform hover:scale-105 hover:shadow-2xl ${
               currentFilter === 'successful' 
                 ? 'border-glacier-success bg-gradient-to-br from-glacier-success-light/20 to-white scale-105 shadow-2xl' 
                 : 'border-neutral-200 hover:border-glacier-success'
@@ -474,7 +522,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
 
           <div 
             onClick={() => handleFilterClick('needImprovement')}
-            className={`group relative overflow-hidden bg-white rounded-2xl shadow-lg p-6 border-2 transition-all duration-500 ease-out cursor-pointer transform hover:scale-105 hover:shadow-2xl ${
+            className={`group relative overflow-hidden bg-white rounded-tr-3xl rounded-bl-3xl rounded-tl-lg rounded-br-lg shadow-lg p-6 border-2 transition-all duration-500 ease-out cursor-pointer transform hover:scale-105 hover:shadow-2xl ${
               currentFilter === 'needImprovement' 
                 ? 'border-red-500 bg-gradient-to-br from-red-50 to-white scale-105 shadow-2xl' 
                 : 'border-neutral-200 hover:border-red-400'
@@ -518,8 +566,27 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
           </div>
         </div>
 
-        {/* שיחות - מועבר למעלה */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
+        {/* גרפים - מועבר למעלה */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">התפלגות שיחות לפי קטגוריה</h2>
+              <div className="w-3 h-3 bg-primary rounded-full"></div>
+            </div>
+            <CallsBarChart data={getChartData()} title="כמות שיחות לפי סוג" height={300} />
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">מגמת התקדמות</h2>
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            </div>
+            <ProgressLineChart data={progressData} title="התפתחות הציון לאורך זמן" height={300} />
+          </div>
+        </div>
+
+        {/* טבלת שיחות עם עיצוב רספונסיבי ו-pagination */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -535,7 +602,7 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
               </div>
               <div className="flex items-center justify-center">
                 <span className="text-sm text-gray-500">
-                  מציג {filteredCalls.length} מתוך {totalCalls} שיחות
+                  מציג {Math.min(startIndex + 1, totalItems)} עד {Math.min(endIndex, totalItems)} מתוך {totalItems} שיחות
                 </span>
               </div>
             </div>
@@ -644,91 +711,103 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
           
           <div className="overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+                              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תאריך ושעה</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">סוג שיחה</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">שם לקוח</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ציון</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">טונציה</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">דגל אדום</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">משך זמן</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
+                    <th className="px-3 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">תאריך</th>
+                    <th className="px-3 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">סוג שיחה</th>
+                    <th className="px-3 lg:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">לקוח</th>
+                    <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ציון</th>
+                    <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">טונציה</th>
+                    <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">דגל</th>
+                    <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">זמן</th>
+                    <th className="px-3 lg:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">פעולות</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredCalls.slice(0, currentFilter === 'all' ? 10 : 20).map((call) => (
-                    <tr key={call.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div>
-                          <div className="font-medium">{new Date(call.created_at).toLocaleDateString('he-IL')}</div>
-                          <div className="text-gray-500">{new Date(call.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="max-w-xs truncate">{call.call_type}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="max-w-xs truncate">{call.customer_name || 'לא זמין'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {call.overall_score ? (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            call.overall_score >= 8 
-                              ? 'bg-green-100 text-green-800' 
-                              : call.overall_score >= 7
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {call.overall_score.toFixed(1)}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 text-sm">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {call.tone_analysis_report && call.tone_analysis_report.ציון_טונציה ? (
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            call.tone_analysis_report.ציון_טונציה >= 6 
-                              ? 'bg-blue-100 text-blue-800' 
-                              : call.tone_analysis_report.ציון_טונציה >= 4
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {call.tone_analysis_report.ציון_טונציה}/10
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 text-sm">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        {call.red_flag ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            דגל אדום
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            תקין
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
-                        {call.audio_duration_seconds ? `${Math.floor(call.audio_duration_seconds / 60)}:${(Math.floor(call.audio_duration_seconds % 60)).toString().padStart(2, '0')}` : <span className="text-gray-400">לא זמין</span>}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <Link 
-                          href={`/dashboard/calls/${call.id}`} 
-                          className="bg-primary hover:bg-primary-dark text-white px-3 py-1 rounded-md text-sm font-medium transition-colors"
-                        >
-                          צפה בדוח
-                        </Link>
-                      </td>
+                  {paginatedCalls.map((call) => (
+                                          <tr key={call.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="space-y-1">
+                            <div className="font-medium text-xs lg:text-sm">{new Date(call.created_at).toLocaleDateString('he-IL')}</div>
+                            <div className="text-gray-500 text-xs">{new Date(call.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}</div>
+                            {/* Mobile: Show call type under date */}
+                            <div className="lg:hidden text-xs text-gray-600 truncate max-w-[120px]" title={call.call_type}>
+                              {call.call_type}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden lg:table-cell">
+                          <div className="max-w-xs truncate" title={call.call_type}>{call.call_type}</div>
+                        </td>
+                        <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="max-w-[100px] lg:max-w-xs truncate" title={call.customer_name || 'לא זמין'}>
+                            {call.customer_name || 'לא זמין'}
+                          </div>
+                        </td>
+                                              <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-center">
+                          {call.overall_score ? (
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              call.overall_score >= 8 
+                                ? 'bg-green-100 text-green-800' 
+                                : call.overall_score >= 7
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {call.overall_score.toFixed(1)}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-sm">-</span>
+                          )}
+                        </td>
+                        <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-center hidden md:table-cell">
+                          {call.tone_analysis_report && call.tone_analysis_report.ציון_טונציה ? (
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              call.tone_analysis_report.ציון_טונציה >= 6 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : call.tone_analysis_report.ציון_טונציה >= 4
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {call.tone_analysis_report.ציון_טונציה}/10
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-sm">-</span>
+                          )}
+                        </td>
+                        <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
+                          {call.red_flag ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              ⚠️
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              ✓
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 hidden md:table-cell">
+                          {call.audio_duration_seconds ? (() => {
+                            const totalSeconds = Math.round(call.audio_duration_seconds);
+                            const minutes = Math.floor(totalSeconds / 60);
+                            const seconds = totalSeconds % 60;
+                            return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                          })() : <span className="text-gray-400">-</span>}
+                        </td>
+                        <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-center">
+                          <Link 
+                            href={`/dashboard/calls/${call.id}`} 
+                            className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-xs lg:text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
+                          >
+                            <span className="hidden sm:inline">צפה בדוח</span>
+                            <span className="sm:hidden">דוח</span>
+                          </Link>
+                        </td>
                     </tr>
                   ))}
-                  {filteredCalls.length === 0 && (
+                  {paginatedCalls.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center">
+                      <td colSpan={8} className="px-6 py-12 text-center">
                         <div className="flex flex-col items-center">
                           <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -751,37 +830,52 @@ export default function AgentDashboardClient({ userId, companyId }: AgentDashboa
             </div>
           </div>
           
-          {filteredCalls.length > (currentFilter === 'all' ? 10 : 20) && (
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <div className="text-center">
-                <button 
-                  onClick={() => setCurrentFilter('all')}
-                  className="text-primary hover:text-primary-dark font-medium text-sm"
-                >
-                  {currentFilter === 'all' ? `צפה בכל השיחות (${calls.length})` : 'צפה בכל השיחות'}
-                </button>
+          {/* Pagination Controls */}
+          {totalItems > 0 && (
+            <div className="px-4 lg:px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span>
+                  מציג {startIndex + 1} עד {Math.min(endIndex, totalItems)} מתוך {totalItems} שיחות
+                </span>
               </div>
+              
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrevious}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                  >
+                    קודם
+                  </button>
+                  
+                  <div className="flex items-center gap-1">
+                    {getPageNumbers().map(pageNum => (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={handleNext}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                  >
+                    הבא
+                  </button>
+                </div>
+              )}
             </div>
           )}
-        </div>
-
-        {/* גרפים - מועבר למטה ומוצג תמיד (לא רק כשהסינון הוא 'all') */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">התפלגות שיחות לפי קטגוריה</h2>
-              <div className="w-3 h-3 bg-primary rounded-full"></div>
-            </div>
-            <CallsBarChart data={getChartData()} title="כמות שיחות לפי סוג" height={300} />
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">מגמת התקדמות</h2>
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            </div>
-            <ProgressLineChart data={progressData} title="התפתחות הציון לאורך זמן" height={300} />
-          </div>
         </div>
       </div>
     </div>

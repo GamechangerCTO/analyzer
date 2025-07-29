@@ -28,11 +28,11 @@ import {
   Calendar,
   User,
   ArrowRight,
-  Star
+  Star,
+  Building2,
+  Zap,
+  Trophy
 } from 'lucide-react';
-
-// קומפוננט טבלת נתונים מתקדמת
-import AdvancedDataTable from '@/components/AdvancedDataTable';
 
 // Types
 interface ManagerStats {
@@ -59,6 +59,19 @@ interface AgentData {
   createdAt: string;
 }
 
+interface Call {
+  id: string;
+  call_type: string;
+  customer_name: string | null;
+  created_at: string;
+  overall_score: number | null;
+  processing_status: string | null;
+  red_flag: boolean | null;
+  audio_duration_seconds?: number | null;
+  user_id: string;
+  agent_name?: string;
+}
+
 interface MinutesQuota {
   totalMinutes: number;
   usedMinutes: number;
@@ -76,79 +89,7 @@ interface Insight {
   actionUrl?: string;
 }
 
-// Smart KPI Card Component
-interface SmartKPICardProps {
-  icon: React.ElementType;
-  title: string;
-  value: number | string;
-  trend?: number;
-  format?: 'number' | 'percentage' | 'currency';
-  subtitle?: string;
-}
-
-const SmartKPICard: React.FC<SmartKPICardProps> = ({ 
-  icon: Icon, 
-  title, 
-  value, 
-  trend, 
-  format = 'number',
-  subtitle 
-}) => {
-  const formatValue = (val: number | string) => {
-    if (typeof val === 'string') return val;
-    
-    switch (format) {
-      case 'percentage':
-        return `${val}%`;
-      case 'currency':
-        return `₪${val.toLocaleString()}`;
-      default:
-        return val.toLocaleString();
-    }
-  };
-
-  const getTrendIcon = () => {
-    if (trend === undefined) return <Minus className="w-4 h-4 text-gray-400" />;
-    if (trend > 0) return <ChevronUp className="w-4 h-4 text-emerald-500" />;
-    if (trend < 0) return <ChevronDown className="w-4 h-4 text-red-500" />;
-    return <Minus className="w-4 h-4 text-gray-400" />;
-  };
-
-  const getTrendColor = () => {
-    if (trend === undefined) return 'text-gray-400';
-    if (trend > 0) return 'text-emerald-500';
-    if (trend < 0) return 'text-red-500';
-    return 'text-gray-400';
-  };
-
-  return (
-    <div className="bg-white/90 backdrop-blur-md border border-glacier-neutral-200/50 rounded-2xl shadow-glacier-soft p-6 hover:shadow-lg transition-all duration-300 group cursor-pointer">
-      <div className="flex items-center justify-between mb-4">
-        <div className="p-3 rounded-2xl bg-glacier-primary-50 group-hover:bg-glacier-primary-100 transition-colors">
-          <Icon className="w-6 h-6 text-glacier-primary-600 group-hover:text-glacier-primary-700" />
-        </div>
-        {trend !== undefined && (
-          <div className="flex items-center space-x-1">
-            {getTrendIcon()}
-            <span className={`text-sm font-medium ${getTrendColor()}`}>
-              {Math.abs(trend)}%
-            </span>
-          </div>
-        )}
-      </div>
-      
-      <div className="space-y-1">
-        <p className="text-2xl font-bold text-glacier-neutral-900">{formatValue(value)}</p>
-        <p className="text-sm text-glacier-neutral-500">{title}</p>
-        {subtitle && (
-          <p className="text-xs text-glacier-neutral-400">{subtitle}</p>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// WelcomeHero Component for Manager
+// WelcomeHero Component for Manager - Bento Style
 interface WelcomeHeroProps {
   managerInfo: {
     full_name: string | null;
@@ -168,11 +109,11 @@ const WelcomeHero: React.FC<WelcomeHeroProps> = ({ managerInfo, companyName }) =
   };
 
   return (
-    <div className="bg-gradient-to-br from-glacier-primary-600 via-glacier-primary-700 to-glacier-accent-600 rounded-3xl p-8 text-white shadow-xl">
+    <div className="bg-gradient-to-br from-glacier-primary-600 via-glacier-primary-700 to-glacier-accent-600 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg p-8 text-white shadow-xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-lg">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-glacier-accent-400 to-glacier-accent-600 flex items-center justify-center text-white font-bold text-2xl">
+          <div className="w-20 h-20 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-lg">
+            <div className="w-16 h-16 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-600 flex items-center justify-center text-white font-bold text-2xl">
               {managerInfo?.full_name?.charAt(0) || 'M'}
             </div>
           </div>
@@ -190,11 +131,141 @@ const WelcomeHero: React.FC<WelcomeHeroProps> = ({ managerInfo, companyName }) =
         </div>
         
         <div className="text-center">
-          <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <Users className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-white/10 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md flex items-center justify-center mx-auto mb-3">
+            <Building2 className="w-8 h-8 text-white" />
           </div>
           <p className="text-glacier-primary-100 text-sm">דשבורד מנהל</p>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Bento-style KPI Card Component
+interface BentoKPICardProps {
+  icon: React.ElementType;
+  title: string;
+  value: number | string;
+  trend?: number;
+  format?: 'number' | 'percentage' | 'currency';
+  subtitle?: string;
+  size?: 'small' | 'medium' | 'large';
+  variant?: 'primary' | 'accent' | 'success' | 'warning';
+}
+
+const BentoKPICard: React.FC<BentoKPICardProps> = ({ 
+  icon: Icon, 
+  title, 
+  value, 
+  trend, 
+  format = 'number',
+  subtitle,
+  size = 'medium',
+  variant = 'primary'
+}) => {
+  const formatValue = (val: number | string) => {
+    if (typeof val === 'string') return val;
+    
+    switch (format) {
+      case 'percentage':
+        return `${val}%`;
+      case 'currency':
+        return `₪${val.toLocaleString()}`;
+      default:
+        return val.toLocaleString();
+    }
+  };
+
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'accent':
+        return {
+          cardBg: 'bg-gradient-to-br from-glacier-accent-50 to-glacier-accent-100',
+          iconBg: 'bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-500 group-hover:from-glacier-secondary-500 group-hover:to-glacier-secondary-600',
+          iconColor: 'text-white',
+          textColor: 'text-glacier-secondary-800',
+          subtitleColor: 'text-glacier-secondary-600'
+        };
+      case 'success':
+        return {
+          cardBg: 'bg-gradient-to-br from-glacier-secondary-50 to-glacier-secondary-100',
+          iconBg: 'bg-gradient-to-br from-glacier-secondary-500 to-glacier-secondary-600 group-hover:from-glacier-secondary-600 group-hover:to-glacier-secondary-700',
+          iconColor: 'text-white',
+          textColor: 'text-glacier-secondary-800',
+          subtitleColor: 'text-glacier-secondary-600'
+        };
+      case 'warning':
+        return {
+          cardBg: 'bg-gradient-to-br from-glacier-warning-light to-orange-100',
+          iconBg: 'bg-gradient-to-br from-glacier-warning to-glacier-warning-dark group-hover:from-glacier-warning-dark group-hover:to-orange-600',
+          iconColor: 'text-white',
+          textColor: 'text-glacier-warning-dark',
+          subtitleColor: 'text-orange-700'
+        };
+      default:
+        return {
+          cardBg: 'bg-gradient-to-br from-glacier-primary-50 to-glacier-primary-100',
+          iconBg: 'bg-gradient-to-br from-glacier-primary-500 to-glacier-primary-600 group-hover:from-glacier-primary-600 group-hover:to-glacier-primary-700',
+          iconColor: 'text-white',
+          textColor: 'text-glacier-primary-800',
+          subtitleColor: 'text-glacier-primary-600'
+        };
+    }
+  };
+
+  const getBentoRadius = () => {
+    switch (size) {
+      case 'large':
+        return 'rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg';
+      case 'small':
+        return 'rounded-tr-3xl rounded-bl-3xl rounded-tl-lg rounded-br-lg';
+      default:
+        return 'rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg';
+    }
+  };
+
+  const getTrendIcon = () => {
+    if (trend === undefined) return <Minus className="w-4 h-4 text-gray-400" />;
+    if (trend > 0) return <ChevronUp className="w-4 h-4 text-emerald-600" />;
+    if (trend < 0) return <ChevronDown className="w-4 h-4 text-red-600" />;
+    return <Minus className="w-4 h-4 text-gray-400" />;
+  };
+
+  const getTrendColor = () => {
+    if (trend === undefined) return 'text-gray-400';
+    if (trend > 0) return 'text-emerald-600';
+    if (trend < 0) return 'text-red-600';
+    return 'text-gray-400';
+  };
+
+  const variantStyles = getVariantStyles();
+
+  return (
+    <div className={`${variantStyles.cardBg} backdrop-blur-md border border-glacier-primary-200 ${getBentoRadius()} shadow-glacier-soft p-6 hover:shadow-lg transition-all duration-300 group cursor-pointer`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className={`p-3 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md ${variantStyles.iconBg} transition-all duration-300 shadow-sm`}>
+          <Icon className={`w-6 h-6 ${variantStyles.iconColor}`} />
+        </div>
+        {trend !== undefined && (
+          <div className="flex items-center space-x-1">
+            {getTrendIcon()}
+            <span className={`text-sm font-medium ${getTrendColor()}`}>
+              {Math.abs(trend)}%
+            </span>
+          </div>
+        )}
+      </div>
+      
+      <div className="space-y-1">
+        <p className={`font-bold ${variantStyles.textColor} ${
+          size === 'large' ? 'text-3xl' : size === 'small' ? 'text-xl' : 'text-2xl'
+        }`}>
+          {formatValue(value)}
+        </p>
+        <p className={`text-sm font-medium ${variantStyles.subtitleColor}`}>{title}</p>
+        {subtitle && (
+          <p className={`text-xs ${variantStyles.subtitleColor} opacity-80`}>{subtitle}</p>
+        )}
       </div>
     </div>
   );
@@ -209,6 +280,20 @@ export default function ManagerDashboardContent() {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [user, setUser] = useState<any>(null);
   const [companyName, setCompanyName] = useState<string>('');
+  
+  // Calls table state
+  const [allCalls, setAllCalls] = useState<Call[]>([]);
+  const [filteredCalls, setFilteredCalls] = useState<Call[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [callTypeFilter, setCallTypeFilter] = useState('all');
+  const [agentFilter, setAgentFilter] = useState('all');
+  const [scoreFilter, setScoreFilter] = useState('all');
+  const [redFlagFilter, setRedFlagFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  
+  // Pagination state for calls
+  const [currentCallsPage, setCurrentCallsPage] = useState(1);
+  const [callsPerPage] = useState(10);
   
   const supabase = createClientComponentClient();
   const router = useRouter();
@@ -305,7 +390,7 @@ export default function ManagerDashboardContent() {
             ? agentsWithScores.reduce((sum, a) => sum + a.avgScore, 0) / agentsWithScores.length
             : 0;
           const successfulCalls = agentsWithStats.reduce((sum, agent) => 
-            sum + (agent.avgScore >= 7 ? agent.totalCalls : 0), 0
+            sum + (agent.avgScore >= 8 ? agent.totalCalls : 0), 0
           );
 
           setStats({
@@ -313,8 +398,8 @@ export default function ManagerDashboardContent() {
             weeklyCalls,
             avgScore: Number(avgScore.toFixed(1)),
             successfulCalls,
-            todayCalls: 0, // Can be calculated if needed
-            yesterdayCalls: 0 // Can be calculated if needed
+            todayCalls: 0,
+            yesterdayCalls: 0
           });
         }
 
@@ -333,6 +418,27 @@ export default function ManagerDashboardContent() {
             isPoc: quotaData.is_poc || false,
             canPurchaseAdditional: true
           });
+        }
+
+        // Get all team calls
+        if (agentsData && agentsData.length > 0) {
+          const agentIds = agentsData.map(agent => agent.id);
+          const { data: callsData } = await supabase
+            .from('calls')
+            .select('id, call_type, customer_name, created_at, overall_score, processing_status, red_flag, audio_duration_seconds, user_id')
+            .in('user_id', agentIds)
+            .order('created_at', { ascending: false });
+
+          if (callsData) {
+            // Add agent names to calls
+            const callsWithAgentNames = callsData.map(call => ({
+              ...call,
+              agent_name: agentsData.find(agent => agent.id === call.user_id)?.full_name || 'לא ידוע'
+            }));
+            
+            setAllCalls(callsWithAgentNames);
+            setFilteredCalls(callsWithAgentNames);
+          }
         }
 
         // Generate insights
@@ -374,10 +480,137 @@ export default function ManagerDashboardContent() {
     fetchDashboardData();
   }, [supabase, router]);
 
-  // Helper functions
+  // Helper functions for calls
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'לא ידוע';
-    return new Date(dateString).toLocaleDateString('he-IL');
+    const date = new Date(dateString);
+    return date.toLocaleDateString('he-IL', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getCallTypeIcon = (callType: string) => {
+    const icons: { [key: string]: JSX.Element } = {
+      'sales_call': <Phone className="w-4 h-4" />,
+      'follow_up_before_offer': <Target className="w-4 h-4" />,
+      'follow_up_after_offer': <CheckCircle className="w-4 h-4" />,
+      'appointment_scheduling': <Calendar className="w-4 h-4" />,
+      'follow_up_appointment': <Clock className="w-4 h-4" />,
+      'customer_service': <User className="w-4 h-4" />
+    };
+    return icons[callType] || <Phone className="w-4 h-4" />;
+  };
+
+  const getCallTypeName = (callType: string) => {
+    const names: { [key: string]: string } = {
+      'sales_call': 'מכירה טלפונית',
+      'follow_up_before_offer': 'פולו אפ לפני הצעה',
+      'follow_up_after_offer': 'פולו אפ אחרי הצעה',
+      'appointment_scheduling': 'תאום פגישה',
+      'follow_up_appointment': 'פולו אפ תאום',
+      'customer_service': 'שירות לקוחות'
+    };
+    return names[callType] || callType;
+  };
+
+  const getScoreColor = (score: number | null) => {
+    if (!score) return 'bg-gray-100 text-gray-600';
+    if (score >= 8.5) return 'bg-gradient-to-r from-glacier-secondary-100 to-glacier-secondary-200 text-glacier-secondary-800';
+    if (score >= 7) return 'bg-gradient-to-r from-glacier-warning-light to-glacier-warning text-glacier-warning-dark';
+    return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-gradient-to-r from-glacier-secondary-100 to-glacier-secondary-200 text-glacier-secondary-800';
+      case 'pending':
+        return 'bg-gradient-to-r from-glacier-warning-light to-glacier-warning text-glacier-warning-dark';
+      case 'error':
+        return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800';
+      default:
+        return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'הושלם';
+      case 'pending':
+        return 'בתהליך';
+      case 'error':
+        return 'שגיאה';
+      default:
+        return status;
+    }
+  };
+
+  // Filtering logic
+  useEffect(() => {
+    let filtered = allCalls;
+
+    // Search term
+    if (searchTerm) {
+      filtered = filtered.filter(call => 
+        call.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        call.agent_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        getCallTypeName(call.call_type).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Call type filter
+    if (callTypeFilter !== 'all') {
+      filtered = filtered.filter(call => call.call_type === callTypeFilter);
+    }
+
+    // Agent filter
+    if (agentFilter !== 'all') {
+      filtered = filtered.filter(call => call.user_id === agentFilter);
+    }
+
+    // Score filter
+    if (scoreFilter !== 'all') {
+      if (scoreFilter === 'high') {
+        filtered = filtered.filter(call => call.overall_score && call.overall_score >= 8);
+      } else if (scoreFilter === 'medium') {
+        filtered = filtered.filter(call => call.overall_score && call.overall_score >= 6 && call.overall_score < 8);
+      } else if (scoreFilter === 'low') {
+        filtered = filtered.filter(call => call.overall_score && call.overall_score < 6);
+      } else if (scoreFilter === 'none') {
+        filtered = filtered.filter(call => !call.overall_score);
+      }
+    }
+
+    // Red flag filter
+    if (redFlagFilter === 'yes') {
+      filtered = filtered.filter(call => call.red_flag === true);
+    } else if (redFlagFilter === 'no') {
+      filtered = filtered.filter(call => call.red_flag === false);
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(call => call.processing_status === statusFilter);
+    }
+
+    setFilteredCalls(filtered);
+    setCurrentCallsPage(1); // Reset to first page when filters change
+  }, [allCalls, searchTerm, callTypeFilter, agentFilter, scoreFilter, redFlagFilter, statusFilter]);
+
+  // Pagination for calls
+  const totalCallsItems = filteredCalls.length;
+  const totalCallsPages = Math.ceil(totalCallsItems / callsPerPage);
+  const startCallsIndex = (currentCallsPage - 1) * callsPerPage;
+  const endCallsIndex = startCallsIndex + callsPerPage;
+  const paginatedCalls = filteredCalls.slice(startCallsIndex, endCallsIndex);
+
+  const handleCallsPageChange = (page: number) => {
+    setCurrentCallsPage(page);
   };
 
   const getRoleIcon = (role: string) => {
@@ -398,419 +631,356 @@ export default function ManagerDashboardContent() {
     return roleNames[role as keyof typeof roleNames] || role;
   };
 
-  const getStatusBadge = (isApproved: boolean | null) => {
-    if (isApproved === true) {
-      return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">מאושר</span>;
-    } else if (isApproved === false) {
-      return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">נדחה</span>;
-    } else {
-      return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">ממתין</span>;
-    }
-  };
-
   const getActivityBadge = (status: 'active' | 'moderate' | 'inactive') => {
     const statusConfig = {
-      'active': { color: 'bg-green-100 text-green-800', text: 'פעיל' },
-      'moderate': { color: 'bg-yellow-100 text-yellow-800', text: 'בינוני' },
-      'inactive': { color: 'bg-red-100 text-red-800', text: 'לא פעיל' }
+      'active': { color: 'bg-gradient-to-r from-glacier-secondary-100 to-glacier-secondary-200 text-glacier-secondary-800 border border-glacier-secondary-300', text: 'פעיל' },
+      'moderate': { color: 'bg-gradient-to-r from-glacier-warning-light to-glacier-warning text-glacier-warning-dark border border-glacier-warning', text: 'בינוני' },
+      'inactive': { color: 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300', text: 'לא פעיל' }
     };
     
     const config = statusConfig[status];
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+      <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.color} shadow-sm`}>
         {config.text}
       </span>
     );
   };
 
-  // Table columns
-  const columns = [
-    {
-      key: 'fullName',
-      title: 'נציג',
-      sortable: true,
-      filterable: true,
-      render: (value: string, row: AgentData) => (
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-glacier-primary-400 to-glacier-accent-500 flex items-center justify-center text-white font-bold">
-            {value?.charAt(0) || '?'}
-          </div>
-          <div>
-            <div className="font-medium text-glacier-neutral-900">{value}</div>
-            <div className="text-sm text-glacier-neutral-500">{row.email}</div>
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'role',
-      title: 'תפקיד',
-      sortable: true,
-      filterable: true,
-      filterType: 'select' as const,
-      filterOptions: [
-        { value: 'owner', label: 'בעלים' },
-        { value: 'manager', label: 'מנהל' },
-        { value: 'agent', label: 'נציג' }
-      ],
-      render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-glacier-accent-400 to-glacier-accent-600 flex items-center justify-center text-white">
-            {getRoleIcon(value)}
-          </div>
-          <span className="font-medium">{getRoleName(value)}</span>
-        </div>
-      )
-    },
-    {
-      key: 'activityStatus',
-      title: 'פעילות',
-      sortable: true,
-      filterable: true,
-      filterType: 'select' as const,
-      filterOptions: [
-        { value: 'active', label: 'פעיל' },
-        { value: 'moderate', label: 'בינוני' },
-        { value: 'inactive', label: 'לא פעיל' }
-      ],
-      render: (value: 'active' | 'moderate' | 'inactive') => getActivityBadge(value)
-    },
-    {
-      key: 'totalCalls',
-      title: 'סה"כ שיחות',
-      sortable: true,
-      filterable: true,
-      filterType: 'number' as const,
-      render: (value: number) => (
-        <div className="flex items-center gap-2">
-          <Phone className="w-4 h-4 text-glacier-neutral-400" />
-          <span className="font-medium">{value || 0}</span>
-        </div>
-      )
-    },
-    {
-      key: 'weeklyCalls',
-      title: 'שיחות השבוע',
-      sortable: true,
-      filterable: true,
-      filterType: 'number' as const,
-      render: (value: number) => (
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-glacier-neutral-400" />
-          <span className="font-medium">{value || 0}</span>
-        </div>
-      )
-    },
-    {
-      key: 'avgScore',
-      title: 'ציון ממוצע',
-      sortable: true,
-      filterable: true,
-      filterType: 'number' as const,
-      render: (value: number) => {
-        if (!value) return <span className="text-glacier-neutral-400">אין נתונים</span>;
-        
-        let colorClass = '';
-        if (value >= 8) colorClass = 'bg-green-100 text-green-700';
-        else if (value >= 6) colorClass = 'bg-amber-100 text-amber-700';
-        else if (value >= 4) colorClass = 'bg-orange-100 text-orange-700';
-        else colorClass = 'bg-red-100 text-red-700';
-        
-        return (
-          <div className="flex items-center gap-2">
-            <Star className="w-4 h-4 text-glacier-neutral-400" />
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
-              {value.toFixed(1)}
-            </span>
-          </div>
-        );
-      }
-    },
-    {
-      key: 'lastCallDate',
-      title: 'שיחה אחרונה',
-      sortable: true,
-      filterable: true,
-      filterType: 'date' as const,
-      render: (value: string | null) => (
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-glacier-neutral-400" />
-          <span>{formatDate(value)}</span>
-        </div>
-      )
-    },
-    {
-      key: 'id',
-      title: 'פעולות',
-      sortable: false,
-      filterable: false,
-      searchable: false,
-      render: (value: string, row: AgentData) => (
-        <div className="flex items-center gap-2">
-          <Link 
-            href={`/dashboard/agent?user=${value}`}
-            className="inline-flex items-center gap-1 px-3 py-1 bg-glacier-primary-500 text-white rounded-lg hover:bg-glacier-primary-600 transition-colors text-xs font-medium"
-          >
-            <Eye className="w-3 h-3" />
-            <span>צפה</span>
-          </Link>
-          
-          {row.role === 'agent' && (
-            <Link 
-              href={`/team/edit-agent/${value}`}
-              className="inline-flex items-center gap-1 px-3 py-1 bg-glacier-neutral-100 text-glacier-neutral-700 rounded-lg hover:bg-glacier-neutral-200 transition-colors text-xs font-medium"
-            >
-              <Settings className="w-3 h-3" />
-              <span>ערוך</span>
-            </Link>
-          )}
-        </div>
-      )
-    }
-  ];
-
-  // Export function
-  const handleExport = () => {
-    const headers = [
-      'שם מלא',
-      'אימייל',
-      'תפקיד',
-      'פעילות',
-      'סה"כ שיחות',
-      'שיחות השבוע',
-      'ציון ממוצע',
-      'שיחה אחרונה'
-    ].join(',');
-    
-    const rows = agents.map(agent => [
-      agent.fullName,
-      agent.email,
-      getRoleName(agent.role),
-      agent.activityStatus === 'active' ? 'פעיל' : agent.activityStatus === 'moderate' ? 'בינוני' : 'לא פעיל',
-      agent.totalCalls || 0,
-      agent.weeklyCalls || 0,
-      agent.avgScore || 0,
-      formatDate(agent.lastCallDate)
-    ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')).join('\n');
-    
-    const csv = `${headers}\n${rows}`;
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `team_dashboard_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-glacier-neutral-50 via-white to-glacier-primary-50/30 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-glacier-primary-400 to-glacier-accent-500 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <Users className="w-8 h-8 text-white" />
+      <div className="min-h-screen bg-gradient-to-br from-glacier-primary-50 via-white to-glacier-accent-50 flex items-center justify-center">
+        <div className="text-center animate-in fade-in duration-700">
+          <div className="w-16 h-16 bg-gradient-to-br from-glacier-primary-400 to-glacier-secondary-500 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <Building2 className="w-8 h-8 text-white" />
           </div>
-          <h3 className="text-lg font-semibold text-glacier-neutral-900 mb-2">טוען דשבורד מנהל...</h3>
-          <p className="text-glacier-neutral-600">אוסף נתוני צוות וביצועים</p>
+          <h3 className="text-lg font-semibold text-glacier-primary-800 mb-2">טוען דשבורד מנהל...</h3>
+          <p className="text-glacier-primary-600">אוסף נתוני צוות וביצועים</p>
         </div>
       </div>
     );
   }
 
   const quotaPercentage = quota ? (quota.usedMinutes / quota.totalMinutes) * 100 : 0;
-  const todayVsYesterday = stats ? ((stats.todayCalls - stats.yesterdayCalls) / Math.max(stats.yesterdayCalls, 1)) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-glacier-neutral-50 via-white to-glacier-primary-50/30 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-glacier-primary-50 via-white to-glacier-accent-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
         
-        {/* שורה ראשונה - כותרת וסטטיסטיקות */}
-        <div className="space-y-6">
-          <WelcomeHero 
-            managerInfo={user}
-            companyName={companyName}
-          />
-          
-          {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <SmartKPICard
-              icon={Users}
-              title="סה״כ נציגים"
-              value={stats?.totalAgents || 0}
-              subtitle="נציגים פעילים"
-            />
-            <SmartKPICard
-              icon={Phone}
-              title="שיחות השבוע"
-              value={stats?.weeklyCalls || 0}
-              trend={todayVsYesterday}
-              subtitle="בהשוואה לאתמול"
-            />
-            <SmartKPICard
-              icon={BarChart3}
-              title="ציון ממוצע"
-              value={stats?.avgScore || 0}
-              format="number"
-              subtitle="השבוע האחרון"
-            />
-            <SmartKPICard
-              icon={CheckCircle}
-              title="שיחות מוצלחות"
-              value={stats?.successfulCalls || 0}
-              subtitle="ציון מעל 7"
-            />
-          </div>
-        </div>
+        {/* Welcome Hero */}
+        <WelcomeHero 
+          managerInfo={user}
+          companyName={companyName}
+        />
 
-        {/* חלוקה 20-80: סיכומים ומכסות + טבלת צוות */}
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+        {/* Main Bento Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           
-          {/* 20% - מידע מנהלי ומכסות */}
-          <div className="xl:col-span-1 space-y-6">
+          {/* Left Column - Stats (1/4) */}
+          <div className="space-y-6">
+            {/* Primary KPI - Large */}
+            <div className="bg-gradient-to-br from-glacier-primary-500 to-glacier-secondary-500 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg p-8 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/80 text-sm font-medium">ציון ממוצע צוות</p>
+                  <p className="text-4xl font-bold">{stats?.avgScore.toFixed(1) || '0.0'}</p>
+                  <div className="mt-3 w-full bg-white/20 rounded-full h-2">
+                    <div 
+                      className="h-full bg-white rounded-full transition-all duration-1000"
+                      style={{width: `${Math.min(((stats?.avgScore || 0) / 10) * 100, 100)}%`}}
+                    ></div>
+                  </div>
+                </div>
+                <div className="w-16 h-16 bg-white/20 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md flex items-center justify-center">
+                  <TrendingUp className="w-8 h-8" />
+                </div>
+              </div>
+            </div>
             
-            {/* מכסת דקות */}
+            {/* Small Stats Grid */}
+            <div className="grid grid-cols-1 gap-3">
+              <BentoKPICard
+                icon={Users}
+                title="נציגים פעילים"
+                value={stats?.totalAgents || 0}
+                size="small"
+                variant="primary"
+              />
+              <BentoKPICard
+                icon={Phone}
+                title="שיחות השבוע"
+                value={stats?.weeklyCalls || 0}
+                size="small"
+                variant="accent"
+              />
+            </div>
+
+            {/* Quota Card */}
             {quota && (
-              <div className="bg-white/90 backdrop-blur-md border border-glacier-neutral-200/50 rounded-2xl shadow-glacier-soft p-6">
-                <h3 className="text-lg font-semibold text-glacier-neutral-900 mb-4 flex items-center">
+              <div className="bg-gradient-to-br from-white/95 to-glacier-accent-50 backdrop-blur-md border border-glacier-accent-200 rounded-tr-3xl rounded-bl-3xl rounded-tl-lg rounded-br-lg shadow-glacier-soft p-6">
+                <h3 className="text-lg font-semibold text-glacier-primary-700 mb-4 flex items-center">
                   <Battery className="w-5 h-5 ml-2 text-glacier-primary-600" />
                   מכסת דקות
                 </h3>
                 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-glacier-neutral-600">שימוש נוכחי</span>
-                    <span className="font-semibold text-glacier-neutral-900">{quotaPercentage.toFixed(1)}%</span>
+                    <span className="text-sm text-glacier-primary-600">שימוש נוכחי</span>
+                    <span className="font-semibold text-glacier-primary-800">{quotaPercentage.toFixed(1)}%</span>
                   </div>
                   
-                  <div className="w-full bg-glacier-neutral-200 rounded-full h-3">
+                  <div className="w-full bg-glacier-primary-100 rounded-full h-3">
                     <div 
                       className={`h-3 rounded-full transition-all duration-500 ${
-                        quotaPercentage >= 90 ? 'bg-red-500' :
-                        quotaPercentage >= 70 ? 'bg-amber-500' : 
-                        'bg-emerald-500'
+                        quotaPercentage >= 90 ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                        quotaPercentage >= 70 ? 'bg-gradient-to-r from-glacier-warning to-glacier-warning-dark' : 
+                        'bg-gradient-to-r from-glacier-secondary-400 to-glacier-secondary-600'
                       }`}
                       style={{ width: `${Math.min(quotaPercentage, 100)}%` }}
                     />
                   </div>
                   
                   <div className="flex justify-between text-sm">
-                    <span className="text-glacier-neutral-600">{quota.usedMinutes} דקות</span>
-                    <span className="text-glacier-neutral-600">{quota.totalMinutes} דקות</span>
+                    <span className="text-glacier-primary-600">{quota.usedMinutes} דקות</span>
+                    <span className="text-glacier-primary-600">{quota.totalMinutes} דקות</span>
                   </div>
                   
-                  <div className="pt-2 border-t border-glacier-neutral-100">
-                    <p className="text-sm text-glacier-neutral-600">
-                      נותרו <span className="font-semibold text-glacier-neutral-900">{quota.availableMinutes}</span> דקות
-                    </p>
-                    
-                    {quotaPercentage >= 75 && (
-                      <div className="mt-4">
-                        <button
-                          onClick={() => router.push('/team/purchase-quota')}
-                          className={`w-full py-2 px-4 rounded-xl font-medium text-sm transition-all duration-200 flex items-center justify-center space-x-2 ${
-                            quotaPercentage >= 90 
-                              ? 'bg-red-500 hover:bg-red-600 text-white' 
-                              : 'bg-amber-500 hover:bg-amber-600 text-white'
-                          }`}
-                        >
-                          <CreditCard className="w-4 h-4" />
-                          <span>רכישת דקות נוספות</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  {quotaPercentage >= 75 && (
+                    <div className="pt-2 border-t border-glacier-accent-200">
+                      <button
+                        onClick={() => router.push('/team/purchase-quota')}
+                        className={`w-full py-2 px-4 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md font-medium text-sm transition-all duration-200 flex items-center justify-center space-x-2 ${
+                          quotaPercentage >= 90 
+                            ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white' 
+                            : 'bg-gradient-to-r from-glacier-warning to-glacier-warning-dark hover:from-glacier-warning-dark hover:to-glacier-warning text-white'
+                        }`}
+                      >
+                        <CreditCard className="w-4 h-4" />
+                        <span>רכישת דקות נוספות</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
+          </div>
 
-            {/* פעולות מהירות */}
-            <div className="bg-white/90 backdrop-blur-md border border-glacier-neutral-200/50 rounded-2xl shadow-glacier-soft p-6">
-              <h3 className="text-lg font-semibold text-glacier-neutral-900 mb-4 flex items-center">
-                <Target className="w-5 h-5 ml-2 text-glacier-primary-600" />
+          {/* Middle Column - Team Overview (2/4) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Secondary Stats */}
+            <div className="grid grid-cols-2 gap-4">
+              <BentoKPICard
+                icon={CheckCircle}
+                title="שיחות מוצלחות"
+                value={stats?.successfulCalls || 0}
+                variant="success"
+              />
+              <BentoKPICard
+                icon={Trophy}
+                title="יעילות צוות"
+                value={`${((stats?.successfulCalls || 0) / Math.max(stats?.weeklyCalls || 1, 1) * 100).toFixed(0)}%`}
+                variant="warning"
+              />
+            </div>
+
+            {/* Team Members Preview */}
+            <div className="bg-gradient-to-br from-white/95 to-glacier-primary-50 backdrop-blur-md border border-glacier-primary-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-glacier-soft overflow-hidden">
+              <div className="px-6 py-4 border-b border-glacier-primary-200 bg-gradient-to-r from-glacier-primary-100 to-glacier-accent-100">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-glacier-primary-800">צוות החברה</h2>
+                  <Link 
+                    href="/team"
+                    className="text-sm font-medium text-glacier-primary-600 hover:text-glacier-primary-700 transition-colors flex items-center gap-1"
+                  >
+                    ראה הכל
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {agents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gradient-to-br from-glacier-primary-200 to-glacier-accent-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg flex items-center justify-center mx-auto mb-4">
+                      <Users className="w-8 h-8 text-glacier-primary-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-glacier-primary-800 mb-2">אין עדיין נציגים</h3>
+                    <p className="text-glacier-primary-600 mb-6">התחל לבנות את הצוות שלך</p>
+                    <Link 
+                      href="/team/add-agent" 
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-glacier-primary-500 to-glacier-secondary-500 text-white rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md hover:from-glacier-primary-600 hover:to-glacier-secondary-600 transition-all duration-300 font-medium shadow-lg"
+                    >
+                      <UserPlus className="w-5 h-5" />
+                      <span>הוסף נציג ראשון</span>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {agents.slice(0, 5).map((agent, index) => (
+                      <div 
+                        key={agent.id} 
+                        className="flex items-center justify-between p-4 bg-gradient-to-r from-glacier-primary-50 to-glacier-accent-50 border border-glacier-primary-200 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md hover:from-glacier-primary-100 hover:to-glacier-accent-100 transition-all duration-300 shadow-sm"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-glacier-primary-500 to-glacier-secondary-500 flex items-center justify-center text-white font-bold shadow-lg">
+                            {agent.fullName?.charAt(0) || '?'}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-glacier-primary-800">{agent.fullName}</div>
+                            <div className="text-sm text-glacier-primary-600 flex items-center gap-2">
+                              <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-600 flex items-center justify-center text-white text-xs">
+                                {getRoleIcon(agent.role)}
+                              </div>
+                              {getRoleName(agent.role)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-glacier-primary-800">{agent.totalCalls} שיחות</div>
+                          <div className="text-xs">{getActivityBadge(agent.activityStatus)}</div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {agents.length > 5 && (
+                      <div className="text-center pt-4 border-t border-glacier-primary-200">
+                        <Link 
+                          href="/team"
+                          className="text-sm text-glacier-primary-600 hover:text-glacier-primary-700 font-medium"
+                        >
+                          +{agents.length - 5} נציגים נוספים
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Actions & Insights (1/4) */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <div className="bg-gradient-to-br from-white/95 to-glacier-accent-50 backdrop-blur-md border border-glacier-accent-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-glacier-soft p-6">
+              <h3 className="text-lg font-semibold text-glacier-primary-700 mb-4 flex items-center">
+                <Zap className="w-5 h-5 ml-2 text-glacier-secondary-600" />
                 פעולות מהירות
               </h3>
               
               <div className="space-y-3">
                 <button 
                   onClick={() => router.push('/team/add-agent')}
-                  className="w-full flex items-center justify-center gap-3 p-3 border border-glacier-neutral-200 rounded-xl hover:bg-glacier-neutral-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-glacier-primary-100 to-glacier-primary-200 border border-glacier-primary-300 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md hover:from-glacier-primary-200 hover:to-glacier-primary-300 transition-all duration-300 shadow-sm"
                 >
-                  <UserPlus className="w-5 h-5 text-glacier-primary-600" />
-                  <span className="font-medium text-glacier-neutral-900">הוסף נציג</span>
+                  <UserPlus className="w-5 h-5 text-glacier-primary-700" />
+                  <span className="font-semibold text-glacier-primary-800">הוסף נציג</span>
                 </button>
                 <button 
                   onClick={() => router.push('/dashboard/manager/all-calls')}
-                  className="w-full flex items-center justify-center gap-3 p-3 border border-glacier-neutral-200 rounded-xl hover:bg-glacier-neutral-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-glacier-secondary-100 to-glacier-secondary-200 border border-glacier-secondary-300 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md hover:from-glacier-secondary-200 hover:to-glacier-secondary-300 transition-all duration-300 shadow-sm"
                 >
-                  <Eye className="w-5 h-5 text-glacier-accent-600" />
-                  <span className="font-medium text-glacier-neutral-900">כל השיחות</span>
+                  <Eye className="w-5 h-5 text-glacier-secondary-700" />
+                  <span className="font-semibold text-glacier-secondary-800">כל השיחות</span>
                 </button>
                 <button 
                   onClick={() => router.push('/team')}
-                  className="w-full flex items-center justify-center gap-3 p-3 border border-glacier-neutral-200 rounded-xl hover:bg-glacier-neutral-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-glacier-accent-100 to-glacier-accent-200 border border-glacier-accent-300 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md hover:from-glacier-accent-200 hover:to-glacier-accent-300 transition-all duration-300 shadow-sm"
                 >
-                  <Users className="w-5 h-5 text-glacier-secondary-600" />
-                  <span className="font-medium text-glacier-neutral-900">ניהול צוות</span>
+                  <Users className="w-5 h-5 text-glacier-primary-700" />
+                  <span className="font-semibold text-glacier-primary-800">ניהול צוות</span>
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* 80% - טבלת צוות מלאה */}
-          <div className="xl:col-span-4">
-            <AdvancedDataTable
-              data={agents}
-              columns={columns}
-              loading={loading}
-              title="צוות החברה"
-              subtitle={`${agents.length} חברי צוות עם נתוני ביצועים מלאים`}
-              onRefresh={() => window.location.reload()}
-              onExport={handleExport}
-              globalSearch={true}
-              pagination={true}
-              pageSize={15}
-              className="shadow-xl"
-            />
+            {/* Recent Activity */}
+            <div className="bg-gradient-to-br from-white/95 to-glacier-secondary-50 backdrop-blur-md border border-glacier-secondary-200 rounded-tr-3xl rounded-bl-3xl rounded-tl-lg rounded-br-lg shadow-glacier-soft p-6">
+              <h3 className="text-lg font-semibold text-glacier-secondary-700 mb-4 flex items-center">
+                <Activity className="w-5 h-5 ml-2 text-glacier-secondary-600" />
+                פעילות אחרונה
+              </h3>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-glacier-primary-100 to-glacier-primary-200 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md border border-glacier-primary-300 shadow-sm">
+                  <div className="w-3 h-3 bg-gradient-to-r from-glacier-primary-500 to-glacier-primary-600 rounded-full shadow-sm"></div>
+                  <div className="text-sm">
+                    <span className="font-bold text-glacier-primary-800">{stats?.weeklyCalls || 0}</span>
+                    <span className="text-glacier-primary-700"> שיחות השבוע</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-glacier-secondary-100 to-glacier-secondary-200 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md border border-glacier-secondary-300 shadow-sm">
+                  <div className="w-3 h-3 bg-gradient-to-r from-glacier-secondary-500 to-glacier-secondary-600 rounded-full shadow-sm"></div>
+                  <div className="text-sm">
+                    <span className="font-bold text-glacier-secondary-800">{stats?.totalAgents || 0}</span>
+                    <span className="text-glacier-secondary-700"> נציגים פעילים</span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-glacier-accent-100 to-glacier-accent-200 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md border border-glacier-accent-300 shadow-sm">
+                  <div className="w-3 h-3 bg-gradient-to-r from-glacier-secondary-500 to-glacier-secondary-700 rounded-full shadow-sm"></div>
+                  <div className="text-sm">
+                    <span className="font-bold text-glacier-secondary-800">{((stats?.avgScore || 0) * 10).toFixed(0)}%</span>
+                    <span className="text-glacier-secondary-700"> יעילות כללית</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* תובנות ניהוליות */}
+        {/* Insights Section - Full Width */}
         {insights.length > 0 && (
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-glacier-accent-400 to-glacier-accent-600 flex items-center justify-center text-white shadow-glacier-soft">
+              <div className="w-12 h-12 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-600 flex items-center justify-center text-white shadow-glacier-soft">
                 <Activity className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-glacier-neutral-900">תובנות ניהוליות</h2>
-                <p className="text-glacier-neutral-600">המלצות מבוססות נתונים לשיפור ביצועי הצוות</p>
+                <h2 className="text-2xl font-bold text-glacier-primary-800">תובנות ניהוליות</h2>
+                <p className="text-glacier-primary-600">המלצות מבוססות נתונים לשיפור ביצועי הצוות</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {insights.map((insight) => (
-                <div key={insight.id} className={`bg-white/90 backdrop-blur-md border border-glacier-neutral-200/50 rounded-2xl shadow-glacier-soft p-6 ${
-                  insight.type === 'success' ? 'border-r-4 border-r-green-400' :
-                  insight.type === 'warning' ? 'border-r-4 border-r-amber-400' :
-                  'border-r-4 border-r-blue-400'
-                }`}>
+                <div key={insight.id} className={`bg-gradient-to-br from-white/95 to-${
+                  insight.type === 'success' ? 'glacier-secondary-50' :
+                  insight.type === 'warning' ? 'glacier-warning-light' :
+                  'glacier-primary-50'
+                } backdrop-blur-md border ${
+                  insight.type === 'success' ? 'border-glacier-secondary-200 border-r-4 border-r-glacier-secondary-500' :
+                  insight.type === 'warning' ? 'border-glacier-warning border-r-4 border-r-glacier-warning-dark' :
+                  'border-glacier-primary-200 border-r-4 border-r-glacier-primary-500'
+                } rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-glacier-soft p-6`}>
                   <div className="flex items-start gap-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      insight.type === 'success' ? 'bg-green-100' :
-                      insight.type === 'warning' ? 'bg-amber-100' :
-                      'bg-blue-100'
+                    <div className={`w-8 h-8 rounded-tl-lg rounded-br-lg rounded-tr-sm rounded-bl-sm flex items-center justify-center ${
+                      insight.type === 'success' ? 'bg-gradient-to-br from-glacier-secondary-100 to-glacier-secondary-200' :
+                      insight.type === 'warning' ? 'bg-gradient-to-br from-glacier-warning-light to-glacier-warning' :
+                      'bg-gradient-to-br from-glacier-primary-100 to-glacier-primary-200'
                     }`}>
-                      {insight.type === 'success' && <CheckCircle className="w-5 h-5 text-green-600" />}
-                      {insight.type === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-600" />}
-                      {insight.type === 'info' && <Activity className="w-5 h-5 text-blue-600" />}
+                      {insight.type === 'success' && <CheckCircle className="w-5 h-5 text-glacier-secondary-700" />}
+                      {insight.type === 'warning' && <AlertTriangle className="w-5 h-5 text-glacier-warning-dark" />}
+                      {insight.type === 'info' && <Activity className="w-5 h-5 text-glacier-primary-700" />}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-glacier-neutral-900 mb-1">{insight.title}</h4>
-                      <p className="text-sm text-glacier-neutral-600 leading-relaxed mb-3">{insight.description}</p>
+                      <h4 className={`font-semibold mb-1 ${
+                        insight.type === 'success' ? 'text-glacier-secondary-800' :
+                        insight.type === 'warning' ? 'text-glacier-warning-dark' :
+                        'text-glacier-primary-800'
+                      }`}>{insight.title}</h4>
+                      <p className={`text-sm leading-relaxed mb-3 ${
+                        insight.type === 'success' ? 'text-glacier-secondary-600' :
+                        insight.type === 'warning' ? 'text-glacier-warning-dark' :
+                        'text-glacier-primary-600'
+                      }`}>{insight.description}</p>
                       {insight.actionText && (
                         <Link 
                           href={insight.actionUrl || '#'}
-                          className="text-sm text-glacier-primary-600 hover:text-glacier-primary-700 font-medium flex items-center gap-1"
+                          className={`text-sm font-medium flex items-center gap-1 transition-colors ${
+                            insight.type === 'success' ? 'text-glacier-secondary-600 hover:text-glacier-secondary-700' :
+                            insight.type === 'warning' ? 'text-glacier-warning-dark hover:text-glacier-warning' :
+                            'text-glacier-primary-600 hover:text-glacier-primary-700'
+                          }`}
                         >
                           <span>{insight.actionText}</span>
                           <ArrowRight className="w-3 h-3" />
@@ -823,6 +993,337 @@ export default function ManagerDashboardContent() {
             </div>
           </div>
         )}
+
+        {/* Comprehensive Team Calls Table */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md bg-gradient-to-br from-glacier-primary-400 to-glacier-primary-600 flex items-center justify-center text-white shadow-glacier-soft">
+              <Phone className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-glacier-primary-800">שיחות הצוות</h2>
+              <p className="text-glacier-primary-600">כל השיחות של הצוות עם אפשרויות חיפוש וסינון מתקדמות</p>
+            </div>
+          </div>
+
+          {/* Filters Section */}
+          <div className="bg-gradient-to-br from-white/95 to-glacier-primary-50 backdrop-blur-md border border-glacier-primary-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-glacier-soft p-6">
+            <h3 className="text-lg font-semibold text-glacier-primary-800 mb-4">חיפוש וסינון מתקדם</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+              {/* Search Input */}
+              <div className="xl:col-span-2">
+                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">חיפוש כללי</label>
+                <input
+                  type="text"
+                  placeholder="חפש לפי לקוח, נציג או סוג שיחה..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 placeholder-glacier-primary-500 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                />
+              </div>
+
+              {/* Agent Filter */}
+              <div>
+                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">נציג</label>
+                <select
+                  value={agentFilter}
+                  onChange={(e) => setAgentFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                >
+                  <option value="all">כל הנציגים</option>
+                  {agents.filter(agent => agent.role === 'agent').map(agent => (
+                    <option key={agent.id} value={agent.id}>{agent.fullName}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Call Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">סוג שיחה</label>
+                <select
+                  value={callTypeFilter}
+                  onChange={(e) => setCallTypeFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                >
+                  <option value="all">כל הסוגים</option>
+                  <option value="sales_call">מכירה טלפונית</option>
+                  <option value="follow_up_before_offer">פולו אפ לפני הצעה</option>
+                  <option value="follow_up_after_offer">פולו אפ אחרי הצעה</option>
+                  <option value="appointment_scheduling">תאום פגישה</option>
+                  <option value="follow_up_appointment">פולו אפ תאום</option>
+                  <option value="customer_service">שירות לקוחות</option>
+                </select>
+              </div>
+
+              {/* Score Filter */}
+              <div>
+                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">ציון</label>
+                <select
+                  value={scoreFilter}
+                  onChange={(e) => setScoreFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                >
+                  <option value="all">כל הציונים</option>
+                  <option value="high">גבוה (8+)</option>
+                  <option value="medium">בינוני (6-8)</option>
+                  <option value="low">נמוך (מתחת ל-6)</option>
+                  <option value="none">ללא ציון</option>
+                </select>
+              </div>
+
+              {/* Red Flag Filter */}
+              <div>
+                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">דגלים אדומים</label>
+                <select
+                  value={redFlagFilter}
+                  onChange={(e) => setRedFlagFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                >
+                  <option value="all">הכל</option>
+                  <option value="yes">עם דגל אדום</option>
+                  <option value="no">ללא דגל אדום</option>
+                </select>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">סטטוס</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                >
+                  <option value="all">כל הסטטוסים</option>
+                  <option value="completed">הושלם</option>
+                  <option value="pending">בתהליך</option>
+                  <option value="error">שגיאה</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Filter Summary */}
+            <div className="mt-4 pt-4 border-t border-glacier-primary-200">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-glacier-primary-600">
+                  מציג <span className="font-semibold text-glacier-primary-800">{filteredCalls.length}</span> מתוך <span className="font-semibold text-glacier-primary-800">{allCalls.length}</span> שיחות
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setCallTypeFilter('all');
+                    setAgentFilter('all');
+                    setScoreFilter('all');
+                    setRedFlagFilter('all');
+                    setStatusFilter('all');
+                  }}
+                  className="px-4 py-2 text-sm bg-gradient-to-r from-glacier-secondary-100 to-glacier-secondary-200 text-glacier-secondary-800 rounded-lg hover:from-glacier-secondary-200 hover:to-glacier-secondary-300 transition-all duration-200 border border-glacier-secondary-300"
+                >
+                  נקה סינונים
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Calls Table */}
+          <div className="bg-gradient-to-br from-white/95 to-glacier-primary-50 backdrop-blur-md border border-glacier-primary-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-glacier-soft overflow-hidden">
+            {/* Table Header */}
+            <div className="px-6 py-4 border-b border-glacier-primary-200 bg-gradient-to-r from-glacier-primary-100 to-glacier-accent-100">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-glacier-primary-800">שיחות הצוות</h3>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-glacier-primary-600">
+                    מציג {Math.min(startCallsIndex + 1, totalCallsItems)} עד {Math.min(endCallsIndex, totalCallsItems)} מתוך {totalCallsItems} שיחות
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Table Content */}
+            {filteredCalls.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gradient-to-br from-glacier-primary-200 to-glacier-accent-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg flex items-center justify-center mx-auto mb-4">
+                  <Phone className="w-8 h-8 text-glacier-primary-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-glacier-primary-800 mb-2">
+                  {allCalls.length === 0 ? 'אין עדיין שיחות' : 'לא נמצאו שיחות מתאימות'}
+                </h3>
+                <p className="text-glacier-primary-600 mb-6">
+                  {allCalls.length === 0 
+                    ? 'השיחות יופיעו כאן לאחר שהנציגים יעלו שיחות' 
+                    : 'נסה לשנות את הסינונים או החיפוש'}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Responsive Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-glacier-primary-200">
+                    <thead className="bg-gradient-to-r from-glacier-primary-100 to-glacier-primary-150">
+                      <tr>
+                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-glacier-primary-700 uppercase tracking-wider">
+                          תאריך
+                        </th>
+                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-glacier-primary-700 uppercase tracking-wider">
+                          נציג
+                        </th>
+                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-glacier-primary-700 uppercase tracking-wider hidden lg:table-cell">
+                          סוג שיחה
+                        </th>
+                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-glacier-primary-700 uppercase tracking-wider">
+                          לקוח
+                        </th>
+                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-glacier-primary-700 uppercase tracking-wider">
+                          ציון
+                        </th>
+                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-glacier-primary-700 uppercase tracking-wider hidden md:table-cell">
+                          סטטוס
+                        </th>
+                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-glacier-primary-700 uppercase tracking-wider">
+                          פעולות
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white/80 divide-y divide-glacier-primary-200">
+                      {paginatedCalls.map((call, index) => (
+                        <tr 
+                          key={call.id} 
+                          className="hover:bg-gradient-to-r hover:from-glacier-primary-50 hover:to-glacier-accent-50 transition-colors duration-200"
+                          style={{ animationDelay: `${index * 30}ms` }}
+                        >
+                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap text-sm text-glacier-primary-800">
+                            <div className="space-y-1">
+                              <div className="font-medium text-xs lg:text-sm">{formatDate(call.created_at)}</div>
+                              {/* Mobile: Show call type under date */}
+                              <div className="lg:hidden">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-tl-lg rounded-br-lg rounded-tr-sm rounded-bl-sm bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-600 flex items-center justify-center text-white">
+                                    {getCallTypeIcon(call.call_type)}
+                                  </div>
+                                  <span className="text-xs font-medium text-glacier-primary-700 truncate max-w-[120px]" title={getCallTypeName(call.call_type)}>
+                                    {getCallTypeName(call.call_type)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-glacier-primary-500 to-glacier-secondary-500 flex items-center justify-center text-white font-bold text-xs">
+                                {call.agent_name?.charAt(0) || '?'}
+                              </div>
+                              <span className="text-sm font-medium text-glacier-primary-800 max-w-xs truncate" title={call.agent_name}>
+                                {call.agent_name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap hidden lg:table-cell">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-tr-lg rounded-bl-lg rounded-tl-sm rounded-br-sm bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-600 flex items-center justify-center text-white">
+                                {getCallTypeIcon(call.call_type)}
+                              </div>
+                              <span className="text-sm font-medium text-glacier-primary-800 max-w-xs truncate" title={getCallTypeName(call.call_type)}>
+                                {getCallTypeName(call.call_type)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap text-sm text-glacier-primary-800">
+                            <div className="flex items-center gap-2">
+                              <span className="max-w-[100px] lg:max-w-xs truncate" title={call.customer_name || 'לקוח ללא שם'}>
+                                {call.customer_name || 'לקוח ללא שם'}
+                              </span>
+                              {call.red_flag && (
+                                <AlertTriangle className="w-4 h-4 text-red-500" />
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap text-center">
+                            {call.overall_score ? (
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getScoreColor(call.overall_score)}`}>
+                                {call.overall_score.toFixed(1)}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 text-xs">-</span>
+                            )}
+                          </td>
+                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap text-center hidden md:table-cell">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(call.processing_status || 'pending')}`}>
+                              {getStatusText(call.processing_status || 'pending')}
+                            </span>
+                          </td>
+                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap text-center">
+                            {call.processing_status === 'completed' && (
+                              <Link 
+                                href={`/call/${call.id}`}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-glacier-primary-500 to-glacier-primary-600 hover:from-glacier-primary-600 hover:to-glacier-primary-700 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 text-xs font-medium"
+                              >
+                                <span className="hidden sm:inline">צפה</span>
+                                <span className="sm:hidden">דוח</span>
+                                <ArrowRight className="w-3 h-3" />
+                              </Link>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalCallsItems > callsPerPage && (
+                  <div className="px-4 lg:px-6 py-4 border-t border-glacier-primary-200 bg-gradient-to-r from-glacier-primary-50 to-glacier-accent-50">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 text-sm text-glacier-primary-600">
+                        <span>
+                          מציג {startCallsIndex + 1} עד {Math.min(endCallsIndex, totalCallsItems)} מתוך {totalCallsItems} שיחות
+                        </span>
+                      </div>
+                      
+                      {totalCallsPages > 1 && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleCallsPageChange(Math.max(1, currentCallsPage - 1))}
+                            disabled={currentCallsPage === 1}
+                            className="px-3 py-2 text-sm border border-glacier-primary-300 rounded-tl-lg rounded-br-lg rounded-tr-sm rounded-bl-sm disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-glacier-primary-50 text-glacier-primary-700 transition-colors"
+                          >
+                            קודם
+                          </button>
+                          
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.min(5, totalCallsPages) }, (_, i) => {
+                              const pageNum = i + 1;
+                              return (
+                                <button
+                                  key={pageNum}
+                                  onClick={() => handleCallsPageChange(pageNum)}
+                                  className={`px-3 py-2 text-sm rounded-tl-md rounded-br-md rounded-tr-sm rounded-bl-sm transition-colors ${
+                                    currentCallsPage === pageNum
+                                      ? 'bg-gradient-to-r from-glacier-primary-500 to-glacier-primary-600 text-white shadow-sm'
+                                      : 'border border-glacier-primary-300 bg-white hover:bg-glacier-primary-50 text-glacier-primary-700'
+                                  }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          
+                          <button
+                            onClick={() => handleCallsPageChange(Math.min(totalCallsPages, currentCallsPage + 1))}
+                            disabled={currentCallsPage === totalCallsPages}
+                            className="px-3 py-2 text-sm border border-glacier-primary-300 rounded-tr-lg rounded-bl-lg rounded-tl-sm rounded-br-sm disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-glacier-primary-50 text-glacier-primary-700 transition-colors"
+                          >
+                            הבא
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
 
       </div>
     </div>

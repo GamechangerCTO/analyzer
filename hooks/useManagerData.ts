@@ -105,7 +105,7 @@ export function useManagerData({ userId, companyId }: UseManagerDataProps): UseM
       const avgScore = completedCalls.length > 0
         ? completedCalls.reduce((sum, call) => sum + (call.overall_score || 0), 0) / completedCalls.length
         : 0
-      const successfulCalls = completedCalls.filter(call => (call.overall_score || 0) >= 70).length
+      const successfulCalls = completedCalls.filter(call => (call.overall_score || 0) >= 8).length
       const pendingCalls = callsData?.filter(call => call.processing_status === 'pending')?.length || 0
 
       setStats({
@@ -123,7 +123,7 @@ export function useManagerData({ userId, companyId }: UseManagerDataProps): UseM
         const agentAvgScore = agentCompletedCalls.length > 0
           ? agentCompletedCalls.reduce((sum, call) => sum + (call.overall_score || 0), 0) / agentCompletedCalls.length
           : 0
-        const agentSuccessfulCalls = agentCompletedCalls.filter(call => (call.overall_score || 0) >= 70).length
+        const agentSuccessfulCalls = agentCompletedCalls.filter(call => (call.overall_score || 0) >= 8).length
 
         return {
           id: agent.id,

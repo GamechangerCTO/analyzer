@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createClient, clearAuthStorage } from '@/lib/supabase/client'
 import LoginForm from '@/components/LoginForm'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Building } from 'lucide-react'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -18,9 +18,19 @@ export default function LoginPage() {
         
         if (user && !error) {
           router.push('/dashboard?login=true')
+        } else if (error && (error.message?.includes('429') || error.message?.includes('rate limit'))) {
+          console.log('[AUTH] Rate limit detected, clearing auth storage')
+          clearAuthStorage()
+          // Don't set loading to false yet, let user manually refresh
+          return
         }
-      } catch (error) {
-        console.log('Auth check error (non-critical):', error)
+      } catch (error: any) {
+        console.log('Auth check error:', error)
+        if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+          console.log('[AUTH] Rate limit in catch block, clearing auth storage')
+          clearAuthStorage()
+          return
+        }
       } finally {
         setIsLoading(false)
       }
@@ -31,11 +41,11 @@ export default function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-glacier-primary-50 via-white to-glacier-accent-50">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-bg-light via-white to-brand-accent-light">
         <div className="relative">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-glacier-primary-200 border-t-glacier-primary-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-primary-light border-t-brand-primary"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <Sparkles className="w-5 h-5 text-glacier-primary-600 animate-pulse" />
+            <Sparkles className="w-5 h-5 text-brand-primary animate-pulse" />
           </div>
         </div>
       </div>
@@ -43,32 +53,52 @@ export default function LoginPage() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-glacier-primary-50 via-white to-glacier-accent-50 relative overflow-hidden">
-      {/* Background decorative elements */}
+    <div className="min-h-screen bg-gradient-to-br from-brand-bg-light via-white to-brand-accent-light relative overflow-hidden">
+      {/* Background decorative elements with new brand colors */}
       <div className="absolute inset-0">
-        <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-glacier-primary-200/30 to-glacier-accent-200/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-gradient-to-r from-glacier-secondary-200/30 to-glacier-primary-200/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-glacier-accent-200/20 to-glacier-secondary-200/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-brand-primary-light/20 to-brand-secondary-light/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-gradient-to-r from-brand-secondary-light/30 to-brand-primary-light/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-brand-accent-light/30 to-brand-secondary-light/20 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       <div className="relative flex min-h-screen flex-col items-center justify-center p-4">
         <div className="w-full max-w-md">
-          {/* Login Form Card with enhanced glassmorphism */}
-          <div className="backdrop-blur-xl bg-white/80 border border-glacier-neutral-200/50 rounded-3xl p-8 shadow-2xl shadow-glacier-primary-900/10 animate-in slide-in-from-bottom duration-500">
+          {/* Logo Section */}
+          <div className="text-center mb-8 animate-in slide-in-from-top duration-500">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-primary to-brand-primary-light shadow-2xl shadow-brand-primary/25 mb-6 group hover:scale-110 transition-all duration-300">
+              {/* Logo particles */}
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand-secondary rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300"></div>
+              <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-brand-accent rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300"></div>
+              
+              <Building className="w-10 h-10 text-white transition-transform duration-300 group-hover:scale-110 relative z-10" />
+            </div>
+            
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-brand-primary to-brand-primary-light bg-clip-text text-transparent">
+                Coachee
+              </h1>
+              <p className="text-lg text-neutral-600 font-medium">
+                פלטפורמת אימון מכירות ושירות
+              </p>
+            </div>
+          </div>
+
+          {/* Login Form Card with enhanced glassmorphism using new brand colors */}
+          <div className="backdrop-blur-xl bg-white/90 border border-brand-primary-light/20 rounded-3xl p-8 shadow-2xl shadow-brand-primary/10 animate-in slide-in-from-bottom duration-500">
             <div className="mb-6 text-center">
-              <h3 className="text-2xl font-bold text-glacier-neutral-800 mb-2">ברוכים הבאים לCoachee</h3>
-              <p className="text-glacier-neutral-600 text-sm">התחבר כדי להתחיל את המסע שלך</p>
+              <h3 className="text-2xl font-bold text-neutral-800 mb-2">ברוכים הבאים</h3>
+              <p className="text-neutral-600 text-sm">התחבר כדי להתחיל את המסע שלך</p>
             </div>
             <LoginForm />
             
             {/* קישור להרשמה */}
             <div className="mt-6 text-center">
-              <p className="text-glacier-neutral-600 text-sm mb-3">
+              <p className="text-neutral-600 text-sm mb-3">
                 עדיין אין לכם חשבון?
               </p>
               <a
                 href="/signup"
-                className="inline-flex items-center justify-center w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="inline-flex items-center justify-center w-full px-4 py-3 bg-gradient-to-r from-brand-primary to-brand-primary-light text-white font-medium rounded-lg hover:from-brand-primary-dark hover:to-brand-primary transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 <Sparkles className="w-4 h-4 ml-2" />
                 הרשמה והצטרפות
@@ -81,30 +111,30 @@ export default function LoginPage() {
             <div className="flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-6 text-sm">
               <a 
                 href="/privacy-policy" 
-                className="group text-glacier-neutral-600 hover:text-glacier-primary-600 transition-all duration-300"
+                className="group text-neutral-600 hover:text-brand-primary transition-all duration-300"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <span className="relative">
                   מדיניות פרטיות
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-glacier-primary-500 to-glacier-accent-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right"></span>
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right"></span>
                 </span>
               </a>
-              <div className="hidden sm:block w-1 h-1 bg-glacier-neutral-300 rounded-full"></div>
+              <div className="hidden sm:block w-1 h-1 bg-neutral-300 rounded-full"></div>
               <a 
                 href="/terms-of-service" 
-                className="group text-glacier-neutral-600 hover:text-glacier-primary-600 transition-all duration-300"
+                className="group text-neutral-600 hover:text-brand-primary transition-all duration-300"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <span className="relative">
                   תנאי שימוש
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-glacier-primary-500 to-glacier-accent-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right"></span>
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right"></span>
                 </span>
               </a>
             </div>
             
-            <div className="mt-4 text-xs text-glacier-neutral-500">
+            <div className="mt-4 text-xs text-neutral-500">
               © 2025 Coachee. כל הזכויות שמורות.
             </div>
           </div>

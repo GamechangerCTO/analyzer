@@ -321,6 +321,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
         customer_name: customerName.trim(),
         audio_file_path: filePath,
         audio_duration_seconds: audioDurationSeconds,
+        duration_seconds: audioDurationSeconds, // Set duration_seconds to match audio_duration_seconds
         agent_notes: agentNotes || null,
         analysis_notes: analysisNotes || null,
         analysis_type: 'full',

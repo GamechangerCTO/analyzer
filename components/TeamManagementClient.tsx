@@ -57,7 +57,7 @@ interface AgentWithStats extends Agent {
   total_calls?: number
   weekly_calls?: number
   avg_score?: number
-  last_call_date?: string
+  last_call_date?: string | null
   activity_status?: 'active' | 'moderate' | 'inactive'
 }
 
@@ -118,7 +118,11 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         .eq('company_id', companyId)
         .single()
       
-      setUserQuota(quotaData)
+      setUserQuota(quotaData ? {
+        total_users: quotaData.total_users,
+        used_users: quotaData.used_users,
+        available_users: quotaData.available_users || 0
+      } : null)
 
       // טעינת נציגים עם נתוני ביצועים
       const { data: agentsData } = await supabase
@@ -296,10 +300,9 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
       render: (value: string, row: AgentWithStats) => (
         <div className="flex items-center gap-3">
           <Avatar
-            src={row.avatar_url}
-            alt={value || 'משתמש'}
+            avatarUrl={row.avatar_url}
+            fullName={value || 'משתמש'}
             size="sm"
-            fallback={value?.charAt(0) || '?'}
           />
           <div>
             <div className="font-medium text-gray-900">{value}</div>
@@ -482,7 +485,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
       agent.total_calls || 0,
       agent.weekly_calls || 0,
       agent.avg_score || 0,
-      formatDate(agent.last_call_date),
+      formatDate(agent.last_call_date || null),
       formatDate(agent.created_at)
     ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')).join('\n')
     

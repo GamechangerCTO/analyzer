@@ -236,7 +236,12 @@ export async function POST(request: Request) {
         
         await addCallLog(call_id, '✅ משך האודיו חושב בהצלחה', { 
           duration_seconds: audioDurationSeconds,
-          duration_formatted: `${Math.floor(audioDurationSeconds / 60)}:${(audioDurationSeconds % 60).toString().padStart(2, '0')}`
+          duration_formatted: (() => {
+            const totalSeconds = Math.round(audioDurationSeconds);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+          })()
         });
         
         // עדכון משך האודיו במסד הנתונים
@@ -797,9 +802,13 @@ export async function POST(request: Request) {
         let systemPrompt = '';
         if (promptError || !promptData) {
           // פרומפט מקצועי מפורט כברירת מחדל - עדכון להתאמה מלאה
+          // בדיקה אם זו שיחת שירות - אם כן, לא לכלול את "שלושת הלמה"
+          const isServiceCall = callData.call_type === 'customer_service' || 
+                               callData.call_type === 'שירות לקוחות מגיב – בעקבות פניה של לקוח';
+          
           systemPrompt = `אתה מומחה בכיר בניתוח שיחות מכירה ושירות עם ניסיון של 15 שנה.
           
-          נתח את השיחה לפי 35 פרמטרים מקצועיים והחזר ציון מ-3 עד 10 לכל פרמטר (3 נדיר מאוד):
+          נתח את השיחה לפי ${isServiceCall ? '32' : '35'} פרמטרים מקצועיים והחזר ציון מ-3 עד 10 לכל פרמטר (3 נדיר מאוד):
           
           **מבנה JSON נדרש:**
           {
@@ -851,12 +860,12 @@ export async function POST(request: Request) {
             "סיכום_שיחה": {
               "סיכום_שיחה_ברור": {"ציון": number, "תובנות": "string", "איך_משפרים": "string"},
               "צידה_לדרך": {"ציון": number, "תובנות": "string", "איך_משפרים": "string"}
-            },
+            }${isServiceCall ? '' : `,
             "שלושת_הלמה": {
               "למה_דווקא_הפתרון_שלנו": {"ציון": number, "תובנות": "string", "איך_משפרים": "string"},
               "למה_דווקא_עכשיו": {"ציון": number, "תובנות": "string", "איך_משפרים": "string"},
               "למה_דווקא_איתנו": {"ציון": number, "תובנות": "string", "איך_משפרים": "string"}
-            },
+            }`},
             "general_key_insights": ["רשימת תובנות מפתח"],
             "improvement_points": ["רשימת נקודות לשיפור"],
             "overall_score": number,
@@ -900,7 +909,9 @@ export async function POST(request: Request) {
           }`;
           await addCallLog(call_id, 'ℹ️ משתמש בפרומפט מקצועי מפורט (לא נמצא פרומפט ספציפי לסוג השיחה)', {
             call_type: callData.call_type,
-            prompt_error: promptError?.message
+            prompt_error: promptError?.message,
+            is_service_call: isServiceCall,
+            parameters_count: isServiceCall ? 32 : 35
           });
         } else {
           systemPrompt = promptData.system_prompt;

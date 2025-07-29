@@ -1027,7 +1027,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         ]
       },
       {
-        category: '3 למה',
+        category: 'שלושת הלמה',
         key: 'שלושת_הלמה',
         subcategories: [
           { name: 'למה דווקא הפתרון שלנו', key: 'למה_דווקא_הפתרון_שלנו' },
@@ -1038,8 +1038,11 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     ];
 
     // סנן קטגוריות לפי סוג השיחה - הסר "שלושת הלמה" משיחות שירות
+    const isServiceCall = call.call_type === 'customer_service' || 
+                         call.call_type === 'שירות לקוחות מגיב – בעקבות פניה של לקוח';
+    
     const filteredCategories = categories.filter(category => {
-      if (category.key === 'שלושת_הלמה' && call.call_type === 'customer_service') {
+      if (category.key === 'שלושת_הלמה' && isServiceCall) {
         return false;
       }
       return true;
@@ -1281,7 +1284,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               <div>
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-800 via-blue-700 to-indigo-600 bg-clip-text text-transparent">
                   {call.call_type === 'sales' ? 'שיחת מכירות מקצועית' : 
-                   call.call_type === 'customer_service' ? 'שיחת שירות מקצועית' : 
+                   (call.call_type === 'customer_service' || call.call_type === 'שירות לקוחות מגיב – בעקבות פניה של לקוח') ? 'שיחת שירות מקצועית' : 
                    'ניתוח שיחה מקצועי'}
                 </h2>
                 <p className="text-slate-600 text-lg font-medium mt-1">תוצאות מפורטות מבוססות נתונים מתקדמים ✨</p>
@@ -1412,11 +1415,6 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                         <div className="text-sm text-green-700 font-medium">משך השיחה</div>
                         <div className="text-lg font-semibold text-green-800">
                           {formatTime(call.audio_duration_seconds)} ⏱️
-                          {call.audio_duration_seconds && (
-                            <div className="text-xs text-green-600 mt-1">
-                              ({call.audio_duration_seconds} שניות)
-                            </div>
-                          )}
                         </div>
                       </div>
                       <div className="backdrop-blur-sm bg-purple-500/10 border border-purple-300/30 p-4 rounded-xl shadow-inner hover:bg-purple-500/20 transition-all duration-300">

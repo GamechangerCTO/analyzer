@@ -22,6 +22,7 @@ interface StatsCardProps {
   subtitle?: string
   color: 'primary' | 'accent' | 'success' | 'warning'
   delay?: number
+  borderRadius?: string
 }
 
 interface DashboardStatsProps {
@@ -32,7 +33,7 @@ interface DashboardStatsProps {
   loading?: boolean
 }
 
-const StatsCard = ({ title, value, icon, trend, subtitle, color, delay = 0 }: StatsCardProps) => {
+const StatsCard = ({ title, value, icon, trend, subtitle, color, delay = 0, borderRadius = 'rounded-3xl' }: StatsCardProps) => {
   const [isVisible, setIsVisible] = useState(false)
   
   useEffect(() => {
@@ -56,7 +57,7 @@ const StatsCard = ({ title, value, icon, trend, subtitle, color, delay = 0 }: St
 
   return (
     <div className={`
-      group relative p-6 rounded-3xl ${bgClasses[color]} 
+      group relative p-6 ${borderRadius} ${bgClasses[color]} 
       border border-glacier-neutral-200/50 backdrop-blur-sm
       transform transition-all duration-500 hover:scale-105 hover:-translate-y-2
       ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
@@ -166,6 +167,7 @@ export default function DashboardStats({ totalCalls, avgScore, successfulCalls, 
         subtitle="שיחות שהועלו למערכת"
         color="primary"
         delay={0}
+        borderRadius="rounded-tl-3xl rounded-br-3xl rounded-tr-md rounded-bl-md"
       />
       
       <StatsCard
@@ -176,15 +178,17 @@ export default function DashboardStats({ totalCalls, avgScore, successfulCalls, 
         subtitle="ביצועים כלליים"
         color="accent"
         delay={100}
+        borderRadius="rounded-tr-3xl rounded-bl-3xl rounded-tl-md rounded-br-md"
       />
       
       <StatsCard
         title="שיחות מצוינות"
         value={successfulCalls}
         icon={<Trophy className="w-8 h-8" />}
-        subtitle="ציון 8+ נקודות"
+        subtitle="ציון 8+ מתוך 10"
         color="success"
         delay={200}
+        borderRadius="rounded-tl-3xl rounded-br-3xl rounded-tr-md rounded-bl-md"
       />
       
       <StatsCard
@@ -195,6 +199,7 @@ export default function DashboardStats({ totalCalls, avgScore, successfulCalls, 
         subtitle="שיחות השבוע האחרון"
         color="warning"
         delay={300}
+        borderRadius="rounded-tr-3xl rounded-bl-3xl rounded-tl-md rounded-br-md"
       />
     </div>
   )

@@ -175,14 +175,14 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
   // Get unique values for filters
   const uniqueAgents = React.useMemo(() => {
     const agentSet = new Set(calls.map(call => call.agent_name).filter(Boolean))
-    return Array.from(agentSet).sort().map(name => ({ value: name, label: name }))
+    return Array.from(agentSet).sort().map(name => ({ value: name as string, label: name as string }))
   }, [calls])
 
   const uniqueCallTypes = React.useMemo(() => {
     const typeSet = new Set(calls.map(call => call.call_type).filter(Boolean))
     return Array.from(typeSet).sort().map(type => ({ 
-      value: type, 
-      label: getCallTypeName(type) 
+      value: type as string, 
+      label: getCallTypeName(type) as string
     }))
   }, [calls])
 

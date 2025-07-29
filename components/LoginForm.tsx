@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { AlertCircle, CheckCircle, User, Settings, Users, Crown, Loader2 } from 'lucide-react'
+import { handleAuthError, createRateLimiter, debounce } from '@/lib/utils'
 
 // טיפוסים
 type Role = 'admin' | 'manager' | 'agent';
@@ -19,6 +20,15 @@ export default function LoginForm() {
   const [authError, setAuthError] = useState<string | null>(null)
   const [authLoading, setAuthLoading] = useState(false)
   const [authStatus, setAuthStatus] = useState<string>('מוכן להתחברות')
+  
+  // Rate limiting protection
+  const isProcessingRef = useRef(false)
+  const lastAuthAttemptRef = useRef(0)
+  const retryCountRef = useRef(0)
+  const maxRetries = 3
+  
+  // Create rate limiter instance
+  const rateLimiter = useRef(createRateLimiter(3, 60000))
 
   // בדיקת שגיאות מ-URL
   useEffect(() => {
@@ -31,7 +41,8 @@ export default function LoginForm() {
         'database_error': 'שגיאה במסד הנתונים - אנא נסה שוב מאוחר יותר',
         'creation_error': 'שגיאה ביצירת החשבון - אנא צור קשר עם התמיכה',
         'auth_exchange_error': 'שגיאה בחילוף אסימונים - אנא נסה שוב',
-        'processing_error': 'שגיאה בעיבוד הבקשה - אנא נסה שוב'
+        'processing_error': 'שגיאה בעיבוד הבקשה - אנא נסה שוב',
+        'rate_limit': 'יותר מדי ניסיונות התחברות - אנא המתן דקה ונסה שוב'
       }
       
       setAuthError(errorMessages[error] || 'שגיאה לא ידועה - אנא נסה שוב')
@@ -59,6 +70,39 @@ export default function LoginForm() {
     setShowRoleSelector(false)
   }
 
+  // Rate limiting helper
+  const checkRateLimit = () => {
+    const now = Date.now()
+    const timeSinceLastAttempt = now - lastAuthAttemptRef.current
+    
+    // Prevent multiple simultaneous requests
+    if (isProcessingRef.current) {
+      return false
+    }
+    
+    // Rate limit: minimum 2 seconds between attempts
+    if (timeSinceLastAttempt < 2000) {
+      setAuthError('אנא המתן 2 שניות בין ניסיונות התחברות')
+      return false
+    }
+    
+    // Reset retry count if more than 30 seconds have passed
+    if (timeSinceLastAttempt > 30000) {
+      retryCountRef.current = 0
+    }
+    
+    // Check if we've exceeded max retries
+    if (retryCountRef.current >= maxRetries) {
+      setAuthError('יותר מדי ניסיונות התחברות - אנא המתן 5 דקות ונסה שוב')
+      return false
+    }
+    
+    lastAuthAttemptRef.current = now
+    retryCountRef.current++
+    isProcessingRef.current = true
+    return true
+  }
+
   // מאזין לשינויים במצב ההתחברות
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -67,6 +111,11 @@ export default function LoginForm() {
         setAuthStatus(`אירוע: ${event}`)
 
         if (event === 'SIGNED_IN' && session) {
+          // Rate limiting check
+          if (!checkRateLimit()) {
+            return
+          }
+          
           setAuthLoading(true)
           setAuthError(null)
           setAuthStatus('מתחבר...')
@@ -92,6 +141,7 @@ export default function LoginForm() {
                 console.error("[AUTH] Error checking super admin:", adminError);
                 setAuthError(`שגיאה בבדיקת משתמש: ${adminError.message}`)
                 setAuthLoading(false)
+                isProcessingRef.current = false
                 return;
               }
 
@@ -111,6 +161,7 @@ export default function LoginForm() {
                   console.error("[AUTH] Error creating super admin:", createError);
                   setAuthError(`שגיאה ביצירת מנהל: ${createError.message}`)
                   setAuthLoading(false)
+                  isProcessingRef.current = false
                   return;
                 }
 
@@ -122,6 +173,7 @@ export default function LoginForm() {
               
               setAuthLoading(false)
               setShowRoleSelector(true);
+              isProcessingRef.current = false
               return;
 
             } else {
@@ -137,6 +189,7 @@ export default function LoginForm() {
                 console.error("[AUTH] Error checking user:", userError);
                 setAuthError(`שגיאה בבדיקת משתמש: ${userError.message}`)
                 setAuthLoading(false)
+                isProcessingRef.current = false
                 return;
               }
               
@@ -145,6 +198,7 @@ export default function LoginForm() {
                 console.log("[AUTH] New user detected, redirecting to complete signup");
                 router.push('/signup-complete');
                 setAuthLoading(false)
+                isProcessingRef.current = false
                 return;
               }
 
@@ -152,18 +206,29 @@ export default function LoginForm() {
                 console.log("[AUTH] User not approved, redirecting to approval page");
                 router.push('/not-approved');
                 setAuthLoading(false)
+                isProcessingRef.current = false
                 return;
               }
 
               console.log("[AUTH] User approved, redirecting to dashboard");
               router.push('/dashboard');
               setAuthLoading(false)
+              isProcessingRef.current = false
             }
 
-          } catch (error) {
+          } catch (error: any) {
             console.error("[AUTH] Unexpected error:", error);
-            setAuthError('שגיאה בלתי צפויה - אנא נסה שוב')
+            
+            // Handle rate limit errors specifically
+            if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+              setAuthError('יותר מדי ניסיונות התחברות - אנא המתן דקה ונסה שוב')
+              retryCountRef.current = maxRetries // Prevent further attempts
+            } else {
+              setAuthError('שגיאה בלתי צפויה - אנא נסה שוב')
+            }
+            
             setAuthLoading(false)
+            isProcessingRef.current = false
           }
         }
 
@@ -171,12 +236,14 @@ export default function LoginForm() {
           setAuthError(null)
           setAuthLoading(false)
           setShowRoleSelector(false)
+          isProcessingRef.current = false
+          retryCountRef.current = 0
         }
       }
     )
 
     return () => subscription.unsubscribe()
-  }, [supabase, router])
+  }, [router, supabase])
 
   const roleOptions = [
     { 
@@ -184,21 +251,21 @@ export default function LoginForm() {
       label: 'מנהל מערכת', 
       description: 'גישה מלאה למערכת',
       icon: Crown,
-      color: 'from-glacier-primary-500 to-glacier-accent-500'
+      color: 'from-brand-primary to-brand-primary-light'
     },
     { 
       value: 'manager' as Role, 
       label: 'מנהל צוות', 
       description: 'ניהול נציגים וצפייה בדוחות',
       icon: Users,
-      color: 'from-glacier-secondary-500 to-glacier-primary-500'
+      color: 'from-brand-secondary to-brand-secondary-light'
     },
     { 
       value: 'agent' as Role, 
       label: 'נציג מכירות', 
       description: 'העלאת שיחות וצפייה בביצועים',
       icon: User,
-      color: 'from-glacier-accent-500 to-glacier-secondary-500'
+      color: 'from-brand-accent-dark to-brand-secondary'
     }
   ]
 
@@ -206,8 +273,8 @@ export default function LoginForm() {
     <div className="space-y-6">
       {/* הודעת סטטוס */}
       {authLoading && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-glacier-primary-50 to-glacier-accent-50 border border-glacier-primary-200/50 animate-in slide-in-from-top duration-500">
-          <div className="flex items-center gap-3 text-glacier-primary-700">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-brand-primary-light/10 to-brand-secondary-light/20 border border-brand-primary-light/20 animate-in slide-in-from-top duration-500">
+          <div className="flex items-center gap-3 text-brand-primary-dark">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span className="font-medium">{authStatus}</span>
           </div>
@@ -228,8 +295,8 @@ export default function LoginForm() {
       {showRoleSelector && (
         <div className="space-y-6 animate-in slide-in-from-bottom duration-500">
           <div className="text-center space-y-2">
-            <h3 className="text-xl font-bold text-glacier-neutral-900">בחר תפקיד להתחברות</h3>
-            <p className="text-glacier-neutral-600">בחר את התפקיד שבו ברצונך להתחבר למערכת</p>
+            <h3 className="text-xl font-bold text-neutral-900">בחר תפקיד להתחברות</h3>
+            <p className="text-neutral-600">בחר את התפקיד שבו ברצונך להתחבר למערכת</p>
           </div>
           
           <div className="space-y-3">
@@ -241,8 +308,8 @@ export default function LoginForm() {
                   onClick={() => setSelectedRole(role.value)}
                   className={`w-full p-4 rounded-2xl border-2 transition-all duration-300 group hover:scale-[1.02] ${
                     selectedRole === role.value
-                      ? 'border-glacier-primary-500 bg-gradient-to-r from-glacier-primary-50 to-glacier-accent-50 shadow-lg shadow-glacier-primary-200/50'
-                      : 'border-glacier-neutral-200 bg-white hover:border-glacier-primary-300 hover:bg-glacier-primary-25'
+                      ? 'border-brand-primary bg-gradient-to-r from-brand-primary-light/10 to-brand-secondary-light/20 shadow-lg shadow-brand-primary/20'
+                      : 'border-neutral-200 bg-white hover:border-brand-primary-light hover:bg-brand-primary-light/5'
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -250,17 +317,17 @@ export default function LoginForm() {
                       <Icon className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1 text-right">
-                      <h4 className="font-bold text-glacier-neutral-900 group-hover:text-glacier-primary-700 transition-colors">
+                      <h4 className="font-bold text-neutral-900 group-hover:text-brand-primary-dark transition-colors">
                         {role.label}
                       </h4>
-                      <p className="text-sm text-glacier-neutral-600 mt-1">
+                      <p className="text-sm text-neutral-600 mt-1">
                         {role.description}
                       </p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 transition-all ${
                       selectedRole === role.value
-                        ? 'border-glacier-primary-500 bg-glacier-primary-500'
-                        : 'border-glacier-neutral-300 group-hover:border-glacier-primary-400'
+                        ? 'border-brand-primary bg-brand-primary'
+                        : 'border-neutral-300 group-hover:border-brand-primary-light'
                     }`}>
                       {selectedRole === role.value && (
                         <CheckCircle className="w-3 h-3 text-white m-0.5" />
@@ -274,7 +341,7 @@ export default function LoginForm() {
           
           <button
             onClick={loginWithRole}
-            className="w-full py-4 px-6 bg-gradient-to-r from-glacier-primary-500 to-glacier-accent-500 text-white rounded-2xl font-bold shadow-lg shadow-glacier-primary-900/25 hover:shadow-xl hover:shadow-glacier-primary-900/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full py-4 px-6 bg-gradient-to-r from-brand-primary to-brand-primary-light text-white rounded-2xl font-bold shadow-lg shadow-brand-primary/25 hover:shadow-xl hover:shadow-brand-primary/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
           >
             המשך עם התפקיד הנבחר
           </button>
@@ -285,13 +352,13 @@ export default function LoginForm() {
       {!showRoleSelector && (
         <div className="space-y-6">
           {/* כפתורי החלפה בין התחברות והרשמה */}
-          <div className="flex p-1 bg-glacier-neutral-100 rounded-2xl shadow-inner">
+          <div className="flex p-1 bg-neutral-100 rounded-2xl shadow-inner">
             <button
               onClick={() => setView('sign_in')}
               className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
                 view === 'sign_in' 
-                  ? 'bg-white text-glacier-primary-600 shadow-lg shadow-glacier-primary-900/10' 
-                  : 'text-glacier-neutral-600 hover:text-glacier-primary-600'
+                  ? 'bg-white text-brand-primary shadow-lg shadow-brand-primary/10' 
+                  : 'text-neutral-600 hover:text-brand-primary'
               }`}
             >
               התחברות
@@ -300,8 +367,8 @@ export default function LoginForm() {
               onClick={() => setView('sign_up')}
               className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
                 view === 'sign_up' 
-                  ? 'bg-white text-glacier-primary-600 shadow-lg shadow-glacier-primary-900/10' 
-                  : 'text-glacier-neutral-600 hover:text-glacier-primary-600'
+                  ? 'bg-white text-brand-primary shadow-lg shadow-brand-primary/10' 
+                  : 'text-neutral-600 hover:text-brand-primary'
               }`}
             >
               הרשמה
@@ -318,8 +385,8 @@ export default function LoginForm() {
                 variables: {
                   default: {
                     colors: {
-                      brand: '#2563EB', // glacier-primary-600
-                      brandAccent: '#1D4ED8', // glacier-primary-700
+                      brand: '#472DA6', // brand-primary
+                      brandAccent: '#5336BF', // brand-primary-light
                       brandButtonText: 'white',
                       defaultButtonBackground: 'transparent',
                       defaultButtonBackgroundHover: '#F8FAFC',
@@ -328,15 +395,15 @@ export default function LoginForm() {
                       dividerBackground: '#E2E8F0',
                       inputBackground: 'white',
                       inputBorder: '#CBD5E1',
-                      inputBorderHover: '#2563EB',
-                      inputBorderFocus: '#2563EB',
+                      inputBorderHover: '#472DA6',
+                      inputBorderFocus: '#472DA6',
                       inputText: '#0F172A',
                       inputLabelText: '#475569',
                       inputPlaceholder: '#94A3B8',
                       messageText: '#EF4444',
                       messageTextDanger: '#EF4444',
-                      anchorTextColor: '#2563EB',
-                      anchorTextHoverColor: '#1D4ED8',
+                      anchorTextColor: '#472DA6',
+                      anchorTextHoverColor: '#5336BF',
                     },
                     space: {
                       spaceSmall: '6px',
@@ -381,7 +448,7 @@ export default function LoginForm() {
                     transition: 'all 0.2s ease-in-out',
                   },
                   anchor: {
-                    color: '#2563EB',
+                    color: '#472DA6',
                     textDecoration: 'none',
                     fontWeight: '500',
                   },
