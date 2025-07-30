@@ -66,17 +66,13 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Logo Section */}
           <div className="text-center mb-8 animate-in slide-in-from-top duration-500">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-brand-primary to-brand-primary-light shadow-2xl shadow-brand-primary/25 mb-6 group hover:scale-110 transition-all duration-300">
-              {/* Logo particles */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand-secondary rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300"></div>
-              <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-brand-accent rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300"></div>
-              
+            <div className="inline-flex items-center justify-center w-32 h-32 mb-6 group hover:scale-110 transition-all duration-300">
               <Image
                 src="/logo.png"
                 alt="Coachee Logo"
-                width={40}
-                height={40}
-                className="transition-transform duration-300 group-hover:scale-110 relative z-10"
+                width={80}
+                height={80}
+                className="transition-transform duration-300 group-hover:scale-110"
               />
             </div>
             

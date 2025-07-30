@@ -6,7 +6,6 @@ import {
   TrendingUp, 
   Shield, 
   Target, 
-  Users, 
   AlertCircle, 
   Brain,
   Zap,
@@ -117,8 +116,8 @@ export default function TeamInsights({ companyId }: TeamInsightsProps) {
       {/* כותרת עם סטטיסטיקות */}
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <div className="w-12 h-12 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-tl-2xl rounded-br-2xl flex items-center justify-center text-white shadow-lg mr-4">
-            <Brain className="w-6 h-6" />
+          <div className="w-16 h-16 bg-white rounded-tl-2xl rounded-br-2xl flex items-center justify-center shadow-lg mr-4 border-2 border-neutral-200">
+            <Brain className="w-10 h-10 text-brand-primary" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-neutral-800">🧠 תובנות AI מהצוות</h2>
