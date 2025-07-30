@@ -580,16 +580,12 @@ export default function AgentDashboardContent({ userId, companyId, targetUserInf
             </div>
           </div>
 
-          {/* הסרה זמנית של AgentSummary כדי לחסוך quota */}
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-tr-3xl rounded-bl-3xl rounded-tl-lg rounded-br-lg p-6 border border-blue-200">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="w-8 h-8 text-blue-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">ניתוח ביצועים זמנית מושבת</h3>
-              <p className="text-gray-600">התכונה תחזור בקרוב - אנחנו עובדים על שיפורים</p>
-            </div>
-          </div>
+          {/* Advanced Performance Analysis - Re-enabled for production demos */}
+          <AgentSummary 
+            agentId={userId} 
+            agentName={agentInfo?.full_name || targetUserInfo?.full_name || 'נציג'} 
+            isOwnSummary={true} 
+          />
         </div>
 
       </div>

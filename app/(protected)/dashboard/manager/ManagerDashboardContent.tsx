@@ -712,9 +712,9 @@ export default function ManagerDashboardContent() {
         )}
 
         {/* Main Bento Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Left Column - Stats (1/4) */}
+          {/* Left Column - Stats (1/3) */}
         <div className="space-y-6">
             {/* Primary KPI - Large */}
             <div className="bg-gradient-to-br from-brand-secondary via-brand-secondary-dark to-brand-primary rounded-tl-3xl rounded-br-3xl p-8 text-white shadow-lg relative overflow-hidden">
@@ -815,7 +815,7 @@ export default function ManagerDashboardContent() {
             )}
           </div>
 
-          {/* Middle Column - Team Overview (2/4) */}
+          {/* Right Section - Team Overview & Actions (2/3) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Secondary Stats */}
             <div className="grid grid-cols-2 gap-4">
@@ -920,74 +920,74 @@ export default function ManagerDashboardContent() {
             </div>
           </div>
 
-                    {/* Right Column - Actions & Insights (1/4) */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <div className="bg-white border-2 border-brand-primary/20 rounded-tl-3xl rounded-br-3xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
-                <Zap className="w-5 h-5 ml-2 text-brand-primary" />
-                פעולות מהירות
-              </h3>
-              
-              <div className="space-y-3">
-                <button 
-                  onClick={() => router.push('/team/add-agent')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 border border-brand-primary/20 rounded-tl-xl rounded-br-xl hover:from-brand-primary/20 hover:to-brand-primary/10 transition-all duration-300 group"
-                >
-                  <UserPlus className="w-5 h-5 text-brand-primary group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-neutral-700">הוסף נציג</span>
-                </button>
-                <button 
-                  onClick={() => router.push('/dashboard/manager/all-calls')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-secondary/10 to-brand-secondary/5 border border-brand-secondary/20 rounded-tr-xl rounded-bl-xl hover:from-brand-secondary/20 hover:to-brand-secondary/10 transition-all duration-300 group"
-                >
-                  <Eye className="w-5 h-5 text-brand-secondary group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-neutral-700">כל השיחות</span>
-                </button>
-                <button 
-                  onClick={() => router.push('/team')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-warning/10 to-brand-warning/5 border border-brand-warning/20 rounded-tl-xl rounded-br-xl hover:from-brand-warning/20 hover:to-brand-warning/10 transition-all duration-300 group"
-                >
-                  <Users className="w-5 h-5 text-brand-warning group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-neutral-700">ניהול צוות</span>
-                </button>
+            {/* Quick Actions Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Quick Actions */}
+              <div className="bg-white border-2 border-brand-primary/20 rounded-tl-3xl rounded-br-3xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                  <Zap className="w-5 h-5 ml-2 text-brand-primary" />
+                  פעולות מהירות
+                </h3>
+                
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => router.push('/team/add-agent')}
+                    className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 border border-brand-primary/20 rounded-tl-xl rounded-br-xl hover:from-brand-primary/20 hover:to-brand-primary/10 transition-all duration-300 group"
+                  >
+                    <UserPlus className="w-5 h-5 text-brand-primary group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-neutral-700">הוסף נציג</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/dashboard/manager/all-calls')}
+                    className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-secondary/10 to-brand-secondary/5 border border-brand-secondary/20 rounded-tr-xl rounded-bl-xl hover:from-brand-secondary/20 hover:to-brand-secondary/10 transition-all duration-300 group"
+                  >
+                    <Eye className="w-5 h-5 text-brand-secondary group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-neutral-700">כל השיחות</span>
+                  </button>
+                  <button 
+                    onClick={() => router.push('/team')}
+                    className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-warning/10 to-brand-warning/5 border border-brand-warning/20 rounded-tl-xl rounded-br-xl hover:from-brand-warning/20 hover:to-brand-warning/10 transition-all duration-300 group"
+                  >
+                    <Users className="w-5 h-5 text-brand-warning group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-neutral-700">ניהול צוות</span>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Recent Activity */}
-            <div className="bg-white border-2 border-brand-secondary/20 rounded-tr-3xl rounded-bl-3xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
-                <Activity className="w-5 h-5 ml-2 text-brand-secondary" />
-                פעילות אחרונה
-              </h3>
-              
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 rounded-tl-xl rounded-br-xl border border-brand-primary/20">
-                  <div className="w-3 h-3 bg-brand-primary rounded-full"></div>
-                  <div className="text-sm">
-                    <span className="font-bold text-neutral-800">{stats?.weeklyCalls || 0}</span>
-                    <span className="text-neutral-600"> שיחות השבוע</span>
-            </div>
-          </div>
+              {/* Recent Activity */}
+              <div className="bg-white border-2 border-brand-secondary/20 rounded-tr-3xl rounded-bl-3xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                  <Activity className="w-5 h-5 ml-2 text-brand-secondary" />
+                  פעילות אחרונה
+                </h3>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 rounded-tl-xl rounded-br-xl border border-brand-primary/20">
+                    <div className="w-3 h-3 bg-brand-primary rounded-full"></div>
+                    <div className="text-sm">
+                      <span className="font-bold text-neutral-800">{stats?.weeklyCalls || 0}</span>
+                      <span className="text-neutral-600"> שיחות השבוע</span>
+                    </div>
+                  </div>
 
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-secondary/10 to-brand-secondary/5 rounded-tr-xl rounded-bl-xl border border-brand-secondary/20">
-                  <div className="w-3 h-3 bg-brand-secondary rounded-full"></div>
-                  <div className="text-sm">
-                    <span className="font-bold text-neutral-800">{stats?.totalAgents || 0}</span>
-                    <span className="text-neutral-600"> נציגים פעילים</span>
-          </div>
-        </div>
+                  <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-secondary/10 to-brand-secondary/5 rounded-tr-xl rounded-bl-xl border border-brand-secondary/20">
+                    <div className="w-3 h-3 bg-brand-secondary rounded-full"></div>
+                    <div className="text-sm">
+                      <span className="font-bold text-neutral-800">{stats?.totalAgents || 0}</span>
+                      <span className="text-neutral-600"> נציגים פעילים</span>
+                    </div>
+                  </div>
 
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-warning/10 to-brand-warning/5 rounded-tl-xl rounded-br-xl border border-brand-warning/20">
-                  <div className="w-3 h-3 bg-brand-warning rounded-full"></div>
-                  <div className="text-sm">
-                    <span className="font-bold text-neutral-800">{((stats?.avgScore || 0) * 10).toFixed(0)}%</span>
-                    <span className="text-neutral-600"> יעילות כללית</span>
+                  <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-warning/10 to-brand-warning/5 rounded-tl-xl rounded-br-xl border border-brand-warning/20">
+                    <div className="w-3 h-3 bg-brand-warning rounded-full"></div>
+                    <div className="text-sm">
+                      <span className="font-bold text-neutral-800">{((stats?.avgScore || 0) * 10).toFixed(0)}%</span>
+                      <span className="text-neutral-600"> יעילות כללית</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
         </div>
 
         {/* Insights Section - Full Width */}
@@ -1182,6 +1182,13 @@ export default function ManagerDashboardContent() {
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-neutral-800">שיחות הצוות</h3>
                 <div className="flex items-center gap-4">
+                  <Link 
+                    href="/dashboard/manager/all-calls"
+                    className="text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors flex items-center gap-1"
+                  >
+                    ראה הכל
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
                   <span className="text-sm text-slate-600">
                     מציג {Math.min(startCallsIndex + 1, totalCallsItems)} עד {Math.min(endCallsIndex, totalCallsItems)} מתוך {totalCallsItems} שיחות
                   </span>
@@ -1211,6 +1218,9 @@ export default function ManagerDashboardContent() {
                   <table className="min-w-full divide-y divide-slate-200">
                     <thead className="bg-gradient-to-r from-brand-primary/10 to-brand-secondary/10">
                       <tr>
+                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-neutral-600 uppercase tracking-wider">
+                          ניתוח
+                        </th>
                         <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-neutral-600 uppercase tracking-wider">
                           תאריך
                         </th>
@@ -1241,6 +1251,22 @@ export default function ManagerDashboardContent() {
                           className="hover:bg-slate-50 transition-colors duration-200"
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
+                          {/* Analysis Column */}
+                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap text-center">
+                            {call.processing_status === 'completed' ? (
+                              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-brand-success to-brand-success-dark">
+                                <CheckCircle className="w-4 h-4 text-white" />
+                              </div>
+                            ) : call.processing_status === 'pending' ? (
+                              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-brand-warning to-brand-warning-dark">
+                                <Clock className="w-4 h-4 text-white" />
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-red-600">
+                                <AlertTriangle className="w-4 h-4 text-white" />
+                              </div>
+                            )}
+                          </td>
                           <td className="px-3 lg:px-4 py-4 whitespace-nowrap text-sm text-slate-800">
                             <div className="space-y-1">
                               <div className="font-medium text-xs lg:text-sm">{formatDate(call.created_at)}</div>
