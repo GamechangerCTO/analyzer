@@ -185,7 +185,7 @@ export default function LegalTermsPage() {
               {/* Last Updated */}
               <div className="text-center mt-8 pt-6 border-t border-neutral-200">
                 <p className="text-sm text-neutral-500">
-                  עדכון אחרון: דצמבר 2024
+                  עדכון אחרון: יולי 2025
                 </p>
               </div>
 
