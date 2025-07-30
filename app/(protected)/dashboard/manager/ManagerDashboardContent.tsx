@@ -844,77 +844,240 @@ export default function ManagerDashboardContent() {
               </div>
             </div>
 
-            {/* Team Members Preview */}
-            <div className="bg-white border-2 border-brand-primary/20 rounded-tl-3xl rounded-br-3xl shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-neutral-200 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-neutral-800">צוות החברה</h2>
-                  <Link 
-                    href="/team"
-                    className="text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors flex items-center gap-1"
-                  >
-                    ראה הכל
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
+            {/* Team Calls in Bento Grid */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-tl-xl rounded-br-xl bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white shadow-lg">
+                    <Phone className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-neutral-800">שיחות אחרונות</h2>
+                    <p className="text-sm text-neutral-600">ניתוח מהיר של השיחות האחרונות</p>
+                  </div>
+                </div>
+                <Link 
+                  href="/dashboard/manager/all-calls"
+                  className="text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors flex items-center gap-1"
+                >
+                  ראה הכל
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+
+              {/* Compact Filters Section */}
+              <div className="bg-white border border-neutral-200 rounded-xl shadow-sm p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {/* Search Input */}
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="חפש שיחה..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-white text-neutral-800 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-sm"
+                    />
+                  </div>
+
+                  {/* Agent Filter */}
+                  <div>
+                    <select
+                      value={agentFilter}
+                      onChange={(e) => setAgentFilter(e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-white text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-sm"
+                    >
+                      <option value="all">כל הנציגים</option>
+                      {agents.filter(agent => agent.role === 'agent').map(agent => (
+                        <option key={agent.id} value={agent.id}>{agent.fullName}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Score Filter */}
+                  <div>
+                    <select
+                      value={scoreFilter}
+                      onChange={(e) => setScoreFilter(e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-white text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-sm"
+                    >
+                      <option value="all">כל הציונים</option>
+                      <option value="high">גבוה (8+)</option>
+                      <option value="medium">בינוני (6-8)</option>
+                      <option value="low">נמוך (מתחת ל-6)</option>
+                      <option value="none">ללא ציון</option>
+                    </select>
+                  </div>
+
+                  {/* Clear Filters */}
+                  <div className="flex items-end">
+                    <button
+                      onClick={() => {
+                        setSearchTerm('');
+                        setCallTypeFilter('all');
+                        setAgentFilter('all');
+                        setScoreFilter('all');
+                        setRedFlagFilter('all');
+                        setStatusFilter('all');
+                      }}
+                      className="w-full px-3 py-2 text-sm bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-all duration-200 border border-neutral-300"
+                    >
+                      נקה
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="p-6">
-                {agents.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 rounded-tl-2xl rounded-br-2xl flex items-center justify-center mx-auto mb-4">
-                      <Users className="w-8 h-8 text-neutral-500" />
+              {/* Compact Calls Table */}
+              <div className="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden">
+                {/* Table Header */}
+                <div className="px-4 py-3 border-b border-neutral-200 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-neutral-600">
+                      {filteredCalls.length} שיחות • לחץ על שיחה לצפייה בניתוח
+                    </span>
+                    <div className="flex items-center gap-2 text-xs text-neutral-500">
+                      <div className="w-2 h-2 bg-brand-success rounded-full"></div>
+                      <span>מנותח</span>
+                      <div className="w-2 h-2 bg-brand-warning rounded-full"></div>
+                      <span>בתהליך</span>
                     </div>
-                    <h3 className="text-lg font-semibold text-neutral-700 mb-2">אין עדיין נציגים</h3>
-                    <p className="text-neutral-500 mb-6">התחל לבנות את הצוות שלך</p>
-                    <Link 
-                      href="/team/add-agent" 
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-brand-primary to-brand-primary-light text-white rounded-tl-xl rounded-br-xl hover:from-brand-primary-dark hover:to-brand-primary transition-all duration-300 font-medium shadow-lg"
-                    >
-                      <UserPlus className="w-5 h-5" />
-                      <span>הוסף נציג ראשון</span>
-                    </Link>
+                  </div>
+                </div>
+
+                {/* Table Content */}
+                {filteredCalls.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 bg-gradient-to-br from-slate-200 to-indigo-200 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <Phone className="w-6 h-6 text-slate-600" />
+                    </div>
+                    <h3 className="text-base font-semibold text-slate-700 mb-1">
+                      {allCalls.length === 0 ? 'אין עדיין שיחות' : 'לא נמצאו שיחות מתאימות'}
+                    </h3>
+                    <p className="text-slate-500 text-sm">
+                      {allCalls.length === 0 
+                        ? 'השיחות יופיעו כאן לאחר שהנציגים יעלו שיחות' 
+                        : 'נסה לשנות את הסינונים או החיפוש'}
+                    </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {agents.slice(0, 5).map((agent, index) => (
-                      <div 
-                        key={agent.id} 
-                        className="flex items-center justify-between p-4 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5 border border-neutral-200/50 rounded-tl-xl rounded-br-xl hover:from-brand-primary/10 hover:to-brand-secondary/10 transition-all duration-300"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white font-bold shadow-lg">
-                            {agent.fullName?.charAt(0) || '?'}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-neutral-800">{agent.fullName}</div>
-                            <div className="text-sm text-neutral-600 flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-neutral-400 to-neutral-600 flex items-center justify-center text-white text-xs">
-                                {getRoleIcon(agent.role)}
+                  <>
+                    {/* Compact Card List */}
+                    <div className="divide-y divide-neutral-100">
+                      {filteredCalls.slice(0, 8).map((call, index) => (
+                        <div 
+                          key={call.id}
+                          onClick={() => {
+                            if (call.processing_status === 'completed') {
+                              window.location.href = `/call/${call.id}`;
+                            }
+                          }}
+                          className={`p-4 hover:bg-neutral-50 transition-all duration-200 ${
+                            call.processing_status === 'completed' 
+                              ? 'cursor-pointer' 
+                              : 'cursor-default opacity-75'
+                          }`}
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          <div className="flex items-center justify-between">
+                            {/* Left side - Main info */}
+                            <div className="flex items-center gap-3 flex-1">
+                              {/* Status indicator */}
+                              <div className="flex-shrink-0">
+                                {call.processing_status === 'completed' ? (
+                                  <div className="w-3 h-3 bg-brand-success rounded-full"></div>
+                                ) : call.processing_status === 'pending' ? (
+                                  <div className="w-3 h-3 bg-brand-warning rounded-full"></div>
+                                ) : (
+                                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                                )}
                               </div>
-                              {getRoleName(agent.role)}
+
+                              {/* Agent */}
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                  {call.agent_name?.charAt(0) || '?'}
+                                </div>
+                                <span className="text-sm font-medium text-neutral-800 truncate">
+                                  {call.agent_name}
+                                </span>
+                              </div>
+
+                              {/* Customer */}
+                              <div className="hidden sm:block text-sm text-neutral-600 truncate min-w-0 max-w-[120px]">
+                                {call.customer_name || 'לקוח ללא שם'}
+                              </div>
+
+                              {/* Call type - mobile only */}
+                              <div className="sm:hidden text-xs text-neutral-500 truncate">
+                                {getCallTypeName(call.call_type)}
+                              </div>
+                            </div>
+
+                            {/* Right side - Score and date */}
+                            <div className="flex items-center gap-4 flex-shrink-0">
+                              {/* Score */}
+                              <div className="text-center">
+                                {call.overall_score ? (
+                                  <div className={`text-lg font-bold ${
+                                    call.overall_score >= 8 ? 'text-brand-success' :
+                                    call.overall_score >= 6 ? 'text-brand-warning' : 'text-red-600'
+                                  }`}>
+                                    {call.overall_score.toFixed(1)}
+                                  </div>
+                                ) : (
+                                  <div className="text-neutral-400 text-sm">-</div>
+                                )}
+                              </div>
+
+                              {/* Date */}
+                              <div className="text-right">
+                                <div className="text-xs text-neutral-500">
+                                  {formatDate(call.created_at)}
+                                </div>
+                                {call.red_flag && (
+                                  <AlertTriangle className="w-4 h-4 text-red-500 mt-1 ml-auto" />
+                                )}
+                              </div>
+
+                              {/* Action button */}
+                              {call.processing_status === 'completed' && (
+                                <Link 
+                                  href={`/call/${call.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-brand-primary to-brand-primary-light hover:from-brand-primary-dark hover:to-brand-primary text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md text-xs font-medium"
+                                >
+                                  <span>צפה</span>
+                                  <ArrowRight className="w-3 h-3" />
+                                </Link>
+                              )}
                             </div>
                           </div>
+
+                          {/* Mobile additional info */}
+                          <div className="sm:hidden mt-2 flex items-center gap-4 text-xs text-neutral-500">
+                            <span>{call.customer_name || 'לקוח ללא שם'}</span>
+                            <span>•</span>
+                            <span>{getCallTypeName(call.call_type)}</span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm font-semibold text-neutral-800">{agent.totalCalls} שיחות</div>
-                          <div className="text-xs">{getActivityBadge(agent.activityStatus)}</div>
+                      ))}
+                    </div>
+
+                    {/* Show more button if there are more calls */}
+                    {filteredCalls.length > 8 && (
+                      <div className="px-4 py-3 border-t border-neutral-100 bg-neutral-50">
+                        <div className="text-center">
+                          <Link 
+                            href="/dashboard/manager/all-calls"
+                            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors"
+                          >
+                            ראה עוד {filteredCalls.length - 8} שיחות
+                            <ArrowRight className="w-4 h-4" />
+                          </Link>
                         </div>
                       </div>
-                    ))}
-                    
-                                        {agents.length > 5 && (
-                      <div className="text-center pt-4 border-t border-neutral-200">
-                        <Link 
-                          href="/team"
-                          className="text-sm text-brand-primary hover:text-brand-primary-dark font-medium"
-                        >
-                          +{agents.length - 5} נציגים נוספים
-                        </Link>
-              </div>
-            )}
-                  </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -1044,244 +1207,81 @@ export default function ManagerDashboardContent() {
           </div>
         )}
 
-                {/* Compact Team Calls Table */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+        {/* Team Members Section - Moved Below */}
+        <div className="space-y-6">
           <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-tl-xl rounded-br-xl bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white shadow-lg">
-                <Phone className="w-5 h-5" />
-      </div>
+            <div className="w-12 h-12 rounded-tl-2xl rounded-br-2xl bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white shadow-lg">
+              <Users className="w-6 h-6" />
+            </div>
             <div>
-                <h2 className="text-xl font-bold text-neutral-800">שיחות אחרונות</h2>
-                <p className="text-sm text-neutral-600">ניתוח מהיר של השיחות האחרונות</p>
-            </div>
-            </div>
-            <Link 
-              href="/dashboard/manager/all-calls"
-              className="text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors flex items-center gap-1"
-            >
-              ראה הכל
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          {/* Compact Filters Section */}
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-sm p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {/* Search Input */}
-              <div>
-                <input
-                  type="text"
-                  placeholder="חפש שיחה..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-white text-neutral-800 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-sm"
-                />
-              </div>
-
-              {/* Agent Filter */}
-              <div>
-                <select
-                  value={agentFilter}
-                  onChange={(e) => setAgentFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-white text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-sm"
-                >
-                  <option value="all">כל הנציגים</option>
-                  {agents.filter(agent => agent.role === 'agent').map(agent => (
-                    <option key={agent.id} value={agent.id}>{agent.fullName}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Score Filter */}
-              <div>
-                <select
-                  value={scoreFilter}
-                  onChange={(e) => setScoreFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-white text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary text-sm"
-                >
-                  <option value="all">כל הציונים</option>
-                  <option value="high">גבוה (8+)</option>
-                  <option value="medium">בינוני (6-8)</option>
-                  <option value="low">נמוך (מתחת ל-6)</option>
-                  <option value="none">ללא ציון</option>
-                </select>
-              </div>
-
-              {/* Clear Filters */}
-              <div className="flex items-end">
-                <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setCallTypeFilter('all');
-                    setAgentFilter('all');
-                    setScoreFilter('all');
-                    setRedFlagFilter('all');
-                    setStatusFilter('all');
-                  }}
-                  className="w-full px-3 py-2 text-sm bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-all duration-200 border border-neutral-300"
-                >
-                  נקה
-                </button>
-              </div>
+              <h2 className="text-2xl font-bold text-neutral-800">צוות החברה</h2>
+              <p className="text-neutral-600">רשימת כל חברי הצוות והביצועים שלהם</p>
             </div>
           </div>
 
-          {/* Compact Calls Table */}
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden">
-            {/* Table Header */}
-            <div className="px-4 py-3 border-b border-neutral-200 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5">
+          <div className="bg-white border-2 border-brand-primary/20 rounded-tl-3xl rounded-br-3xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-neutral-200 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-neutral-600">
-                  {filteredCalls.length} שיחות • לחץ על שיחה לצפייה בניתוח
-                  </span>
-                <div className="flex items-center gap-2 text-xs text-neutral-500">
-                  <div className="w-2 h-2 bg-brand-success rounded-full"></div>
-                  <span>מנותח</span>
-                  <div className="w-2 h-2 bg-brand-warning rounded-full"></div>
-                  <span>בתהליך</span>
-                </div>
+                <h3 className="text-xl font-bold text-neutral-800">רשימת הצוות</h3>
+                <Link 
+                  href="/team"
+                  className="text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors flex items-center gap-1"
+                >
+                  ניהול צוות
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
             </div>
 
-            {/* Table Content */}
-            {filteredCalls.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gradient-to-br from-slate-200 to-indigo-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Phone className="w-8 h-8 text-slate-600" />
+            <div className="p-6">
+              {agents.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 rounded-tl-2xl rounded-br-2xl flex items-center justify-center mx-auto mb-4">
+                    <Users className="w-8 h-8 text-neutral-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-neutral-700 mb-2">אין עדיין נציגים</h3>
+                  <p className="text-neutral-500 mb-6">התחל לבנות את הצוות שלך</p>
+                  <Link 
+                    href="/team/add-agent" 
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-brand-primary to-brand-primary-light text-white rounded-tl-xl rounded-br-xl hover:from-brand-primary-dark hover:to-brand-primary transition-all duration-300 font-medium shadow-lg"
+                  >
+                    <UserPlus className="w-5 h-5" />
+                    <span>הוסף נציג ראשון</span>
+                  </Link>
                 </div>
-                <h3 className="text-lg font-semibold text-slate-700 mb-2">
-                  {allCalls.length === 0 ? 'אין עדיין שיחות' : 'לא נמצאו שיחות מתאימות'}
-                </h3>
-                <p className="text-slate-500 mb-6">
-                  {allCalls.length === 0 
-                    ? 'השיחות יופיעו כאן לאחר שהנציגים יעלו שיחות' 
-                    : 'נסה לשנות את הסינונים או החיפוש'}
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Compact Card List */}
-                <div className="divide-y divide-neutral-100">
-                  {filteredCalls.slice(0, 8).map((call, index) => (
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {agents.map((agent, index) => (
                     <div 
-                      key={call.id}
-                      onClick={() => {
-                        if (call.processing_status === 'completed') {
-                          window.location.href = `/call/${call.id}`;
-                        }
-                      }}
-                      className={`p-4 hover:bg-neutral-50 transition-all duration-200 ${
-                        call.processing_status === 'completed' 
-                          ? 'cursor-pointer' 
-                          : 'cursor-default opacity-75'
-                      }`}
+                      key={agent.id} 
+                      className="flex items-center justify-between p-4 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5 border border-neutral-200/50 rounded-tl-xl rounded-br-xl hover:from-brand-primary/10 hover:to-brand-secondary/10 transition-all duration-300"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
-                      <div className="flex items-center justify-between">
-                        {/* Left side - Main info */}
-                        <div className="flex items-center gap-3 flex-1">
-                          {/* Status indicator */}
-                          <div className="flex-shrink-0">
-                            {call.processing_status === 'completed' ? (
-                              <div className="w-3 h-3 bg-brand-success rounded-full"></div>
-                            ) : call.processing_status === 'pending' ? (
-                              <div className="w-3 h-3 bg-brand-warning rounded-full"></div>
-                            ) : (
-                              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                            )}
-                          </div>
-
-                          {/* Agent */}
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                              {call.agent_name?.charAt(0) || '?'}
-                            </div>
-                            <span className="text-sm font-medium text-neutral-800 truncate">
-                              {call.agent_name}
-                            </span>
-                          </div>
-
-                          {/* Customer */}
-                          <div className="hidden sm:block text-sm text-neutral-600 truncate min-w-0 max-w-[120px]">
-                            {call.customer_name || 'לקוח ללא שם'}
-                          </div>
-
-                          {/* Call type - mobile only */}
-                          <div className="sm:hidden text-xs text-neutral-500 truncate">
-                            {getCallTypeName(call.call_type)}
-                          </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white font-bold shadow-lg">
+                          {agent.fullName?.charAt(0) || '?'}
                         </div>
-
-                        {/* Right side - Score and date */}
-                        <div className="flex items-center gap-4 flex-shrink-0">
-                          {/* Score */}
-                          <div className="text-center">
-                            {call.overall_score ? (
-                              <div className={`text-lg font-bold ${
-                                call.overall_score >= 8 ? 'text-brand-success' :
-                                call.overall_score >= 6 ? 'text-brand-warning' : 'text-red-600'
-                              }`}>
-                                {call.overall_score.toFixed(1)}
-                              </div>
-                            ) : (
-                              <div className="text-neutral-400 text-sm">-</div>
-                            )}
-                          </div>
-
-                          {/* Date */}
-                          <div className="text-right">
-                            <div className="text-xs text-neutral-500">
-                              {formatDate(call.created_at)}
+                        <div>
+                          <div className="font-semibold text-neutral-800">{agent.fullName}</div>
+                          <div className="text-sm text-neutral-600 flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-neutral-400 to-neutral-600 flex items-center justify-center text-white text-xs">
+                              {getRoleIcon(agent.role)}
                             </div>
-                            {call.red_flag && (
-                              <AlertTriangle className="w-4 h-4 text-red-500 mt-1 ml-auto" />
-                            )}
+                            {getRoleName(agent.role)}
                           </div>
-
-                          {/* Action button */}
-                          {call.processing_status === 'completed' && (
-                            <Link 
-                              href={`/call/${call.id}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-brand-primary to-brand-primary-light hover:from-brand-primary-dark hover:to-brand-primary text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md text-xs font-medium"
-                            >
-                              <span>צפה</span>
-                              <ArrowRight className="w-3 h-3" />
-                            </Link>
-                          )}
                         </div>
                       </div>
-
-                      {/* Mobile additional info */}
-                      <div className="sm:hidden mt-2 flex items-center gap-4 text-xs text-neutral-500">
-                        <span>{call.customer_name || 'לקוח ללא שם'}</span>
-                        <span>•</span>
-                        <span>{getCallTypeName(call.call_type)}</span>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-neutral-800">{agent.totalCalls} שיחות</div>
                       </div>
                     </div>
                   ))}
                 </div>
-
-                {/* Show more button if there are more calls */}
-                {filteredCalls.length > 8 && (
-                  <div className="px-4 py-3 border-t border-neutral-100 bg-neutral-50">
-                    <div className="text-center">
-                      <Link 
-                        href="/dashboard/manager/all-calls"
-                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors"
-                      >
-                        ראה עוד {filteredCalls.length - 8} שיחות
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+              )}
+            </div>
           </div>
         </div>
-
+                
       </div>
     </div>
   );
