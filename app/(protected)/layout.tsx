@@ -145,12 +145,12 @@ export default async function ProtectedLayout({
                 מדיניות פרטיות
               </a>
               <a 
-                href="/terms-of-service" 
+                href="/legal-terms" 
                 className="text-glacier-neutral-500 hover:text-glacier-primary-600 underline decoration-glacier-accent decoration-2 underline-offset-4 transition-colors duration-200 coachee-interactive"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                תנאי שירות
+                תקנון משפטי
               </a>
             </div>
             

@@ -5,7 +5,7 @@ export async function middleware(request: NextRequest) {
   const res = NextResponse.next()
 
   // נתיבים פתוחים (אין צורך בהתחברות)
-  const publicPaths = ['/login', '/signup', '/signup-complete', '/api', '/not-approved', '/not-found', '/privacy-policy', '/terms-of-service', '/subscription-setup', '/test-auth']
+  const publicPaths = ['/login', '/signup', '/signup-complete', '/api', '/not-approved', '/not-found', '/privacy-policy', '/legal-terms', '/subscription-setup', '/test-auth']
   
   // בדיקה האם הנתיב הנוכחי מאושר גם ללא התחברות
   const isPublicPath = publicPaths.some((path) => request.nextUrl.pathname.startsWith(path))
