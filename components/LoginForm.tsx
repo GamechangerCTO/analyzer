@@ -273,8 +273,8 @@ export default function LoginForm() {
     <div className="space-y-6">
       {/* הודעת סטטוס */}
       {authLoading && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-brand-primary-light/10 to-brand-secondary-light/20 border border-brand-primary-light/20 animate-in slide-in-from-top duration-500">
-          <div className="flex items-center gap-3 text-brand-primary-dark">
+        <div className="bg-white border-2 border-brand-primary/20 rounded-tl-2xl rounded-br-2xl p-4 shadow-sm animate-in slide-in-from-top duration-500">
+          <div className="flex items-center gap-3 text-brand-primary">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span className="font-medium">{authStatus}</span>
           </div>
@@ -283,8 +283,8 @@ export default function LoginForm() {
 
       {/* הודעת שגיאה */}
       {authError && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-red-50 to-red-100 border border-red-200/50 animate-in slide-in-from-top duration-500">
-          <div className="flex items-center gap-3 text-red-700">
+        <div className="bg-white border-2 border-brand-warning/30 rounded-tr-2xl rounded-bl-2xl p-4 shadow-sm animate-in slide-in-from-top duration-500">
+          <div className="flex items-center gap-3 text-brand-warning">
             <AlertCircle className="w-5 h-5" />
             <span className="font-medium">{authError}</span>
           </div>
@@ -293,9 +293,9 @@ export default function LoginForm() {
 
       {/* בורר תפקידים לסופר אדמין */}
       {showRoleSelector && (
-        <div className="space-y-6 animate-in slide-in-from-bottom duration-500">
+        <div className="bg-white border-2 border-brand-primary/20 rounded-tl-3xl rounded-br-3xl p-6 shadow-lg space-y-6 animate-in slide-in-from-bottom duration-500">
           <div className="text-center space-y-2">
-            <h3 className="text-xl font-bold text-neutral-900">בחר תפקיד להתחברות</h3>
+            <h3 className="text-2xl font-bold text-neutral-900">בחר תפקיד להתחברות</h3>
             <p className="text-neutral-600">בחר את התפקיד שבו ברצונך להתחבר למערכת</p>
           </div>
           
@@ -306,10 +306,10 @@ export default function LoginForm() {
                 <button
                   key={role.value}
                   onClick={() => setSelectedRole(role.value)}
-                  className={`w-full p-4 rounded-2xl border-2 transition-all duration-300 group hover:scale-[1.02] ${
+                  className={`w-full p-4 rounded-tl-2xl rounded-br-2xl border-2 transition-all duration-300 group hover:scale-[1.02] ${
                     selectedRole === role.value
-                      ? 'border-brand-primary bg-gradient-to-r from-brand-primary-light/10 to-brand-secondary-light/20 shadow-lg shadow-brand-primary/20'
-                      : 'border-neutral-200 bg-white hover:border-brand-primary-light hover:bg-brand-primary-light/5'
+                      ? 'border-brand-primary bg-gradient-to-r from-brand-primary/5 to-brand-secondary/10 shadow-lg shadow-brand-primary/10'
+                      : 'border-neutral-200 bg-white hover:border-brand-primary hover:bg-brand-primary/5'
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -341,7 +341,7 @@ export default function LoginForm() {
           
           <button
             onClick={loginWithRole}
-            className="w-full py-4 px-6 bg-gradient-to-r from-brand-primary to-brand-primary-light text-white rounded-2xl font-bold shadow-lg shadow-brand-primary/25 hover:shadow-xl hover:shadow-brand-primary/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full py-4 px-6 bg-gradient-to-r from-brand-primary to-brand-secondary text-white rounded-tr-2xl rounded-bl-2xl font-bold shadow-lg shadow-brand-primary/25 hover:shadow-xl hover:shadow-brand-primary/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
           >
             המשך עם התפקיד הנבחר
           </button>
@@ -352,10 +352,10 @@ export default function LoginForm() {
       {!showRoleSelector && (
         <div className="space-y-6">
           {/* כפתורי החלפה בין התחברות והרשמה */}
-          <div className="flex p-1 bg-neutral-100 rounded-2xl shadow-inner">
+          <div className="flex p-1 bg-neutral-100 rounded-tl-2xl rounded-br-2xl shadow-inner">
             <button
               onClick={() => setView('sign_in')}
-              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
+              className={`flex-1 py-3 px-4 rounded-tl-xl rounded-br-xl text-sm font-bold transition-all duration-300 ${
                 view === 'sign_in' 
                   ? 'bg-white text-brand-primary shadow-lg shadow-brand-primary/10' 
                   : 'text-neutral-600 hover:text-brand-primary'
@@ -365,7 +365,7 @@ export default function LoginForm() {
             </button>
             <button
               onClick={() => setView('sign_up')}
-              className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 ${
+              className={`flex-1 py-3 px-4 rounded-tr-xl rounded-bl-xl text-sm font-bold transition-all duration-300 ${
                 view === 'sign_up' 
                   ? 'bg-white text-brand-primary shadow-lg shadow-brand-primary/10' 
                   : 'text-neutral-600 hover:text-brand-primary'
