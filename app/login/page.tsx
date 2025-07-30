@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient, clearAuthStorage } from '@/lib/supabase/client'
 import LoginForm from '@/components/LoginForm'
 import { Sparkles, Building } from 'lucide-react'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -70,7 +71,13 @@ export default function LoginPage() {
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand-secondary rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300"></div>
               <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-brand-accent rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300"></div>
               
-              <Building className="w-10 h-10 text-white transition-transform duration-300 group-hover:scale-110 relative z-10" />
+              <Image
+                src="/logo.png"
+                alt="Coachee Logo"
+                width={40}
+                height={40}
+                className="transition-transform duration-300 group-hover:scale-110 relative z-10"
+              />
             </div>
             
             <div className="space-y-2">

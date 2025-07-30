@@ -30,6 +30,14 @@ export const metadata: Metadata = {
   keywords: 'מכירות, אימון, ניתוח שיחות, שירות לקוחות, בינה מלאכותית, פלטפורמת אימון, coachee',
   authors: [{ name: 'Coachee Team' }],
   viewport: 'width=device-width, initial-scale=1',
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/logo.png',
+  },
 }
 
 export default function RootLayout({

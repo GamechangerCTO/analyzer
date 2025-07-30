@@ -4,6 +4,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import Sidebar from '@/components/Sidebar'
 import React from 'react'
 import { Building } from 'lucide-react'
+import Image from 'next/image'
 
 export default async function ProtectedLayout({
   children,
@@ -155,7 +156,12 @@ export default async function ProtectedLayout({
             
             <div className="flex justify-center items-center space-x-4 mb-4">
               <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-glacier-primary-500 to-glacier-accent-500 flex items-center justify-center shadow-glacier-soft">
-                <Building className="w-5 h-5 text-white" />
+                <Image
+                  src="/logo.png"
+                  alt="Coachee Logo"
+                  width={20}
+                  height={20}
+                />
               </div>
               <span className="text-glacier-neutral-800 font-semibold">Coachee</span>
             </div>

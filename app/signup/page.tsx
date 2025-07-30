@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { 
   Building, 
   Users, 
@@ -291,7 +292,13 @@ export default function SignupPage() {
         {currentStep === 1 && (
           <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
             <div className="text-center mb-6">
-              <Building className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+              <Image
+                src="/logo.png"
+                alt="Coachee Logo"
+                width={48}
+                height={48}
+                className="mx-auto mb-4"
+              />
               <h2 className="text-2xl font-bold text-gray-800">פרטי החברה</h2>
               <p className="text-gray-600">בואו נכיר - מלאו את הפרטים הבסיסיים</p>
             </div>

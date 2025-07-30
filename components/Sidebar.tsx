@@ -118,7 +118,13 @@ export default function Sidebar({ user, userData }: SidebarProps) {
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-glacier-accent rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300"></div>
             <div className="absolute -bottom-1 -left-1 w-1 h-1 bg-glacier-primary rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300 delay-150"></div>
             
-            <Building className="w-6 h-6 text-white transition-transform duration-300 group-hover:scale-110" />
+            <Image
+              src="/logo.png"
+              alt="Coachee Logo"
+              width={24}
+              height={24}
+              className="transition-transform duration-300 group-hover:scale-110"
+            />
           </div>
           <div className="flex flex-col relative z-10">
             <div className="text-xl font-bold text-neutral-900 group-hover:text-glacier-primary transition-colors duration-300">
@@ -313,7 +319,13 @@ export default function Sidebar({ user, userData }: SidebarProps) {
               <div className="absolute -top-1 -right-1 w-2 h-2 bg-glacier-accent rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300"></div>
               <div className="absolute -bottom-1 -left-1 w-1 h-1 bg-glacier-primary rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300"></div>
               
-              <Building className="w-5 h-5 text-white transition-transform duration-300 group-hover:scale-110 relative z-10" />
+              <Image
+                src="/logo.png"
+                alt="Coachee Logo"
+                width={20}
+                height={20}
+                className="transition-transform duration-300 group-hover:scale-110 relative z-10"
+              />
             </div>
             <div className="flex flex-col relative z-10">
               <span className="text-lg font-bold text-neutral-900 group-hover:text-glacier-primary transition-colors duration-300">Coachee</span>
