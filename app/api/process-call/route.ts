@@ -226,8 +226,8 @@ export async function POST(request: Request) {
     let audioDurationSeconds = callData.audio_duration_seconds;
     
     // אם אין זמן שמור או שהוא לא סביר, נסה לחשב מחדש
-    if (!audioDurationSeconds || audioDurationSeconds <= 0 || audioDurationSeconds > 7200) {
-      try {
+    try {
+      if (!audioDurationSeconds || audioDurationSeconds <= 0 || audioDurationSeconds > 7200) {
         await addCallLog(call_id, '🕐 זמן שגוי או חסר, מחשב מחדש מהקובץ');
         const audioResponse = await fetch(signedUrl);
         if (audioResponse.ok) {
@@ -256,10 +256,15 @@ export async function POST(request: Request) {
             
           await addCallLog(call_id, '💾 משך האודיו עודכן במסד הנתונים', { duration_seconds: audioDurationSeconds });
         }
-      } catch (error) {
-        await addCallLog(call_id, '❌ שגיאה בחישוב זמן, משתמש בברירת מחדל', { error: error instanceof Error ? error.message : 'unknown' });
-        audioDurationSeconds = 60; // ברירת מחדל
       }
+    } catch (error) {
+      await addCallLog(call_id, '❌ שגיאה בחישוב זמן, משתמש בברירת מחדל', { error: error instanceof Error ? error.message : 'unknown' });
+      audioDurationSeconds = 60; // ברירת מחדל
+    }
+    
+    if (!audioDurationSeconds || audioDurationSeconds <= 0 || audioDurationSeconds > 7200) {
+      // If we still don't have a duration, use default
+      audioDurationSeconds = 60;
     } else {
       await addCallLog(call_id, '✅ משתמש בזמן אודיו שמור', { 
         duration_seconds: audioDurationSeconds,
@@ -270,94 +275,94 @@ export async function POST(request: Request) {
     // 🎯 בדיקת מכסת דקות לפני עיבוד
     await addCallLog(call_id, '🔍 בודק מכסת דקות זמינה');
     const callDurationMinutes = Math.ceil(audioDurationSeconds / 60); // עיגול כלפי מעלה
+    
+    try {
+      // בדיקה שיש company_id
+      if (!callData.company_id) {
+        await addCallLog(call_id, '❌ חסר מזהה חברה', { company_id: callData.company_id });
         
-        // בדיקה שיש company_id
-        if (!callData.company_id) {
-          await addCallLog(call_id, '❌ חסר מזהה חברה', { company_id: callData.company_id });
+        await supabase
+          .from('calls')
+          .update({
+            processing_status: 'error',
+            error_message: 'חסר מזהה חברה - לא ניתן לבדוק מכסה'
+          })
+          .eq('id', call_id);
           
-          await supabase
-            .from('calls')
-            .update({
-              processing_status: 'error',
-              error_message: 'חסר מזהה חברה - לא ניתן לבדוק מכסה'
-            })
-            .eq('id', call_id);
-            
-          return NextResponse.json(
-            { error: 'חסר מזהה חברה', details: 'לא ניתן לבדוק מכסה' },
-            { status: 400 }
-          );
-        }
-        
-        // בדיקה אם החברה יכולה לעבד שיחה בהיקף הנדרש
-        const { data: canProcessData, error: canProcessError } = await supabase
-          .rpc('can_process_call_duration', { 
-            p_company_id: callData.company_id,
-            p_estimated_minutes: callDurationMinutes
-          });
-          
-        if (canProcessError) {
-          await addCallLog(call_id, '❌ שגיאה בבדיקת מכסת דקות', { 
-            error: canProcessError.message,
-            duration_minutes: callDurationMinutes
-          });
-          
-          await supabase
-            .from('calls')
-            .update({
-              processing_status: 'error',
-              error_message: `שגיאה בבדיקת מכסת דקות: ${canProcessError.message}`
-            })
-            .eq('id', call_id);
-            
-          return NextResponse.json(
-            { error: 'שגיאה בבדיקת מכסת דקות', details: canProcessError.message },
-            { status: 500 }
-          );
-        }
-        
-        if (!canProcessData) {
-          await addCallLog(call_id, '❌ אין מספיק דקות זמינות לעיבוד השיחה', { 
-            duration_minutes: callDurationMinutes,
-            company_id: callData.company_id
-          });
-          
-          // קבלת מידע מכסה מפורט להודעת שגיאה
-          const { data: quotaInfo } = await supabase
-            .rpc('get_company_minutes_quota', { p_company_id: callData.company_id });
-            
-          const quota = quotaInfo?.[0];
-          const errorMessage = quota 
-            ? `אין מספיק דקות זמינות. השיחה דורשת ${callDurationMinutes} דקות, אך זמינות רק ${quota.available_minutes} דקות. (${quota.used_minutes}/${quota.total_minutes} דקות בשימוש)`
-            : `אין מספיק דקות זמינות לעיבוד שיחה של ${callDurationMinutes} דקות`;
-          
-          await supabase
-            .from('calls')
-            .update({
-              processing_status: 'quota_exceeded',
-              error_message: errorMessage
-            })
-            .eq('id', call_id);
-            
-          return NextResponse.json(
-            { 
-              error: 'חרגתם ממכסת הדקות', 
-              details: errorMessage,
-              quota_info: quota 
-            },
-            { status: 402 } // Payment Required
-          );
-        }
-        
-        await addCallLog(call_id, '✅ מכסת דקות מאושרת', { 
-          duration_minutes: callDurationMinutes,
-          quota_status: 'approved'
+        return NextResponse.json(
+          { error: 'חסר מזהה חברה', details: 'לא ניתן לבדוק מכסה' },
+          { status: 400 }
+        );
+      }
+      
+      // בדיקה אם החברה יכולה לעבד שיחה בהיקף הנדרש
+      const { data: canProcessData, error: canProcessError } = await supabase
+        .rpc('can_process_call_duration', { 
+          p_company_id: callData.company_id,
+          p_estimated_minutes: callDurationMinutes
         });
         
+      if (canProcessError) {
+        await addCallLog(call_id, '❌ שגיאה בבדיקת מכסת דקות', { 
+          error: canProcessError.message,
+          duration_minutes: callDurationMinutes
+        });
+        
+        await supabase
+          .from('calls')
+          .update({
+            processing_status: 'error',
+            error_message: `שגיאה בבדיקת מכסת דקות: ${canProcessError.message}`
+          })
+          .eq('id', call_id);
+          
+        return NextResponse.json(
+          { error: 'שגיאה בבדיקת מכסת דקות', details: canProcessError.message },
+          { status: 500 }
+        );
       }
-    } catch (durationError) {
-      await addCallLog(call_id, '⚠️ שגיאה בחישוב משך האודיו - ממשיך בניתוח', { 
-        error: durationError instanceof Error ? durationError.message : 'שגיאה לא ידועה'
+      
+      if (!canProcessData) {
+        await addCallLog(call_id, '❌ אין מספיק דקות זמינות לעיבוד השיחה', { 
+          duration_minutes: callDurationMinutes,
+          company_id: callData.company_id
+        });
+        
+        // קבלת מידע מכסה מפורט להודעת שגיאה
+        const { data: quotaInfo } = await supabase
+          .rpc('get_company_minutes_quota', { p_company_id: callData.company_id });
+          
+        const quota = quotaInfo?.[0];
+        const errorMessage = quota 
+          ? `אין מספיק דקות זמינות. השיחה דורשת ${callDurationMinutes} דקות, אך זמינות רק ${quota.available_minutes} דקות. (${quota.used_minutes}/${quota.total_minutes} דקות בשימוש)`
+          : `אין מספיק דקות זמינות לעיבוד שיחה של ${callDurationMinutes} דקות`;
+        
+        await supabase
+          .from('calls')
+          .update({
+            processing_status: 'quota_exceeded',
+            error_message: errorMessage
+          })
+          .eq('id', call_id);
+          
+        return NextResponse.json(
+          { 
+            error: 'חרגתם ממכסת הדקות', 
+            details: errorMessage,
+            quota_info: quota 
+          },
+          { status: 402 } // Payment Required
+        );
+      }
+      
+      await addCallLog(call_id, '✅ מכסת דקות מאושרת', { 
+        duration_minutes: callDurationMinutes,
+        quota_status: 'approved'
+      });
+      
+    } catch (quotaError) {
+      await addCallLog(call_id, '⚠️ שגיאה בבדיקת מכסה - ממשיך בניתוח', { 
+        error: quotaError instanceof Error ? quotaError.message : 'שגיאה לא ידועה'
       });
     }
 
