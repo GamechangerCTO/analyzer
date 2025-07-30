@@ -121,8 +121,8 @@ export default function Sidebar({ user, userData }: SidebarProps) {
             <Image
               src="/logo.png"
               alt="Coachee Logo"
-              width={24}
-              height={24}
+              width={48}
+              height={48}
               className="transition-transform duration-300 group-hover:scale-110"
             />
           </div>

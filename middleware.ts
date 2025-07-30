@@ -14,7 +14,13 @@ export async function middleware(request: NextRequest) {
   const isStaticResource = request.nextUrl.pathname.startsWith('/_next') || 
                             request.nextUrl.pathname.startsWith('/images') || 
                             request.nextUrl.pathname.startsWith('/favicon.ico') ||
-                            request.nextUrl.pathname.startsWith('/avatars')
+                            request.nextUrl.pathname.startsWith('/avatars') ||
+                            request.nextUrl.pathname.startsWith('/logo') ||
+                            request.nextUrl.pathname.endsWith('.png') ||
+                            request.nextUrl.pathname.endsWith('.jpg') ||
+                            request.nextUrl.pathname.endsWith('.jpeg') ||
+                            request.nextUrl.pathname.endsWith('.svg') ||
+                            request.nextUrl.pathname.endsWith('.ico')
   
   // אם הנתיב ציבורי או משאב סטטי, אין צורך בבדיקת התחברות
   if (isPublicPath || isStaticResource) {
