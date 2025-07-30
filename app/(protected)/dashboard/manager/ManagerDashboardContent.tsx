@@ -34,6 +34,8 @@ import {
   Trophy
 } from 'lucide-react';
 
+import TeamInsights from '@/components/TeamInsights';
+
 // Types
 interface ManagerStats {
   totalAgents: number;
@@ -109,11 +111,11 @@ const WelcomeHero: React.FC<WelcomeHeroProps> = ({ managerInfo, companyName }) =
   };
 
   return (
-    <div className="bg-gradient-to-br from-glacier-primary-600 via-glacier-primary-700 to-glacier-accent-600 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg p-8 text-white shadow-xl">
+    <div className="bg-gradient-to-br from-brand-primary via-brand-primary-light to-brand-secondary rounded-tl-3xl rounded-br-3xl p-8 text-white shadow-xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-lg">
-            <div className="w-16 h-16 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-600 flex items-center justify-center text-white font-bold text-2xl">
+          <div className="w-20 h-20 rounded-tl-3xl rounded-br-3xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-lg">
+            <div className="w-16 h-16 rounded-tl-2xl rounded-br-2xl bg-gradient-to-br from-brand-secondary to-brand-secondary-dark flex items-center justify-center text-white font-bold text-2xl">
               {managerInfo?.full_name?.charAt(0) || 'M'}
             </div>
           </div>
@@ -121,20 +123,20 @@ const WelcomeHero: React.FC<WelcomeHeroProps> = ({ managerInfo, companyName }) =
             <h1 className="text-3xl font-bold mb-2">
               {getGreeting()}, {managerInfo?.full_name || 'מנהל'}! 👋
             </h1>
-            <p className="text-glacier-primary-100 text-lg">
+            <p className="text-white/90 text-lg">
               ברוך הבא לדשבורד הניהול של {companyName || 'החברה'}
             </p>
-            <p className="text-glacier-primary-200 text-sm mt-1">
+            <p className="text-white/75 text-sm mt-1">
               עקוב אחר ביצועי הצוות, נהל נציגים וקבל תובנות מתקדמות
             </p>
           </div>
         </div>
         
         <div className="text-center">
-          <div className="w-16 h-16 bg-white/10 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md flex items-center justify-center mx-auto mb-3">
+          <div className="w-16 h-16 bg-white/10 rounded-tr-2xl rounded-bl-2xl flex items-center justify-center mx-auto mb-3">
             <Building2 className="w-8 h-8 text-white" />
           </div>
-          <p className="text-glacier-primary-100 text-sm">דשבורד מנהל</p>
+          <p className="text-white/90 text-sm">דשבורד מנהל</p>
         </div>
       </div>
     </div>
@@ -180,35 +182,35 @@ const BentoKPICard: React.FC<BentoKPICardProps> = ({
     switch (variant) {
       case 'accent':
         return {
-          cardBg: 'bg-gradient-to-br from-glacier-accent-50 to-glacier-accent-100',
-          iconBg: 'bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-500 group-hover:from-glacier-secondary-500 group-hover:to-glacier-secondary-600',
+          cardBg: 'bg-white border-2 border-brand-accent-dark',
+          iconBg: 'bg-gradient-to-br from-brand-secondary to-brand-secondary-dark group-hover:from-brand-secondary-dark group-hover:to-brand-secondary',
           iconColor: 'text-white',
-          textColor: 'text-glacier-secondary-800',
-          subtitleColor: 'text-glacier-secondary-600'
+          textColor: 'text-neutral-800',
+          subtitleColor: 'text-neutral-600'
         };
       case 'success':
         return {
-          cardBg: 'bg-gradient-to-br from-glacier-secondary-50 to-glacier-secondary-100',
-          iconBg: 'bg-gradient-to-br from-glacier-secondary-500 to-glacier-secondary-600 group-hover:from-glacier-secondary-600 group-hover:to-glacier-secondary-700',
+          cardBg: 'bg-white border-2 border-brand-success',
+          iconBg: 'bg-gradient-to-br from-brand-success to-brand-success-dark group-hover:from-brand-success-dark group-hover:to-brand-success',
           iconColor: 'text-white',
-          textColor: 'text-glacier-secondary-800',
-          subtitleColor: 'text-glacier-secondary-600'
+          textColor: 'text-neutral-800',
+          subtitleColor: 'text-neutral-600'
         };
       case 'warning':
         return {
-          cardBg: 'bg-gradient-to-br from-glacier-warning-light to-orange-100',
-          iconBg: 'bg-gradient-to-br from-glacier-warning to-glacier-warning-dark group-hover:from-glacier-warning-dark group-hover:to-orange-600',
+          cardBg: 'bg-white border-2 border-brand-warning',
+          iconBg: 'bg-gradient-to-br from-brand-warning to-brand-warning-dark group-hover:from-brand-warning-dark group-hover:to-brand-warning',
           iconColor: 'text-white',
-          textColor: 'text-glacier-warning-dark',
-          subtitleColor: 'text-orange-700'
+          textColor: 'text-neutral-800',
+          subtitleColor: 'text-neutral-600'
         };
       default:
         return {
-          cardBg: 'bg-gradient-to-br from-glacier-primary-50 to-glacier-primary-100',
-          iconBg: 'bg-gradient-to-br from-glacier-primary-500 to-glacier-primary-600 group-hover:from-glacier-primary-600 group-hover:to-glacier-primary-700',
+          cardBg: 'bg-white border-2 border-brand-primary',
+          iconBg: 'bg-gradient-to-br from-brand-primary to-brand-primary-light group-hover:from-brand-primary-light group-hover:to-brand-primary',
           iconColor: 'text-white',
-          textColor: 'text-glacier-primary-800',
-          subtitleColor: 'text-glacier-primary-600'
+          textColor: 'text-neutral-800',
+          subtitleColor: 'text-neutral-600'
         };
     }
   };
@@ -216,11 +218,11 @@ const BentoKPICard: React.FC<BentoKPICardProps> = ({
   const getBentoRadius = () => {
     switch (size) {
       case 'large':
-        return 'rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg';
+        return 'rounded-tl-3xl rounded-br-3xl';
       case 'small':
-        return 'rounded-tr-3xl rounded-bl-3xl rounded-tl-lg rounded-br-lg';
+        return 'rounded-tr-2xl rounded-bl-2xl';
       default:
-        return 'rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg';
+        return 'rounded-tl-2xl rounded-br-2xl';
     }
   };
 
@@ -241,9 +243,9 @@ const BentoKPICard: React.FC<BentoKPICardProps> = ({
   const variantStyles = getVariantStyles();
 
   return (
-    <div className={`${variantStyles.cardBg} backdrop-blur-md border border-glacier-primary-200 ${getBentoRadius()} shadow-glacier-soft p-6 hover:shadow-lg transition-all duration-300 group cursor-pointer`}>
+    <div className={`${variantStyles.cardBg} ${getBentoRadius()} shadow-sm p-6 hover:shadow-lg transition-all duration-300 group cursor-pointer`}>
       <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md ${variantStyles.iconBg} transition-all duration-300 shadow-sm`}>
+        <div className={`p-3 rounded-tr-xl rounded-bl-xl ${variantStyles.iconBg} transition-all duration-300 shadow-sm`}>
           <Icon className={`w-6 h-6 ${variantStyles.iconColor}`} />
         </div>
         {trend !== undefined && (
@@ -648,13 +650,13 @@ export default function ManagerDashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-glacier-primary-50 via-white to-glacier-accent-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-brand-bg-light to-brand-bg flex items-center justify-center">
         <div className="text-center animate-in fade-in duration-700">
-          <div className="w-16 h-16 bg-gradient-to-br from-glacier-primary-400 to-glacier-secondary-500 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg flex items-center justify-center mx-auto mb-4 animate-pulse">
+          <div className="w-16 h-16 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-tl-3xl rounded-br-3xl flex items-center justify-center mx-auto mb-4 animate-pulse">
             <Building2 className="w-8 h-8 text-white" />
           </div>
-          <h3 className="text-lg font-semibold text-glacier-primary-800 mb-2">טוען דשבורד מנהל...</h3>
-          <p className="text-glacier-primary-600">אוסף נתוני צוות וביצועים</p>
+          <h3 className="text-lg font-semibold text-neutral-800 mb-2">טוען דשבורד מנהל...</h3>
+          <p className="text-neutral-600">אוסף נתוני צוות וביצועים</p>
           </div>
         </div>
     );
@@ -663,16 +665,16 @@ export default function ManagerDashboardContent() {
   const quotaPercentage = quota ? (quota.usedMinutes / quota.totalMinutes) * 100 : 0;
         
         return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-brand-bg-light to-brand-bg p-6">
       <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
         
-        {/* Welcome Hero - Elegant Design */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-black/10 rounded-3xl"></div>
+        {/* Welcome Hero - Clean Brand Design */}
+        <div className="bg-gradient-to-br from-brand-primary via-brand-primary-light to-brand-secondary rounded-tl-3xl rounded-br-3xl p-8 text-white shadow-lg relative overflow-hidden">
+          <div className="absolute inset-0 bg-black/5 rounded-tl-3xl rounded-br-3xl"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-lg">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center text-white font-bold text-2xl">
+              <div className="w-20 h-20 rounded-tl-2xl rounded-br-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-lg">
+                <div className="w-16 h-16 rounded-tl-xl rounded-br-xl bg-gradient-to-br from-brand-secondary to-brand-secondary-dark flex items-center justify-center text-white font-bold text-2xl">
                   {user?.full_name?.charAt(0) || 'M'}
           </div>
         </div>
@@ -686,23 +688,28 @@ export default function ManagerDashboardContent() {
                     return 'לילה טוב';
                   })()}, {user?.full_name || 'מנהל'}! 👋
                 </h1>
-                <p className="text-indigo-100 text-lg">
+                <p className="text-white/90 text-lg">
                   ברוך הבא לדשבורד הניהול של {companyName || 'החברה'}
                 </p>
-                <p className="text-indigo-200 text-sm mt-1">
+                <p className="text-white/75 text-sm mt-1">
                   עקוב אחר ביצועי הצוות, נהל נציגים וקבל תובנות מתקדמות
                 </p>
         </div>
             </div>
             
         <div className="text-center">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <div className="w-16 h-16 bg-white/10 rounded-tr-xl rounded-bl-xl flex items-center justify-center mx-auto mb-3">
                 <Building2 className="w-8 h-8 text-white" />
           </div>
-              <p className="text-indigo-100 text-sm">דשבורד מנהל</p>
+              <p className="text-white/90 text-sm">דשבורד מנהל</p>
         </div>
       </div>
         </div>
+
+        {/* AI Team Insights - ממש בראש הדף */}
+        {user?.company_id && (
+          <TeamInsights companyId={user.company_id} />
+        )}
 
         {/* Main Bento Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -710,8 +717,8 @@ export default function ManagerDashboardContent() {
           {/* Left Column - Stats (1/4) */}
         <div className="space-y-6">
             {/* Primary KPI - Large */}
-            <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-black/20 rounded-3xl"></div>
+            <div className="bg-gradient-to-br from-brand-secondary via-brand-secondary-dark to-brand-primary rounded-tl-3xl rounded-br-3xl p-8 text-white shadow-lg relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-black/15 rounded-tl-3xl rounded-br-3xl"></div>
               <div className="relative z-10">
                 <div className="flex items-center justify-between">
                   <div>
@@ -724,7 +731,7 @@ export default function ManagerDashboardContent() {
                       ></div>
                     </div>
                   </div>
-                  <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <div className="w-16 h-16 bg-white/20 rounded-tr-xl rounded-bl-xl flex items-center justify-center">
                     <TrendingUp className="w-8 h-8" />
                   </div>
                 </div>
@@ -733,69 +740,69 @@ export default function ManagerDashboardContent() {
             
                         {/* Small Stats Grid */}
             <div className="grid grid-cols-1 gap-4">
-              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white border-2 border-brand-primary/20 rounded-tl-2xl rounded-br-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100">
-                    <Users className="w-5 h-5 text-blue-600" />
+                  <div className="p-3 rounded-tr-xl rounded-bl-xl bg-gradient-to-br from-brand-primary to-brand-primary-light">
+                    <Users className="w-5 h-5 text-white" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-800">{stats?.totalAgents || 0}</p>
-                  <p className="text-sm font-medium text-slate-600">נציגים פעילים</p>
+                  <p className="text-2xl font-bold text-neutral-800">{stats?.totalAgents || 0}</p>
+                  <p className="text-sm font-medium text-neutral-600">נציגים פעילים</p>
           </div>
         </div>
 
-              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white border-2 border-brand-secondary/20 rounded-tr-2xl rounded-bl-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-purple-100 to-violet-100">
-                    <Phone className="w-5 h-5 text-purple-600" />
+                  <div className="p-3 rounded-tl-xl rounded-br-xl bg-gradient-to-br from-brand-secondary to-brand-secondary-dark">
+                    <Phone className="w-5 h-5 text-white" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-800">{stats?.weeklyCalls || 0}</p>
-                  <p className="text-sm font-medium text-slate-600">שיחות השבוע</p>
+                  <p className="text-2xl font-bold text-neutral-800">{stats?.weeklyCalls || 0}</p>
+                  <p className="text-sm font-medium text-neutral-600">שיחות השבוע</p>
                 </div>
               </div>
             </div>
 
             {/* Quota Card */}
             {quota && (
-              <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
-                  <Battery className="w-5 h-5 ml-2 text-slate-600" />
+              <div className="bg-white border-2 border-brand-warning/20 rounded-tl-3xl rounded-br-3xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                  <Battery className="w-5 h-5 ml-2 text-neutral-600" />
                   מכסת דקות
                 </h3>
                 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">שימוש נוכחי</span>
-                    <span className="font-semibold text-slate-800">{quotaPercentage.toFixed(1)}%</span>
+                    <span className="text-sm text-neutral-600">שימוש נוכחי</span>
+                    <span className="font-semibold text-neutral-800">{quotaPercentage.toFixed(1)}%</span>
                   </div>
                   
-                  <div className="w-full bg-slate-100 rounded-full h-3">
+                  <div className="w-full bg-neutral-100 rounded-full h-3">
                     <div 
                       className={`h-3 rounded-full transition-all duration-500 ${
                         quotaPercentage >= 90 ? 'bg-gradient-to-r from-red-400 to-red-500' :
-                        quotaPercentage >= 70 ? 'bg-gradient-to-r from-amber-400 to-orange-500' : 
-                        'bg-gradient-to-r from-emerald-400 to-teal-500'
+                        quotaPercentage >= 70 ? 'bg-gradient-to-r from-brand-warning to-brand-warning-dark' : 
+                        'bg-gradient-to-r from-brand-secondary to-brand-secondary-dark'
                       }`}
                       style={{ width: `${Math.min(quotaPercentage, 100)}%` }}
                     />
                   </div>
                   
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">{quota.usedMinutes} דקות</span>
-                    <span className="text-slate-600">{quota.totalMinutes} דקות</span>
+                    <span className="text-neutral-600">{quota.usedMinutes} דקות</span>
+                    <span className="text-neutral-600">{quota.totalMinutes} דקות</span>
                   </div>
                     
                     {quotaPercentage >= 75 && (
-                    <div className="pt-2 border-t border-slate-200">
+                    <div className="pt-2 border-t border-neutral-200">
                         <button
                           onClick={() => router.push('/team/purchase-quota')}
-                          className={`w-full py-2 px-4 rounded-xl font-medium text-sm transition-all duration-200 flex items-center justify-center space-x-2 ${
+                          className={`w-full py-2 px-4 rounded-tl-xl rounded-br-xl font-medium text-sm transition-all duration-200 flex items-center justify-center space-x-2 ${
                             quotaPercentage >= 90 
                             ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg' 
-                            : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg'
+                            : 'bg-gradient-to-r from-brand-warning to-brand-warning-dark hover:from-brand-warning-dark hover:to-brand-warning text-white shadow-lg'
                           }`}
                         >
                           <CreditCard className="w-4 h-4" />
@@ -812,39 +819,39 @@ export default function ManagerDashboardContent() {
           <div className="lg:col-span-2 space-y-6">
             {/* Secondary Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white border-2 border-brand-success/20 rounded-tl-2xl rounded-br-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-100 to-green-100">
-                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                  <div className="p-3 rounded-tr-xl rounded-bl-xl bg-gradient-to-br from-brand-success to-brand-success-dark">
+                    <CheckCircle className="w-6 h-6 text-white" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-800">{stats?.successfulCalls || 0}</p>
-                  <p className="text-sm font-medium text-slate-600">שיחות מוצלחות</p>
+                  <p className="text-2xl font-bold text-neutral-800">{stats?.successfulCalls || 0}</p>
+                  <p className="text-sm font-medium text-neutral-600">שיחות מוצלחות</p>
                 </div>
               </div>
               
-              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
+              <div className="bg-white border-2 border-brand-warning/20 rounded-tr-2xl rounded-bl-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-100 to-yellow-100">
-                    <Trophy className="w-6 h-6 text-amber-600" />
+                  <div className="p-3 rounded-tl-xl rounded-br-xl bg-gradient-to-br from-brand-warning to-brand-warning-dark">
+                    <Trophy className="w-6 h-6 text-white" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-800">{((stats?.successfulCalls || 0) / Math.max(stats?.weeklyCalls || 1, 1) * 100).toFixed(0)}%</p>
-                  <p className="text-sm font-medium text-slate-600">יעילות צוות</p>
+                  <p className="text-2xl font-bold text-neutral-800">{((stats?.successfulCalls || 0) / Math.max(stats?.weeklyCalls || 1, 1) * 100).toFixed(0)}%</p>
+                  <p className="text-sm font-medium text-neutral-600">יעילות צוות</p>
                 </div>
               </div>
             </div>
 
             {/* Team Members Preview */}
-            <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-blue-50/30">
+            <div className="bg-white border-2 border-brand-primary/20 rounded-tl-3xl rounded-br-3xl shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-neutral-200 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-slate-800">צוות החברה</h2>
+                  <h2 className="text-xl font-bold text-neutral-800">צוות החברה</h2>
                   <Link 
                     href="/team"
-                    className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-1"
+                    className="text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors flex items-center gap-1"
                   >
                     ראה הכל
                     <ArrowRight className="w-3 h-3" />
@@ -855,14 +862,14 @@ export default function ManagerDashboardContent() {
               <div className="p-6">
                 {agents.length === 0 ? (
                   <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Users className="w-8 h-8 text-slate-500" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 rounded-tl-2xl rounded-br-2xl flex items-center justify-center mx-auto mb-4">
+                      <Users className="w-8 h-8 text-neutral-500" />
                     </div>
-                    <h3 className="text-lg font-semibold text-slate-700 mb-2">אין עדיין נציגים</h3>
-                    <p className="text-slate-500 mb-6">התחל לבנות את הצוות שלך</p>
+                    <h3 className="text-lg font-semibold text-neutral-700 mb-2">אין עדיין נציגים</h3>
+                    <p className="text-neutral-500 mb-6">התחל לבנות את הצוות שלך</p>
                     <Link 
                       href="/team/add-agent" 
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-brand-primary to-brand-primary-light text-white rounded-tl-xl rounded-br-xl hover:from-brand-primary-dark hover:to-brand-primary transition-all duration-300 font-medium shadow-lg"
                     >
                       <UserPlus className="w-5 h-5" />
                       <span>הוסף נציג ראשון</span>
@@ -873,17 +880,17 @@ export default function ManagerDashboardContent() {
                     {agents.slice(0, 5).map((agent, index) => (
                       <div 
                         key={agent.id} 
-                        className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-blue-50/30 border border-slate-200/50 rounded-xl hover:from-slate-100 hover:to-blue-50/50 transition-all duration-300"
+                        className="flex items-center justify-between p-4 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5 border border-neutral-200/50 rounded-tl-xl rounded-br-xl hover:from-brand-primary/10 hover:to-brand-secondary/10 transition-all duration-300"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white font-bold shadow-lg">
                             {agent.fullName?.charAt(0) || '?'}
                           </div>
                           <div>
-                            <div className="font-semibold text-slate-800">{agent.fullName}</div>
-                            <div className="text-sm text-slate-600 flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white text-xs">
+                            <div className="font-semibold text-neutral-800">{agent.fullName}</div>
+                            <div className="text-sm text-neutral-600 flex items-center gap-2">
+                              <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-neutral-400 to-neutral-600 flex items-center justify-center text-white text-xs">
                                 {getRoleIcon(agent.role)}
                               </div>
                               {getRoleName(agent.role)}
@@ -891,17 +898,17 @@ export default function ManagerDashboardContent() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-semibold text-slate-800">{agent.totalCalls} שיחות</div>
+                          <div className="text-sm font-semibold text-neutral-800">{agent.totalCalls} שיחות</div>
                           <div className="text-xs">{getActivityBadge(agent.activityStatus)}</div>
                         </div>
                       </div>
                     ))}
                     
                                         {agents.length > 5 && (
-                      <div className="text-center pt-4 border-t border-slate-200">
+                      <div className="text-center pt-4 border-t border-neutral-200">
                         <Link 
                           href="/team"
-                          className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                          className="text-sm text-brand-primary hover:text-brand-primary-dark font-medium"
                         >
                           +{agents.length - 5} נציגים נוספים
                         </Link>
@@ -916,66 +923,66 @@ export default function ManagerDashboardContent() {
                     {/* Right Column - Actions & Insights (1/4) */}
           <div className="space-y-6">
             {/* Quick Actions */}
-            <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
-                <Zap className="w-5 h-5 ml-2 text-indigo-600" />
+            <div className="bg-white border-2 border-brand-primary/20 rounded-tl-3xl rounded-br-3xl shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                <Zap className="w-5 h-5 ml-2 text-brand-primary" />
                 פעולות מהירות
               </h3>
               
               <div className="space-y-3">
                 <button 
                   onClick={() => router.push('/team/add-agent')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl hover:from-indigo-100 hover:to-blue-100 transition-all duration-300 group"
+                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 border border-brand-primary/20 rounded-tl-xl rounded-br-xl hover:from-brand-primary/20 hover:to-brand-primary/10 transition-all duration-300 group"
                 >
-                  <UserPlus className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-slate-700">הוסף נציג</span>
+                  <UserPlus className="w-5 h-5 text-brand-primary group-hover:scale-110 transition-transform" />
+                  <span className="font-semibold text-neutral-700">הוסף נציג</span>
                 </button>
                 <button 
                   onClick={() => router.push('/dashboard/manager/all-calls')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl hover:from-emerald-100 hover:to-teal-100 transition-all duration-300 group"
+                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-secondary/10 to-brand-secondary/5 border border-brand-secondary/20 rounded-tr-xl rounded-bl-xl hover:from-brand-secondary/20 hover:to-brand-secondary/10 transition-all duration-300 group"
                 >
-                  <Eye className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-slate-700">כל השיחות</span>
+                  <Eye className="w-5 h-5 text-brand-secondary group-hover:scale-110 transition-transform" />
+                  <span className="font-semibold text-neutral-700">כל השיחות</span>
                 </button>
                 <button 
                   onClick={() => router.push('/team')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200 rounded-xl hover:from-purple-100 hover:to-violet-100 transition-all duration-300 group"
+                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-warning/10 to-brand-warning/5 border border-brand-warning/20 rounded-tl-xl rounded-br-xl hover:from-brand-warning/20 hover:to-brand-warning/10 transition-all duration-300 group"
                 >
-                  <Users className="w-5 h-5 text-purple-600 group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-slate-700">ניהול צוות</span>
+                  <Users className="w-5 h-5 text-brand-warning group-hover:scale-110 transition-transform" />
+                  <span className="font-semibold text-neutral-700">ניהול צוות</span>
                 </button>
               </div>
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
-                <Activity className="w-5 h-5 ml-2 text-emerald-600" />
+            <div className="bg-white border-2 border-brand-secondary/20 rounded-tr-3xl rounded-bl-3xl shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                <Activity className="w-5 h-5 ml-2 text-brand-secondary" />
                 פעילות אחרונה
               </h3>
               
               <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-100">
-                  <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 rounded-tl-xl rounded-br-xl border border-brand-primary/20">
+                  <div className="w-3 h-3 bg-brand-primary rounded-full"></div>
                   <div className="text-sm">
-                    <span className="font-bold text-slate-800">{stats?.weeklyCalls || 0}</span>
-                    <span className="text-slate-600"> שיחות השבוע</span>
+                    <span className="font-bold text-neutral-800">{stats?.weeklyCalls || 0}</span>
+                    <span className="text-neutral-600"> שיחות השבוע</span>
             </div>
           </div>
 
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-secondary/10 to-brand-secondary/5 rounded-tr-xl rounded-bl-xl border border-brand-secondary/20">
+                  <div className="w-3 h-3 bg-brand-secondary rounded-full"></div>
                   <div className="text-sm">
-                    <span className="font-bold text-slate-800">{stats?.totalAgents || 0}</span>
-                    <span className="text-slate-600"> נציגים פעילים</span>
+                    <span className="font-bold text-neutral-800">{stats?.totalAgents || 0}</span>
+                    <span className="text-neutral-600"> נציגים פעילים</span>
           </div>
         </div>
 
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border border-amber-100">
-                  <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-warning/10 to-brand-warning/5 rounded-tl-xl rounded-br-xl border border-brand-warning/20">
+                  <div className="w-3 h-3 bg-brand-warning rounded-full"></div>
                   <div className="text-sm">
-                    <span className="font-bold text-slate-800">{((stats?.avgScore || 0) * 10).toFixed(0)}%</span>
-                    <span className="text-slate-600"> יעילות כללית</span>
+                    <span className="font-bold text-neutral-800">{((stats?.avgScore || 0) * 10).toFixed(0)}%</span>
+                    <span className="text-neutral-600"> יעילות כללית</span>
                   </div>
                 </div>
               </div>
@@ -987,54 +994,42 @@ export default function ManagerDashboardContent() {
         {insights.length > 0 && (
           <div className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-600 flex items-center justify-center text-white shadow-glacier-soft">
+              <div className="w-12 h-12 rounded-tl-2xl rounded-br-2xl bg-gradient-to-br from-brand-secondary to-brand-secondary-dark flex items-center justify-center text-white shadow-sm">
                 <Activity className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-glacier-primary-800">תובנות ניהוליות</h2>
-                <p className="text-glacier-primary-600">המלצות מבוססות נתונים לשיפור ביצועי הצוות</p>
+                <h2 className="text-2xl font-bold text-neutral-800">תובנות ניהוליות</h2>
+                <p className="text-neutral-600">המלצות מבוססות נתונים לשיפור ביצועי הצוות</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {insights.map((insight) => (
-                <div key={insight.id} className={`bg-gradient-to-br from-white/95 to-${
-                  insight.type === 'success' ? 'glacier-secondary-50' :
-                  insight.type === 'warning' ? 'glacier-warning-light' :
-                  'glacier-primary-50'
-                } backdrop-blur-md border ${
-                  insight.type === 'success' ? 'border-glacier-secondary-200 border-r-4 border-r-glacier-secondary-500' :
-                  insight.type === 'warning' ? 'border-glacier-warning border-r-4 border-r-glacier-warning-dark' :
-                  'border-glacier-primary-200 border-r-4 border-r-glacier-primary-500'
-                } rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-glacier-soft p-6`}>
+                <div key={insight.id} className={`bg-white border-2 ${
+                  insight.type === 'success' ? 'border-brand-success' :
+                  insight.type === 'warning' ? 'border-brand-warning' :
+                  'border-brand-primary'
+                } rounded-tl-3xl rounded-br-3xl shadow-sm p-6`}>
                   <div className="flex items-start gap-3">
-                    <div className={`w-8 h-8 rounded-tl-lg rounded-br-lg rounded-tr-sm rounded-bl-sm flex items-center justify-center ${
-                      insight.type === 'success' ? 'bg-gradient-to-br from-glacier-secondary-100 to-glacier-secondary-200' :
-                      insight.type === 'warning' ? 'bg-gradient-to-br from-glacier-warning-light to-glacier-warning' :
-                      'bg-gradient-to-br from-glacier-primary-100 to-glacier-primary-200'
+                    <div className={`w-8 h-8 rounded-tr-lg rounded-bl-lg flex items-center justify-center ${
+                      insight.type === 'success' ? 'bg-gradient-to-br from-brand-success to-brand-success-dark' :
+                      insight.type === 'warning' ? 'bg-gradient-to-br from-brand-warning to-brand-warning-dark' :
+                      'bg-gradient-to-br from-brand-primary to-brand-primary-dark'
                     }`}>
-                      {insight.type === 'success' && <CheckCircle className="w-5 h-5 text-glacier-secondary-700" />}
-                      {insight.type === 'warning' && <AlertTriangle className="w-5 h-5 text-glacier-warning-dark" />}
-                      {insight.type === 'info' && <Activity className="w-5 h-5 text-glacier-primary-700" />}
+                      {insight.type === 'success' && <CheckCircle className="w-5 h-5 text-white" />}
+                      {insight.type === 'warning' && <AlertTriangle className="w-5 h-5 text-white" />}
+                      {insight.type === 'info' && <Activity className="w-5 h-5 text-white" />}
                     </div>
                     <div className="flex-1">
-                      <h4 className={`font-semibold mb-1 ${
-                        insight.type === 'success' ? 'text-glacier-secondary-800' :
-                        insight.type === 'warning' ? 'text-glacier-warning-dark' :
-                        'text-glacier-primary-800'
-                      }`}>{insight.title}</h4>
-                      <p className={`text-sm leading-relaxed mb-3 ${
-                        insight.type === 'success' ? 'text-glacier-secondary-600' :
-                        insight.type === 'warning' ? 'text-glacier-warning-dark' :
-                        'text-glacier-primary-600'
-                      }`}>{insight.description}</p>
+                      <h4 className="font-semibold mb-1 text-neutral-800">{insight.title}</h4>
+                      <p className="text-sm leading-relaxed mb-3 text-neutral-600">{insight.description}</p>
                       {insight.actionText && (
                         <Link 
                           href={insight.actionUrl || '#'}
                           className={`text-sm font-medium flex items-center gap-1 transition-colors ${
-                            insight.type === 'success' ? 'text-glacier-secondary-600 hover:text-glacier-secondary-700' :
-                            insight.type === 'warning' ? 'text-glacier-warning-dark hover:text-glacier-warning' :
-                            'text-glacier-primary-600 hover:text-glacier-primary-700'
+                            insight.type === 'success' ? 'text-brand-success hover:text-brand-success-dark' :
+                            insight.type === 'warning' ? 'text-brand-warning hover:text-brand-warning-dark' :
+                            'text-brand-primary hover:text-brand-primary-dark'
                           }`}
                         >
                           <span>{insight.actionText}</span>
@@ -1052,29 +1047,29 @@ export default function ManagerDashboardContent() {
                 {/* Comprehensive Team Calls Table */}
         <div className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+            <div className="w-12 h-12 rounded-tl-2xl rounded-br-2xl bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white shadow-lg">
               <Phone className="w-6 h-6" />
       </div>
             <div>
-              <h2 className="text-2xl font-bold text-slate-800">שיחות הצוות</h2>
-              <p className="text-slate-600">כל השיחות של הצוות עם אפשרויות חיפוש וסינון מתקדמות</p>
+              <h2 className="text-2xl font-bold text-neutral-800">שיחות הצוות</h2>
+              <p className="text-neutral-600">כל השיחות של הצוות עם אפשרויות חיפוש וסינון מתקדמות</p>
             </div>
           </div>
 
           {/* Filters Section */}
-          <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-slate-700 mb-4">חיפוש וסינון מתקדם</h3>
+          <div className="bg-white border-2 border-neutral-200 rounded-tl-3xl rounded-br-3xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-neutral-700 mb-4">חיפוש וסינון מתקדם</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
               {/* Search Input */}
               <div className="xl:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-2">חיפוש כללי</label>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">חיפוש כללי</label>
                 <input
                   type="text"
                   placeholder="חפש לפי לקוח, נציג או סוג שיחה..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-tl-lg rounded-br-lg bg-white text-neutral-800 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
                 />
               </div>
 
@@ -1181,11 +1176,11 @@ export default function ManagerDashboardContent() {
           </div>
 
           {/* Calls Table */}
-          <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white border-2 border-neutral-200 rounded-tr-3xl rounded-bl-3xl shadow-sm overflow-hidden">
             {/* Table Header */}
-            <div className="px-6 py-4 border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-indigo-50/30">
+            <div className="px-6 py-4 border-b border-neutral-200 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-slate-800">שיחות הצוות</h3>
+                <h3 className="text-xl font-bold text-neutral-800">שיחות הצוות</h3>
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-slate-600">
                     מציג {Math.min(startCallsIndex + 1, totalCallsItems)} עד {Math.min(endCallsIndex, totalCallsItems)} מתוך {totalCallsItems} שיחות
@@ -1214,27 +1209,27 @@ export default function ManagerDashboardContent() {
                 {/* Responsive Table */}
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-slate-200">
-                    <thead className="bg-slate-50">
+                    <thead className="bg-gradient-to-r from-brand-primary/10 to-brand-secondary/10">
                       <tr>
-                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">
+                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-neutral-600 uppercase tracking-wider">
                           תאריך
                         </th>
-                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">
+                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-neutral-600 uppercase tracking-wider">
                           נציג
                         </th>
                         <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider hidden lg:table-cell">
                           סוג שיחה
                         </th>
-                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">
+                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-neutral-600 uppercase tracking-wider">
                           לקוח
                         </th>
-                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-slate-600 uppercase tracking-wider">
+                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-neutral-600 uppercase tracking-wider">
                           ציון
                         </th>
                         <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-slate-600 uppercase tracking-wider hidden md:table-cell">
                           סטטוס
                         </th>
-                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-slate-600 uppercase tracking-wider">
+                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-neutral-600 uppercase tracking-wider">
                           פעולות
                         </th>
                       </tr>
