@@ -222,39 +222,54 @@ export async function POST(request: Request) {
       audio_path: callData.audio_file_path
     });
 
-    // חישוב משך האודיו לפני התמלול
-    let audioDurationSeconds = null;
-    try {
-      await addCallLog(call_id, '🕐 מחשב משך האודיו');
-      const audioResponse = await fetch(signedUrl);
-      if (audioResponse.ok) {
-        const audioBlob = await audioResponse.blob();
-        
-        // יבוא דינמי של פונקציית חישוב המשך
-        const { getAudioDuration } = await import('@/lib/audioConverter');
-        audioDurationSeconds = Math.round(await getAudioDuration(audioBlob));
-        
-        await addCallLog(call_id, '✅ משך האודיו חושב בהצלחה', { 
-          duration_seconds: audioDurationSeconds,
-          duration_formatted: (() => {
-            const totalSeconds = Math.round(audioDurationSeconds);
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-          })()
-        });
-        
-        // עדכון משך האודיו במסד הנתונים
-        await supabase
-          .from('calls')
-          .update({ audio_duration_seconds: audioDurationSeconds })
-          .eq('id', call_id);
+    // שימוש בזמן שכבר חושב בupload או בדיקה אם קיים
+    let audioDurationSeconds = callData.audio_duration_seconds;
+    
+    // אם אין זמן שמור או שהוא לא סביר, נסה לחשב מחדש
+    if (!audioDurationSeconds || audioDurationSeconds <= 0 || audioDurationSeconds > 7200) {
+      try {
+        await addCallLog(call_id, '🕐 זמן שגוי או חסר, מחשב מחדש מהקובץ');
+        const audioResponse = await fetch(signedUrl);
+        if (audioResponse.ok) {
+          const audioBlob = await audioResponse.blob();
           
-        await addCallLog(call_id, '💾 משך האודיו נשמר במסד הנתונים', { duration_seconds: audioDurationSeconds });
-        
-        // 🎯 בדיקת מכסת דקות לפני עיבוד
-        await addCallLog(call_id, '🔍 בודק מכסת דקות זמינה');
-        const callDurationMinutes = Math.ceil(audioDurationSeconds / 60); // עיגול כלפי מעלה
+          // נסה להשתמש בגישה פשוטה בלבד
+          try {
+            // בסביבת שרת לא ניתן לחשב מדויק, נשתמש בהערכה זהירה
+            audioDurationSeconds = Math.max(30, Math.min(1800, Math.round(audioBlob.size / 32000))); // הערכה של 32KB לשנייה
+            
+            await addCallLog(call_id, '⚠️ חישוב הערכה בסביבת שרת', { 
+              duration_seconds: audioDurationSeconds,
+              blob_size: audioBlob.size,
+              calculation_method: 'server_estimation'
+            });
+          } catch (calcError) {
+            await addCallLog(call_id, '❌ שגיאה בחישוב, משתמש בברירת מחדל');
+            audioDurationSeconds = 60; // ברירת מחדל של דקה
+          }
+          
+          // עדכון משך האודיו במסד הנתונים
+          await supabase
+            .from('calls')
+            .update({ audio_duration_seconds: audioDurationSeconds })
+            .eq('id', call_id);
+            
+          await addCallLog(call_id, '💾 משך האודיו עודכן במסד הנתונים', { duration_seconds: audioDurationSeconds });
+        }
+      } catch (error) {
+        await addCallLog(call_id, '❌ שגיאה בחישוב זמן, משתמש בברירת מחדל', { error: error instanceof Error ? error.message : 'unknown' });
+        audioDurationSeconds = 60; // ברירת מחדל
+      }
+    } else {
+      await addCallLog(call_id, '✅ משתמש בזמן אודיו שמור', { 
+        duration_seconds: audioDurationSeconds,
+        source: 'existing_record'
+      });
+    }
+    
+    // 🎯 בדיקת מכסת דקות לפני עיבוד
+    await addCallLog(call_id, '🔍 בודק מכסת דקות זמינה');
+    const callDurationMinutes = Math.ceil(audioDurationSeconds / 60); // עיגול כלפי מעלה
         
         // בדיקה שיש company_id
         if (!callData.company_id) {

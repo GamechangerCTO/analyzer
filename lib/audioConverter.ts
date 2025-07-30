@@ -18,22 +18,19 @@ async function loadFFmpeg() {
   return ffmpeg;
 }
 
-// פונקציה חדשה לחישוב משך אודיו
+// פונקציה מדויקת לחישוב משך אודיו  
 export async function getAudioDuration(audioFile: File | Blob): Promise<number> {
   return new Promise((resolve, reject) => {
     try {
-      // בדיקה אם אנחנו בסביבת דפדפן או שרת
+      // בסביבת שרת - דחה את החישוב לקריאה מהקובץ שנשמר
       const isServer = typeof window === 'undefined';
-      
       if (isServer) {
-        // בסביבת שרת - השתמש רק בהערכה לפי גודל הקובץ
-        const estimatedDuration = estimateDurationByFileSize(audioFile.size);
-        console.log(`🕐 סביבת שרת: משתמש בהערכה לפי גודל קובץ: ${estimatedDuration} שניות`);
-        resolve(estimatedDuration);
+        console.log('🕐 סביבת שרת: החישוב יבוצע מהקובץ שנשמר בstorage');
+        reject(new Error('חישוב בסביבת שרת יעשה מהקובץ שנשמר'));
         return;
       }
       
-      // בסביבת דפדפן - נסה לקבל משך מדויק
+      // בסביבת דפדפן - חישוב מדויק עם Audio element
       const audio = new Audio();
       const url = URL.createObjectURL(audioFile);
       
@@ -41,40 +38,33 @@ export async function getAudioDuration(audioFile: File | Blob): Promise<number> 
         URL.revokeObjectURL(url);
         const duration = audio.duration;
         
-        if (isNaN(duration) || duration === Infinity) {
-          // אם לא מצליח לקבל duration, נשתמש בהערכה לפי גודל הקובץ
-          const estimatedDuration = estimateDurationByFileSize(audioFile.size);
-          console.log(`🕐 לא הצלחתי לקבל משך אודיו מדויק, משתמש בהערכה: ${estimatedDuration} שניות`);
-          resolve(estimatedDuration);
+        if (isNaN(duration) || duration === Infinity || duration <= 0) {
+          console.error('🕐 Audio element החזיר duration לא תקין:', duration);
+          reject(new Error(`Duration לא תקין: ${duration}`));
         } else {
           console.log(`🕐 משך אודיו מדויק: ${duration} שניות`);
-          resolve(duration);
+          resolve(Math.round(duration));
         }
       });
       
-      audio.addEventListener('error', () => {
+      audio.addEventListener('error', (event) => {
         URL.revokeObjectURL(url);
-        // במקרה של שגיאה, נשתמש בהערכה לפי גודל הקובץ
-        const estimatedDuration = estimateDurationByFileSize(audioFile.size);
-        console.log(`🕐 שגיאה בחישוב משך אודיו, משתמש בהערכה: ${estimatedDuration} שניות`);
-        resolve(estimatedDuration);
+        console.error('🕐 שגיאה בטעינת Audio element:', event);
+        reject(new Error('לא ניתן לטעון את קובץ האודיו'));
       });
       
       audio.src = url;
       
-      // timeout כדי למנוע המתנה אינסופית
+      // timeout של 10 שניות
       setTimeout(() => {
         URL.revokeObjectURL(url);
-        const estimatedDuration = estimateDurationByFileSize(audioFile.size);
-        console.log(`🕐 timeout בחישוב משך אודיו, משתמש בהערכה: ${estimatedDuration} שניות`);
-        resolve(estimatedDuration);
-      }, 10000); // 10 שניות timeout
+        console.error('🕐 timeout בחישוב משך אודיו');
+        reject(new Error('timeout בחישוב משך אודיו'));
+      }, 10000);
       
     } catch (error) {
-      console.error('שגיאה בחישוב משך אודיו:', error);
-      const estimatedDuration = estimateDurationByFileSize(audioFile.size);
-      console.log(`🕐 שגיאה בחישוב משך אודיו, משתמש בהערכה: ${estimatedDuration} שניות`);
-      resolve(estimatedDuration);
+      console.error('שגיאה כללית בחישוב משך אודיו:', error);
+      reject(error);
     }
   });
 }

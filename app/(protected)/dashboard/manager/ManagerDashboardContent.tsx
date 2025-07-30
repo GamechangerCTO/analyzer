@@ -633,14 +633,14 @@ export default function ManagerDashboardContent() {
 
   const getActivityBadge = (status: 'active' | 'moderate' | 'inactive') => {
     const statusConfig = {
-      'active': { color: 'bg-gradient-to-r from-glacier-secondary-100 to-glacier-secondary-200 text-glacier-secondary-800 border border-glacier-secondary-300', text: 'פעיל' },
-      'moderate': { color: 'bg-gradient-to-r from-glacier-warning-light to-glacier-warning text-glacier-warning-dark border border-glacier-warning', text: 'בינוני' },
-      'inactive': { color: 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300', text: 'לא פעיל' }
+      'active': { color: 'bg-emerald-100 text-emerald-700 border border-emerald-200', text: 'פעיל' },
+      'moderate': { color: 'bg-amber-100 text-amber-700 border border-amber-200', text: 'בינוני' },
+      'inactive': { color: 'bg-slate-100 text-slate-600 border border-slate-200', text: 'לא פעיל' }
     };
     
     const config = statusConfig[status];
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.color} shadow-sm`}>
+      <span className={`px-2 py-1 rounded-lg text-xs font-medium ${config.color}`}>
         {config.text}
       </span>
     );
@@ -655,112 +655,156 @@ export default function ManagerDashboardContent() {
           </div>
           <h3 className="text-lg font-semibold text-glacier-primary-800 mb-2">טוען דשבורד מנהל...</h3>
           <p className="text-glacier-primary-600">אוסף נתוני צוות וביצועים</p>
+          </div>
         </div>
-      </div>
     );
   }
 
   const quotaPercentage = quota ? (quota.usedMinutes / quota.totalMinutes) * 100 : 0;
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-glacier-primary-50 via-white to-glacier-accent-50 p-6">
+        
+        return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 p-6">
       <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
         
-        {/* Welcome Hero */}
-        <WelcomeHero 
-          managerInfo={user}
-          companyName={companyName}
-        />
+        {/* Welcome Hero - Elegant Design */}
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-black/10 rounded-3xl"></div>
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-lg">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center text-white font-bold text-2xl">
+                  {user?.full_name?.charAt(0) || 'M'}
+          </div>
+        </div>
+              <div>
+                <h1 className="text-3xl font-bold mb-2">
+                  {(() => {
+                    const hour = new Date().getHours();
+                    if (hour < 12) return 'בוקר טוב';
+                    if (hour < 17) return 'צהריים טובים';
+                    if (hour < 21) return 'ערב טוב';
+                    return 'לילה טוב';
+                  })()}, {user?.full_name || 'מנהל'}! 👋
+                </h1>
+                <p className="text-indigo-100 text-lg">
+                  ברוך הבא לדשבורד הניהול של {companyName || 'החברה'}
+                </p>
+                <p className="text-indigo-200 text-sm mt-1">
+                  עקוב אחר ביצועי הצוות, נהל נציגים וקבל תובנות מתקדמות
+                </p>
+        </div>
+            </div>
+            
+        <div className="text-center">
+              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <Building2 className="w-8 h-8 text-white" />
+          </div>
+              <p className="text-indigo-100 text-sm">דשבורד מנהל</p>
+        </div>
+      </div>
+        </div>
 
         {/* Main Bento Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           
           {/* Left Column - Stats (1/4) */}
-          <div className="space-y-6">
+        <div className="space-y-6">
             {/* Primary KPI - Large */}
-            <div className="bg-gradient-to-br from-glacier-primary-500 to-glacier-secondary-500 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg p-8 text-white shadow-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/80 text-sm font-medium">ציון ממוצע צוות</p>
-                  <p className="text-4xl font-bold">{stats?.avgScore.toFixed(1) || '0.0'}</p>
-                  <div className="mt-3 w-full bg-white/20 rounded-full h-2">
-                    <div 
-                      className="h-full bg-white rounded-full transition-all duration-1000"
-                      style={{width: `${Math.min(((stats?.avgScore || 0) / 10) * 100, 100)}%`}}
-                    ></div>
+            <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-black/20 rounded-3xl"></div>
+              <div className="relative z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm font-medium">ציון ממוצע צוות</p>
+                    <p className="text-4xl font-bold">{stats?.avgScore.toFixed(1) || '0.0'}</p>
+                    <div className="mt-3 w-full bg-white/20 rounded-full h-2">
+                      <div 
+                        className="h-full bg-white rounded-full transition-all duration-1000"
+                        style={{width: `${Math.min(((stats?.avgScore || 0) / 10) * 100, 100)}%`}}
+                      ></div>
+                    </div>
                   </div>
-                </div>
-                <div className="w-16 h-16 bg-white/20 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md flex items-center justify-center">
-                  <TrendingUp className="w-8 h-8" />
+                  <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                    <TrendingUp className="w-8 h-8" />
+                  </div>
                 </div>
               </div>
             </div>
             
-            {/* Small Stats Grid */}
-            <div className="grid grid-cols-1 gap-3">
-              <BentoKPICard
-                icon={Users}
-                title="נציגים פעילים"
-                value={stats?.totalAgents || 0}
-                size="small"
-                variant="primary"
-              />
-              <BentoKPICard
-                icon={Phone}
-                title="שיחות השבוע"
-                value={stats?.weeklyCalls || 0}
-                size="small"
-                variant="accent"
-              />
+                        {/* Small Stats Grid */}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100">
+                    <Users className="w-5 h-5 text-blue-600" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-800">{stats?.totalAgents || 0}</p>
+                  <p className="text-sm font-medium text-slate-600">נציגים פעילים</p>
+          </div>
+        </div>
+
+              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-purple-100 to-violet-100">
+                    <Phone className="w-5 h-5 text-purple-600" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-800">{stats?.weeklyCalls || 0}</p>
+                  <p className="text-sm font-medium text-slate-600">שיחות השבוע</p>
+                </div>
+              </div>
             </div>
 
             {/* Quota Card */}
             {quota && (
-              <div className="bg-gradient-to-br from-white/95 to-glacier-accent-50 backdrop-blur-md border border-glacier-accent-200 rounded-tr-3xl rounded-bl-3xl rounded-tl-lg rounded-br-lg shadow-glacier-soft p-6">
-                <h3 className="text-lg font-semibold text-glacier-primary-700 mb-4 flex items-center">
-                  <Battery className="w-5 h-5 ml-2 text-glacier-primary-600" />
+              <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+                  <Battery className="w-5 h-5 ml-2 text-slate-600" />
                   מכסת דקות
                 </h3>
                 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-glacier-primary-600">שימוש נוכחי</span>
-                    <span className="font-semibold text-glacier-primary-800">{quotaPercentage.toFixed(1)}%</span>
+                    <span className="text-sm text-slate-600">שימוש נוכחי</span>
+                    <span className="font-semibold text-slate-800">{quotaPercentage.toFixed(1)}%</span>
                   </div>
                   
-                  <div className="w-full bg-glacier-primary-100 rounded-full h-3">
+                  <div className="w-full bg-slate-100 rounded-full h-3">
                     <div 
                       className={`h-3 rounded-full transition-all duration-500 ${
-                        quotaPercentage >= 90 ? 'bg-gradient-to-r from-red-500 to-red-600' :
-                        quotaPercentage >= 70 ? 'bg-gradient-to-r from-glacier-warning to-glacier-warning-dark' : 
-                        'bg-gradient-to-r from-glacier-secondary-400 to-glacier-secondary-600'
+                        quotaPercentage >= 90 ? 'bg-gradient-to-r from-red-400 to-red-500' :
+                        quotaPercentage >= 70 ? 'bg-gradient-to-r from-amber-400 to-orange-500' : 
+                        'bg-gradient-to-r from-emerald-400 to-teal-500'
                       }`}
                       style={{ width: `${Math.min(quotaPercentage, 100)}%` }}
                     />
                   </div>
                   
                   <div className="flex justify-between text-sm">
-                    <span className="text-glacier-primary-600">{quota.usedMinutes} דקות</span>
-                    <span className="text-glacier-primary-600">{quota.totalMinutes} דקות</span>
+                    <span className="text-slate-600">{quota.usedMinutes} דקות</span>
+                    <span className="text-slate-600">{quota.totalMinutes} דקות</span>
                   </div>
-                  
-                  {quotaPercentage >= 75 && (
-                    <div className="pt-2 border-t border-glacier-accent-200">
-                      <button
-                        onClick={() => router.push('/team/purchase-quota')}
-                        className={`w-full py-2 px-4 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md font-medium text-sm transition-all duration-200 flex items-center justify-center space-x-2 ${
-                          quotaPercentage >= 90 
-                            ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white' 
-                            : 'bg-gradient-to-r from-glacier-warning to-glacier-warning-dark hover:from-glacier-warning-dark hover:to-glacier-warning text-white'
-                        }`}
-                      >
-                        <CreditCard className="w-4 h-4" />
-                        <span>רכישת דקות נוספות</span>
-                      </button>
-                    </div>
-                  )}
+                    
+                    {quotaPercentage >= 75 && (
+                    <div className="pt-2 border-t border-slate-200">
+                        <button
+                          onClick={() => router.push('/team/purchase-quota')}
+                          className={`w-full py-2 px-4 rounded-xl font-medium text-sm transition-all duration-200 flex items-center justify-center space-x-2 ${
+                            quotaPercentage >= 90 
+                            ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg' 
+                            : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg'
+                          }`}
+                        >
+                          <CreditCard className="w-4 h-4" />
+                          <span>רכישת דקות נוספות</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
             )}
           </div>
 
@@ -768,28 +812,39 @@ export default function ManagerDashboardContent() {
           <div className="lg:col-span-2 space-y-6">
             {/* Secondary Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <BentoKPICard
-                icon={CheckCircle}
-                title="שיחות מוצלחות"
-                value={stats?.successfulCalls || 0}
-                variant="success"
-              />
-              <BentoKPICard
-                icon={Trophy}
-                title="יעילות צוות"
-                value={`${((stats?.successfulCalls || 0) / Math.max(stats?.weeklyCalls || 1, 1) * 100).toFixed(0)}%`}
-                variant="warning"
-              />
+              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-100 to-green-100">
+                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-800">{stats?.successfulCalls || 0}</p>
+                  <p className="text-sm font-medium text-slate-600">שיחות מוצלחות</p>
+                </div>
+              </div>
+              
+              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-100 to-yellow-100">
+                    <Trophy className="w-6 h-6 text-amber-600" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-800">{((stats?.successfulCalls || 0) / Math.max(stats?.weeklyCalls || 1, 1) * 100).toFixed(0)}%</p>
+                  <p className="text-sm font-medium text-slate-600">יעילות צוות</p>
+                </div>
+              </div>
             </div>
 
             {/* Team Members Preview */}
-            <div className="bg-gradient-to-br from-white/95 to-glacier-primary-50 backdrop-blur-md border border-glacier-primary-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-glacier-soft overflow-hidden">
-              <div className="px-6 py-4 border-b border-glacier-primary-200 bg-gradient-to-r from-glacier-primary-100 to-glacier-accent-100">
+            <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-blue-50/30">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-glacier-primary-800">צוות החברה</h2>
+                  <h2 className="text-xl font-bold text-slate-800">צוות החברה</h2>
                   <Link 
                     href="/team"
-                    className="text-sm font-medium text-glacier-primary-600 hover:text-glacier-primary-700 transition-colors flex items-center gap-1"
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors flex items-center gap-1"
                   >
                     ראה הכל
                     <ArrowRight className="w-3 h-3" />
@@ -800,14 +855,14 @@ export default function ManagerDashboardContent() {
               <div className="p-6">
                 {agents.length === 0 ? (
                   <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-glacier-primary-200 to-glacier-accent-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg flex items-center justify-center mx-auto mb-4">
-                      <Users className="w-8 h-8 text-glacier-primary-600" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Users className="w-8 h-8 text-slate-500" />
                     </div>
-                    <h3 className="text-lg font-semibold text-glacier-primary-800 mb-2">אין עדיין נציגים</h3>
-                    <p className="text-glacier-primary-600 mb-6">התחל לבנות את הצוות שלך</p>
+                    <h3 className="text-lg font-semibold text-slate-700 mb-2">אין עדיין נציגים</h3>
+                    <p className="text-slate-500 mb-6">התחל לבנות את הצוות שלך</p>
                     <Link 
                       href="/team/add-agent" 
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-glacier-primary-500 to-glacier-secondary-500 text-white rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md hover:from-glacier-primary-600 hover:to-glacier-secondary-600 transition-all duration-300 font-medium shadow-lg"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg"
                     >
                       <UserPlus className="w-5 h-5" />
                       <span>הוסף נציג ראשון</span>
@@ -818,17 +873,17 @@ export default function ManagerDashboardContent() {
                     {agents.slice(0, 5).map((agent, index) => (
                       <div 
                         key={agent.id} 
-                        className="flex items-center justify-between p-4 bg-gradient-to-r from-glacier-primary-50 to-glacier-accent-50 border border-glacier-primary-200 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md hover:from-glacier-primary-100 hover:to-glacier-accent-100 transition-all duration-300 shadow-sm"
+                        className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-blue-50/30 border border-slate-200/50 rounded-xl hover:from-slate-100 hover:to-blue-50/50 transition-all duration-300"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-glacier-primary-500 to-glacier-secondary-500 flex items-center justify-center text-white font-bold shadow-lg">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
                             {agent.fullName?.charAt(0) || '?'}
                           </div>
                           <div>
-                            <div className="font-semibold text-glacier-primary-800">{agent.fullName}</div>
-                            <div className="text-sm text-glacier-primary-600 flex items-center gap-2">
-                              <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-600 flex items-center justify-center text-white text-xs">
+                            <div className="font-semibold text-slate-800">{agent.fullName}</div>
+                            <div className="text-sm text-slate-600 flex items-center gap-2">
+                              <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center text-white text-xs">
                                 {getRoleIcon(agent.role)}
                               </div>
                               {getRoleName(agent.role)}
@@ -836,91 +891,91 @@ export default function ManagerDashboardContent() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-semibold text-glacier-primary-800">{agent.totalCalls} שיחות</div>
+                          <div className="text-sm font-semibold text-slate-800">{agent.totalCalls} שיחות</div>
                           <div className="text-xs">{getActivityBadge(agent.activityStatus)}</div>
                         </div>
                       </div>
                     ))}
                     
-                    {agents.length > 5 && (
-                      <div className="text-center pt-4 border-t border-glacier-primary-200">
+                                        {agents.length > 5 && (
+                      <div className="text-center pt-4 border-t border-slate-200">
                         <Link 
                           href="/team"
-                          className="text-sm text-glacier-primary-600 hover:text-glacier-primary-700 font-medium"
+                          className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                         >
                           +{agents.length - 5} נציגים נוספים
                         </Link>
-                      </div>
-                    )}
+              </div>
+            )}
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Right Column - Actions & Insights (1/4) */}
+                    {/* Right Column - Actions & Insights (1/4) */}
           <div className="space-y-6">
             {/* Quick Actions */}
-            <div className="bg-gradient-to-br from-white/95 to-glacier-accent-50 backdrop-blur-md border border-glacier-accent-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-glacier-soft p-6">
-              <h3 className="text-lg font-semibold text-glacier-primary-700 mb-4 flex items-center">
-                <Zap className="w-5 h-5 ml-2 text-glacier-secondary-600" />
+            <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+                <Zap className="w-5 h-5 ml-2 text-indigo-600" />
                 פעולות מהירות
               </h3>
               
               <div className="space-y-3">
                 <button 
                   onClick={() => router.push('/team/add-agent')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-glacier-primary-100 to-glacier-primary-200 border border-glacier-primary-300 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md hover:from-glacier-primary-200 hover:to-glacier-primary-300 transition-all duration-300 shadow-sm"
+                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl hover:from-indigo-100 hover:to-blue-100 transition-all duration-300 group"
                 >
-                  <UserPlus className="w-5 h-5 text-glacier-primary-700" />
-                  <span className="font-semibold text-glacier-primary-800">הוסף נציג</span>
+                  <UserPlus className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform" />
+                  <span className="font-semibold text-slate-700">הוסף נציג</span>
                 </button>
                 <button 
                   onClick={() => router.push('/dashboard/manager/all-calls')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-glacier-secondary-100 to-glacier-secondary-200 border border-glacier-secondary-300 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md hover:from-glacier-secondary-200 hover:to-glacier-secondary-300 transition-all duration-300 shadow-sm"
+                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl hover:from-emerald-100 hover:to-teal-100 transition-all duration-300 group"
                 >
-                  <Eye className="w-5 h-5 text-glacier-secondary-700" />
-                  <span className="font-semibold text-glacier-secondary-800">כל השיחות</span>
+                  <Eye className="w-5 h-5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                  <span className="font-semibold text-slate-700">כל השיחות</span>
                 </button>
                 <button 
                   onClick={() => router.push('/team')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-glacier-accent-100 to-glacier-accent-200 border border-glacier-accent-300 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md hover:from-glacier-accent-200 hover:to-glacier-accent-300 transition-all duration-300 shadow-sm"
+                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200 rounded-xl hover:from-purple-100 hover:to-violet-100 transition-all duration-300 group"
                 >
-                  <Users className="w-5 h-5 text-glacier-primary-700" />
-                  <span className="font-semibold text-glacier-primary-800">ניהול צוות</span>
+                  <Users className="w-5 h-5 text-purple-600 group-hover:scale-110 transition-transform" />
+                  <span className="font-semibold text-slate-700">ניהול צוות</span>
                 </button>
               </div>
             </div>
 
             {/* Recent Activity */}
-            <div className="bg-gradient-to-br from-white/95 to-glacier-secondary-50 backdrop-blur-md border border-glacier-secondary-200 rounded-tr-3xl rounded-bl-3xl rounded-tl-lg rounded-br-lg shadow-glacier-soft p-6">
-              <h3 className="text-lg font-semibold text-glacier-secondary-700 mb-4 flex items-center">
-                <Activity className="w-5 h-5 ml-2 text-glacier-secondary-600" />
+            <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center">
+                <Activity className="w-5 h-5 ml-2 text-emerald-600" />
                 פעילות אחרונה
               </h3>
               
               <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-glacier-primary-100 to-glacier-primary-200 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md border border-glacier-primary-300 shadow-sm">
-                  <div className="w-3 h-3 bg-gradient-to-r from-glacier-primary-500 to-glacier-primary-600 rounded-full shadow-sm"></div>
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-100">
+                  <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
                   <div className="text-sm">
-                    <span className="font-bold text-glacier-primary-800">{stats?.weeklyCalls || 0}</span>
-                    <span className="text-glacier-primary-700"> שיחות השבוע</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-glacier-secondary-100 to-glacier-secondary-200 rounded-tr-2xl rounded-bl-2xl rounded-tl-md rounded-br-md border border-glacier-secondary-300 shadow-sm">
-                  <div className="w-3 h-3 bg-gradient-to-r from-glacier-secondary-500 to-glacier-secondary-600 rounded-full shadow-sm"></div>
+                    <span className="font-bold text-slate-800">{stats?.weeklyCalls || 0}</span>
+                    <span className="text-slate-600"> שיחות השבוע</span>
+            </div>
+          </div>
+
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
+                  <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
                   <div className="text-sm">
-                    <span className="font-bold text-glacier-secondary-800">{stats?.totalAgents || 0}</span>
-                    <span className="text-glacier-secondary-700"> נציגים פעילים</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-glacier-accent-100 to-glacier-accent-200 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md border border-glacier-accent-300 shadow-sm">
-                  <div className="w-3 h-3 bg-gradient-to-r from-glacier-secondary-500 to-glacier-secondary-700 rounded-full shadow-sm"></div>
+                    <span className="font-bold text-slate-800">{stats?.totalAgents || 0}</span>
+                    <span className="text-slate-600"> נציגים פעילים</span>
+          </div>
+        </div>
+
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl border border-amber-100">
+                  <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
                   <div className="text-sm">
-                    <span className="font-bold text-glacier-secondary-800">{((stats?.avgScore || 0) * 10).toFixed(0)}%</span>
-                    <span className="text-glacier-secondary-700"> יעילות כללית</span>
+                    <span className="font-bold text-slate-800">{((stats?.avgScore || 0) * 10).toFixed(0)}%</span>
+                    <span className="text-slate-600"> יעילות כללית</span>
                   </div>
                 </div>
               </div>
@@ -994,42 +1049,42 @@ export default function ManagerDashboardContent() {
           </div>
         )}
 
-        {/* Comprehensive Team Calls Table */}
+                {/* Comprehensive Team Calls Table */}
         <div className="space-y-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md bg-gradient-to-br from-glacier-primary-400 to-glacier-primary-600 flex items-center justify-center text-white shadow-glacier-soft">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
               <Phone className="w-6 h-6" />
-            </div>
+      </div>
             <div>
-              <h2 className="text-2xl font-bold text-glacier-primary-800">שיחות הצוות</h2>
-              <p className="text-glacier-primary-600">כל השיחות של הצוות עם אפשרויות חיפוש וסינון מתקדמות</p>
+              <h2 className="text-2xl font-bold text-slate-800">שיחות הצוות</h2>
+              <p className="text-slate-600">כל השיחות של הצוות עם אפשרויות חיפוש וסינון מתקדמות</p>
             </div>
           </div>
 
           {/* Filters Section */}
-          <div className="bg-gradient-to-br from-white/95 to-glacier-primary-50 backdrop-blur-md border border-glacier-primary-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-glacier-soft p-6">
-            <h3 className="text-lg font-semibold text-glacier-primary-800 mb-4">חיפוש וסינון מתקדם</h3>
+          <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-slate-700 mb-4">חיפוש וסינון מתקדם</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
               {/* Search Input */}
               <div className="xl:col-span-2">
-                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">חיפוש כללי</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">חיפוש כללי</label>
                 <input
                   type="text"
                   placeholder="חפש לפי לקוח, נציג או סוג שיחה..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 placeholder-glacier-primary-500 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-800 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
 
               {/* Agent Filter */}
               <div>
-                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">נציג</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">נציג</label>
                 <select
                   value={agentFilter}
                   onChange={(e) => setAgentFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="all">כל הנציגים</option>
                   {agents.filter(agent => agent.role === 'agent').map(agent => (
@@ -1040,11 +1095,11 @@ export default function ManagerDashboardContent() {
 
               {/* Call Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">סוג שיחה</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">סוג שיחה</label>
                 <select
                   value={callTypeFilter}
                   onChange={(e) => setCallTypeFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="all">כל הסוגים</option>
                   <option value="sales_call">מכירה טלפונית</option>
@@ -1058,11 +1113,11 @@ export default function ManagerDashboardContent() {
 
               {/* Score Filter */}
               <div>
-                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">ציון</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">ציון</label>
                 <select
                   value={scoreFilter}
                   onChange={(e) => setScoreFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="all">כל הציונים</option>
                   <option value="high">גבוה (8+)</option>
@@ -1074,11 +1129,11 @@ export default function ManagerDashboardContent() {
 
               {/* Red Flag Filter */}
               <div>
-                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">דגלים אדומים</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">דגלים אדומים</label>
                 <select
                   value={redFlagFilter}
                   onChange={(e) => setRedFlagFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="all">הכל</option>
                   <option value="yes">עם דגל אדום</option>
@@ -1088,11 +1143,11 @@ export default function ManagerDashboardContent() {
 
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-glacier-primary-700 mb-2">סטטוס</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">סטטוס</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-glacier-primary-300 rounded-lg bg-white/80 text-glacier-primary-800 focus:outline-none focus:ring-2 focus:ring-glacier-primary-400 focus:border-glacier-primary-400"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="all">כל הסטטוסים</option>
                   <option value="completed">הושלם</option>
@@ -1103,10 +1158,10 @@ export default function ManagerDashboardContent() {
             </div>
 
             {/* Filter Summary */}
-            <div className="mt-4 pt-4 border-t border-glacier-primary-200">
+            <div className="mt-4 pt-4 border-t border-slate-200">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-glacier-primary-600">
-                  מציג <span className="font-semibold text-glacier-primary-800">{filteredCalls.length}</span> מתוך <span className="font-semibold text-glacier-primary-800">{allCalls.length}</span> שיחות
+                <p className="text-sm text-slate-600">
+                  מציג <span className="font-semibold text-slate-800">{filteredCalls.length}</span> מתוך <span className="font-semibold text-slate-800">{allCalls.length}</span> שיחות
                 </p>
                 <button
                   onClick={() => {
@@ -1117,7 +1172,7 @@ export default function ManagerDashboardContent() {
                     setRedFlagFilter('all');
                     setStatusFilter('all');
                   }}
-                  className="px-4 py-2 text-sm bg-gradient-to-r from-glacier-secondary-100 to-glacier-secondary-200 text-glacier-secondary-800 rounded-lg hover:from-glacier-secondary-200 hover:to-glacier-secondary-300 transition-all duration-200 border border-glacier-secondary-300"
+                  className="px-4 py-2 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all duration-200 border border-slate-300"
                 >
                   נקה סינונים
                 </button>
@@ -1126,13 +1181,13 @@ export default function ManagerDashboardContent() {
           </div>
 
           {/* Calls Table */}
-          <div className="bg-gradient-to-br from-white/95 to-glacier-primary-50 backdrop-blur-md border border-glacier-primary-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg shadow-glacier-soft overflow-hidden">
+          <div className="bg-white/90 backdrop-blur-sm border border-slate-200/50 rounded-2xl shadow-sm overflow-hidden">
             {/* Table Header */}
-            <div className="px-6 py-4 border-b border-glacier-primary-200 bg-gradient-to-r from-glacier-primary-100 to-glacier-accent-100">
+            <div className="px-6 py-4 border-b border-slate-200/50 bg-gradient-to-r from-slate-50 to-indigo-50/30">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-glacier-primary-800">שיחות הצוות</h3>
+                <h3 className="text-xl font-bold text-slate-800">שיחות הצוות</h3>
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-glacier-primary-600">
+                  <span className="text-sm text-slate-600">
                     מציג {Math.min(startCallsIndex + 1, totalCallsItems)} עד {Math.min(endCallsIndex, totalCallsItems)} מתוך {totalCallsItems} שיחות
                   </span>
                 </div>
@@ -1142,13 +1197,13 @@ export default function ManagerDashboardContent() {
             {/* Table Content */}
             {filteredCalls.length === 0 ? (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gradient-to-br from-glacier-primary-200 to-glacier-accent-200 rounded-tl-3xl rounded-br-3xl rounded-tr-lg rounded-bl-lg flex items-center justify-center mx-auto mb-4">
-                  <Phone className="w-8 h-8 text-glacier-primary-600" />
+                <div className="w-16 h-16 bg-gradient-to-br from-slate-200 to-indigo-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Phone className="w-8 h-8 text-slate-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-glacier-primary-800 mb-2">
+                <h3 className="text-lg font-semibold text-slate-700 mb-2">
                   {allCalls.length === 0 ? 'אין עדיין שיחות' : 'לא נמצאו שיחות מתאימות'}
                 </h3>
-                <p className="text-glacier-primary-600 mb-6">
+                <p className="text-slate-500 mb-6">
                   {allCalls.length === 0 
                     ? 'השיחות יופיעו כאן לאחר שהנציגים יעלו שיחות' 
                     : 'נסה לשנות את הסינונים או החיפוש'}
@@ -1158,49 +1213,49 @@ export default function ManagerDashboardContent() {
               <>
                 {/* Responsive Table */}
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-glacier-primary-200">
-                    <thead className="bg-gradient-to-r from-glacier-primary-100 to-glacier-primary-150">
+                  <table className="min-w-full divide-y divide-slate-200">
+                    <thead className="bg-slate-50">
                       <tr>
-                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-glacier-primary-700 uppercase tracking-wider">
+                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">
                           תאריך
                         </th>
-                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-glacier-primary-700 uppercase tracking-wider">
+                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">
                           נציג
                         </th>
-                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-glacier-primary-700 uppercase tracking-wider hidden lg:table-cell">
+                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider hidden lg:table-cell">
                           סוג שיחה
                         </th>
-                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-glacier-primary-700 uppercase tracking-wider">
+                        <th className="px-3 lg:px-4 py-3 text-right text-xs font-medium text-slate-600 uppercase tracking-wider">
                           לקוח
                         </th>
-                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-glacier-primary-700 uppercase tracking-wider">
+                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-slate-600 uppercase tracking-wider">
                           ציון
                         </th>
-                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-glacier-primary-700 uppercase tracking-wider hidden md:table-cell">
+                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-slate-600 uppercase tracking-wider hidden md:table-cell">
                           סטטוס
                         </th>
-                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-glacier-primary-700 uppercase tracking-wider">
+                        <th className="px-3 lg:px-4 py-3 text-center text-xs font-medium text-slate-600 uppercase tracking-wider">
                           פעולות
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white/80 divide-y divide-glacier-primary-200">
+                    <tbody className="bg-white divide-y divide-slate-200">
                       {paginatedCalls.map((call, index) => (
                         <tr 
                           key={call.id} 
-                          className="hover:bg-gradient-to-r hover:from-glacier-primary-50 hover:to-glacier-accent-50 transition-colors duration-200"
+                          className="hover:bg-slate-50 transition-colors duration-200"
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
-                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap text-sm text-glacier-primary-800">
+                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap text-sm text-slate-800">
                             <div className="space-y-1">
                               <div className="font-medium text-xs lg:text-sm">{formatDate(call.created_at)}</div>
                               {/* Mobile: Show call type under date */}
                               <div className="lg:hidden">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 rounded-tl-lg rounded-br-lg rounded-tr-sm rounded-bl-sm bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-600 flex items-center justify-center text-white">
+                                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white">
                                     {getCallTypeIcon(call.call_type)}
                                   </div>
-                                  <span className="text-xs font-medium text-glacier-primary-700 truncate max-w-[120px]" title={getCallTypeName(call.call_type)}>
+                                  <span className="text-xs font-medium text-slate-600 truncate max-w-[120px]" title={getCallTypeName(call.call_type)}>
                                     {getCallTypeName(call.call_type)}
                                   </span>
                                 </div>
@@ -1209,25 +1264,25 @@ export default function ManagerDashboardContent() {
                           </td>
                           <td className="px-3 lg:px-4 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-glacier-primary-500 to-glacier-secondary-500 flex items-center justify-center text-white font-bold text-xs">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
                                 {call.agent_name?.charAt(0) || '?'}
                               </div>
-                              <span className="text-sm font-medium text-glacier-primary-800 max-w-xs truncate" title={call.agent_name}>
+                              <span className="text-sm font-medium text-slate-800 max-w-xs truncate" title={call.agent_name}>
                                 {call.agent_name}
                               </span>
                             </div>
                           </td>
                           <td className="px-3 lg:px-4 py-4 whitespace-nowrap hidden lg:table-cell">
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-tr-lg rounded-bl-lg rounded-tl-sm rounded-br-sm bg-gradient-to-br from-glacier-secondary-400 to-glacier-secondary-600 flex items-center justify-center text-white">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white">
                                 {getCallTypeIcon(call.call_type)}
                               </div>
-                              <span className="text-sm font-medium text-glacier-primary-800 max-w-xs truncate" title={getCallTypeName(call.call_type)}>
+                              <span className="text-sm font-medium text-slate-800 max-w-xs truncate" title={getCallTypeName(call.call_type)}>
                                 {getCallTypeName(call.call_type)}
                               </span>
                             </div>
                           </td>
-                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap text-sm text-glacier-primary-800">
+                          <td className="px-3 lg:px-4 py-4 whitespace-nowrap text-sm text-slate-800">
                             <div className="flex items-center gap-2">
                               <span className="max-w-[100px] lg:max-w-xs truncate" title={call.customer_name || 'לקוח ללא שם'}>
                                 {call.customer_name || 'לקוח ללא שם'}
@@ -1255,7 +1310,7 @@ export default function ManagerDashboardContent() {
                             {call.processing_status === 'completed' && (
                               <Link 
                                 href={`/call/${call.id}`}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-glacier-primary-500 to-glacier-primary-600 hover:from-glacier-primary-600 hover:to-glacier-primary-700 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 text-xs font-medium"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105 text-xs font-medium"
                               >
                                 <span className="hidden sm:inline">צפה</span>
                                 <span className="sm:hidden">דוח</span>
@@ -1271,9 +1326,9 @@ export default function ManagerDashboardContent() {
 
                 {/* Pagination Controls */}
                 {totalCallsItems > callsPerPage && (
-                  <div className="px-4 lg:px-6 py-4 border-t border-glacier-primary-200 bg-gradient-to-r from-glacier-primary-50 to-glacier-accent-50">
+                  <div className="px-4 lg:px-6 py-4 border-t border-slate-200 bg-slate-50">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 text-sm text-glacier-primary-600">
+                      <div className="flex items-center gap-4 text-sm text-slate-600">
                         <span>
                           מציג {startCallsIndex + 1} עד {Math.min(endCallsIndex, totalCallsItems)} מתוך {totalCallsItems} שיחות
                         </span>
@@ -1284,7 +1339,7 @@ export default function ManagerDashboardContent() {
                           <button
                             onClick={() => handleCallsPageChange(Math.max(1, currentCallsPage - 1))}
                             disabled={currentCallsPage === 1}
-                            className="px-3 py-2 text-sm border border-glacier-primary-300 rounded-tl-lg rounded-br-lg rounded-tr-sm rounded-bl-sm disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-glacier-primary-50 text-glacier-primary-700 transition-colors"
+                            className="px-3 py-2 text-sm border border-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-slate-50 text-slate-700 transition-colors"
                           >
                             קודם
                           </button>
@@ -1296,10 +1351,10 @@ export default function ManagerDashboardContent() {
                                 <button
                                   key={pageNum}
                                   onClick={() => handleCallsPageChange(pageNum)}
-                                  className={`px-3 py-2 text-sm rounded-tl-md rounded-br-md rounded-tr-sm rounded-bl-sm transition-colors ${
+                                  className={`px-3 py-2 text-sm rounded-lg transition-colors ${
                                     currentCallsPage === pageNum
-                                      ? 'bg-gradient-to-r from-glacier-primary-500 to-glacier-primary-600 text-white shadow-sm'
-                                      : 'border border-glacier-primary-300 bg-white hover:bg-glacier-primary-50 text-glacier-primary-700'
+                                      ? 'bg-indigo-600 text-white shadow-sm'
+                                      : 'border border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
                                   }`}
                                 >
                                   {pageNum}
@@ -1311,7 +1366,7 @@ export default function ManagerDashboardContent() {
                           <button
                             onClick={() => handleCallsPageChange(Math.min(totalCallsPages, currentCallsPage + 1))}
                             disabled={currentCallsPage === totalCallsPages}
-                            className="px-3 py-2 text-sm border border-glacier-primary-300 rounded-tr-lg rounded-bl-lg rounded-tl-sm rounded-br-sm disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-glacier-primary-50 text-glacier-primary-700 transition-colors"
+                            className="px-3 py-2 text-sm border border-slate-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-slate-50 text-slate-700 transition-colors"
                           >
                             הבא
                           </button>

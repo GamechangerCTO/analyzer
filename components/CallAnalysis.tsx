@@ -53,6 +53,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   const [audioLoading, setAudioLoading] = useState(false)
   const [retryAttempts, setRetryAttempts] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [actualDuration, setActualDuration] = useState<number | null>(null)
   
   const audioRef = useRef<HTMLAudioElement>(null)
   
@@ -381,6 +382,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       handleAudioError();
     }
     
+    const handleLoadedMetadata = () => {
+      if (audioElement.duration && !isNaN(audioElement.duration) && isFinite(audioElement.duration)) {
+        setActualDuration(audioElement.duration);
+        console.log('✅ קלטתי משך זמן אמיתי מהקובץ:', audioElement.duration);
+      }
+    }
+    
     audioElement.addEventListener('timeupdate', updateTime)
     audioElement.addEventListener('pause', handlePause)
     audioElement.addEventListener('ended', handleEnded)
@@ -390,6 +398,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     audioElement.addEventListener('canplay', handleCanPlay)
     audioElement.addEventListener('abort', handleLoadError)
     audioElement.addEventListener('stalled', handleLoadError)
+    audioElement.addEventListener('loadedmetadata', handleLoadedMetadata)
     
     return () => {
       audioElement.removeEventListener('timeupdate', updateTime)
@@ -401,6 +410,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       audioElement.removeEventListener('canplay', handleCanPlay)
       audioElement.removeEventListener('abort', handleLoadError)
       audioElement.removeEventListener('stalled', handleLoadError)
+      audioElement.removeEventListener('loadedmetadata', handleLoadedMetadata)
     }
   }, [])
   
@@ -1414,8 +1424,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                       <div className="backdrop-blur-sm bg-green-500/10 border border-green-300/30 p-4 rounded-xl shadow-inner hover:bg-green-500/20 transition-all duration-300">
                         <div className="text-sm text-green-700 font-medium">משך השיחה</div>
                         <div className="text-lg font-semibold text-green-800">
-                          {formatTime(call.audio_duration_seconds)} ⏱️
+                          {actualDuration ? formatTime(actualDuration) : formatTime(call.audio_duration_seconds)} ⏱️
                         </div>
+                        {actualDuration && call.audio_duration_seconds && Math.abs(actualDuration - call.audio_duration_seconds) > 5 && (
+                          <div className="text-xs text-green-600 mt-1">
+                            (מתוקן מ: {formatTime(call.audio_duration_seconds)})
+                          </div>
+                        )}
                       </div>
                       <div className="backdrop-blur-sm bg-purple-500/10 border border-purple-300/30 p-4 rounded-xl shadow-inner hover:bg-purple-500/20 transition-all duration-300">
                         <div className="text-sm text-purple-700 font-medium">תאריך ניתוח</div>
