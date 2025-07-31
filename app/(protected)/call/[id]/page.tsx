@@ -63,35 +63,35 @@ export default async function CallPage({ params }: CallPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Header מעוצב בסגנון Glacier */}
+    <div className="min-h-screen bg-gradient-to-br from-brand-primary/5 via-brand-secondary/8 to-neutral-50">
+      {/* Header with brand design */}
       <div className="relative">
         {/* Background gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/20 to-blue-900/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/10 to-brand-secondary/10"></div>
         
-        {/* Glassmorphism header */}
-        <div className="relative backdrop-blur-xl bg-white/10 border-b border-white/20 shadow-2xl">
+        {/* Brand styled header */}
+        <div className="relative bg-white border-b-2 border-brand-primary/20 shadow-lg">
           <div className="max-w-7xl mx-auto px-6 py-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-6 rtl:space-x-reverse">
-                {/* Logo/Icon עם גלס מורפיזם */}
-                <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 backdrop-blur-sm border border-white/30 shadow-xl">
-                  <Brain className="w-8 h-8 text-blue-600" />
+                {/* Logo/Icon with brand styling */}
+                <div className="flex items-center justify-center w-16 h-16 rounded-tl-2xl rounded-br-2xl bg-gradient-to-br from-brand-primary to-brand-secondary border-2 border-white shadow-xl">
+                  <Brain className="w-8 h-8 text-white" />
                 </div>
                 
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent mb-2">
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent mb-2">
                     Coachee - ניתוח שיחה מקצועי
                   </h1>
-                  <div className="flex items-center space-x-4 rtl:space-x-reverse text-sm text-slate-600">
-                    <span className="px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full border border-white/30">
+                  <div className="flex items-center space-x-4 rtl:space-x-reverse text-sm text-neutral-600">
+                    <span className="px-3 py-1 bg-neutral-100 border border-neutral-200 rounded-tl-xl rounded-br-xl">
                       📅 {new Date(callData.created_at).toLocaleDateString('he-IL')}
                     </span>
-                    <span className="px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full border border-white/30">
+                    <span className="px-3 py-1 bg-neutral-100 border border-neutral-200 rounded-tr-xl rounded-bl-xl">
                       👤 {callData.users?.full_name || callData.users?.email}
                     </span>
                     {callData.companies?.name && (
-                      <span className="px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full border border-white/30">
+                      <span className="px-3 py-1 bg-neutral-100 border border-neutral-200 rounded-tl-xl rounded-br-xl">
                         🏢 {callData.companies.name}
                       </span>
                     )}
@@ -101,7 +101,7 @@ export default async function CallPage({ params }: CallPageProps) {
               
               <a 
                 href="/dashboard"
-                className="group inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all duration-300 font-medium shadow-xl hover:shadow-2xl hover:scale-105 backdrop-blur-sm border border-white/20"
+                className="group inline-flex items-center px-6 py-3 bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary-dark hover:to-brand-secondary-dark text-white rounded-tl-2xl rounded-br-2xl transition-all duration-300 font-medium shadow-xl hover:shadow-2xl hover:scale-105 border border-white/20"
               >
                 <ArrowRight className="w-5 h-5 mr-2 group-hover:transform group-hover:translate-x-1 transition-transform duration-300" />
                 חזרה לדשבורד
@@ -111,10 +111,10 @@ export default async function CallPage({ params }: CallPageProps) {
         </div>
       </div>
       
-      {/* Content עם גלס מורפיזם */}
+      {/* Content with brand styling */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="backdrop-blur-xl bg-white/10 rounded-3xl border border-white/20 shadow-2xl p-1">
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-white/30 shadow-inner">
+        <div className="bg-white rounded-tl-3xl rounded-br-3xl border-2 border-brand-primary/20 shadow-2xl p-1">
+          <div className="bg-white rounded-tl-3xl rounded-br-3xl border border-neutral-200 shadow-inner">
             <CallAnalysis call={callData as any} audioUrl={audioUrl} userRole={userData?.role} />
           </div>
         </div>

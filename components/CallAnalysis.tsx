@@ -1111,16 +1111,16 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
   // פונקציה לקבלת צבע רקע לפי ציון
   const getScoreBg = (score: number) => {
-    if (score >= 8) return 'bg-green-100 text-green-800';
-    if (score >= 6) return 'bg-yellow-100 text-yellow-800';
-    if (score >= 4) return 'bg-orange-100 text-orange-800';
-    return 'bg-red-100 text-red-800';
+    if (score >= 8) return 'bg-brand-success/10 text-brand-success border border-brand-success/20';
+    if (score >= 6) return 'bg-brand-warning/10 text-brand-warning border border-brand-warning/20';
+    if (score >= 4) return 'bg-orange-100 text-orange-700 border border-orange-200';
+    return 'bg-red-100 text-red-700 border border-red-200';
   };
 
   // פונקציה לקביעת צבע הציון
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-green-600';
-    if (score >= 6) return 'text-yellow-600';
+    if (score >= 8) return 'text-brand-success';
+    if (score >= 6) return 'text-brand-warning';
     if (score >= 4) return 'text-orange-600';
     return 'text-red-600';
   };
@@ -1270,34 +1270,34 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
-      {/* Header פנימי עם גלס מורפיזם מתקדם */}
+    <div className="min-h-screen bg-gradient-to-br from-brand-primary/5 via-brand-secondary/8 to-neutral-50 p-6">
+      {/* Header פנימי עם brand styling */}
       <div className="relative mb-8">
-        {/* Background layers עם אפקטי עומק */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-indigo-500/15 to-purple-500/20 rounded-3xl blur-xl"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10 rounded-3xl"></div>
+        {/* Background layers */}
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/10 via-brand-secondary/10 to-brand-primary/10 rounded-tl-3xl rounded-br-3xl blur-xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10 rounded-tl-3xl rounded-br-3xl"></div>
         
         {/* Header content */}
-        <div className="relative backdrop-blur-xl bg-white/30 border border-white/40 rounded-3xl shadow-2xl p-8 hover:shadow-3xl transition-all duration-500">
+        <div className="relative bg-white border border-brand-primary/20 rounded-tl-3xl rounded-br-3xl shadow-2xl p-8 hover:shadow-3xl transition-all duration-500">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6 rtl:space-x-reverse">
-              <div className={`relative flex items-center justify-center w-20 h-20 rounded-3xl shadow-2xl border-2 border-white/50 backdrop-blur-xl transition-all duration-500 hover:scale-110 ${
-                finalOverallScore >= 8 ? 'bg-gradient-to-br from-emerald-400/30 to-green-500/30' :
-                finalOverallScore >= 6 ? 'bg-gradient-to-br from-amber-400/30 to-orange-500/30' :
-                'bg-gradient-to-br from-red-400/30 to-pink-500/30'
+              <div className={`relative flex items-center justify-center w-20 h-20 rounded-tl-3xl rounded-br-3xl shadow-2xl border-2 border-white/50 transition-all duration-500 hover:scale-110 ${
+                finalOverallScore >= 8 ? 'bg-gradient-to-br from-brand-success/20 to-brand-success/30' :
+                finalOverallScore >= 6 ? 'bg-gradient-to-br from-brand-warning/20 to-brand-warning/30' :
+                'bg-gradient-to-br from-red-400/20 to-red-500/30'
               }`}>
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-3xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-tl-3xl rounded-br-3xl"></div>
                 <span className={`relative text-3xl font-bold ${getScoreColor(finalOverallScore)} animate-pulse`}>
                   {finalOverallScore}
                 </span>
               </div>
               <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-800 via-blue-700 to-indigo-600 bg-clip-text text-transparent">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">
                   {call.call_type === 'sales' ? 'שיחת מכירות מקצועית' : 
                    (call.call_type === 'customer_service' || call.call_type === 'שירות לקוחות מגיב – בעקבות פניה של לקוח') ? 'שיחת שירות מקצועית' : 
                    'ניתוח שיחה מקצועי'}
                 </h2>
-                <p className="text-slate-600 text-lg font-medium mt-1">תוצאות מפורטות מבוססות נתונים מתקדמים ✨</p>
+                <p className="text-neutral-600 text-lg font-medium mt-1">תוצאות מפורטות מבוססות נתונים מתקדמים ✨</p>
               </div>
             </div>
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
@@ -1336,24 +1336,24 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         </div>
       </div>
 
-      {/* Navigation Tabs עם גלס מורפיזם מתקדם */}
+      {/* Navigation Tabs with brand styling */}
       <div className="mb-8">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-indigo-500/15 to-purple-500/20 rounded-3xl blur-xl"></div>
-          <div className="relative backdrop-blur-2xl bg-white/20 border border-white/40 rounded-3xl shadow-2xl p-3">
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/10 via-brand-secondary/10 to-brand-primary/10 rounded-tl-3xl rounded-br-3xl blur-xl"></div>
+          <div className="relative bg-white border border-brand-primary/20 rounded-tr-3xl rounded-bl-3xl shadow-2xl p-3">
             <nav className="flex flex-wrap gap-3">
               {['content', 'tone', 'summary', ...(userRole === 'admin' ? ['transcript'] : [])].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`relative py-4 px-8 rounded-2xl font-bold transition-all duration-500 overflow-hidden group ${
+                  className={`relative py-4 px-8 rounded-tl-2xl rounded-br-2xl font-bold transition-all duration-500 overflow-hidden group ${
                     activeTab === tab
-                      ? 'bg-gradient-to-r from-blue-600/90 to-indigo-600/90 text-white shadow-2xl border border-white/30 scale-105'
-                      : 'text-slate-700 bg-white/40 hover:bg-white/60 hover:text-blue-700 border border-white/40 hover:border-blue-400/60 hover:shadow-xl hover:scale-105'
+                      ? 'bg-gradient-to-r from-brand-primary to-brand-secondary text-white shadow-2xl border border-white/30 scale-105'
+                      : 'text-neutral-700 bg-neutral-50 hover:bg-neutral-100 hover:text-brand-primary border border-neutral-200 hover:border-brand-primary/30 hover:shadow-xl hover:scale-105'
                   }`}
                 >
                   {activeTab === tab && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/30 to-indigo-400/30 animate-pulse rounded-2xl"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/30 to-brand-secondary/30 animate-pulse rounded-tl-2xl rounded-br-2xl"></div>
                   )}
                   <span className="relative z-10 flex items-center">
                     {tab === 'summary' ? '📊 סיכום כללי' :
@@ -1362,7 +1362,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                      '📄 תמליל'}
                   </span>
                   {activeTab !== tab && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/10 group-hover:to-indigo-500/10 rounded-2xl transition-all duration-300"></div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/0 to-brand-secondary/0 group-hover:from-brand-primary/10 group-hover:to-brand-secondary/10 rounded-tl-2xl rounded-br-2xl transition-all duration-300"></div>
                   )}
                 </button>
               ))}
@@ -1372,25 +1372,25 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       </div>
 
       {/* Tab Content עם גלס מורפיזם */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {activeTab === 'summary' && (
           <div className="space-y-6">
             {/* סיכום כללי */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* ציון כללי */}
               <div className="lg:col-span-1">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-2xl"></div>
-                  <div className="relative backdrop-blur-xl bg-white/80 border border-white/30 rounded-2xl shadow-xl p-6 text-center hover:shadow-2xl transition-all duration-300">
-                    <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-slate-700 to-blue-600 bg-clip-text text-transparent">ציון כללי</h3>
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 rounded-tl-2xl rounded-br-2xl"></div>
+                  <div className="relative bg-white border border-brand-primary/20 rounded-tl-2xl rounded-br-2xl shadow-xl p-6 text-center hover:shadow-2xl transition-all duration-300">
+                    <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent">ציון כללי</h3>
                     <div className={`text-6xl font-bold mb-4 ${getScoreColor(finalOverallScore)} transition-all duration-500 hover:scale-110`}>
                       {finalOverallScore}
                     </div>
-                    <div className="text-slate-600 text-lg font-medium">מתוך 10</div>
-                    <div className={`mt-4 p-4 rounded-xl backdrop-blur-sm border shadow-inner ${
-                      finalOverallScore >= 8 ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-300/30' :
-                      finalOverallScore >= 6 ? 'bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-yellow-300/30' :
-                      'bg-gradient-to-br from-red-500/20 to-pink-500/20 border-red-300/30'
+                    <div className="text-neutral-600 text-lg font-medium">מתוך 10</div>
+                    <div className={`mt-4 p-4 rounded-tr-xl rounded-bl-xl border shadow-inner ${
+                      finalOverallScore >= 8 ? 'bg-gradient-to-br from-brand-success/10 to-brand-success/20 border-brand-success/30' :
+                      finalOverallScore >= 6 ? 'bg-gradient-to-br from-brand-warning/10 to-brand-warning/20 border-brand-warning/30' :
+                      'bg-gradient-to-br from-red-500/20 to-red-600/20 border-red-300/30'
                     }`}>
                       <span className={`text-sm font-medium ${getScoreColor(finalOverallScore)}`}>
                         {finalOverallScore >= 8 ? 'ביצועים מעולים! 🏆' :
@@ -1910,16 +1910,16 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
             {/* נקודות חוזק */}
             {analysis_report.נקודות_חוזקה && analysis_report.נקודות_חוזקה.length > 0 && (
-              <div className="bg-green-50 border border-green-200 rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold mb-4 text-green-700 flex items-center">
+              <div className="bg-brand-success/10 border border-brand-success/20 rounded-tl-xl rounded-br-xl shadow-lg p-6">
+                <h3 className="text-xl font-semibold mb-4 text-brand-success flex items-center">
                   <span className="mr-2">✅</span>
                   נקודות חוזק
                 </h3>
                 <ul className="space-y-2">
                   {analysis_report.נקודות_חוזקה.map((item: string, index: number) => (
                     <li key={index} className="flex items-start">
-                      <span className="text-green-500 mr-2">•</span>
-                      <span className="text-green-700">{item}</span>
+                      <span className="text-brand-success mr-2">•</span>
+                      <span className="text-brand-success">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -1928,16 +1928,16 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
             {/* המלצות דחופות ביותר */}
             {analysis_report.המלצות_דחופות_ביותר && analysis_report.המלצות_דחופות_ביותר.length > 0 && (
-              <div className="bg-orange-50 border border-orange-200 rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold mb-4 text-orange-700 flex items-center">
+              <div className="bg-brand-warning/10 border border-brand-warning/20 rounded-tr-xl rounded-bl-xl shadow-lg p-6">
+                <h3 className="text-xl font-semibold mb-4 text-brand-warning flex items-center">
                   <span className="mr-2">🎯</span>
                   המלצות דחופות ביותר
                 </h3>
                 <ul className="space-y-2">
                   {analysis_report.המלצות_דחופות_ביותר.map((item: string, index: number) => (
                     <li key={index} className="flex items-start">
-                      <span className="text-orange-500 mr-2">•</span>
-                      <span className="text-orange-700">{item}</span>
+                      <span className="text-brand-warning mr-2">•</span>
+                      <span className="text-brand-warning">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -1952,16 +1952,16 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 <div 
                   key={categoryIndex} 
                   id={`category-${categoryData.category.replace(/\s+/g, '-')}`}
-                  className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 ${
+                  className={`bg-white rounded-tl-xl rounded-br-xl shadow-lg overflow-hidden transition-all duration-300 ${
                     selectedCategory === categoryData.category 
-                      ? 'ring-4 ring-blue-300 ring-opacity-75 shadow-2xl' 
+                      ? 'ring-4 ring-brand-primary/30 ring-opacity-75 shadow-2xl' 
                       : ''
                   }`}
                 >
                   <div className={`bg-gradient-to-r px-6 py-4 ${
                     selectedCategory === categoryData.category 
-                      ? 'from-blue-700 to-blue-800' 
-                      : 'from-blue-600 to-blue-700'
+                      ? 'from-brand-primary to-brand-secondary' 
+                      : 'from-brand-primary to-brand-secondary'
                   }`}>
                     <h3 className="text-xl font-semibold text-white flex items-center justify-between">
                       <span className="flex items-center">

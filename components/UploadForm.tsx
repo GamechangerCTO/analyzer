@@ -410,25 +410,25 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
   const isManager = userData?.role === 'manager';
   
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
 
         {uploadStep === 'upload' && (
-          <div className="space-y-8">
+          <div className="space-y-4">
             
             {/* אינדיקטור צעדים עם אנימציות מתקדמות - Responsive 2025 */}
-            <div className="flex items-center justify-center mb-6 md:mb-8 px-4">
-              <div className="flex items-center space-x-2 md:space-x-4 overflow-x-auto max-w-full">
+            <div className="flex items-center justify-center mb-4 md:mb-6 px-4">
+              <div className="flex items-center space-x-1 md:space-x-2 overflow-x-auto max-w-full">
                 {/* צעד 1 - קובץ */}
-                                  <div className={`relative flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-2 md:py-3 rounded-xl md:rounded-2xl transition-all duration-500 ease-out transform text-xs md:text-sm min-w-0 flex-shrink-0 ${
+                                  <div className={`relative flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-2 md:py-3 rounded-tl-xl rounded-br-xl transition-all duration-500 ease-out transform text-xs md:text-sm min-w-0 flex-shrink-0 ${
                     currentStep === 'file' 
-                      ? 'bg-glacier-primary text-white scale-105 shadow-lg animate-pulse' 
+                      ? 'bg-brand-primary text-white scale-105 shadow-lg animate-pulse' 
                       : file 
-                        ? 'bg-glacier-success text-white scale-100 shadow-md'
+                        ? 'bg-brand-success text-white scale-100 shadow-md'
                         : 'bg-neutral-200 text-neutral-800 border border-neutral-300 hover:scale-105 hover:shadow-md'
                   }`}>
                     {/* Background glow effect */}
                     {currentStep === 'file' && (
-                      <div className="absolute inset-0 bg-glacier-primary rounded-xl md:rounded-2xl animate-pulse opacity-50 blur-sm"></div>
+                      <div className="absolute inset-0 bg-brand-primary rounded-tl-xl rounded-br-xl animate-pulse opacity-50 blur-sm"></div>
                     )}
                     
                     <FileAudio className={`w-4 h-4 md:w-5 md:h-5 relative z-10 transition-transform duration-300 flex-shrink-0 ${
@@ -444,22 +444,22 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                   </div>
                 
                 <ArrowRight className={`w-4 h-4 md:w-5 md:h-5 transition-all duration-300 flex-shrink-0 ${
-                  file ? 'text-glacier-success animate-pulse' : 'text-neutral-400'
+                  file ? 'text-brand-success animate-pulse' : 'text-neutral-400'
                 }`} />
                 
                 {/* צעד 2 - פרטים */}
-                <div className={`relative flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-2 md:py-3 rounded-xl md:rounded-2xl transition-all duration-500 ease-out transform text-xs md:text-sm min-w-0 flex-shrink-0 ${
+                <div className={`relative flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-2 md:py-3 rounded-tr-xl rounded-bl-xl transition-all duration-500 ease-out transform text-xs md:text-sm min-w-0 flex-shrink-0 ${
                   currentStep === 'details' 
-                    ? 'bg-glacier-primary text-white scale-105 shadow-lg animate-pulse' 
+                    ? 'bg-brand-primary text-white scale-105 shadow-lg animate-pulse' 
                     : (callType && customerName)
-                      ? 'bg-glacier-success text-white scale-100 shadow-md'
+                      ? 'bg-brand-success text-white scale-100 shadow-md'
                       : file
                         ? 'bg-neutral-200 text-neutral-800 border border-neutral-300 hover:scale-105 hover:shadow-md cursor-pointer'
                         : 'bg-neutral-100 text-neutral-400 border border-neutral-200 opacity-50'
                 }`}>
                   {/* Background glow effect */}
                   {currentStep === 'details' && (
-                    <div className="absolute inset-0 bg-glacier-primary rounded-xl md:rounded-2xl animate-pulse opacity-50 blur-sm"></div>
+                    <div className="absolute inset-0 bg-brand-primary rounded-tr-xl rounded-bl-xl animate-pulse opacity-50 blur-sm"></div>
                   )}
                   
                   <Info className={`w-4 h-4 md:w-5 md:h-5 relative z-10 transition-transform duration-300 flex-shrink-0 ${
@@ -475,20 +475,20 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                 </div>
                 
                 <ArrowRight className={`w-4 h-4 md:w-5 md:h-5 transition-all duration-300 flex-shrink-0 ${
-                  (callType && customerName) ? 'text-glacier-success animate-pulse' : 'text-neutral-400'
+                  (callType && customerName) ? 'text-brand-success animate-pulse' : 'text-neutral-400'
                 }`} />
                 
                 {/* צעד 3 - שליחה */}
-                <div className={`relative flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-2 md:py-3 rounded-xl md:rounded-2xl transition-all duration-500 ease-out transform text-xs md:text-sm min-w-0 flex-shrink-0 ${
+                <div className={`relative flex items-center space-x-1 md:space-x-2 px-2 md:px-4 py-2 md:py-3 rounded-tl-xl rounded-br-xl transition-all duration-500 ease-out transform text-xs md:text-sm min-w-0 flex-shrink-0 ${
                   currentStep === 'submit' 
-                    ? 'bg-glacier-primary text-white scale-105 shadow-lg animate-pulse' 
+                    ? 'bg-brand-primary text-white scale-105 shadow-lg animate-pulse' 
                     : (callType && customerName)
                       ? 'bg-neutral-200 text-neutral-800 border border-neutral-300 hover:scale-105 hover:shadow-md cursor-pointer'
                       : 'bg-neutral-100 text-neutral-400 border border-neutral-200 opacity-50'
                 }`}>
                   {/* Background glow effect */}
                   {currentStep === 'submit' && (
-                    <div className="absolute inset-0 bg-glacier-primary rounded-xl md:rounded-2xl animate-pulse opacity-50 blur-sm"></div>
+                    <div className="absolute inset-0 bg-brand-primary rounded-tl-xl rounded-br-xl animate-pulse opacity-50 blur-sm"></div>
                   )}
                   
                   <Zap className={`w-4 h-4 md:w-5 md:h-5 relative z-10 transition-transform duration-300 flex-shrink-0 ${
@@ -502,16 +502,16 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-4">
               
               {/* שלב 1: בחירת קובץ - Mobile Optimized */}
               {currentStep === 'file' && (
-                <div className="space-y-4 md:space-y-6 animate-in slide-in-from-bottom duration-500 px-4 md:px-0">
+                <div className="space-y-3 md:space-y-4 animate-in slide-in-from-bottom duration-500 px-4 md:px-0">
                   
                   {/* כרטיס הדרכה - Mobile Optimized */}
-                  <div className="bg-gradient-to-r from-glacier-accent-50 to-glacier-secondary-50 border border-glacier-accent-200 rounded-2xl md:rounded-3xl p-4 md:p-6">
+                  <div className="bg-gradient-to-r from-brand-secondary/10 to-brand-primary/10 border border-brand-secondary/20 rounded-tl-2xl rounded-br-2xl p-4 md:p-6">
                     <div className="flex items-start space-x-3 md:space-x-4">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-glacier-accent rounded-xl md:rounded-2xl flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-brand-secondary rounded-tl-xl rounded-br-xl flex items-center justify-center flex-shrink-0">
                         <Headphones className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -539,14 +539,14 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                     onTouchStart={() => setIsHovering(true)}
                     onTouchEnd={() => setIsHovering(false)}
                     className={`
-                      relative cursor-pointer border-2 border-dashed rounded-2xl md:rounded-3xl p-6 md:p-12 text-center transition-all duration-500 ease-out group overflow-hidden touch-action-manipulation
+                      relative cursor-pointer border-2 border-dashed rounded-tl-2xl rounded-br-2xl p-6 md:p-12 text-center transition-all duration-500 ease-out group overflow-hidden touch-action-manipulation
                       ${dragActive 
-                        ? 'border-glacier-accent bg-glacier-accent-50 scale-105 shadow-2xl rotate-1 transform-gpu' 
+                        ? 'border-brand-secondary bg-brand-secondary/10 scale-105 shadow-2xl rotate-1 transform-gpu' 
                         : file
-                          ? 'border-glacier-success bg-glacier-success-50 shadow-xl scale-102'
+                          ? 'border-brand-success bg-brand-success/10 shadow-xl scale-102'
                           : isHovering 
-                            ? 'border-glacier-primary bg-gradient-to-br from-glacier-primary-light to-white shadow-xl scale-102 transform-gpu'
-                            : 'border-neutral-300 bg-white hover:border-glacier-primary hover:bg-glacier-primary-50 shadow-lg active:scale-95'
+                            ? 'border-brand-primary bg-gradient-to-br from-brand-primary/5 to-white shadow-xl scale-102 transform-gpu'
+                            : 'border-neutral-300 bg-white hover:border-brand-primary hover:bg-brand-primary/5 shadow-lg active:scale-95'
                       }
                       ${isFileAnimating ? 'animate-pulse' : ''}
                       ${showSuccessAnimation ? 'animate-bounce' : ''}
@@ -562,8 +562,8 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                     
                     {isConverting ? (
                       <div className="space-y-4">
-                        <div className="w-20 h-20 bg-glacier-warning-100 rounded-2xl flex items-center justify-center mx-auto">
-                          <Loader2 className="w-10 h-10 text-glacier-warning-600 animate-spin" />
+                        <div className="w-20 h-20 bg-brand-warning/10 rounded-tl-2xl rounded-br-2xl flex items-center justify-center mx-auto">
+                          <Loader2 className="w-10 h-10 text-brand-warning animate-spin" />
                         </div>
                         <div>
                           <h3 className="text-xl font-bold text-neutral-900 mb-2">
@@ -574,14 +574,14 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                       </div>
                     ) : file ? (
                       <div className="space-y-4">
-                        <div className="w-20 h-20 bg-glacier-success-100 rounded-2xl flex items-center justify-center mx-auto">
-                          <CheckCircle2 className="w-10 h-10 text-glacier-success-600" />
+                        <div className="w-20 h-20 bg-brand-success/10 rounded-tl-2xl rounded-br-2xl flex items-center justify-center mx-auto">
+                          <CheckCircle2 className="w-10 h-10 text-brand-success" />
                         </div>
                         <div>
-                          <h3 className="text-xl font-bold text-glacier-success-800 mb-2">
+                          <h3 className="text-xl font-bold text-brand-success mb-2">
                             קובץ נבחר בהצלחה!
                           </h3>
-                          <p className="text-glacier-neutral-700 text-lg font-medium">
+                          <p className="text-neutral-700 text-lg font-medium">
                             {fileName}
                           </p>
                           <button
@@ -590,7 +590,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                               e.stopPropagation();
                               resetForm();
                             }}
-                            className="mt-3 text-glacier-neutral-500 hover:text-glacier-neutral-700 text-sm underline"
+                            className="mt-3 text-neutral-500 hover:text-neutral-700 text-sm underline"
                           >
                             בחר קובץ אחר
                           </button>
@@ -598,7 +598,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                       </div>
                     ) : (
                       <div className="space-y-3 md:space-y-4">
-                        <div className={`relative w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-glacier-primary to-glacier-accent rounded-2xl flex items-center justify-center mx-auto transition-all duration-500 ease-out transform-gpu ${
+                        <div className={`relative w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-tl-2xl rounded-br-2xl flex items-center justify-center mx-auto transition-all duration-500 ease-out transform-gpu ${
                           dragActive ? 'scale-125 rotate-6 shadow-2xl' : 
                           isHovering ? 'scale-110 -rotate-3 shadow-xl' : 
                           showSuccessAnimation ? 'scale-125 rotate-12' : 
@@ -616,8 +616,8 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                           {/* Floating particles effect */}
                           {(dragActive || isHovering) && (
                             <>
-                              <div className="absolute -top-2 -right-2 w-3 h-3 bg-glacier-accent rounded-full animate-ping opacity-75"></div>
-                              <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-glacier-primary rounded-full animate-pulse opacity-75"></div>
+                              <div className="absolute -top-2 -right-2 w-3 h-3 bg-brand-secondary rounded-full animate-ping opacity-75"></div>
+                              <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-brand-primary rounded-full animate-pulse opacity-75"></div>
                               <div className="absolute top-0 left-0 w-1 h-1 bg-white rounded-full animate-bounce opacity-75"></div>
                             </>
                           )}
@@ -637,20 +637,20 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                         {/* סטטיסטיקות מהירות */}
                         <div className="flex items-center justify-center space-x-8 mt-6 pt-6 border-t border-neutral-200">
                           <div className="text-center">
-                            <div className="w-10 h-10 bg-glacier-primary/30 rounded-full flex items-center justify-center mx-auto mb-2 border border-glacier-primary/50">
-                              <Zap className="w-5 h-5 text-neutral-800" />
+                            <div className="w-10 h-10 bg-brand-primary/10 rounded-tl-xl rounded-br-xl flex items-center justify-center mx-auto mb-2 border border-brand-primary/20">
+                              <Zap className="w-5 h-5 text-brand-primary" />
                             </div>
                             <div className="text-sm text-neutral-700 font-semibold">ניתוח מהיר</div>
                           </div>
                           <div className="text-center">
-                            <div className="w-10 h-10 bg-glacier-accent/30 rounded-full flex items-center justify-center mx-auto mb-2 border border-glacier-accent/50">
-                              <Activity className="w-5 h-5 text-neutral-800" />
+                            <div className="w-10 h-10 bg-brand-secondary/10 rounded-tr-xl rounded-bl-xl flex items-center justify-center mx-auto mb-2 border border-brand-secondary/20">
+                              <Activity className="w-5 h-5 text-brand-secondary" />
                             </div>
                             <div className="text-sm text-neutral-700 font-semibold">דוח מפורט</div>
                           </div>
                           <div className="text-center">
-                            <div className="w-10 h-10 bg-glacier-success/30 rounded-full flex items-center justify-center mx-auto mb-2 border border-glacier-success/50">
-                              <Target className="w-5 h-5 text-neutral-800" />
+                            <div className="w-10 h-10 bg-brand-success/10 rounded-tl-xl rounded-br-xl flex items-center justify-center mx-auto mb-2 border border-brand-success/20">
+                              <Target className="w-5 h-5 text-brand-success" />
                             </div>
                             <div className="text-sm text-neutral-700 font-semibold">המלצות מעשיות</div>
                           </div>
@@ -663,7 +663,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
 
               {/* שלב 2: פרטי השיחה */}
               {currentStep === 'details' && (
-                <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
+                <div className="space-y-4 animate-in slide-in-from-bottom duration-500">
                   
                   {/* קובץ שנבחר - סיכום */}
                   <div className="bg-glacier-success-50 border border-glacier-success-200 rounded-2xl p-6">
@@ -686,7 +686,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                   </div>
 
                   {/* פרטי השיחה */}
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid md:grid-cols-2 gap-4">
                     
                     {/* שם לקוח */}
                     <div className="space-y-3">
@@ -786,7 +786,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                   )}
 
                   {/* הערות אופציונליות */}
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid md:grid-cols-2 gap-4">
                     
                     {/* הערות נציג */}
                     <div className="space-y-3">
@@ -857,10 +857,10 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
 
               {/* שלב 3: אישור סופי ושליחה */}
               {currentStep === 'submit' && (
-                <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
+                <div className="space-y-4 animate-in slide-in-from-bottom duration-500">
                   
                   {/* סיכום הפרטים */}
-                  <div className="bg-gradient-to-br from-glacier-primary-50 to-glacier-accent-50 border-2 border-glacier-primary-200 rounded-2xl p-8">
+                  <div className="bg-gradient-to-br from-glacier-primary-50 to-glacier-accent-50 border-2 border-glacier-primary-200 rounded-2xl p-6">
                     <div className="flex items-center justify-center mb-6">
                       <div className="w-8 h-8 bg-glacier-primary-500 rounded-full flex items-center justify-center mr-3">
                         <Target className="w-4 h-4 text-white" />
@@ -870,7 +870,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                       </h3>
                     </div>
                     
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
                           <FileAudio className="w-5 h-5 text-glacier-primary-600" />
@@ -1010,7 +1010,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
 
         {/* מסך עיבוד */}
         {uploadStep === 'processing' && (
-          <div className="text-center space-y-8 py-12">
+          <div className="text-center space-y-4 py-8">
             <div className="w-32 h-32 bg-gradient-to-br from-glacier-primary-100 to-glacier-accent-100 rounded-full flex items-center justify-center mx-auto animate-pulse">
               <div className="w-20 h-20 bg-gradient-to-br from-glacier-primary-500 to-glacier-accent-500 rounded-full flex items-center justify-center">
                 <Activity className="w-10 h-10 text-white animate-bounce" />
@@ -1037,7 +1037,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
               <p className="text-glacier-neutral-600 mt-2 font-medium">{progress}% הושלם</p>
             </div>
             
-            <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto pt-8">
+            <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto pt-6">
               <div className="text-center">
                 <div className="w-12 h-12 bg-glacier-primary-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <Mic className="w-6 h-6 text-glacier-primary-600" />
@@ -1062,7 +1062,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
 
         {/* מסך הושלם */}
         {uploadStep === 'completed' && (
-          <div className="text-center space-y-8 py-12">
+          <div className="text-center space-y-4 py-8">
             <div className="w-32 h-32 bg-gradient-to-br from-glacier-success-100 to-glacier-primary-100 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-20 h-20 text-glacier-success-600" />
             </div>
