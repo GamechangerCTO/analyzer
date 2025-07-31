@@ -712,10 +712,10 @@ export default function ManagerDashboardContent() {
         )}
 
         {/* Main Bento Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           
-          {/* Left Column - Stats (1/3) */}
-        <div className="space-y-6">
+          {/* Left Column - Stats (1/5 = 20%) */}
+        <div className="lg:col-span-1 space-y-6">
             {/* Primary KPI - Large */}
             <div className="bg-gradient-to-br from-brand-secondary via-brand-secondary-dark to-brand-primary rounded-tl-3xl rounded-br-3xl p-8 text-white shadow-lg relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-black/15 rounded-tl-3xl rounded-br-3xl"></div>
@@ -813,36 +813,45 @@ export default function ManagerDashboardContent() {
                   </div>
                 </div>
             )}
-          </div>
 
-          {/* Right Section - Team Overview & Actions (2/3) */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Secondary Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white border-2 border-brand-success/20 rounded-tl-2xl rounded-br-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 rounded-tr-xl rounded-bl-xl bg-gradient-to-br from-brand-success to-brand-success-dark">
-                    <CheckCircle className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-neutral-800">{stats?.successfulCalls || 0}</p>
-                  <p className="text-sm font-medium text-neutral-600">שיחות מוצלחות</p>
-                </div>
-              </div>
+            {/* Recent Activity */}
+            <div className="bg-white border-2 border-brand-secondary/20 rounded-tr-3xl rounded-bl-3xl shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
+                <Activity className="w-5 h-5 ml-2 text-brand-secondary" />
+                פעילות אחרונה
+              </h3>
               
-              <div className="bg-white border-2 border-brand-warning/20 rounded-tr-2xl rounded-bl-2xl shadow-sm p-6 hover:shadow-lg transition-all duration-300">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="p-3 rounded-tl-xl rounded-br-xl bg-gradient-to-br from-brand-warning to-brand-warning-dark">
-                    <Trophy className="w-6 h-6 text-white" />
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 rounded-tl-xl rounded-br-xl border border-brand-primary/20">
+                  <div className="w-3 h-3 bg-brand-primary rounded-full"></div>
+                  <div className="text-sm">
+                    <span className="font-bold text-neutral-800">{stats?.weeklyCalls || 0}</span>
+                    <span className="text-neutral-600"> שיחות השבוע</span>
                   </div>
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-neutral-800">{((stats?.successfulCalls || 0) / Math.max(stats?.weeklyCalls || 1, 1) * 100).toFixed(0)}%</p>
-                  <p className="text-sm font-medium text-neutral-600">יעילות צוות</p>
+
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-secondary/10 to-brand-secondary/5 rounded-tr-xl rounded-bl-xl border border-brand-secondary/20">
+                  <div className="w-3 h-3 bg-brand-secondary rounded-full"></div>
+                  <div className="text-sm">
+                    <span className="font-bold text-neutral-800">{stats?.totalAgents || 0}</span>
+                    <span className="text-neutral-600"> נציגים פעילים</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-warning/10 to-brand-warning/5 rounded-tl-xl rounded-br-xl border border-brand-warning/20">
+                  <div className="w-3 h-3 bg-brand-warning rounded-full"></div>
+                  <div className="text-sm">
+                    <span className="font-bold text-neutral-800">{((stats?.avgScore || 0) * 10).toFixed(0)}%</span>
+                    <span className="text-neutral-600"> יעילות כללית</span>
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Right Section - Team Overview & Calls Table (4/5 = 80%) */}
+          <div className="lg:col-span-4 space-y-6">
+
 
             {/* Team Calls in Bento Grid */}
             <div className="space-y-4">
@@ -1081,76 +1090,85 @@ export default function ManagerDashboardContent() {
                 )}
               </div>
             </div>
-          </div>
 
-            {/* Quick Actions Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Quick Actions */}
-            <div className="bg-white border-2 border-brand-primary/20 rounded-tl-3xl rounded-br-3xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
-                <Zap className="w-5 h-5 ml-2 text-brand-primary" />
-                פעולות מהירות
-              </h3>
-              
-              <div className="space-y-3">
-                <button 
-                  onClick={() => router.push('/team/add-agent')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 border border-brand-primary/20 rounded-tl-xl rounded-br-xl hover:from-brand-primary/20 hover:to-brand-primary/10 transition-all duration-300 group"
-                >
-                  <UserPlus className="w-5 h-5 text-brand-primary group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-neutral-700">הוסף נציג</span>
-                </button>
-                <button 
-                  onClick={() => router.push('/dashboard/manager/all-calls')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-secondary/10 to-brand-secondary/5 border border-brand-secondary/20 rounded-tr-xl rounded-bl-xl hover:from-brand-secondary/20 hover:to-brand-secondary/10 transition-all duration-300 group"
-                >
-                  <Eye className="w-5 h-5 text-brand-secondary group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-neutral-700">כל השיחות</span>
-                </button>
-                <button 
-                  onClick={() => router.push('/team')}
-                  className="w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-r from-brand-warning/10 to-brand-warning/5 border border-brand-warning/20 rounded-tl-xl rounded-br-xl hover:from-brand-warning/20 hover:to-brand-warning/10 transition-all duration-300 group"
-                >
-                  <Users className="w-5 h-5 text-brand-warning group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-neutral-700">ניהול צוות</span>
-                </button>
+            {/* Team Members Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-tl-xl rounded-br-xl bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white shadow-lg">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-neutral-800">צוות החברה</h2>
+                  <p className="text-sm text-neutral-600">רשימת כל חברי הצוות והביצועים שלהם</p>
+                </div>
               </div>
-            </div>
 
-            {/* Recent Activity */}
-            <div className="bg-white border-2 border-brand-secondary/20 rounded-tr-3xl rounded-bl-3xl shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-neutral-700 mb-4 flex items-center">
-                <Activity className="w-5 h-5 ml-2 text-brand-secondary" />
-                פעילות אחרונה
-              </h3>
-              
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-primary/10 to-brand-primary/5 rounded-tl-xl rounded-br-xl border border-brand-primary/20">
-                  <div className="w-3 h-3 bg-brand-primary rounded-full"></div>
-                  <div className="text-sm">
-                    <span className="font-bold text-neutral-800">{stats?.weeklyCalls || 0}</span>
-                    <span className="text-neutral-600"> שיחות השבוע</span>
-            </div>
-          </div>
-
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-secondary/10 to-brand-secondary/5 rounded-tr-xl rounded-bl-xl border border-brand-secondary/20">
-                  <div className="w-3 h-3 bg-brand-secondary rounded-full"></div>
-                  <div className="text-sm">
-                    <span className="font-bold text-neutral-800">{stats?.totalAgents || 0}</span>
-                    <span className="text-neutral-600"> נציגים פעילים</span>
-          </div>
-        </div>
-
-                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-brand-warning/10 to-brand-warning/5 rounded-tl-xl rounded-br-xl border border-brand-warning/20">
-                  <div className="w-3 h-3 bg-brand-warning rounded-full"></div>
-                  <div className="text-sm">
-                    <span className="font-bold text-neutral-800">{((stats?.avgScore || 0) * 10).toFixed(0)}%</span>
-                    <span className="text-neutral-600"> יעילות כללית</span>
+              <div className="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-neutral-200 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-neutral-800">רשימת הצוות</h3>
+                    <Link 
+                      href="/team"
+                      className="text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors flex items-center gap-1"
+                    >
+                      ניהול צוות
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
                   </div>
+                </div>
+
+                <div className="p-4">
+                  {agents.length === 0 ? (
+                    <div className="text-center py-6">
+                      <div className="w-12 h-12 bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 rounded-tl-xl rounded-br-xl flex items-center justify-center mx-auto mb-3">
+                        <Users className="w-6 h-6 text-neutral-500" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-neutral-700 mb-2">אין עדיין נציגים</h3>
+                      <p className="text-neutral-500 mb-4">התחל לבנות את הצוות שלך</p>
+                      <Link 
+                        href="/team/add-agent" 
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-primary to-brand-primary-light text-white rounded-tl-lg rounded-br-lg hover:from-brand-primary-dark hover:to-brand-primary transition-all duration-300 font-medium shadow-md text-sm"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        <span>הוסף נציג ראשון</span>
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {agents.map((agent, index) => (
+                        <div 
+                          key={agent.id} 
+                          className="flex items-center justify-between p-3 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5 border border-neutral-200/50 rounded-tl-lg rounded-br-lg hover:from-brand-primary/10 hover:to-brand-secondary/10 transition-all duration-300"
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white font-bold shadow-md">
+                              {agent.fullName?.charAt(0) || '?'}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-neutral-800 text-sm">{agent.fullName}</div>
+                              <div className="text-xs text-neutral-600 flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-sm bg-gradient-to-br from-neutral-400 to-neutral-600 flex items-center justify-center text-white text-xs">
+                                  {getRoleIcon(agent.role)}
+                                </div>
+                                {getRoleName(agent.role)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-semibold text-neutral-800">{agent.totalCalls}</div>
+                            <div className="text-xs text-neutral-600">שיחות</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
+
+
         </div>
 
         {/* Insights Section - Full Width */}
@@ -1206,81 +1224,6 @@ export default function ManagerDashboardContent() {
             </div>
           </div>
         )}
-
-        {/* Team Members Section - Moved Below */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-tl-2xl rounded-br-2xl bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white shadow-lg">
-              <Users className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-neutral-800">צוות החברה</h2>
-              <p className="text-neutral-600">רשימת כל חברי הצוות והביצועים שלהם</p>
-            </div>
-          </div>
-
-          <div className="bg-white border-2 border-brand-primary/20 rounded-tl-3xl rounded-br-3xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-neutral-200 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-neutral-800">רשימת הצוות</h3>
-                <Link 
-                  href="/team"
-                  className="text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors flex items-center gap-1"
-                >
-                  ניהול צוות
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
-            </div>
-
-            <div className="p-6">
-              {agents.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 rounded-tl-2xl rounded-br-2xl flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-neutral-500" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-neutral-700 mb-2">אין עדיין נציגים</h3>
-                  <p className="text-neutral-500 mb-6">התחל לבנות את הצוות שלך</p>
-                  <Link 
-                    href="/team/add-agent" 
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-brand-primary to-brand-primary-light text-white rounded-tl-xl rounded-br-xl hover:from-brand-primary-dark hover:to-brand-primary transition-all duration-300 font-medium shadow-lg"
-                  >
-                    <UserPlus className="w-5 h-5" />
-                    <span>הוסף נציג ראשון</span>
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {agents.map((agent, index) => (
-                    <div 
-                      key={agent.id} 
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-brand-primary/5 to-brand-secondary/5 border border-neutral-200/50 rounded-tl-xl rounded-br-xl hover:from-brand-primary/10 hover:to-brand-secondary/10 transition-all duration-300"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-primary to-brand-primary-light flex items-center justify-center text-white font-bold shadow-lg">
-                          {agent.fullName?.charAt(0) || '?'}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-neutral-800">{agent.fullName}</div>
-                          <div className="text-sm text-neutral-600 flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-sm bg-gradient-to-br from-neutral-400 to-neutral-600 flex items-center justify-center text-white text-xs">
-                              {getRoleIcon(agent.role)}
-                            </div>
-                            {getRoleName(agent.role)}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-semibold text-neutral-800">{agent.totalCalls} שיחות</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
                 
       </div>
     </div>

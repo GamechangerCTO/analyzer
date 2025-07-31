@@ -17,7 +17,10 @@ import {
   Menu,
   X,
   ChevronDown,
-  Building
+  Building,
+  UserPlus,
+  Eye,
+  Zap
 } from 'lucide-react'
 import Avatar from './Avatar'
 import Image from 'next/image'
@@ -201,6 +204,47 @@ export default function Sidebar({ user, userData }: SidebarProps) {
           )
         })}
       </nav>
+
+      {/* פעולות מהירות למנהלים */}
+      {userData.role === 'manager' && (
+        <div className="px-4 py-2">
+          <div className="border-t border-neutral-200 pt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap className="w-4 h-4 text-neutral-500" />
+              <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">פעולות מהירות</span>
+            </div>
+            
+            <div className="space-y-1">
+              <Link
+                href="/team/add-agent"
+                className="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-neutral-700 hover:bg-gradient-to-r hover:from-brand-primary/10 hover:to-brand-primary/5 transition-all duration-300"
+                onClick={() => setIsMobileOpen(false)}
+              >
+                <UserPlus className="w-4 h-4 text-brand-primary group-hover:scale-110 transition-transform" />
+                <span className="group-hover:font-medium transition-all">הוסף נציג</span>
+              </Link>
+              
+              <Link
+                href="/dashboard/manager/all-calls"
+                className="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-neutral-700 hover:bg-gradient-to-r hover:from-brand-secondary/10 hover:to-brand-secondary/5 transition-all duration-300"
+                onClick={() => setIsMobileOpen(false)}
+              >
+                <Eye className="w-4 h-4 text-brand-secondary group-hover:scale-110 transition-transform" />
+                <span className="group-hover:font-medium transition-all">כל השיחות</span>
+              </Link>
+              
+              <Link
+                href="/team"
+                className="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-neutral-700 hover:bg-gradient-to-r hover:from-brand-warning/10 hover:to-brand-warning/5 transition-all duration-300"
+                onClick={() => setIsMobileOpen(false)}
+              >
+                <Users className="w-4 h-4 text-brand-warning group-hover:scale-110 transition-transform" />
+                <span className="group-hover:font-medium transition-all">ניהול צוות</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* פרופיל משתמש עם אנימציות מתקדמות */}
       <div className="p-4 border-t border-neutral-200">

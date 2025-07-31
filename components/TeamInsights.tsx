@@ -120,7 +120,7 @@ export default function TeamInsights({ companyId }: TeamInsightsProps) {
             <Brain className="w-10 h-10 text-brand-primary" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-neutral-800">🧠 תובנות AI מהצוות</h2>
+            <h2 className="text-2xl font-bold text-neutral-800">🧠 תובנות מהצוות</h2>
             <p className="text-neutral-600 text-sm">
               ניתוח חכם של {insightsData.calls_analyzed} שיחות אחרונות • {insightsData.team_size} חברי צוות
             </p>
