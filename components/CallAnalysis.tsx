@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import CallStatusBadge from './CallStatusBadge'
 import { getCallStatus } from '@/lib/getCallStatus'
+import AnimatedAnalysis from './AnimatedAnalysis'
 
 interface CallData {
   id: string
@@ -754,174 +755,15 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   // הצגת סטטוס העיבוד - רק אם אין ניתוח קיים או אם המעמד אינו completed
   if (!shouldShowAnalysis && (['pending', 'processing', 'transcribing', 'analyzing_tone', 'analyzing_content'].includes(status) || (status === 'completed' && !hasAnalysisData) || isPolling)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="flex flex-col items-center justify-center">
-              <div className="mb-6">
-                <CallStatusBadge status={status} />
-              </div>
-              
-              <h2 className="text-2xl font-bold mb-3 text-center text-gray-800">
-                {status === 'completed' 
-                  ? 'ניתוח השיחה הושלם! 🎉' 
-                  : 'השיחה נמצאת בתהליך עיבוד'
-                }
-              </h2>
-              
-              <p className="text-gray-600 mb-4 text-center max-w-md">
-                {status === 'completed' 
-                  ? 'הניתוח הושלם בהצלחה! טוען את התוצאות...'
-                  : 'אנו מנתחים את השיחה שלך באמצעות טכנולוגיות ניתוח מתקדמות. התהליך עשוי לקחת מספר דקות.'
-                }
-              </p>
-              
-              {status === 'analyzing_tone' && (
-                <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800 text-center">
-                    🎭 מבצע ניתוח טונציה מתקדם - הדף יתעדכן אוטומטיקית ברגע השלמת הניתוח
-                  </p>
-                </div>
-              )}
-
-              {status === 'completed' && countdown > 0 && (
-                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800 text-center font-medium mb-3">
-                    ✅ הניתוח הושלם בהצלחה! טוען את התוצאות בעוד {countdown} שניות...
-                  </p>
-                  <div className="flex justify-center">
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors font-medium"
-                    >
-                      🚀 טען עכשיו
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {status === 'completed' && countdown === 0 && (
-                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800 text-center font-medium">
-                    ✅ הניתוח הושלם! מעבר לתוצאות...
-                  </p>
-                </div>
-              )}
-              
-              {/* מד התקדמות מעוצב - עם progress דינמי */}
-              <div className="w-full max-w-lg mx-auto mb-8">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-semibold text-blue-600">
-                    {status === 'pending' ? '🔄 טוען משאבים' :
-                     status === 'processing' ? '⚙️ מכין לעיבוד' :
-                     status === 'transcribing' ? '📝 תמלול השיחה' :
-                     status === 'analyzing_tone' ? '🎭 ניתוח טונציה' :
-                     status === 'analyzing_content' ? '📊 ניתוח תוכן' :
-                     status === 'completed' ? '✅ הושלם' :
-                     'מעבד...'}
-                  </span>
-                  <span className="text-sm font-bold text-blue-600 transition-all duration-500">
-                    {dynamicProgress}%
-                  </span>
-                </div>
-                                 <div className="overflow-hidden h-3 bg-blue-100 rounded-full relative">
-                   <div 
-                     style={{ width: `${dynamicProgress}%` }} 
-                     className={`h-full rounded-full transition-all duration-500 ease-out ${
-                       status === 'completed' 
-                         ? 'bg-gradient-to-r from-green-500 to-green-600' 
-                         : 'bg-gradient-to-r from-blue-500 to-blue-600'
-                     } ${showSuccessAnimation ? 'animate-pulse' : ''}`}
-                   />
-                   {/* אפקט זוהר מתקדם */}
-                   <div 
-                     style={{ width: `${dynamicProgress}%` }} 
-                     className={`h-full rounded-full opacity-60 absolute top-0 ${
-                       status === 'completed' 
-                         ? 'bg-gradient-to-r from-green-400 to-green-500 animate-ping' 
-                         : 'bg-gradient-to-r from-blue-400 to-blue-500 animate-pulse'
-                     }`}
-                   />
-                   {/* אפקט כוכבים מיוחד ל-completed */}
-                   {status === 'completed' && showSuccessAnimation && (
-                     <div className="absolute inset-0 flex justify-center items-center">
-                       <span className="text-xs text-white font-bold animate-bounce">✨</span>
-                     </div>
-                   )}
-                 </div>
-                
-                {/* מחוון מילולי מתקדם - מבוסס על לוגים אמיתיים */}
-                <div className="mt-2 text-xs text-gray-500 text-center">
-                  {currentLogStatus ? (
-                    <span className="font-medium text-blue-600">
-                      {currentLogStatus.replace(/[🚀📝🎭📊✅🔄⬇️📡🏁❌]/g, '').trim()}
-                    </span>
-                  ) : (
-                    <>
-                      {status === 'pending' && dynamicProgress < 10 && 'מכין את המערכת לעיבוד...'}
-                      {status === 'pending' && dynamicProgress >= 10 && 'טוען את קובץ האודיו...'}
-                      {status === 'processing' && 'מתחיל תהליך ניתוח השיחה...'}
-                      {status === 'transcribing' && dynamicProgress < 30 && 'מתחיל תמלול השיחה...'}
-                      {status === 'transcribing' && dynamicProgress >= 30 && 'ממשיך בתמלול מדויק...'}
-                      {status === 'analyzing_tone' && dynamicProgress < 60 && 'מנתח טון ורגש...'}
-                      {status === 'analyzing_tone' && dynamicProgress >= 60 && 'מסיים ניתוח טונציה...'}
-                      {status === 'analyzing_content' && dynamicProgress < 85 && 'מנתח תוכן מקצועי...'}
-                      {status === 'analyzing_content' && dynamicProgress >= 85 && 'מכין דוח סופי...'}
-                      {status === 'completed' && 'הניתוח הושלם! טוען תוצאות...'}
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              {/* אנימציית טעינה מעוצבת */}
-              <div className="flex justify-center items-center mb-8">
-                <div className="relative">
-                  <div className={`animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 ${
-                    status === 'completed' ? 'border-green-500' : 'border-blue-500'
-                  }`}></div>
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl">
-                    {status === 'processing' ? '🔄' :
-                     status === 'transcribing' ? '📝' :
-                     status === 'analyzing_tone' ? '🎭' :
-                     status === 'analyzing_content' ? '📊' :
-                     status === 'completed' ? '✅' : '⚙️'}
-                  </div>
-                </div>
-              </div>
-              
-              {/* לוגים במעוצב */}
-              {callLogs.length > 0 && (
-                <div className="w-full max-w-2xl mx-auto bg-gray-50 rounded-lg border border-gray-200 p-4">
-                  <h3 className="text-sm font-semibold mb-3 text-gray-700 text-center">🔍 סטטוס עיבוד נוכחי</h3>
-                  <div className="max-h-32 overflow-y-auto space-y-2">
-                    {callLogs.slice(-4).map((log, index) => (
-                      <div key={index} className="flex items-start text-sm bg-white p-2 rounded shadow-sm">
-                        <span className="text-gray-500 ml-2 whitespace-nowrap text-xs">
-                          {new Date(log.timestamp).toLocaleTimeString('he-IL')}
-                        </span>
-                        <span className="text-gray-700 flex-1">{log.message}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* כפתור חירום */}
-              <div className="mt-6">
-                <button 
-                  onClick={() => {
+      <AnimatedAnalysis 
+        callId={call.id}
+        onComplete={() => {
+          setStatus('completed')
+          setShouldShowAnalysis(true)
                     setIsPolling(false)
                     window.location.reload()
                   }}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  🔄 רענן דף וטען ניתוח
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      />
     )
   }
   
