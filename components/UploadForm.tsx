@@ -146,13 +146,23 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
     }
   }, [isCallTypeDropdownOpen])
 
-  const handleCallTypeSelect = (type: string) => {
+  const handleCallTypeSelect = (type: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault()
+      event.stopPropagation()
+    }
     setCallType(type)
     setIsCallTypeDropdownOpen(false)
+    
     // הוספת אפקט ויזואלי קצר להראות שהבחירה בוצעה
-    setTimeout(() => {
-      // אפשר להוסיף כאן אפקט חזותי נוסף אם רוצים
-    }, 150)
+    // אפשר להוסיף כאן אפקט רוטט קל לכפתור הראשי
+    const button = document.querySelector('[data-call-type-button]') as HTMLElement
+    if (button) {
+      button.style.transform = 'scale(1.05)'
+      setTimeout(() => {
+        button.style.transform = ''
+      }, 150)
+    }
   }
   
   const validateAndSetFile = async (selectedFile: File) => {
@@ -718,7 +728,12 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                         <div className="relative">
                           <button
                             type="button"
-                            onClick={() => setIsCallTypeDropdownOpen(!isCallTypeDropdownOpen)}
+                            data-call-type-button
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              setIsCallTypeDropdownOpen(!isCallTypeDropdownOpen)
+                            }}
                             className="relative w-full p-4 border-2 border-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300 ease-out text-right flex items-center justify-between bg-white hover:border-glacier-primary-light hover:shadow-lg hover:scale-[1.02] focus:scale-[1.02] focus:shadow-xl transform-gpu overflow-hidden group"
                           >
                             {/* Shimmer effect */}
@@ -744,7 +759,7 @@ export default function UploadForm({ user, userData, callTypes }: UploadFormProp
                                 <button
                                   key={type}
                                   type="button"
-                                  onClick={() => handleCallTypeSelect(type)}
+                                  onClick={(e) => handleCallTypeSelect(type, e)}
                                   className="relative w-full px-4 py-3 text-right hover:bg-gradient-to-r hover:from-glacier-primary-50 hover:to-glacier-accent-50 transition-all duration-200 text-neutral-900 font-medium hover:text-glacier-primary group overflow-hidden transform hover:scale-[1.02] hover:shadow-md"
                                   style={{animationDelay: `${index * 50}ms`}}
                                 >
