@@ -29,6 +29,23 @@ export default function AgentSummary({ agentId, agentName, isOwnSummary = true }
     const fetchSummary = async () => {
       try {
         setLoading(true)
+        
+        // ראשית, נסה לקרוא מהמסד נתונים
+        const cachedResponse = await fetch(`/api/agent-summary-cached?userId=${agentId}`)
+        
+        if (cachedResponse.ok) {
+          const cachedData = await cachedResponse.json()
+          if (cachedData && cachedData.insights_data) {
+            console.log('✅ טעינת תובנות סוכן מהמסד נתונים (מטמון)')
+            setSummaryData(cachedData.insights_data)
+            setError(null)
+            setLoading(false)
+            return
+          }
+        }
+
+        // אם אין נתונים מטמוניים או שהם ישנים, קרא מ-API כרגיל
+        console.log('📡 קריאה ל-API לתובנות סוכן (אין מטמון או מטמון ישן)')
         const response = await fetch(`/api/agent-summary?agentId=${agentId}`)
         const data = await response.json()
         

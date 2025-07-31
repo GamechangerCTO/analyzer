@@ -102,6 +102,69 @@ function cleanOpenAIResponse(content: string): string {
   }
 }
 
+// פונקציה לעדכון תובנות הצוות במסד הנתונים
+async function updateTeamInsights(companyId: string, userId: string) {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // קריאה ל-API לקבלת תובנות עדכניות
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    
+    const [teamResponse, agentResponse] = await Promise.all([
+      // תובנות צוות
+      fetch(`${baseUrl}/api/team-insights?companyId=${companyId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      }),
+      // תובנות סוכן
+      fetch(`${baseUrl}/api/agent-summary?userId=${userId}`, {
+        method: 'GET', 
+        headers: { 'Content-Type': 'application/json' }
+      })
+    ]);
+
+    // עדכון תובנות הצוות במסד נתונים
+    if (teamResponse.ok) {
+      const teamData = await teamResponse.json();
+      const { error: teamInsertError } = await supabase
+        .rpc('upsert_team_insights', {
+          p_company_id: companyId,
+          p_insights_data: teamData,
+          p_analysis_period: teamData.analysis_period || '5 השיחות האחרונות של הצוות'
+        });
+      
+      if (teamInsertError) {
+        console.error('שגיאה בעדכון תובנות הצוות:', teamInsertError);
+      }
+    }
+
+    // עדכון תובנות הסוכן במסד נתונים  
+    if (agentResponse.ok) {
+      const agentData = await agentResponse.json();
+      const { error: agentInsertError } = await supabase
+        .rpc('upsert_agent_insights', {
+          p_user_id: userId,
+          p_company_id: companyId,
+          p_insights_data: agentData,
+          p_analysis_period: agentData.analysis_period || '5 השיחות האחרונות'
+        });
+      
+      if (agentInsertError) {
+        console.error('שגיאה בעדכון תובנות הסוכן:', agentInsertError);
+      }
+    }
+
+  } catch (error: any) {
+    console.error('שגיאה בעדכון תובנות במסד נתונים:', error);
+    throw error;
+  }
+}
+
 export async function POST(request: Request) {
   let call_id: string | null = null;
   
@@ -1236,6 +1299,22 @@ export async function POST(request: Request) {
           completion_time: new Date().toISOString(),
           time_taken_seconds: Math.round((new Date().getTime() - new Date(callData.created_at).getTime()) / 1000)
         });
+
+        // עדכון תובנות הצוות לאחר השלמת ניתוח שיחה חדשה
+        if (callData.company_id && callData.user_id) {
+          try {
+            await addCallLog(call_id, '🧠 מעדכן תובנות צוות אחרי שיחה חדשה');
+            await updateTeamInsights(callData.company_id, callData.user_id);
+            await addCallLog(call_id, '✅ תובנות הצוות עודכנו בהצלחה');
+          } catch (insightsError: any) {
+            await addCallLog(call_id, '⚠️ שגיאה בעדכון תובנות (לא משפיע על השיחה)', { 
+              error: insightsError.message 
+            });
+            // לא נכשיל את כל התהליך בגלל שגיאה בתובנות
+          }
+        } else {
+          await addCallLog(call_id, '⚠️ חסרים נתוני חברה/משתמש לעדכון תובנות');
+        }
           
       } else {
         // רק ניתוח טונציה - עדכון הניתוח בטבלה
@@ -1287,6 +1366,22 @@ export async function POST(request: Request) {
           completion_time: new Date().toISOString(),
           time_taken_seconds: Math.round((new Date().getTime() - new Date(callData.created_at).getTime()) / 1000)
         });
+
+        // עדכון תובנות הצוות לאחר השלמת ניתוח שיחה חדשה (טונציה בלבד)
+        if (callData.company_id && callData.user_id) {
+          try {
+            await addCallLog(call_id, '🧠 מעדכן תובנות צוות אחרי שיחה חדשה (טונציה)');
+            await updateTeamInsights(callData.company_id, callData.user_id);
+            await addCallLog(call_id, '✅ תובנות הצוות עודכנו בהצלחה');
+          } catch (insightsError: any) {
+            await addCallLog(call_id, '⚠️ שגיאה בעדכון תובנות (לא משפיע על השיחה)', { 
+              error: insightsError.message 
+            });
+            // לא נכשיל את כל התהליך בגלל שגיאה בתובנות
+          }
+        } else {
+          await addCallLog(call_id, '⚠️ חסרים נתוני חברה/משתמש לעדכון תובנות');
+        }
       }
 
     } catch (analysisError: any) {

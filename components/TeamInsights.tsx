@@ -39,6 +39,23 @@ export default function TeamInsights({ companyId }: TeamInsightsProps) {
     const fetchTeamInsights = async () => {
       try {
         setLoading(true)
+        
+        // ראשית, נסה לקרוא מהמסד נתונים
+        const cachedResponse = await fetch(`/api/team-insights-cached?companyId=${companyId}`)
+        
+        if (cachedResponse.ok) {
+          const cachedData = await cachedResponse.json()
+          if (cachedData && cachedData.insights_data) {
+            console.log('✅ טעינת תובנות מהמסד נתונים (מטמון)')
+            setInsightsData(cachedData.insights_data)
+            setError(null)
+            setLoading(false)
+            return
+          }
+        }
+
+        // אם אין נתונים מטמוניים או שהם ישנים, קרא מ-API כרגיל
+        console.log('📡 קריאה ל-API לתובנות (אין מטמון או מטמון ישן)')
         const response = await fetch(`/api/team-insights?companyId=${companyId}`)
         const data = await response.json()
         
