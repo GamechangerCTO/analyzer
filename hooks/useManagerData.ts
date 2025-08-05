@@ -157,26 +157,21 @@ export function useManagerData({ userId, companyId }: UseManagerDataProps): UseM
     try {
       setQuotaLoading(true)
       
-      // שליפת מכסת משתמשים (נשתמש בזה כבסיס לחישוב דקות)
+      // שליפת מכסת דקות ישירות
       const { data: quotaData } = await supabase
-        .from('company_user_quotas')
+        .from('company_minutes_quotas')
         .select('*')
         .eq('company_id', companyId)
         .single()
 
       if (quotaData) {
-        // נחשב דקות על בסיס משתמשים (לדוגמה: 1000 דקות לכל משתמש)
-        const minutesPerUser = 1000
-        const totalMinutes = quotaData.total_users * minutesPerUser
-        const usedMinutes = quotaData.used_users * minutesPerUser
-        
         const quota: MinutesQuota = {
-          total_minutes: totalMinutes,
-          used_minutes: usedMinutes,
-          available_minutes: totalMinutes - usedMinutes,
-          is_poc: false, // נניח שזה לא POC
-          can_purchase_additional: true,
-          usage_percentage: totalMinutes > 0 ? (usedMinutes / totalMinutes) * 100 : 0
+          total_minutes: quotaData.total_minutes,
+          used_minutes: quotaData.used_minutes,
+          available_minutes: quotaData.available_minutes,
+          is_poc: quotaData.is_poc,
+          can_purchase_additional: quotaData.can_purchase_additional,
+          usage_percentage: quotaData.total_minutes > 0 ? (quotaData.used_minutes / quotaData.total_minutes) * 100 : 0
         }
         setMinutesQuota(quota)
       }

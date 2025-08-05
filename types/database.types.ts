@@ -606,51 +606,7 @@ export type Database = {
           },
         ]
       }
-      company_user_quotas: {
-        Row: {
-          available_users: number | null
-          company_id: string
-          created_at: string | null
-          id: string
-          total_users: number
-          updated_at: string | null
-          used_users: number
-        }
-        Insert: {
-          available_users?: number | null
-          company_id: string
-          created_at?: string | null
-          id?: string
-          total_users?: number
-          updated_at?: string | null
-          used_users?: number
-        }
-        Update: {
-          available_users?: number | null
-          company_id?: string
-          created_at?: string | null
-          id?: string
-          total_users?: number
-          updated_at?: string | null
-          used_users?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "company_user_quotas_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "company_user_quotas_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "company_questionnaire_status"
-            referencedColumns: ["company_id"]
-          },
-        ]
-      }
+      // company_user_quotas table removed - user quotas system deleted
       company_minutes_quotas: {
         Row: {
           id: string
@@ -1152,10 +1108,7 @@ export type Database = {
       }
     }
     Functions: {
-      can_add_user_to_company: {
-        Args: { p_company_id: string }
-        Returns: boolean
-      }
+      // can_add_user_to_company function removed
       get_company_questionnaire_missing_fields: {
         Args: { p_company_id: string }
         Returns: Json
@@ -1164,14 +1117,7 @@ export type Database = {
         Args: { p_company_id: string }
         Returns: number
       }
-      get_company_user_quota: {
-        Args: { p_company_id: string }
-        Returns: {
-          total_users: number
-          used_users: number
-          available_users: number
-        }[]
-      }
+      // get_company_user_quota function removed
       insert_call: {
         Args:
           | {

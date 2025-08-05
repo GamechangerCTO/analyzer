@@ -105,22 +105,7 @@ export async function DELETE(request: NextRequest) {
         .select('id')
         .eq('company_id', userToDelete.company_id)
 
-      if (!countError) {
-        const currentUserCount = companyUsers?.length || 0
-
-        // עדכון מכסת המשתמשים
-        const { error: quotaUpdateError } = await supabaseAdmin
-          .from('company_user_quotas')
-          .update({ 
-            used_users: currentUserCount,
-            updated_at: new Date().toISOString()
-          })
-          .eq('company_id', userToDelete.company_id)
-
-        if (quotaUpdateError) {
-          console.warn('⚠️ Warning updating user quota:', quotaUpdateError)
-        }
-      }
+      // מכסת משתמשים הוסרה - רק מכסת דקות רלוונטית
     }
 
     // שלב 6: מחיקת המשתמש מ-Supabase Auth (אופציונלי)
