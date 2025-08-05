@@ -59,57 +59,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // ✅ BYPASS לאדמין - מנהלי מערכת יכולים ליצור נציגים ללא מגבלות מכסה
-    let skipQuotaCheck = false
-    if (currentUserData.role === 'admin') {
-      console.log('Admin bypass: יצירת נציג ללא בדיקת מכסה')
-      skipQuotaCheck = true
-    }
-
-    // בדיקת מכסה זמינה למנהלים - בדיקה לפי מנוי במקום מכסות ישנות
-    if (!skipQuotaCheck) {
-      // קבלת פרטי המנוי של החברה
-      const { data: subscription, error: subError } = await supabase
-        .from('company_subscriptions')
-        .select('agents_count')
-        .eq('company_id', companyId)
-        .eq('is_active', true)
-        .single()
-
-      if (subError || !subscription) {
-        return NextResponse.json(
-          { error: 'לא נמצא מנוי פעיל לחברה. אנא הגדירו חבילה תחילה.' },
-          { status: 400 }
-        )
-      }
-
-      // ספירת נציגים קיימים
-      const { count: currentAgentsCount, error: countError } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .eq('company_id', companyId)
-        .eq('role', 'agent')
-
-      if (countError) {
-        console.error('Error counting agents:', countError)
-        return NextResponse.json(
-          { error: 'שגיאה בבדיקת מספר נציגים' },
-          { status: 500 }
-        )
-      }
-
-      if ((currentAgentsCount || 0) >= subscription.agents_count) {
-        return NextResponse.json(
-          { 
-            error: 'הגעתם למספר הנציגים המקסימלי',
-            message: `החבילה שלכם מאפשרת עד ${subscription.agents_count} נציגים. כרגע יש לכם ${currentAgentsCount || 0} נציגים. אנא שדרגו את החבילה להוספת נציגים נוספים.`,
-            current_agents: currentAgentsCount || 0,
-            max_agents: subscription.agents_count
-          },
-          { status: 400 }
-        )
-      }
-    }
+    // מגבלת נציגים הוסרה - רק מגבלת דקות רלוונטית
 
     // בדיקה אם המייל כבר קיים
     const { data: existingUser, error: existingUserError } = await supabase

@@ -70,7 +70,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
   const [showAddAgentModal, setShowAddAgentModal] = useState(false)
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
-  const [userQuota, setUserQuota] = useState<{total_users: number, used_users: number, available_users: number} | null>(null)
+  // מגבלת משתמשים הוסרה - השארנו רק מגבלת דקות
   const [formData, setFormData] = useState<AddAgentFormData>({
     fullName: '',
     email: '',
@@ -111,18 +111,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
       
       setSubscription(subscriptionData)
 
-      // טעינת מכסת משתמשים
-      const { data: quotaData } = await supabase
-        .from('company_user_quotas')
-        .select('*')
-        .eq('company_id', companyId)
-        .single()
-      
-      setUserQuota(quotaData ? {
-        total_users: quotaData.total_users,
-        used_users: quotaData.used_users,
-        available_users: quotaData.available_users || 0
-      } : null)
+      // מגבלת משתמשים הוסרה
 
       // טעינת נציגים עם נתוני ביצועים
       const { data: agentsData } = await supabase
@@ -538,28 +527,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         </div>
       </div>
 
-      {/* Quota Display */}
-      {userQuota && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Users className="w-5 h-5 text-blue-600 mr-2" />
-              <span className="text-sm font-medium text-blue-900">
-                מכסת משתמשים: {userQuota.used_users} / {userQuota.total_users}
-              </span>
-            </div>
-            <div className="text-sm text-blue-700">
-              זמינים: {userQuota.available_users}
-            </div>
-          </div>
-          <div className="mt-2 w-full bg-blue-200 rounded-full h-2">
-            <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(userQuota.used_users / userQuota.total_users) * 100}%` }}
-            />
-          </div>
-        </div>
-      )}
+      {/* מגבלת משתמשים הוסרה - רק מגבלת דקות רלוונטית */}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

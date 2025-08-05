@@ -118,19 +118,7 @@ export default function AddCompanyModal({ isOpen, onClose, onCompanyAdded }: Add
           console.log('Minutes quota created successfully')
         }
 
-        // יצירת מכסת משתמשים לחברה (backward compatibility)
-        const { error: userQuotaError } = await supabase
-          .from('company_user_quotas')
-          .insert({
-            company_id: newCompanyId,
-            total_users: formData.is_poc ? 3 : 10, // POC = 3 משתמשים, רגיל = 10
-            used_users: 0
-          })
-
-        if (userQuotaError) {
-          console.error('Warning: Failed to create user quota:', userQuotaError)
-          // לא נכשיל את כל התהליך
-        }
+        // מגבלת משתמשים הוסרה - רק מגבלת דקות רלוונטית
       }
 
       setSuccessMessage('החברה נוצרה בהצלחה! המנהל יוכל להשלים את השאלון בכניסה הראשונה.')

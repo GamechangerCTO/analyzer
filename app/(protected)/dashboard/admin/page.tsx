@@ -538,34 +538,7 @@ export default function AdminDashboardPage() {
             </div>
           </Link>
 
-          {/* מכסות משתמשים */}
-          <Link 
-            href="/dashboard/admin/company-quotas" 
-            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-emerald-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-green-50"></div>
-            <div className="relative space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <Target className="w-7 h-7 text-white" />
-                </div>
-                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all duration-300" />
-              </div>
-              
-              <div>
-                <h3 className="text-xl font-bold text-neutral-900 mb-2">
-                  מכסות משתמשים
-                </h3>
-                <p className="text-neutral-600 text-sm leading-relaxed mb-3">
-                  ניהול מכסות ותוכניות מנוי לחברות שונות
-                </p>
-                <p className="text-emerald-600 text-sm font-semibold flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  ניהול אוטומטי ומתקדם
-                </p>
-              </div>
-            </div>
-          </Link>
+          {/* מכסות משתמשים הוסרו - נותרה רק מגבלת דקות */}
 
           {/* בקשות נציגים */}
           <Link 

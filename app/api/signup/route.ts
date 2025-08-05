@@ -112,19 +112,7 @@ export async function POST(request: NextRequest) {
       // לא נכשיל את כל התהליך בגלל זה
     }
 
-    // 4. יצירת מכסת משתמשים לחברה
-    const { error: userQuotaError } = await supabase
-      .from('company_user_quotas')
-      .insert({
-        company_id: company.id,
-        total_users: 5, // ברירת מחדל ל-POC
-        used_users: 1   // כולל את המשתמש שיצרנו
-      })
-
-    if (userQuotaError) {
-      console.error('User quota creation error:', userQuotaError)
-      // לא נכשיל את כל התהליך בגלל זה
-    }
+    // 4. מגבלת משתמשים הוסרה - רק מגבלת דקות רלוונטית
 
     console.log('Signup completed successfully')
     

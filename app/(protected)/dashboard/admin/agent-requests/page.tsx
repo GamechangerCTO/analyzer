@@ -14,16 +14,7 @@ type AgentRequest = Database['public']['Tables']['agent_approval_requests']['Row
   } | null
 }
 
-interface QuotaPurchaseData {
-  type: 'quota_purchase'
-  package_id: string
-  package_name: string
-  additional_users: number
-  price: number
-  requester_name: string
-  company_name: string
-  current_quota?: any
-}
+// ממשק QuotaPurchaseData הוסר - מגבלת משתמשים בוטלה
 
 export default function AgentRequestsPage() {
   const [requests, setRequests] = useState<AgentRequest[]>([])
@@ -57,47 +48,13 @@ export default function AgentRequestsPage() {
     }
   }
 
-  const isQuotaPurchaseRequest = (request: AgentRequest): boolean => {
-    return request.full_name?.startsWith('QUOTA_PURCHASE:') || false
-  }
-
-  const getQuotaPurchaseData = (request: AgentRequest): QuotaPurchaseData | null => {
-    if (!isQuotaPurchaseRequest(request) || !request.email?.includes('quota-')) return null
-    
-    try {
-      // נשתמש בשם המלא כדי לשלוף מידע על החבילה
-      const packageName = request.full_name?.replace('QUOTA_PURCHASE: ', '') || ''
-      
-      // נחפש את החבילה בהתאם לשם
-      const quotaPackages = [
-        { id: 'small', name: 'חבילה קטנה', users: 5, price: 299 },
-        { id: 'medium', name: 'חבילה בינונית', users: 10, price: 499 },
-        { id: 'large', name: 'חבילה גדולה', users: 20, price: 899 },
-        { id: 'enterprise', name: 'חבילה ארגונית', users: 50, price: 1999 }
-      ]
-      
-      const foundPackage = quotaPackages.find(pkg => pkg.name === packageName)
-      
-      if (!foundPackage) return null
-      
-      return {
-        type: 'quota_purchase',
-        package_id: foundPackage.id,
-        package_name: foundPackage.name,
-        additional_users: foundPackage.users,
-        price: foundPackage.price,
-        requester_name: request.users?.full_name || 'לא ידוע',
-        company_name: request.companies?.name || 'לא ידוע'
-      }
-    } catch {
-      return null
-    }
-  }
+  // פונקציות מכסות הוסרו - מגבלת משתמשים בוטלה
 
   const filteredRequests = requests.filter(request => {
     if (filter === 'pending') return request.status === 'pending'
-    if (filter === 'agents') return !isQuotaPurchaseRequest(request)
-    if (filter === 'quota') return isQuotaPurchaseRequest(request)
+    // מגבלת משתמשים הוסרה - כל הבקשות הן בקשות נציגים רגילות
+    if (filter === 'agents') return true
+    if (filter === 'quota') return false // אין יותר בקשות מכסה
     return true
   })
 
@@ -107,31 +64,19 @@ export default function AgentRequestsPage() {
       const request = requests.find(r => r.id === requestId)
       if (!request) return
 
-      if (isQuotaPurchaseRequest(request)) {
-        // עיבוד בקשת רכישת מכסה
-        const quotaData = getQuotaPurchaseData(request)
-        if (quotaData) {
-          const success = await processQuotaPurchase(request, quotaData)
-          if (success) {
-            await updateRequestStatus(requestId, 'approved')
-            await fetchRequests()
-          }
-        }
-      } else {
-        // עיבוד בקשת נציג רגילה
-        const response = await fetch('/api/admin/approve-agent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ requestId })
-        })
+      // מגבלת משתמשים הוסרה - כל הבקשות מטופלות כבקשות רגילות
+      const response = await fetch('/api/admin/approve-agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId })
+      })
 
-        const result = await response.json()
-        if (response.ok) {
-          await fetchRequests()
-          alert('✅ בקשת הנציג אושרה בהצלחה!')
-        } else {
-          throw new Error(result.error)
-        }
+      const result = await response.json()
+      if (response.ok) {
+        await fetchRequests()
+        alert('✅ בקשת הנציג אושרה בהצלחה!')
+      } else {
+        throw new Error(result.error)
       }
     } catch (error) {
       console.error('Error approving request:', error)
@@ -141,31 +86,7 @@ export default function AgentRequestsPage() {
     }
   }
 
-  const processQuotaPurchase = async (request: AgentRequest, quotaData: QuotaPurchaseData): Promise<boolean> => {
-    try {
-      const response = await fetch('/api/admin/process-quota-purchase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requestId: request.id,
-          companyId: request.company_id,
-          additionalUsers: quotaData.additional_users
-        })
-      })
-
-      const result = await response.json()
-      if (response.ok) {
-        alert(`✅ רכישת המכסה אושרה! ${quotaData.additional_users} משתמשים נוספו לחברת ${quotaData.company_name}`)
-        return true
-      } else {
-        throw new Error(result.error)
-      }
-    } catch (error) {
-      console.error('Error processing quota purchase:', error)
-      alert('❌ שגיאה בעיבוד רכישת המכסה: ' + (error as Error).message)
-      return false
-    }
-  }
+  // פונקציית רכישת מכסה הוסרה - מגבלת משתמשים בוטלה
 
   const updateRequestStatus = async (requestId: string, status: string) => {
     await supabase
@@ -227,8 +148,8 @@ export default function AgentRequestsPage() {
   }
 
   const pendingCount = requests.filter(r => r.status === 'pending').length
-  const agentRequestsCount = requests.filter(r => !isQuotaPurchaseRequest(r)).length
-  const quotaRequestsCount = requests.filter(r => isQuotaPurchaseRequest(r)).length
+  const agentRequestsCount = requests.length // כל הבקשות הן בקשות נציגים
+  const quotaRequestsCount = 0 // אין יותר בקשות מכסה
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -323,35 +244,20 @@ export default function AgentRequestsPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredRequests.map((request) => {
-                  const isQuotaRequest = isQuotaPurchaseRequest(request)
-                  const quotaData = isQuotaRequest ? getQuotaPurchaseData(request) : null
+                  // מגבלת משתמשים הוסרה - כל הבקשות הן בקשות נציגים רגילות
                   
                   return (
                     <tr key={request.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {isQuotaRequest ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                            💳 מכסה
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            👤 נציג
-                          </span>
-                        )}
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          👤 נציג
+                        </span>
                       </td>
                       <td className="px-6 py-4">
-                        {isQuotaRequest && quotaData ? (
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{quotaData.package_name}</p>
-                            <p className="text-sm text-gray-500">+{quotaData.additional_users} משתמשים</p>
-                            <p className="text-sm text-green-600 font-medium">₪{quotaData.price.toLocaleString()}</p>
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{request.full_name}</p>
-                            <p className="text-sm text-gray-500">{request.email}</p>
-                          </div>
-                        )}
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{request.full_name}</p>
+                          <p className="text-sm text-gray-500">{request.email}</p>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {request.companies?.name || 'לא ידוע'}
