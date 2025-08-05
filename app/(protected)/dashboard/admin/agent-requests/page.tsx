@@ -263,10 +263,7 @@ export default function AgentRequestsPage() {
                         {request.companies?.name || 'לא ידוע'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {isQuotaRequest && quotaData 
-                          ? quotaData.requester_name 
-                          : request.users?.full_name || 'לא ידוע'
-                        }
+                        {request.users?.full_name || 'לא ידוע'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(request.status)}`}>
