@@ -37,7 +37,7 @@ export default async function AddAgentPage() {
   // בדיקת פרטי החברה
   const { data: companyData } = await supabase
     .from('companies')
-    .select('id, name')
+    .select('id, name, is_poc')
     .eq('id', userData.company_id)
     .single()
   

@@ -168,9 +168,9 @@ export function useManagerData({ userId, companyId }: UseManagerDataProps): UseM
         const quota: MinutesQuota = {
           total_minutes: quotaData.total_minutes,
           used_minutes: quotaData.used_minutes,
-          available_minutes: quotaData.available_minutes,
+          available_minutes: quotaData.available_minutes ?? 0,
           is_poc: quotaData.is_poc,
-          can_purchase_additional: quotaData.can_purchase_additional,
+          can_purchase_additional: quotaData.can_purchase_additional ?? false,
           usage_percentage: quotaData.total_minutes > 0 ? (quotaData.used_minutes / quotaData.total_minutes) * 100 : 0
         }
         setMinutesQuota(quota)
