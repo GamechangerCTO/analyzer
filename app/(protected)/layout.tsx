@@ -51,6 +51,15 @@ export default async function ProtectedLayout({
     redirect('/not-approved?reason=pending')
   }
 
+  // בדיקה אם יש חובת החלפת סיסמה (נציגים חדשים)
+  // רק אם לא נמצאים כבר בדף החלפת הסיסמה
+  const forcePasswordChange = user.user_metadata?.force_password_change
+  if (forcePasswordChange) {
+    // הגישה לדף change-password מתוכננת דרך layout נפרד
+    // כאן פשוט נדרוס את הגישה לשאר הדפים
+    redirect('/change-password')
+  }
+
   // בדיקה אם מנהל ללא חבילה - הפניה לבחירת חבילה (רק אם זה לא POC)
   if ((userData.role === 'manager' || userData.role === 'owner') && userData.company_id) {
     console.log('Protected Layout - Auth check:', {

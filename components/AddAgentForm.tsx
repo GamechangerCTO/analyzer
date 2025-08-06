@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { User, Mail, MessageSquare, AlertCircle, CheckCircle2, Send } from 'lucide-react'
+import { User, Mail, MessageSquare, AlertCircle, CheckCircle2, Send, Lock } from 'lucide-react'
 
 interface AddAgentFormProps {
   companyId: string
@@ -12,6 +12,8 @@ interface AddAgentFormProps {
 export default function AddAgentForm({ companyId, requesterId }: AddAgentFormProps) {
   const [formData, setFormData] = useState({
     email: '',
+    password: '',
+    full_name: '',
     notes: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -48,6 +50,20 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
         return
       }
 
+      // Password validation
+      if (!formData.password || formData.password.length < 6) {
+        setMessage({ type: 'error', text: 'סיסמה חייבת להכיל לפחות 6 תווים' })
+        setIsSubmitting(false)
+        return
+      }
+
+      // Full name validation
+      if (!formData.full_name.trim()) {
+        setMessage({ type: 'error', text: 'שם מלא הוא שדה חובה' })
+        setIsSubmitting(false)
+        return
+      }
+
       // Call API to create agent request
       const response = await fetch('/api/team/add-agent', {
         method: 'POST',
@@ -56,6 +72,8 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
         },
         body: JSON.stringify({
           email: formData.email.trim(),
+          password: formData.password,
+          full_name: formData.full_name.trim(),
           notes: formData.notes.trim(),
           companyId,
           requesterId
@@ -70,12 +88,14 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
 
       setMessage({ 
         type: 'success', 
-        text: 'בקשת הוספת נציג נשלחה בהצלחה! המנהל יקבל הודעה לאישור.'
+        text: result.message || 'נציג נוסף בהצלחה למערכת!'
       })
 
       // Reset form
       setFormData({
         email: '',
+        password: '',
+        full_name: '',
         notes: ''
       })
 
@@ -100,7 +120,7 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
         </div>
         <h2 className="text-2xl font-bold text-neutral-900 mb-2">הוספת נציג חדש</h2>
         <p className="text-glacier-neutral-600">
-          שלח בקשה להוספת נציג חדש לצוות. הבקשה תישלח למנהל לאישור.
+          הוסף נציג חדש לצוות. הנציג יקבל פרטי התחברות ויידרש להחליף סיסמה בכניסה הראשונה.
         </p>
       </div>
 
@@ -149,10 +169,49 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
             className="w-full p-4 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300 ease-out text-neutral-900 bg-white hover:border-glacier-primary-light hover:shadow-lg hover:scale-[1.02] focus:scale-[1.02] focus:shadow-xl transform-gpu"
             placeholder="הכנס כתובת אימייל של הנציג החדש..."
           />
+        </div>
+
+        {/* Password Field */}
+        <div className="space-y-3">
+          <label htmlFor="password" className="text-lg font-bold text-neutral-900 mb-2 flex items-center gap-2">
+            <Lock className="w-5 h-5 text-glacier-accent" />
+            סיסמה
+            <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            minLength={6}
+            className="w-full p-4 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300 ease-out text-neutral-900 bg-white hover:border-glacier-primary-light hover:shadow-lg hover:scale-[1.02] focus:scale-[1.02] focus:shadow-xl transform-gpu"
+            placeholder="הכנס סיסמה זמנית (לפחות 6 תווים)..."
+          />
           <p className="mt-2 text-sm text-glacier-neutral-600 flex items-start gap-2">
-            <User className="w-4 h-4 text-glacier-neutral-400 mt-0.5 flex-shrink-0" />
-            לאחר אישור הבקשה, הנציג יקבל הודעת אימייל עם קישור להרשמה
+            <AlertCircle className="w-4 h-4 text-glacier-warning mt-0.5 flex-shrink-0" />
+            הנציג יתבקש להחליף את הסיסמה בכניסה הראשונה למערכת
           </p>
+        </div>
+
+        {/* Full Name Field */}
+        <div className="space-y-3">
+          <label htmlFor="full_name" className="text-lg font-bold text-neutral-900 mb-2 flex items-center gap-2">
+            <User className="w-5 h-5 text-glacier-secondary" />
+            שם מלא
+            <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="full_name"
+            name="full_name"
+            value={formData.full_name}
+            onChange={handleChange}
+            required
+            className="w-full p-4 border-2 border-glacier-neutral-200 rounded-xl focus:border-glacier-primary focus:outline-none transition-all duration-300 ease-out text-neutral-900 bg-white hover:border-glacier-primary-light hover:shadow-lg hover:scale-[1.02] focus:scale-[1.02] focus:shadow-xl transform-gpu"
+            placeholder="הכנס שם מלא של הנציג..."
+          />
         </div>
         
         {/* Notes Field */}
@@ -183,12 +242,12 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
               {isSubmitting ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>שולח בקשה...</span>
+                  <span>יוצר נציג...</span>
                 </>
               ) : (
                 <>
-                  <Send className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-                  <span>שליחת בקשה</span>
+                  <User className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span>הוסף נציג</span>
                 </>
               )}
             </div>
@@ -209,15 +268,15 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
               <div className="space-y-2 text-sm text-neutral-700">
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-glacier-accent rounded-full mt-2 flex-shrink-0"></div>
-                  <span>הבקשה נשלחת למנהל הצוות לאישור</span>
+                  <span>הנציג נוצר מיידית במערכת עם הפרטים שהוזנו</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-glacier-accent rounded-full mt-2 flex-shrink-0"></div>
-                  <span>לאחר אישור, הנציג יקבל הזמנה באימייל</span>
+                  <span>הנציג יכול להתחבר מיד עם האימייל והסיסמה שהוגדרו</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-glacier-accent rounded-full mt-2 flex-shrink-0"></div>
-                  <span>הנציג יוכל להירשם ולהתחיל לעבוד</span>
+                  <span>בכניסה הראשונה, הנציג יתבקש להחליף את הסיסמה</span>
                 </div>
               </div>
             </div>

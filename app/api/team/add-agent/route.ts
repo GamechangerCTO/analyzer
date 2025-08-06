@@ -6,11 +6,19 @@ import { cookies } from 'next/headers'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, full_name, phone } = body
+    const { email, password, full_name, notes } = body
 
-    if (!email || !full_name) {
+    if (!email || !password || !full_name) {
       return NextResponse.json(
-        { error: 'Email and full name are required' },
+        { error: 'Email, password and full name are required' },
+        { status: 400 }
+      )
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password must be at least 6 characters long' },
         { status: 400 }
       )
     }
@@ -76,18 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     // יצירת משתמש ישירות במערכת SaaS - ללא צורך באישור אדמין
-    
-    // יצירת סיסמה זמנית
-    const generateTempPassword = () => {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-      let password = ''
-      for (let i = 0; i < 12; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length))
-      }
-      return password
-    }
-
-    const tempPassword = generateTempPassword()
+    // הסיסמה מתקבלת מהמנהל, והנציג יתבקש להחליף אותה בכניסה הראשונה
 
     // יצירת משתמש חדש ב-Supabase Auth
     const supabaseAdmin = createAdminClient(
@@ -103,12 +100,13 @@ export async function POST(request: NextRequest) {
 
     const { data: newUser, error: userCreateError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
-      password: tempPassword,
+      password: password,
       email_confirm: true,
       user_metadata: {
         full_name: full_name,
         role: 'agent',
-        company_id: companyId
+        company_id: companyId,
+        force_password_change: true // נציג יתבקש להחליף סיסמה בכניסה הראשונה
       }
     })
 
@@ -151,10 +149,9 @@ export async function POST(request: NextRequest) {
       agent: {
         id: newUser.user?.id,
         email: email,
-        full_name: full_name,
-        temp_password: tempPassword // רק לפעם הראשונה - המשתמש יידרש לשנות
+        full_name: full_name
       },
-      note: 'הנציג יקבל מייל עם פרטי הגישה ויידרש לשנות את הסיסמה בהתחברות הראשונה'
+      note: 'הנציג יכול להתחבר מיד עם הפרטים שהוגדרו ויידרש להחליף את הסיסמה בכניסה הראשונה'
     })
 
   } catch (error) {

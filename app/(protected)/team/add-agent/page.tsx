@@ -45,39 +45,43 @@ export default async function AddAgentPage() {
     notFound()
   }
   
-  // בדיקת מגבלות המנוי
-  const { data: subscriptionData } = await supabase
-    .from('company_subscriptions')
-    .select(`
-      agents_count,
-      is_active,
-      subscription_plans(max_agents)
-    `)
-    .eq('company_id', userData.company_id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  
-  // קבלת מספר הנציגים הנוכחי בחברה
+    // בדיקה האם זו חברת POC (לא צריכה מנוי)
+  const isPocCompany = companyData.is_poc === true
+
+  // מגבלת נציגים הוסרה - מנהלים יכולים להוסיף נציגים בחופשיות
+  // רק בדיקה שיש מנוי פעיל (לחברות שאינן POC)
+  let subscriptionData = null
+  if (!isPocCompany) {
+    const { data } = await supabase
+      .from('company_subscriptions')
+      .select(`
+        is_active
+      `)
+      .eq('company_id', userData.company_id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    
+    subscriptionData = data
+  }
+
+  // קבלת מספר הנציגים הנוכחי בחברה (לצורך תצוגה בלבד)
   const { count: agentsCount } = await supabase
     .from('users')
     .select('id', { count: 'exact', head: true })
     .eq('company_id', userData.company_id)
     .eq('role', 'agent')
-  
-  // בדיקה האם ניתן להוסיף נציגים נוספים
-  let canAddAgent = false
+
+  // בדיקה האם ניתן להוסיף נציגים - מגבלת נציגים הוסרה
+  let canAddAgent = true
   let limitMessage = null
-  
-  // מספר הנציגים המרבי - במידה וקיים
-  const maxAgents = subscriptionData?.subscription_plans?.max_agents;
-  
-  if (!subscriptionData || !subscriptionData.is_active) {
-    limitMessage = 'המנוי שלך אינו פעיל. אנא שדרג את המנוי כדי להוסיף נציגים.'
-  } else if (agentsCount && maxAgents && agentsCount >= maxAgents) {
-    limitMessage = `הגעת למגבלת הנציגים (${maxAgents}). אנא שדרג את המנוי כדי להוסיף נציגים נוספים.`
-  } else {
+
+  // חברות POC תמיד יכולות להוסיף נציגים
+  if (isPocCompany) {
     canAddAgent = true
+  } else if (!subscriptionData || !subscriptionData.is_active) {
+    canAddAgent = false
+    limitMessage = 'המנוי שלך אינו פעיל. אנא פנה לתמיכה לפעלת המנוי או עבור לעמוד הגדרת המנוי.'
   }
   
   return (
@@ -97,9 +101,14 @@ export default async function AddAgentPage() {
           <>
             <p className="mb-6 text-gray-600">
               הוסף נציג חדש לחברה <strong>{companyData.name}</strong>.
-              {maxAgents && (
+              {agentsCount !== null && (
                 <span className="mr-2">
-                  נותרו {maxAgents - (agentsCount || 0)} מתוך {maxAgents} נציגים במנוי שלך.
+                  נמצאים כעת {agentsCount} נציגים בחברה שלך.
+                </span>
+              )}
+              {isPocCompany && (
+                <span className="block mt-2 text-sm text-blue-600">
+                  ℹ️ כחברת POC, תוכלו להוסיף נציגים ללא הגבלה.
                 </span>
               )}
             </p>
@@ -111,14 +120,22 @@ export default async function AddAgentPage() {
           </>
         ) : (
           <div className="text-center py-8">
-            <h2 className="text-xl font-semibold mb-4">לא ניתן להוסיף נציגים נוספים</h2>
+            <h2 className="text-xl font-semibold mb-4">לא ניתן להוסיף נציגים</h2>
             <p className="text-gray-600 mb-6">{limitMessage}</p>
-            <Link
-              href="/team/upgrade"
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-            >
-              שדרוג מנוי
-            </Link>
+            <div className="space-x-4">
+              <Link
+                href="/subscription-setup"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              >
+                הגדרת מנוי
+              </Link>
+              <Link
+                href="/team"
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg"
+              >
+                חזרה לניהול צוות
+              </Link>
+            </div>
           </div>
         )}
       </div>
