@@ -122,82 +122,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // הוספת המשתמש לטבלת users
+    // עדכון המשתמש שנוצר על ידי ה-trigger עם הנתונים המלאים
     if (newUser.user) {
-      // בדיקה אם המשתמש כבר קיים בטבלת users (למניעת duplicate key)
-      const { data: existingUserInTable, error: checkError } = await supabase
+      console.log('Updating user created by trigger with full data:', { 
+        id: newUser.user.id, 
+        email, 
+        full_name, 
+        company_id: companyId 
+      })
+      
+      const { error: updateError } = await supabase
         .from('users')
-        .select('id')
+        .update({
+          full_name: full_name,
+          company_id: companyId,
+          is_approved: true
+        })
         .eq('id', newUser.user.id)
-        .maybeSingle()
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        // אם יש שגיאה אמיתית (לא "לא נמצא")
+      if (updateError) {
+        // אם נכשל בעדכון, נמחק את המשתמש מה-auth
         await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
-        console.error('Error checking existing user in table:', checkError)
+        console.error('Error updating user in table:', updateError)
         return NextResponse.json(
-          { error: `שגיאה בבדיקת משתמש קיים: ${checkError.message}` },
+          { error: `שגיאה בעדכון משתמש: ${updateError.message}` },
           { status: 400 }
         )
-      }
-
-      if (!existingUserInTable) {
-        // המשתמש לא קיים בטבלה - נוסיף אותו
-        console.log('Inserting user to table:', { 
-          id: newUser.user.id, 
-          email, 
-          full_name, 
-          role: 'agent', 
-          company_id: companyId 
-        })
-        
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert({
-            id: newUser.user.id,
-            email: email,
-            full_name: full_name,
-            role: 'agent',
-            company_id: companyId,
-            is_approved: true // נציג מאושר אוטומטית במערכת SaaS
-          })
-
-        if (insertError) {
-          // אם נכשל בהוספה לטבלה, נמחק את המשתמש מה-auth
-          await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
-          console.error('Error inserting user into table:', insertError)
-          return NextResponse.json(
-            { error: `שגיאה בהוספת משתמש לטבלה: ${insertError.message}` },
-            { status: 400 }
-          )
-        }
-      } else {
-        // המשתמש כבר קיים בטבלה (יוצר על ידי trigger) - נעדכן אותו עם הנתונים המלאים
-        console.log('Updating existing user created by trigger:', { 
-          id: newUser.user.id, 
-          email, 
-          full_name, 
-          company_id: companyId 
-        })
-        
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({
-            full_name: full_name,
-            company_id: companyId,
-            is_approved: true
-          })
-          .eq('id', newUser.user.id)
-
-        if (updateError) {
-          // אם נכשל בעדכון, נמחק את המשתמש מה-auth
-          await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
-          console.error('Error updating user in table:', updateError)
-          return NextResponse.json(
-            { error: `שגיאה בעדכון משתמש: ${updateError.message}` },
-            { status: 400 }
-          )
-        }
       }
     }
 
