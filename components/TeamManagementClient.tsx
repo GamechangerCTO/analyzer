@@ -50,6 +50,7 @@ interface TeamManagementClientProps {
 interface AddAgentFormData {
   fullName: string
   email: string
+  password: string
   notes?: string
 }
 
@@ -74,6 +75,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
   const [formData, setFormData] = useState<AddAgentFormData>({
     fullName: '',
     email: '',
+    password: '',
     notes: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -197,10 +199,11 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          fullName: formData.fullName,
+          full_name: formData.fullName,
           email: formData.email,
+          password: formData.password,
           companyId,
-          requestedBy: userId,
+          requesterId: userId,
           notes: formData.notes
         }),
       })
@@ -211,7 +214,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         setSuccessMessage(result.message)
         setShowSuccessNotification(true)
         setShowAddAgentModal(false)
-        setFormData({ fullName: '', email: '', notes: '' })
+        setFormData({ fullName: '', email: '', password: '', notes: '' })
         
         // רענון הנתונים
         fetchData()
@@ -643,6 +646,24 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="הכנס כתובת אימייל"
                 />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  סיסמה זמנית *
+                </label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={formData.password}
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="הכנס סיסמה זמנית (לפחות 6 תווים)"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  הנציג יתבקש להחליף את הסיסמה בכניסה הראשונה
+                </p>
               </div>
               
               <div>

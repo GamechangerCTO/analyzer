@@ -16,9 +16,6 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
     full_name: '',
     notes: ''
   })
-  
-  // Debug log to check if component renders
-  console.log('AddAgentForm rendered with formData:', formData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null)
 
@@ -42,8 +39,6 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
     
     setIsSubmitting(true)
     setMessage(null)
-
-    console.log('Form data before submit:', formData) // Debug log
 
     try {
       // Basic validation
