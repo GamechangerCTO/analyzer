@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import Sidebar from '@/components/Sidebar'
+import { LEGAL_TERMS_VERSION } from '@/lib/constants'
 import React from 'react'
 import { Building } from 'lucide-react'
 import Image from 'next/image'
@@ -51,6 +52,8 @@ export default async function ProtectedLayout({
     redirect('/not-approved?reason=pending')
   }
 
+  // דרישת אישור תקנון למנהלים בביקור ראשון מטופלת בהמשך הקובץ
+
   // בדיקה אם יש חובת החלפת סיסמה (נציגים חדשים)
   // רק אם לא נמצאים כבר בדף החלפת הסיסמה
   const forcePasswordChange = user.user_metadata?.force_password_change
@@ -58,6 +61,20 @@ export default async function ProtectedLayout({
     // הגישה לדף change-password מתוכננת דרך layout נפרד
     // כאן פשוט נדרוס את הגישה לשאר הדפים
     redirect('/change-password')
+  }
+
+  // דרישת אישור תקנון למנהלים/בעלים לפני גישה ראשונה
+  if (userData.role === 'manager' || userData.role === 'owner') {
+    const { data: acceptance } = await supabase
+      .from('legal_terms_acceptances')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('terms_version', LEGAL_TERMS_VERSION)
+      .maybeSingle()
+
+    if (!acceptance && !isAdmin) {
+      redirect('/legal-terms?requireApproval=1')
+    }
   }
 
   // בדיקה אם מנהל ללא חבילה - הפניה לבחירת חבילה (רק אם זה לא POC)

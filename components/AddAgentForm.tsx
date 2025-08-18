@@ -31,6 +31,12 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // מניעת שליחות מרובות
+    if (isSubmitting) {
+      return
+    }
+    
     setIsSubmitting(true)
     setMessage(null)
 
@@ -277,6 +283,10 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-glacier-accent rounded-full mt-2 flex-shrink-0"></div>
                   <span>בכניסה הראשונה, הנציג יתבקש להחליף את הסיסמה</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <span>ניתן להוסיף נציגים ללא הגבלה - המגבלה רק על דקות השימוש</span>
                 </div>
               </div>
             </div>

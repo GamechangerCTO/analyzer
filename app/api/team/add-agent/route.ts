@@ -120,23 +120,50 @@ export async function POST(request: NextRequest) {
 
     // הוספת המשתמש לטבלת users
     if (newUser.user) {
-      const { error: insertError } = await supabase
+      // בדיקה אם המשתמש כבר קיים בטבלת users (למניעת duplicate key)
+      const { data: existingUserInTable, error: checkError } = await supabase
         .from('users')
-        .insert({
-          id: newUser.user.id,
-          email: email,
-          full_name: full_name,
-          role: 'agent',
-          company_id: companyId,
-          is_approved: true // נציג מאושר אוטומטית במערכת SaaS
-        })
+        .select('id')
+        .eq('id', newUser.user.id)
+        .maybeSingle()
 
-      if (insertError) {
-        // אם נכשל בהוספה לטבלה, נמחק את המשתמש מה-auth
+      if (checkError && checkError.code !== 'PGRST116') {
+        // אם יש שגיאה אמיתית (לא "לא נמצא")
         await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
-        console.error('Error inserting user into table:', insertError)
+        console.error('Error checking existing user in table:', checkError)
         return NextResponse.json(
-          { error: `שגיאה בהוספת משתמש לטבלה: ${insertError.message}` },
+          { error: `שגיאה בבדיקת משתמש קיים: ${checkError.message}` },
+          { status: 400 }
+        )
+      }
+
+      if (!existingUserInTable) {
+        // המשתמש לא קיים בטבלה - נוסיף אותו
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: newUser.user.id,
+            email: email,
+            full_name: full_name,
+            role: 'agent',
+            company_id: companyId,
+            is_approved: true // נציג מאושר אוטומטית במערכת SaaS
+          })
+
+        if (insertError) {
+          // אם נכשל בהוספה לטבלה, נמחק את המשתמש מה-auth
+          await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
+          console.error('Error inserting user into table:', insertError)
+          return NextResponse.json(
+            { error: `שגיאה בהוספת משתמש לטבלה: ${insertError.message}` },
+            { status: 400 }
+          )
+        }
+      } else {
+        // המשתמש כבר קיים בטבלה - נמחק אותו מה-auth כיוון שזה duplicate
+        await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
+        return NextResponse.json(
+          { error: 'משתמש עם מזהה זה כבר קיים במערכת' },
           { status: 400 }
         )
       }

@@ -112,32 +112,20 @@ export default function Sidebar({ user, userData }: SidebarProps) {
     <div className="flex flex-col h-full">
       {/* לוגו וכותרת עם אנימציות מתקדמות */}
       <div className="p-6 border-b border-neutral-200">
-        <Link href="/dashboard" className="group flex items-center gap-3 coachee-interactive relative overflow-hidden">
+        <Link href="/dashboard" className="group flex flex-col items-center gap-0 coachee-interactive relative overflow-hidden">
           {/* Background glow effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-glacier-primary/10 to-glacier-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
           
-          <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-glacier-primary to-glacier-accent flex items-center justify-center shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 transform-gpu">
-            {/* Floating particles */}
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-glacier-accent rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300"></div>
-            <div className="absolute -bottom-1 -left-1 w-1 h-1 bg-glacier-primary rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300 delay-150"></div>
-            
+          <div className="relative w-28 h-28 flex items-center justify-center transition-transform duration-500 group-hover:scale-110 transform-gpu">
             <Image
               src="/logo.png"
               alt="Coachee Logo"
-              width={48}
-              height={48}
-              className="transition-transform duration-300 group-hover:scale-110"
+              width={112}
+              height={112}
+              className="transition-transform duration-300 group-hover:scale-110 object-contain drop-shadow-xl saturate-125 contrast-110"
             />
           </div>
-          <div className="flex flex-col relative z-10">
-            <div className="text-xl font-bold text-neutral-900 group-hover:text-glacier-primary transition-colors duration-300">
-              Coachee
-              <div className="absolute inset-0 bg-gradient-to-r from-glacier-primary to-glacier-accent bg-clip-text text-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                Coachee
-              </div>
-            </div>
-            <div className="text-sm text-neutral-600 group-hover:text-glacier-accent transition-colors duration-300">פלטפורמת אימון</div>
-          </div>
+          <div className="relative z-10 -mt-2 text-sm md:text-base font-medium text-neutral-700 group-hover:text-glacier-accent transition-colors duration-300 leading-none">פלטפורמת אימון</div>
           
           {/* Shimmer effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
@@ -354,27 +342,20 @@ export default function Sidebar({ user, userData }: SidebarProps) {
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-glacier-accent rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300"></div>
           </button>
           
-          <Link href="/dashboard" className="group flex items-center gap-3 px-4 py-2 rounded-2xl hover:bg-gradient-to-r hover:from-glacier-primary/10 hover:to-glacier-accent/10 transition-all duration-300 relative overflow-hidden">
+          <Link href="/dashboard" className="group flex flex-col items-center gap-0 px-4 py-2 rounded-2xl hover:bg-gradient-to-r hover:from-glacier-primary/10 hover:to-glacier-accent/10 transition-all duration-300 relative overflow-hidden">
             {/* Background shimmer */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-glacier-primary/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
             
-            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-glacier-primary to-glacier-accent flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 transform-gpu shadow-lg">
-              {/* Logo particles */}
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-glacier-accent rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300"></div>
-              <div className="absolute -bottom-1 -left-1 w-1 h-1 bg-glacier-primary rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity duration-300"></div>
-              
+            <div className="relative w-20 h-20 flex items-center justify-center group-hover:scale-110 transition-all duration-300 transform-gpu">
               <Image
                 src="/logo.png"
                 alt="Coachee Logo"
-                width={20}
-                height={20}
-                className="transition-transform duration-300 group-hover:scale-110 relative z-10"
+                width={80}
+                height={80}
+                className="transition-transform duration-300 group-hover:scale-110 object-contain drop-shadow-lg saturate-125 contrast-110 relative z-10"
               />
             </div>
-            <div className="flex flex-col relative z-10">
-              <span className="text-lg font-bold text-neutral-900 group-hover:text-glacier-primary transition-colors duration-300">Coachee</span>
-              <span className="text-xs text-neutral-600 group-hover:text-glacier-accent transition-colors duration-300">פלטפורמת אימון</span>
-            </div>
+            <span className="relative z-10 -mt-1 text-xs font-medium text-neutral-700 group-hover:text-glacier-accent transition-colors duration-300 leading-none">פלטפורמת אימון</span>
           </Link>
           
           {/* Right side placeholder with notification indicator */}
