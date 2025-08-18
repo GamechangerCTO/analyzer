@@ -1,9 +1,9 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 
-export default function LegalTermsPage() {
+function LegalTermsContent() {
   const searchParams = useSearchParams()
   const requireApproval = searchParams.get('requireApproval') === '1'
   const router = useRouter()
@@ -84,6 +84,21 @@ export default function LegalTermsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LegalTermsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-glacier-primary/5 via-white to-glacier-accent/5 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-glacier-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-neutral-600">טוען תקנון...</p>
+        </div>
+      </div>
+    }>
+      <LegalTermsContent />
+    </Suspense>
   )
 }
 
