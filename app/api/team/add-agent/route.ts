@@ -172,12 +172,32 @@ export async function POST(request: NextRequest) {
           )
         }
       } else {
-        // המשתמש כבר קיים בטבלה - נמחק אותו מה-auth כיוון שזה duplicate
-        await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
-        return NextResponse.json(
-          { error: 'משתמש עם מזהה זה כבר קיים במערכת' },
-          { status: 400 }
-        )
+        // המשתמש כבר קיים בטבלה (יוצר על ידי trigger) - נעדכן אותו עם הנתונים המלאים
+        console.log('Updating existing user created by trigger:', { 
+          id: newUser.user.id, 
+          email, 
+          full_name, 
+          company_id: companyId 
+        })
+        
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            full_name: full_name,
+            company_id: companyId,
+            is_approved: true
+          })
+          .eq('id', newUser.user.id)
+
+        if (updateError) {
+          // אם נכשל בעדכון, נמחק את המשתמש מה-auth
+          await supabaseAdmin.auth.admin.deleteUser(newUser.user.id)
+          console.error('Error updating user in table:', updateError)
+          return NextResponse.json(
+            { error: `שגיאה בעדכון משתמש: ${updateError.message}` },
+            { status: 400 }
+          )
+        }
       }
     }
 
