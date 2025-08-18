@@ -98,6 +98,8 @@ export async function POST(request: NextRequest) {
       }
     )
 
+    console.log('Creating user with data:', { email, full_name, companyId })
+    
     const { data: newUser, error: userCreateError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       password: password,
@@ -109,6 +111,8 @@ export async function POST(request: NextRequest) {
         force_password_change: true // נציג יתבקש להחליף סיסמה בכניסה הראשונה
       }
     })
+    
+    console.log('Created user result:', newUser?.user?.id, newUser?.user?.email)
 
     if (userCreateError) {
       console.error('Error creating user:', userCreateError)
@@ -139,6 +143,14 @@ export async function POST(request: NextRequest) {
 
       if (!existingUserInTable) {
         // המשתמש לא קיים בטבלה - נוסיף אותו
+        console.log('Inserting user to table:', { 
+          id: newUser.user.id, 
+          email, 
+          full_name, 
+          role: 'agent', 
+          company_id: companyId 
+        })
+        
         const { error: insertError } = await supabase
           .from('users')
           .insert({
