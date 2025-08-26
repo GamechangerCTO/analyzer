@@ -116,12 +116,12 @@ export default function Sidebar({ user, userData }: SidebarProps) {
           {/* Background glow effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-glacier-primary/10 to-glacier-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
           
-          <div className="relative w-36 h-36 flex items-center justify-center transition-transform duration-500 group-hover:scale-110 transform-gpu">
+          <div className="relative w-48 h-48 flex items-center justify-center transition-transform duration-500 group-hover:scale-110 transform-gpu">
             <Image
               src="/logo.png"
               alt="Coachee Logo"
-              width={146}
-              height={146}
+              width={190}
+              height={190}
               className="transition-transform duration-300 group-hover:scale-110 object-contain drop-shadow-xl saturate-125 contrast-110"
             />
           </div>
@@ -346,12 +346,12 @@ export default function Sidebar({ user, userData }: SidebarProps) {
             {/* Background shimmer */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-glacier-primary/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
             
-            <div className="relative w-26 h-26 flex items-center justify-center group-hover:scale-110 transition-all duration-300 transform-gpu">
+            <div className="relative w-32 h-32 flex items-center justify-center group-hover:scale-110 transition-all duration-300 transform-gpu">
               <Image
                 src="/logo.png"
                 alt="Coachee Logo"
-                width={104}
-                height={104}
+                width={130}
+                height={130}
                 className="transition-transform duration-300 group-hover:scale-110 object-contain drop-shadow-lg saturate-125 contrast-110 relative z-10"
               />
             </div>
