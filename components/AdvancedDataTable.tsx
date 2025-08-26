@@ -403,8 +403,8 @@ function AdvancedDataTable<T extends Record<string, any>>({
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+      <div className="overflow-hidden">
+        <table className="w-full table-fixed divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               {columns.map(column => (
@@ -443,11 +443,13 @@ function AdvancedDataTable<T extends Record<string, any>>({
               paginatedData.map((row, index) => (
                 <tr key={index} className="hover:bg-gray-50">
                   {columns.map(column => (
-                    <td key={column.key} className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {column.render 
-                        ? column.render(getNestedValue(row, column.key), row)
-                        : getNestedValue(row, column.key) || '-'
-                      }
+                    <td key={column.key} className={`px-4 py-4 text-sm text-gray-900 truncate ${column.width || ''}`}>
+                      <div className="truncate" title={String(getNestedValue(row, column.key) || '-')}>
+                        {column.render 
+                          ? column.render(getNestedValue(row, column.key), row)
+                          : getNestedValue(row, column.key) || '-'
+                        }
+                      </div>
                     </td>
                   ))}
                 </tr>

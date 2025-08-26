@@ -208,6 +208,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
       sortable: true,
       filterable: true,
       filterType: 'date' as const,
+      width: 'w-[15%]',
       render: (value: string) => (
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-gray-400" />
@@ -222,6 +223,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
       filterable: true,
       filterType: 'select' as const,
       filterOptions: uniqueAgents,
+      width: 'w-[15%]',
       render: (value: string) => (
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
@@ -238,6 +240,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
       filterable: true,
       filterType: 'select' as const,
       filterOptions: uniqueCallTypes,
+      width: 'w-[12%]',
       render: (value: string) => (
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white">
@@ -252,6 +255,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
       title: 'שם לקוח',
       sortable: true,
       filterable: true,
+      width: 'w-[20%]',
       render: (value: string, row: Call) => (
         <div className="flex items-center gap-2">
           <span className="font-medium">{value || 'לקוח ללא שם'}</span>
@@ -271,6 +275,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
       filterable: true,
       filterType: 'select' as const,
       filterOptions: scoreRangeOptions,
+      width: 'w-[8%]',
       render: (value: number | null) => getScoreBadge(value)
     },
     {
@@ -279,6 +284,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
       sortable: true,
       filterable: true,
       filterType: 'number' as const,
+      width: 'w-[10%]',
       render: (value: number | null) => (
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-gray-400" />
@@ -293,6 +299,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
       filterable: true,
       filterType: 'select' as const,
       filterOptions: statusOptions,
+      width: 'w-[8%]',
       render: (value: string) => getStatusBadge(value || 'pending')
     },
     {
@@ -301,6 +308,7 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
       sortable: false,
       filterable: false,
       searchable: false,
+      width: 'w-[12%]',
       render: (value: string, row: Call) => (
         <div className="flex items-center gap-2">
           {row.processing_status === 'completed' && (
