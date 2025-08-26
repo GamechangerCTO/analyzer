@@ -133,10 +133,20 @@ export default async function ProtectedLayout({
       const activeSubscription = subscriptions && subscriptions.length > 0 ? subscriptions[0] : null
       const hasActiveSubscription = activeSubscription && 
         activeSubscription.is_active && 
-        new Date(activeSubscription.expires_at) > new Date()
+        (activeSubscription.expires_at === null || new Date(activeSubscription.expires_at) > new Date())
+
+      console.log('Protected Layout - Subscription validation:', {
+        activeSubscription: activeSubscription ? {
+          id: activeSubscription.id,
+          is_active: activeSubscription.is_active,
+          expires_at: activeSubscription.expires_at,
+          is_expired: activeSubscription.expires_at ? new Date(activeSubscription.expires_at) <= new Date() : false
+        } : null,
+        hasActiveSubscription
+      })
 
       if (!hasActiveSubscription) {
-        console.log('Protected Layout - Non-POC manager without subscription, redirecting to subscription setup')
+        console.log('Protected Layout - Non-POC manager without valid subscription, redirecting to subscription setup')
         redirect('/subscription-setup?reason=no-subscription')
       }
       
