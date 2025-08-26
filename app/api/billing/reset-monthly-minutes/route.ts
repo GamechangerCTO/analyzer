@@ -82,15 +82,15 @@ export async function GET(request: NextRequest) {
       throw error
     }
 
-    const needsReset = billingStatus?.filter(sub => sub.needs_reset) || []
-    const nextReset = billingStatus?.filter(sub => !sub.needs_reset)
-      .sort((a, b) => a.days_until_reset - b.days_until_reset)[0]
+    const needsReset = billingStatus?.filter((sub: any) => sub.needs_reset) || []
+    const nextReset = billingStatus?.filter((sub: any) => !sub.needs_reset)
+      .sort((a: any, b: any) => a.days_until_reset - b.days_until_reset)[0]
 
     return NextResponse.json({
       totalActiveSubscriptions: billingStatus?.length || 0,
       subscriptionsNeedingReset: needsReset.length,
       nextResetDue: nextReset ? `${nextReset.company_name} in ${nextReset.days_until_reset} days (${nextReset.next_billing_date})` : 'None scheduled',
-      details: billingStatus?.map(sub => ({
+      details: billingStatus?.map((sub: any) => ({
         companyName: sub.company_name,
         joinDate: sub.join_date,
         nextBillingDate: sub.next_billing_date,
