@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     console.log(`🚀 Monthly reset triggered from: ${isVercelCron ? 'Vercel Cron' : 'Manual API'} at ${new Date().toISOString()}`)
 
     // הרצת פונקציית איפוס הדקות החודשית
-    const { data, error } = await supabase.rpc('reset_monthly_minutes')
+    const { data, error } = await supabase.rpc('reset_monthly_minutes' as any)
 
     if (error) {
       console.error('Monthly reset error:', error)
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // עדכון גם בטבלת company_minutes_quotas אם קיימת
     try {
-      const { error: quotaError } = await supabase.rpc('sync_subscription_quotas')
+      const { error: quotaError } = await supabase.rpc('sync_subscription_quotas' as any)
       if (quotaError && !quotaError.message.includes('function "sync_subscription_quotas" does not exist')) {
         console.warn('Quota sync warning:', quotaError)
       }
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     const supabase = createClient()
 
     // שימוש בפונקציה החדשה לבדיקת סטטוס
-    const { data: billingStatus, error } = await supabase.rpc('check_monthly_billing_status')
+    const { data: billingStatus, error } = await supabase.rpc('check_monthly_billing_status' as any)
 
     if (error) {
       throw error
