@@ -30,6 +30,7 @@ interface Call {
   user_id: string | null
   agent_name?: string | null
   agent_email?: string | null
+  agent_role?: string | null
 }
 
 interface AllCallsClientProps {
@@ -50,10 +51,10 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
       setLoading(true)
       setError(null)
 
-      // קודם נמצא את כל המשתמשים בחברה
+      // קודם נמצא את כל המשתמשים בחברה (נציגים בלבד)
       const { data: users, error: usersError } = await supabase
         .from('users')
-        .select('id, full_name, email')
+        .select('id, full_name, email, role')
         .eq('company_id', companyId)
         .eq('role', 'agent')
 
@@ -81,7 +82,8 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
         return {
           ...call,
           agent_name: user?.full_name || null,
-          agent_email: user?.email || null
+          agent_email: user?.email || null,
+          agent_role: user?.role || null
         }
       }) || []
 
@@ -320,14 +322,16 @@ export default function AllCallsClient({ userId, companyId, companyName }: AllCa
               <span>צפה</span>
             </Link>
           )}
-          <Link 
-            href={`/dashboard/agent?user=${row.user_id}`}
-            className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs font-medium"
-            title="עבור לדשבורד הנציג"
-          >
-            <User className="w-3 h-3" />
-            <span>נציג</span>
-          </Link>
+          {row.agent_role === 'agent' && (
+            <Link 
+              href={`/dashboard/agent?user=${row.user_id}`}
+              className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs font-medium"
+              title="עבור לדשבורד הנציג"
+            >
+              <User className="w-3 h-3" />
+              <span>נציג</span>
+            </Link>
+          )}
         </div>
       )
     }
