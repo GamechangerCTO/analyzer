@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { simulationId, instructions } = await request.json()
+    const { simulationId, instructions, voice } = await request.json()
 
     // ווידוא שהסימולציה שייכת למשתמש
     const { data: simulation } = await supabase
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const sessionConfig = {
       model: "gpt-4o-realtime-preview",
       instructions: instructions || "You are a helpful customer for sales training in Hebrew.",
-      voice: "alloy",
+      voice: voice || "shimmer",
       input_audio_format: "pcm16",
       output_audio_format: "pcm16",
       input_audio_transcription: {

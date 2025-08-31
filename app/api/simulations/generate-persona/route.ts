@@ -291,6 +291,9 @@ ${targetWeaknesses.join(', ')}
     "opening": "איך מתחילים איתו שיחה",
     "objections": "איך הוא מעלה התנגדויות",
     "closing": "איך מנסים לסגור איתו"
+  },
+  "voice_characteristics": {
+    "gender": "male או female - המגדר של הפרסונה (לקביעת הקול בסימולציה)"
   }
 }
 

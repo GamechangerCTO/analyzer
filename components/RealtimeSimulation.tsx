@@ -37,9 +37,36 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   // הגדרת פרסונת הלקוח ל-AI (קבלת הפרסונה מהפרמטר או מהסימולציה)
   const persona = customerPersona || simulation.customer_personas_hebrew?.[0]
   
+  // קביעת קול בהתאם לפרסונה
+  const getVoiceForPersona = () => {
+    // בדיקה אם יש הגדרה ספציפית בפרסונה
+    if (persona?.voice_characteristics?.gender) {
+      if (persona.voice_characteristics.gender === 'male' || persona.voice_characteristics.gender === 'זכר') {
+        return 'echo' // קול גברי
+      } else {
+        return 'shimmer' // קול נשי
+      }
+    }
+    
+    // בדיקה לפי שם הפרסונה
+    const personaName = persona?.persona_name || ''
+    const maleNames = ['דני', 'אמיר', 'יוסי', 'דוד', 'מיכאל', 'רון', 'אבי', 'גיל', 'יונתן', 'איתמר']
+    const femaleNames = ['דנה', 'מיכל', 'שרה', 'רותי', 'ליאת', 'נועה', 'תמר', 'ענת', 'רונית', 'יעל']
+    
+    if (maleNames.some(name => personaName.includes(name))) {
+      return 'echo' // קול גברי
+    } else if (femaleNames.some(name => personaName.includes(name))) {
+      return 'shimmer' // קול נשי
+    }
+    
+    // ברירת מחדל - נקבה (כי רוב פרסונות הלקוחות נשים בניסיון שלי)
+    return 'shimmer'
+  }
+
   const createAIInstructions = () => {
+    const genderText = getVoiceForPersona() === 'echo' ? 'לקוח פוטנציאלי' : 'לקוחה פוטנציאלית'
     const instructions = `
-אתה ${persona?.persona_name || 'דנה'} - לקוחה פוטנציאלית אמיתית שמתקשרת לחברה.
+אתה ${persona?.persona_name || 'דנה'} - ${genderText} אמיתי שמתקשר לחברה.
 
 רקע אישי: ${persona?.background_story || 'אמא לשני ילדים, עובדת בחברת הייטק, אוהבת לקנות דברים איכותיים אבל מקפידה על המחיר'}
 
@@ -84,7 +111,8 @@ ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשבי
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           simulationId: simulation.id,
-          instructions: createAIInstructions()
+          instructions: createAIInstructions(),
+          voice: getVoiceForPersona()
         })
       })
 
@@ -284,7 +312,7 @@ ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשבי
         model: "gpt-4o-realtime-preview",
         modalities: ["text", "audio"],
         instructions: createAIInstructions(),
-        voice: "alloy",
+        voice: getVoiceForPersona(),
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
         input_audio_transcription: {
