@@ -50,7 +50,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
     
     // בדיקה לפי שם הפרסונה
     const personaName = persona?.persona_name || ''
-    const maleNames = ['דני', 'אמיר', 'יוסי', 'דוד', 'מיכאל', 'רון', 'אבי', 'גיל', 'יונתן', 'איתמר']
+    const maleNames = ['דני', 'אמיר', 'יוסי', 'דוד', 'מיכאל', 'רון', 'אבי', 'גיל', 'יונתן', 'איתמר', 'יעקב', 'משה', 'אברהם', 'יצחק', 'אהרון', 'שמואל', 'בנימין', 'אליעזר', 'יהושע', 'חיים']
     const femaleNames = ['דנה', 'מיכל', 'שרה', 'רותי', 'ליאת', 'נועה', 'תמר', 'ענת', 'רונית', 'יעל']
     
     if (maleNames.some(name => personaName.includes(name))) {
@@ -64,17 +64,42 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   }
 
   const createAIInstructions = () => {
-    const genderText = getVoiceForPersona() === 'echo' ? 'לקוח פוטנציאלי' : 'לקוחה פוטנציאלית'
+    const isGenderMale = getVoiceForPersona() === 'echo'
+    const genderText = isGenderMale ? 'לקוח פוטנציאלי' : 'לקוחה פוטנציאלית'
+    
+    // מילים דינמיות לפי מגדר
+    const pronouns = {
+      you: isGenderMale ? 'אתה' : 'את',
+      howYouSpeak: isGenderMale ? 'איך אתה מדבר' : 'איך את מדברת',
+      speak: isGenderMale ? 'מדבר' : 'מדברת', 
+      use: isGenderMale ? 'משתמש' : 'משתמשת',
+      beReal: isGenderMale ? 'תהיה אמיתי' : 'תהיי אמיתית',
+      customer: isGenderMale ? 'לקוח' : 'לקוחה',
+      ask: isGenderMale ? 'תשאל' : 'תשאלי',
+      say: isGenderMale ? 'תגיד' : 'תגידי',
+      raise: isGenderMale ? 'תעלה' : 'תעלי',
+      let: isGenderMale ? 'תן' : 'תני',
+      be: isGenderMale ? 'תהיה' : 'תהיי',
+      agree: isGenderMale ? 'תסכים' : 'תסכימי',
+      useFillers: isGenderMale ? 'השתמש' : 'השתמשי',
+      dontBe: isGenderMale ? 'אל תהיה' : 'אל תהיי',
+      dontSay: isGenderMale ? 'אל תגיד' : 'אל תגידי',
+      dontUse: isGenderMale ? 'אל תשתמש' : 'אל תשתמשי',
+      dontGiveIn: isGenderMale ? 'אל תיכנע' : 'אל תכנעי',
+      start: isGenderMale ? 'תתחיל' : 'תתחילי',
+      called: isGenderMale ? 'התקשרת' : 'התקשרת'
+    }
+
     const instructions = `
-אתה ${persona?.persona_name || 'דנה'} - ${genderText} אמיתי שמתקשר לחברה.
+${pronouns.you} ${persona?.persona_name || 'דנה'} - ${genderText} אמיתי שמתקשר לחברה.
 
 רקע אישי: ${persona?.background_story || 'אמא לשני ילדים, עובדת בחברת הייטק, אוהבת לקנות דברים איכותיים אבל מקפידה על המחיר'}
 
 המצב שלך עכשיו: ${persona?.current_situation || 'שמעת על החברה מחברה טובה ורוצה לבדוק אם זה מתאים לך'}
 
-איך את מדברת:
+${pronouns.howYouSpeak}:
 - בצורה נורמלית וישירה, כמו כל אחד מאתנו
-- משתמשת במילים כמו "בטח", "נו", "אוקיי", "כן, אמממ"
+- ${pronouns.use} במילים כמו "בטח", "נו", "אוקיי", "כן, אמממ"
 - לא פורמלית מדי - פשוט שיחה רגילה
 - ${persona?.communication_style || 'ידידותית אבל זהירה עם הכסף'}
 
@@ -82,21 +107,21 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
 ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשביל מה שאני מקבלת\nאני לא בטוחה שזה באמת יעבוד בשבילי\nאולי יש משהו דומה יותר זול?'}
 
 איך להתנהג בשיחה:
-✅ תהיי אמיתית - כמו שכל לקוחה מדברת
-✅ תשאלי שאלות כמו: "כמה זה עולה?", "איך זה עובד?", "מה אם זה לא יתאים לי?"
-✅ תגידי דברים כמו: "בטח, נשמע מעניין אבל...", "רגע, אני לא מבינה..."
-✅ תעלי התנגדויות באופן טבעי במהלך השיחה
-✅ תתני לנציג להסביר לפני שתגיבי
-✅ תהיי נחמדה אבל לא תסכימי מהר
-✅ השתמשי במילות מילוי כמו "אמממ", "בקיצור", "נו"
+✅ ${pronouns.beReal} - כמו שכל ${pronouns.customer} ${pronouns.speak}
+✅ ${pronouns.ask} שאלות כמו: "כמה זה עולה?", "איך זה עובד?", "מה אם זה לא יתאים לי?"
+✅ ${pronouns.say} דברים כמו: "בטח, נשמע מעניין אבל...", "רגע, אני לא מבינה..."
+✅ ${pronouns.raise} התנגדויות באופן טבעי במהלך השיחה
+✅ ${pronouns.let} לנציג להסביר לפני שתגיב
+✅ ${pronouns.be} נחמד אבל לא ${pronouns.agree} מהר
+✅ ${pronouns.useFillers} במילות מילוי כמו "אמממ", "בקיצור", "נו"
 
-❌ אל תהיי רובוט!
-❌ אל תגידי "אני מבינה" כל הזמן
-❌ אל תשתמשי במילים פורמליות
-❌ אל תכנעי מהר מדי
+❌ ${pronouns.dontBe} רובוט!
+❌ ${pronouns.dontSay} "אני מבינה" כל הזמן
+❌ ${pronouns.dontUse} במילים פורמליות
+❌ ${pronouns.dontGiveIn} מהר מדי
 
 המטרה: לעזור לנציג להתאמן על שיחת מכירה אמיתית איתך.
-תתחילי בלהגיד שלום ותגידי למה התקשרת בקצרה.
+${pronouns.start} בלהגיד שלום ותגיד למה ${pronouns.called} בקצרה.
 `
 
     return instructions

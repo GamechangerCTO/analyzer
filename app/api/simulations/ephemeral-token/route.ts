@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     // יצירת ephemeral token מ-OpenAI
     const sessionConfig = {
-      model: "gpt-4o-realtime-preview",
+      model: "gpt-realtime",
       instructions: instructions || "You are a helpful customer for sales training in Hebrew.",
       voice: voice || "shimmer",
       input_audio_format: "pcm16",
