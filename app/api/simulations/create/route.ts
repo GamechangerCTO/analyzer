@@ -96,13 +96,19 @@ export async function POST(request: NextRequest) {
 
     const body: CreateSimulationRequest = await request.json()
     const { simulation_type, customer_persona, difficulty_level, triggered_by_call_id, callAnalysis } = body
+    
+    // Debug logging
+    console.log('Request body:', JSON.stringify(body, null, 2))
+    console.log('User info:', { id: session.user.id, company_id: user.company_id })
 
     // בניית תרחיש הסימולציה
     let scenarioDescription = "תרחיש סימולציה כללי"
     let enhancedScenario = ""
 
     if (scenarioPrompts[simulation_type as keyof typeof scenarioPrompts]) {
-      const baseScenario = scenarioPrompts[simulation_type as keyof typeof scenarioPrompts][customer_persona as keyof typeof scenarioPrompts.objection_handling]
+      // customer_persona might be a UUID, so let's use a default persona type
+      const personaType = 'hesitant' // default persona type
+      const baseScenario = scenarioPrompts[simulation_type as keyof typeof scenarioPrompts][personaType as keyof typeof scenarioPrompts.objection_handling]
       
       // שילוב מידע מהשיחה המקורית אם קיימת
       let originalCallContext = ""
@@ -193,19 +199,33 @@ ${originalCallContext}
     }
 
     // יצירת הסימולציה בבסיס הנתונים
+    let parsedAiFeedback = null;
+    if (enhancedScenario) {
+      try {
+        parsedAiFeedback = JSON.parse(enhancedScenario);
+      } catch (parseError) {
+        console.error('Failed to parse enhancedScenario as JSON:', parseError);
+        parsedAiFeedback = { error: 'Invalid JSON', raw: enhancedScenario };
+      }
+    }
+    
+    const insertData = {
+      agent_id: session.user.id,
+      company_id: user.company_id,
+      triggered_by_call_id,
+      simulation_type,
+      customer_persona, // חזרה לשם המקורי של הטבלה
+      difficulty_level,
+      scenario_description: scenarioDescription,
+      status: 'pending',
+      ai_feedback: parsedAiFeedback
+    }
+    
+    console.log('Insert data:', JSON.stringify(insertData, null, 2))
+    
     const { data: simulation, error: insertError } = await supabase
       .from('simulations')
-      .insert({
-        agent_id: session.user.id,
-        company_id: user.company_id,
-        triggered_by_call_id,
-        simulation_type,
-        customer_persona, // חזרה לשם המקורי של הטבלה
-        difficulty_level,
-        scenario_description: scenarioDescription,
-        status: 'pending',
-        ai_feedback: enhancedScenario ? JSON.parse(enhancedScenario) : null
-      })
+      .insert(insertData)
       .select()
       .single()
 
