@@ -27,34 +27,42 @@ export async function POST(request: NextRequest) {
 
     // יצירת ephemeral token מ-OpenAI
     const sessionConfig = {
-      session: {
-        type: "realtime",
-        model: "gpt-realtime",
-        instructions: instructions || "You are a helpful customer for sales training.",
-        voice: "alloy",
-        input_audio_format: "pcm16",
-        output_audio_format: "pcm16",
-        input_audio_transcription: {
-          model: "whisper-1"
-        },
-        turn_detection: {
-          type: "server_vad",
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 500
-        }
+      model: "gpt-4o-realtime-preview",
+      instructions: instructions || "You are a helpful customer for sales training in Hebrew.",
+      voice: "alloy",
+      input_audio_format: "pcm16",
+      output_audio_format: "pcm16",
+      input_audio_transcription: {
+        model: "whisper-1"
+      },
+      turn_detection: {
+        type: "server_vad",
+        threshold: 0.5,
+        prefix_padding_ms: 300,
+        silence_duration_ms: 500
       }
     }
 
     console.log('🔑 יוצר ephemeral token עבור סימולציה:', simulationId)
+    console.log('📝 Session config:', JSON.stringify(sessionConfig, null, 2))
+
+    // Check if OpenAI API key exists
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('❌ OPENAI_API_KEY לא מוגדר')
+      return NextResponse.json(
+        { error: 'OpenAI API key not configured' },
+        { status: 500 }
+      )
+    }
 
     const response = await fetch(
-      "https://api.openai.com/v1/realtime/client_secrets",
+      "https://api.openai.com/v1/realtime/sessions",
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
           "Content-Type": "application/json",
+          "OpenAI-Beta": "realtime=v1"
         },
         body: JSON.stringify(sessionConfig),
       }
