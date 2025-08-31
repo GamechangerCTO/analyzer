@@ -175,7 +175,7 @@ ${persona?.common_objections?.join('\n- ') || '- המחיר נראה גבוה\n-
 
       // שליחה לOpenAI Realtime API
       const baseUrl = "https://api.openai.com/v1/realtime/calls"
-      const model = "gpt-realtime"
+      const model = "gpt-4o-realtime-preview"
       
       const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
         method: "POST",
@@ -275,7 +275,7 @@ ${persona?.common_objections?.join('\n- ') || '- המחיר נראה גבוה\n-
       type: "session.update",
       session: {
         type: "realtime",
-        model: "gpt-realtime",
+        model: "gpt-4o-realtime-preview",
         modalities: ["text", "audio"],
         instructions: createAIInstructions(),
         voice: "alloy",
