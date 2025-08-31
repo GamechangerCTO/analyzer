@@ -248,6 +248,8 @@ ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשבי
     switch (event.type) {
       case 'session.created':
         console.log('🎉 סשן נוצר בהצלחה')
+        console.log('📊 dataChannel זמין:', !!dataChannel)
+        console.log('📊 sessionStarted:', sessionStarted)
         startSimulation()
         break
 
@@ -295,8 +297,13 @@ ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשבי
 
   // התחלת הסימולציה
   const startSimulation = () => {
-    if (!dataChannel || !sessionStarted) return
+    console.log('🚀 מתחיל סימולציה, dataChannel:', !!dataChannel)
+    if (!dataChannel) {
+      console.error('❌ אין dataChannel - לא יכול להתחיל סימולציה')
+      return
+    }
 
+    console.log('✅ מעדכן סטטוס ל-active')
     setStatus('active')
     setSessionStarted(true)
     setSimulationMetrics(prev => ({
