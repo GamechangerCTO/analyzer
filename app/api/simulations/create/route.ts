@@ -96,10 +96,6 @@ export async function POST(request: NextRequest) {
 
     const body: CreateSimulationRequest = await request.json()
     const { simulation_type, customer_persona, difficulty_level, triggered_by_call_id, callAnalysis } = body
-    
-    // Debug logging
-    console.log('Request body:', JSON.stringify(body, null, 2))
-    console.log('User info:', { id: session.user.id, company_id: user.company_id })
 
     // בניית תרחיש הסימולציה
     let scenarioDescription = "תרחיש סימולציה כללי"
@@ -220,8 +216,6 @@ ${originalCallContext}
       status: 'pending',
       ai_feedback: parsedAiFeedback
     }
-    
-    console.log('Insert data:', JSON.stringify(insertData, null, 2))
     
     const { data: simulation, error: insertError } = await supabase
       .from('simulations')

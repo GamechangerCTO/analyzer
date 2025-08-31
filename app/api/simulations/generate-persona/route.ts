@@ -96,32 +96,38 @@ export async function POST(request: NextRequest) {
 
     const personaData = JSON.parse(personaResponse.choices[0].message.content || '{}')
     
-    // שמירת הפרסונה במסד הנתונים
+    console.log('Generated persona data:', JSON.stringify(personaData, null, 2))
+    
+    // שמירת הפרסונה במסד הנתונים - עם הגבלת אורך
+    const truncateString = (str: string, maxLength: number) => {
+      return str && str.length > maxLength ? str.substring(0, maxLength) : str
+    }
+    
     const { data: savedPersona, error: saveError } = await supabase
       .from('customer_personas_hebrew')
       .insert({
         company_id: companyId,
         created_by: session.user.id,
-        persona_name: personaData.persona_name,
-        personality_type: personaData.personality_type,
-        communication_style: personaData.communication_style,
-        industry_context: personaData.industry_context,
-        company_size: personaData.company_size,
+        persona_name: truncateString(personaData.persona_name, 100),
+        personality_type: truncateString(personaData.personality_type, 50),
+        communication_style: truncateString(personaData.communication_style, 50),
+        industry_context: truncateString(personaData.industry_context, 100),
+        company_size: truncateString(personaData.company_size, 50),
         background_story: personaData.background_story,
         current_situation: personaData.current_situation,
         pain_points: personaData.pain_points || [],
         goals_and_objectives: personaData.goals_and_objectives || [],
         common_objections: personaData.common_objections || [],
         objection_patterns: personaData.objection_patterns || {},
-        objection_difficulty: difficulty,
+        objection_difficulty: truncateString(difficulty, 20),
         preferred_communication: personaData.preferred_communication || [],
-        decision_making_style: personaData.decision_making_style,
-        budget_sensitivity: personaData.budget_sensitivity,
-        time_pressure: personaData.time_pressure,
+        decision_making_style: truncateString(personaData.decision_making_style, 50),
+        budget_sensitivity: truncateString(personaData.budget_sensitivity, 20),
+        time_pressure: truncateString(personaData.time_pressure, 20),
         openai_instructions: personaData.openai_instructions,
         scenario_templates: personaData.scenario_templates || {},
         targets_weaknesses: targetWeaknesses || [],
-        difficulty_level: difficulty,
+        difficulty_level: truncateString(difficulty, 20),
         is_template: false
       })
       .select()
