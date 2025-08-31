@@ -177,17 +177,28 @@ ${persona?.common_objections?.join('\n- ') || '- המחיר נראה גבוה\n-
       const baseUrl = "https://api.openai.com/v1/realtime/calls"
       const model = "gpt-4o-realtime-preview"
       
+      console.log('🔑 Ephemeral token:', ephemeralKeyRef.current?.substring(0, 20) + '...')
+      console.log('📡 Sending SDP offer to:', `${baseUrl}?model=${model}`)
+      
       const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
         method: "POST",
         body: offer.sdp,
         headers: {
           Authorization: `Bearer ${ephemeralKeyRef.current}`,
           "Content-Type": "application/sdp",
+          "OpenAI-Beta": "realtime=v1"
         },
       })
 
       if (!sdpResponse.ok) {
-        throw new Error(`SDP request failed: ${sdpResponse.status}`)
+        const errorText = await sdpResponse.text()
+        console.error('🔴 SDP request failed:', {
+          status: sdpResponse.status,
+          statusText: sdpResponse.statusText,
+          error: errorText,
+          headers: Object.fromEntries(sdpResponse.headers.entries())
+        })
+        throw new Error(`SDP request failed: ${sdpResponse.status} - ${errorText}`)
       }
 
       const answer = {
