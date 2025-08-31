@@ -11,7 +11,7 @@ interface RealtimeSimulationProps {
   company: any
 }
 
-type SimulationStatus = 'preparing' | 'connecting' | 'ready' | 'active' | 'completed' | 'error'
+type SimulationStatus = 'preparing' | 'connecting' | 'ready' | 'active' | 'ending' | 'completed' | 'error'
 
 export default function RealtimeSimulation({ simulation, customerPersona, user, company }: RealtimeSimulationProps) {
   const router = useRouter()
@@ -198,7 +198,7 @@ ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשבי
 
       // שליחה לOpenAI Realtime API
       const baseUrl = "https://api.openai.com/v1/realtime/calls"
-      const model = "gpt-4o-realtime-preview"
+      const model = "gpt-realtime"
       
       console.log('🔑 Ephemeral token:', ephemeralKeyRef.current?.substring(0, 20) + '...')
       console.log('📡 Sending SDP offer to:', `${baseUrl}?model=${model}`)
@@ -309,7 +309,7 @@ ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשבי
       type: "session.update",
       session: {
         type: "realtime",
-        model: "gpt-4o-realtime-preview",
+        model: "gpt-realtime",
         modalities: ["text", "audio"],
         instructions: createAIInstructions(),
         voice: getVoiceForPersona(),
@@ -343,8 +343,32 @@ ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשבי
   }
 
   // סיום הסימולציה
+  // עצירה מיידית ללא שמירה
+  const stopSimulation = () => {
+    try {
+      setStatus('ending')
+      
+      // ניתוק החיבורים
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop())
+      }
+      if (peerConnection) {
+        peerConnection.close()
+      }
+      
+      // חזור לעמוד הסימולציות
+      router.push('/simulations')
+    } catch (error) {
+      console.error('❌ שגיאה בעצירת סימולציה:', error)
+      setStatus('error')
+    }
+  }
+
+  // עצירה ושליחה לניתוח
   const endSimulation = async () => {
     try {
+      setStatus('ending')
+      
       // ניתוק החיבורים
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop())
@@ -353,27 +377,37 @@ ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשבי
         peerConnection.close()
       }
 
-      // שמירת תוצאות הסימולציה
-      await fetch('/api/simulations/complete', {
+      // שמירת תוצאות הסימולציה עם בקשה לניתוח
+      const response = await fetch('/api/simulations/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           simulationId: simulation.id,
           transcript: transcript.join('\n'),
           metrics: simulationMetrics,
-          status: 'completed'
+          status: 'completed',
+          generateReport: true // דגל לייצור דוח
         })
       })
 
-      setStatus('completed')
-      
-      // מעבר לדף התוצאות
-      setTimeout(() => {
-        router.push(`/simulations/report/${simulation.id}`)
-      }, 2000)
+      if (response.ok) {
+        const result = await response.json()
+        setStatus('completed')
+        
+        // מעבר לעמוד הדוח
+        setTimeout(() => {
+          if (result.reportId) {
+            router.push(`/simulations/report/${result.reportId}`)
+          } else {
+            router.push(`/simulations/report/${simulation.id}`)
+          }
+        }, 2000)
+      } else {
+        throw new Error('Failed to complete simulation')
+      }
 
     } catch (error) {
-      console.error('Error ending simulation:', error)
+      console.error('❌ שגיאה בסיום וניתוח סימולציה:', error)
       setStatus('error')
     }
   }
@@ -408,12 +442,14 @@ ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשבי
             <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
               status === 'active' ? 'bg-green-100 text-green-800' :
               status === 'ready' ? 'bg-blue-100 text-blue-800' :
+              status === 'ending' ? 'bg-orange-100 text-orange-800' :
               status === 'error' ? 'bg-red-100 text-red-800' :
               'bg-gray-100 text-gray-800'
             }`}>
               <div className={`w-2 h-2 rounded-full mr-2 ${
                 status === 'active' ? 'bg-green-500 animate-pulse' :
                 status === 'ready' ? 'bg-blue-500' :
+                status === 'ending' ? 'bg-orange-500 animate-pulse' :
                 status === 'error' ? 'bg-red-500' :
                 'bg-gray-500'
               }`} />
@@ -421,6 +457,7 @@ ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשבי
               {status === 'connecting' && 'מתחבר...'}
               {status === 'ready' && 'מוכן להתחיל'}
               {status === 'active' && 'שיחה פעילה'}
+              {status === 'ending' && 'מסיים...'}
               {status === 'completed' && 'הושלם'}
               {status === 'error' && 'שגיאה'}
             </div>
@@ -457,12 +494,20 @@ ${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשבי
           )}
 
           {status === 'active' && (
-            <button
-              onClick={endSimulation}
-              className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors"
-            >
-              🏁 סיים סימולציה
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={stopSimulation}
+                className="bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors flex items-center"
+              >
+                ⏹️ עצור סימולציה
+              </button>
+              <button
+                onClick={endSimulation}
+                className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center"
+              >
+                🏁 עצור ושלח לניתוח
+              </button>
+            </div>
           )}
 
           {status === 'error' && (

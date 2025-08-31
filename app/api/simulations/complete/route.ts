@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { simulationId, transcript, metrics, status } = await request.json()
+    const { simulationId, transcript, metrics, status, generateReport = true } = await request.json()
 
     console.log('🏁 מסיים סימולציה:', simulationId)
 
@@ -98,8 +98,15 @@ export async function POST(request: NextRequest) {
     const duration = metrics.startTime ? 
       Math.floor((Date.now() - new Date(metrics.startTime).getTime()) / 1000) : 0
 
-    // יצירת דוח AI מפורט בעברית
-    const reportPrompt = `
+    let reportData = null
+    let report = null
+
+    // יצירת דוח רק אם נדרש
+    if (generateReport) {
+      console.log('🤖 יוצר דוח AI...')
+      
+      // יצירת דוח AI מפורט בעברית
+      const reportPrompt = `
 אתה מומחה בניתוח סימולציות מכירות ויצירת דוחות בעברית.
 
 ## פרטי הסימולציה:
@@ -155,50 +162,94 @@ ${transcript || 'לא זמין תמלול'}
 }
 `
 
-    console.log('🤖 יוצר דוח AI...')
+      console.log('🤖 יוצר דוח AI...')
 
-    const reportResponse = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-2024-04-09',
-      messages: [
-        { 
-          role: 'system', 
-          content: 'אתה מומחה בניתוח סימולציות מכירות. תמיד החזר JSON תקין בעברית עם דוח מפורט ומועיל.' 
-        },
-        { role: 'user', content: reportPrompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000
-    })
+      const reportResponse = await openai.chat.completions.create({
+        model: 'gpt-4-turbo-2024-04-09',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'אתה מומחה בניתוח סימולציות מכירות. תמיד החזר JSON תקין בעברית עם דוח מפורט ומועיל.' 
+          },
+          { role: 'user', content: reportPrompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+      })
 
-    const reportContent = reportResponse.choices[0]?.message?.content || '{}'
-    console.log('📝 תגובה גולמית מ-OpenAI:', reportContent.substring(0, 200) + '...')
-    
-    const cleanedContent = cleanOpenAIResponse(reportContent)
-    console.log('🧹 תוכן מנוקה:', cleanedContent.substring(0, 200) + '...')
-    
-    let reportData
-    try {
-      reportData = JSON.parse(cleanedContent)
-    } catch (parseError: any) {
-      console.error('❌ שגיאה בניתוח JSON:', parseError.message)
+      const reportContent = reportResponse.choices[0]?.message?.content || '{}'
+      console.log('📝 תגובה גולמית מ-OpenAI:', reportContent.substring(0, 200) + '...')
       
-      // fallback - דוח בסיסי
-      reportData = {
-        overall_score: 7,
-        summary: `סימולציה הושלמה עם ${simulation.customer_personas_hebrew?.[0]?.persona_name || 'לקוח ווירטואלי'}. הנציג הראה ביצועים סבירים.`,
-        strengths: ['השתתפות פעילה', 'ניסיון להתמודד עם התנגדויות'],
-        improvement_areas: ['שיפור זמני תגובה', 'חיזוק ביטחון'],
-        specific_feedback: [],
-        recommendations: ['המשך אימון על התמודדות עם התנגדויות', 'תרגול שאלות פתוחות'],
-        next_training_focus: 'בניית קשר עם לקוחות',
-        detailed_scores: {
-          communication: 7,
-          objection_handling: 6,
-          relationship_building: 7,
-          closing: 6,
-          product_knowledge: 7
+      const cleanedContent = cleanOpenAIResponse(reportContent)
+      console.log('🧹 תוכן מנוקה:', cleanedContent.substring(0, 200) + '...')
+      
+      try {
+        reportData = JSON.parse(cleanedContent)
+      } catch (parseError: any) {
+        console.error('❌ שגיאה בניתוח JSON:', parseError.message)
+        
+        // fallback - דוח בסיסי
+        reportData = {
+          overall_score: 7,
+          summary: `סימולציה הושלמה עם ${simulation.customer_personas_hebrew?.[0]?.persona_name || 'לקוח ווירטואלי'}. הנציג הראה ביצועים סבירים.`,
+          strengths: ['השתתפות פעילה', 'ניסיון להתמודד עם התנגדויות'],
+          improvement_areas: ['שיפור זמני תגובה', 'חיזוק ביטחון'],
+          specific_feedback: [],
+          recommendations: ['המשך אימון על התמודדות עם התנגדויות', 'תרגול שאלות פתוחות'],
+          next_training_focus: 'בניית קשר עם לקוחות',
+          detailed_scores: {
+            communication: 7,
+            objection_handling: 6,
+            relationship_building: 7,
+            closing: 6,
+            product_knowledge: 7
+          }
         }
       }
+      
+      // יצירת דוח מפורט
+      const { data: reportResult, error: reportError } = await supabase
+        .from('simulation_reports_hebrew')
+        .insert({
+          simulation_id: simulationId,
+          agent_id: session.user.id,
+          company_id: simulation.company_id,
+          overall_score: reportData.overall_score,
+          detailed_scores: reportData.detailed_scores,
+          summary: reportData.summary,
+          strengths: reportData.strengths,
+          improvement_areas: reportData.improvement_areas,
+          specific_feedback: reportData.specific_feedback,
+          recommendations: reportData.recommendations,
+          next_training_focus: reportData.next_training_focus,
+          simulation_metrics: metrics,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (reportError) {
+        console.error('❌ שגיאה ביצירת דוח:', reportError)
+      } else {
+        report = reportResult
+      }
+      
+      // עדכון מטבעות הנציג
+      await supabase
+        .from('agent_coins')
+        .upsert({
+          agent_id: session.user.id,
+          company_id: simulation.company_id,
+          total_coins: Math.max(1, Math.floor(reportData.overall_score / 2)),
+          last_earned: new Date().toISOString()
+        }, {
+          onConflict: 'agent_id',
+          ignoreDuplicates: false
+        })
+    } else {
+      console.log('⏹️ סימולציה נעצרה ללא יצירת דוח')
+      // ציון בסיסי לסימולציה שנעצרה
+      reportData = { overall_score: 5 }
     }
 
     // עדכון הסימולציה
@@ -210,8 +261,8 @@ ${transcript || 'לא זמין תמלול'}
         duration_seconds: duration,
         transcript: transcript,
         score: reportData.overall_score,
-        ai_feedback: reportData,
-        coins_earned: Math.max(1, Math.floor(reportData.overall_score / 2)) // 1-5 מטבעות לפי ביצועים
+        ai_feedback: generateReport ? reportData : null,
+        coins_earned: generateReport ? Math.max(1, Math.floor(reportData.overall_score / 2)) : 0
       })
       .eq('id', simulationId)
 
@@ -219,49 +270,12 @@ ${transcript || 'לא זמין תמלול'}
       console.error('❌ שגיאה בעדכון סימולציה:', updateError)
     }
 
-    // יצירת דוח מפורט
-    const { data: report, error: reportError } = await supabase
-      .from('simulation_reports_hebrew')
-      .insert({
-        simulation_id: simulationId,
-        agent_id: session.user.id,
-        company_id: simulation.company_id,
-        overall_score: reportData.overall_score,
-        detailed_scores: reportData.detailed_scores,
-        summary: reportData.summary,
-        strengths: reportData.strengths,
-        improvement_areas: reportData.improvement_areas,
-        specific_feedback: reportData.specific_feedback,
-        recommendations: reportData.recommendations,
-        next_training_focus: reportData.next_training_focus,
-        simulation_metrics: metrics,
-        created_at: new Date().toISOString()
-      })
-      .select()
-      .single()
-
-    if (reportError) {
-      console.error('❌ שגיאה ביצירת דוח:', reportError)
-    }
-
-    // עדכון מטבעות הנציג
-    await supabase
-      .from('agent_coins')
-      .upsert({
-        agent_id: session.user.id,
-        company_id: simulation.company_id,
-        total_coins: Math.max(1, Math.floor(reportData.overall_score / 2)),
-        last_earned: new Date().toISOString()
-      }, {
-        onConflict: 'agent_id',
-        ignoreDuplicates: false
-      })
-
     console.log('✅ סימולציה הושלמה בהצלחה')
 
     return NextResponse.json({
       success: true,
       report: report,
+      reportId: report?.id || null,
       simulation: {
         ...simulation,
         status: 'completed',
