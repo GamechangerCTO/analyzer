@@ -12,6 +12,7 @@ import ModernChart from '@/components/ModernChart'
 import DashboardRecommendation from '@/components/DashboardRecommendation'
 import AgentSummary from '@/components/AgentSummary'
 import LoadingDashboard from '@/components/LoadingDashboard'
+import SimulationsDashboard from '@/components/dashboard/SimulationsDashboard'
 
 interface AgentDashboardContentProps {
   userId: string
@@ -586,6 +587,25 @@ export default function AgentDashboardContent({ userId, companyId, targetUserInf
             agentName={agentInfo?.full_name || targetUserInfo?.full_name || 'נציג'} 
             isOwnSummary={true} 
           />
+
+          {/* Simulations Dashboard */}
+          <div className="bg-white rounded-xl shadow-lg p-6 border-r-4 border-purple-400">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                <Target className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">🎭 חדר כושר מכירות</h2>
+                <p className="text-gray-600">סימולציות אינטראקטיביות לשיפור הביצועים</p>
+              </div>
+            </div>
+            
+            <SimulationsDashboard 
+              userId={userId}
+              userRole="agent"
+              companyId={companyId}
+            />
+          </div>
         </div>
 
       </div>

@@ -42,8 +42,8 @@ export default function AgentRequestsClient({ adminId, adminName }: AgentRequest
 
     if (searchTerm) {
       filtered = filtered.filter(request => 
-        request.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        request.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.users?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.agent_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         request.companies?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
@@ -177,8 +177,8 @@ export default function AgentRequestsClient({ adminId, adminName }: AgentRequest
   ) => {
     try {
       const message = action === 'approved' 
-        ? `בקשתך להוספת הנציג ${request.full_name} אושרה על ידי מנהל המערכת`
-        : `בקשתך להוספת הנציג ${request.full_name} נדחתה${reason ? `: ${reason}` : ''}`
+        ? `בקשתך להוספת הנציג ${request.users?.full_name || request.agent_id} אושרה על ידי מנהל המערכת`
+        : `בקשתך להוספת הנציג ${request.users?.full_name || request.agent_id} נדחתה${reason ? `: ${reason}` : ''}`
 
       await supabase
         .from('agent_notifications')
@@ -192,7 +192,7 @@ export default function AgentRequestsClient({ adminId, adminName }: AgentRequest
             requestId: request.id,
             action,
             reason: reason || null,
-            agentName: request.full_name
+            agentName: request.users?.full_name || request.agent_id
           }
         })
     } catch (error) {
@@ -381,8 +381,8 @@ export default function AgentRequestsClient({ adminId, adminName }: AgentRequest
                   <tr key={request.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{request.full_name}</div>
-                        <div className="text-sm text-gray-500">{request.email}</div>
+                        <div className="text-sm font-medium text-gray-900">{request.users?.full_name || 'לא ידוע'}</div>
+                        <div className="text-sm text-gray-500">{request.agent_id}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

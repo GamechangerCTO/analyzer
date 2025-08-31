@@ -2,16 +2,18 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { createBaseSystemPrompt, getOptimalPrompt, type SimulationPromptParams } from '@/lib/simulation-prompts'
 
 interface RealtimeSimulationProps {
   simulation: any
+  customerPersona?: any
   user: any
   company: any
 }
 
 type SimulationStatus = 'preparing' | 'connecting' | 'ready' | 'active' | 'completed' | 'error'
 
-export default function RealtimeSimulation({ simulation, user, company }: RealtimeSimulationProps) {
+export default function RealtimeSimulation({ simulation, customerPersona, user, company }: RealtimeSimulationProps) {
   const router = useRouter()
   const [status, setStatus] = useState<SimulationStatus>('preparing')
   const [isAudioEnabled, setIsAudioEnabled] = useState(false)
@@ -29,28 +31,28 @@ export default function RealtimeSimulation({ simulation, user, company }: Realti
     currentObjection: null as string | null
   })
 
-  const audioElementRef = useRef<HTMLAudioElement>(null)
+  const audioElementRef = useRef<HTMLAudioElement | null>(null)
   const ephemeralKeyRef = useRef<string | null>(null)
 
-  // הגדרת פרסונת הלקוח ל-AI
-  const customerPersona = simulation.customer_personas_hebrew?.[0]
+  // הגדרת פרסונת הלקוח ל-AI (קבלת הפרסונה מהפרמטר או מהסימולציה)
+  const persona = customerPersona || simulation.customer_personas_hebrew?.[0]
   
   const createAIInstructions = () => {
     const instructions = `
-🎯 אתה ${customerPersona?.persona_name || 'לקוח פוטנציאלי'} - ${customerPersona?.personality_type || 'מקצועי'}.
+🎯 אתה ${persona?.persona_name || 'לקוח פוטנציאלי'} - ${persona?.personality_type || 'מקצועי'}.
 
 ## פרטי הלקוח:
-${customerPersona?.background_story || 'לקוח שמחפש פתרון מתאים'}
+${persona?.background_story || 'לקוח שמחפש פתרון מתאים'}
 
 ## מצבך הנוכחי:
-${customerPersona?.current_situation || 'בוחן אפשרויות לרכישה'}
+${persona?.current_situation || 'בוחן אפשרויות לרכישה'}
 
 ## התנהגותך:
-- סגנון תקשורת: ${customerPersona?.communication_style || 'ישיר ומקצועי'}
-- הערות התנהגותיות: ${customerPersona?.behavioral_notes || 'התנהג כלקוח רגיל'}
+- סגנון תקשורת: ${persona?.communication_style || 'ישיר ומקצועי'}
+- הערות התנהגותיות: ${persona?.behavioral_notes || 'התנהג כלקוח רגיל'}
 
 ## 🚫 התנגדויות שתעלה:
-${customerPersona?.common_objections?.join('\n- ') || '- המחיר נראה גבוה\n- צריך זמן לחשיבה'}
+${persona?.common_objections?.join('\n- ') || '- המחיר נראה גבוה\n- צריך זמן לחשיבה'}
 
 ## 🎭 הוראות חשובות לביצוע:
 1. **דבר בעברית בלבד** - תמיד ובכל מצב
@@ -58,7 +60,7 @@ ${customerPersona?.common_objections?.join('\n- ') || '- המחיר נראה ג�
 3. **אתגר את הנציג** ברמת קושי: ${simulation.difficulty_level}
 4. **השתמש בהתנגדויות הספציפיות** שנמצאות ברשימה למעלה
 5. **היה ריאליסטי** - אל תיכנע מהר מדי
-6. **שמור על האישיות** - ${customerPersona?.personality_type}
+6. **שמור על האישיות** - ${persona?.personality_type}
 
 ## תחום העסק:
 החברה: ${company?.name || 'החברה'}
@@ -124,9 +126,10 @@ ${customerPersona?.common_objections?.join('\n- ') || '- המחיר נראה ג�
 
       // הגדרת audio element לקבלת אודיו מה-AI
       if (!audioElementRef.current) {
-        audioElementRef.current = document.createElement('audio')
-        audioElementRef.current.autoplay = true
-        audioElementRef.current.playsInline = true
+        const audioEl = document.createElement('audio')
+        audioEl.autoplay = true
+        audioEl.setAttribute('playsinline', 'true')
+        audioElementRef.current = audioEl
       }
 
       pc.ontrack = (event) => {
@@ -220,9 +223,9 @@ ${customerPersona?.common_objections?.join('\n- ') || '- המחיר נראה ג�
         }
         break
 
-      case 'response.audio_transcript.done':
+                case 'response.audio_transcript.done':
         if (event.transcript) {
-          setTranscript(prev => [...prev, `🤖 ${customerPersona?.persona_name || 'לקוח'}: ${event.transcript}`])
+          setTranscript(prev => [...prev, `🤖 ${persona?.persona_name || 'לקוח'}: ${event.transcript}`])
           setCurrentMessage('')
         }
         break
@@ -294,13 +297,13 @@ ${customerPersona?.common_objections?.join('\n- ') || '- המחיר נראה ג�
 
     // הודעת פתיחה מהלקוח
     setTimeout(() => {
-      const openingMessage = {
-        type: "response.create",
-        response: {
-          modalities: ["audio"],
-          instructions: `תתחיל את השיחה עם הנציג. תכיר את עצמך כ${customerPersona?.persona_name || 'לקוח פוטנציאלי'} ותביע עניין ראשוני במוצר/שירות. היה חברותי אבל זהיר.`
+              const openingMessage = {
+          type: "response.create",
+          response: {
+            modalities: ["audio"],
+            instructions: `תתחיל את השיחה עם הנציג. תכיר את עצמך כ${persona?.persona_name || 'לקוח פוטנציאלי'} ותביע עניין ראשוני במוצר/שירות. היה חברותי אבל זהיר.`
+          }
         }
-      }
       dataChannel.send(JSON.stringify(openingMessage))
     }, 1000)
   }
@@ -362,7 +365,7 @@ ${customerPersona?.common_objections?.join('\n- ') || '- המחיר נראה ג�
               🎯 סימולציה בזמן אמת
             </h1>
             <p className="text-gray-600">
-              אימון עם {customerPersona?.persona_name || 'לקוח ווירטואלי'} • 
+              אימון עם {persona?.persona_name || 'לקוח ווירטואלי'} • 
               רמת קושי: {simulation.difficulty_level}
             </p>
           </div>
@@ -395,14 +398,14 @@ ${customerPersona?.common_objections?.join('\n- ') || '- המחיר נראה ג�
           <h3 className="font-medium text-blue-900 mb-2">פרופיל הלקוח:</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="font-medium">סוג אישיות:</span> {customerPersona?.personality_type}
+              <span className="font-medium">סוג אישיות:</span> {persona?.personality_type}
             </div>
             <div>
-              <span className="font-medium">סגנון תקשורת:</span> {customerPersona?.communication_style}
+              <span className="font-medium">סגנון תקשורת:</span> {persona?.communication_style}
             </div>
           </div>
           <p className="text-blue-700 text-sm mt-2">
-            {customerPersona?.current_situation}
+            {persona?.current_situation}
           </p>
         </div>
       </div>
@@ -464,7 +467,7 @@ ${customerPersona?.common_objections?.join('\n- ') || '- המחיר נראה ג�
             
             {currentMessage && (
               <div className="p-2 rounded bg-green-100 text-green-900 opacity-70">
-                🤖 {customerPersona?.persona_name || 'לקוח'}: {currentMessage}...
+                🤖 {persona?.persona_name || 'לקוח'}: {currentMessage}...
               </div>
             )}
             

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { createBaseSystemPrompt } from '@/lib/simulation-prompts'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -291,4 +292,3 @@ ${targetWeaknesses.join(', ')}
 
   return prompt
 }
-`

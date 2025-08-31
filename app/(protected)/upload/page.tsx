@@ -66,9 +66,9 @@ export default async function UploadPage() {
           </nav>
           
           {/* Company Badge */}
-          {userData?.companies?.name && (
+          {userData?.companies && Array.isArray(userData.companies) && userData.companies[0]?.name && (
             <div className="px-4 py-2 bg-white border border-neutral-200 rounded-tl-2xl rounded-br-2xl text-sm text-neutral-700 shadow-sm">
-              חברה: <span className="font-bold text-neutral-900">{userData.companies.name}</span>
+              חברה: <span className="font-bold text-neutral-900">{userData.companies[0].name}</span>
             </div>
           )}
         </div>

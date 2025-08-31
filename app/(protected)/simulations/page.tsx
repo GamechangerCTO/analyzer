@@ -183,7 +183,7 @@ export default async function SimulationsPage() {
                 </p>
                 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {persona.targets_weaknesses?.slice(0, 2).map((weakness, index) => (
+                  {persona.targets_weaknesses?.slice(0, 2).map((weakness: string, index: number) => (
                     <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
                       {weakness}
                     </span>

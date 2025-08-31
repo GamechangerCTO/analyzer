@@ -305,7 +305,7 @@ export default function CreateSimulationForm({
                                 נקודות לשיפור שזוהו:
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                {improvementAreas.slice(0, 3).map((area, index) => (
+                                {improvementAreas.slice(0, 3).map((area: string, index: number) => (
                                   <span key={index} className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">
                                     {area}
                                   </span>

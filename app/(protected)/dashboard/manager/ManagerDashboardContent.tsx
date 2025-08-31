@@ -34,7 +34,8 @@ import {
   Trophy
 } from 'lucide-react';
 
-import TeamInsights from '@/components/TeamInsights';
+import TeamInsights from '@/components/TeamInsights'
+import SimulationsDashboard from '@/components/dashboard/SimulationsDashboard';
 
 // Types
 interface ManagerStats {
@@ -1224,6 +1225,25 @@ export default function ManagerDashboardContent() {
             </div>
           </div>
         )}
+
+        {/* Team Simulations Dashboard */}
+        <div className="bg-white rounded-xl shadow-lg p-6 border-r-4 border-purple-400">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+              <Trophy className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">🎭 סימולציות הצוות</h2>
+              <p className="text-gray-600">מעקב אחר התקדמות הצוות בסימולציות ואימונים</p>
+            </div>
+          </div>
+          
+          <SimulationsDashboard 
+            userId={user?.id || ''}
+            userRole="manager"
+            companyId={user?.company_id}
+          />
+        </div>
                 
       </div>
     </div>

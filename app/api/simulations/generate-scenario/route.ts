@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { createScenarioPrompt } from '@/lib/simulation-prompts'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -54,7 +55,13 @@ export async function POST(request: NextRequest) {
     }
 
     // יצירת תרחיש מותאם
-    const scenarioPrompt = buildScenarioPrompt(persona, companyData, difficulty, focusArea, estimatedDuration)
+    const scenarioPrompt = createScenarioPrompt({ 
+      persona, 
+      company: companyData, 
+      callType: persona.simulation_type || 'inbound',
+      difficultyLevel: difficulty, 
+      focusAreas: [focusArea || 'שיפור כללי'] 
+    })
     
     const scenarioResponse = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -217,4 +224,3 @@ function buildScenarioPrompt(
 
   return prompt
 }
-`

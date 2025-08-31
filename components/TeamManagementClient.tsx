@@ -292,7 +292,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
       render: (value: string, row: AgentWithStats) => (
         <div className="flex items-center gap-3">
           <Avatar
-            avatarUrl={row.avatar_url}
+            avatarUrl={null}
             fullName={value || 'משתמש'}
             size="sm"
           />

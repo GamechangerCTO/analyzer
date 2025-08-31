@@ -161,7 +161,7 @@ export default function SimulationReport({ report, user, recentReports }: Simula
                   return (
                     <div key={category} className="bg-white border rounded-lg p-4 text-center">
                       <div className={`text-2xl font-bold mb-2 ${getScoreColor(score as number)}`}>
-                        {score}/10
+                        {Number(score)}/10
                       </div>
                       <div className="text-sm text-gray-600">
                         {categoryNames[category as keyof typeof categoryNames] || category}

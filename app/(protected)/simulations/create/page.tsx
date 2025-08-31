@@ -28,22 +28,32 @@ export default async function CreateSimulationPage() {
     .limit(10)
 
   // קבלת נתוני החברה
-  const { data: company } = await supabase
-    .from('companies')
-    .select(`
-      *,
-      company_questionnaires (*)
-    `)
-    .eq('id', user?.company_id)
-    .single()
+  let company = null
+  if (user?.company_id) {
+    const { data: companyData } = await supabase
+      .from('companies')
+      .select(`
+        *,
+        company_questionnaires (*)
+      `)
+      .eq('id', user.company_id)
+      .single()
+    
+    company = companyData
+  }
 
   // קבלת פרסונות קיימות
-  const { data: existingPersonas } = await supabase
-    .from('customer_personas_hebrew')
-    .select('*')
-    .eq('company_id', user?.company_id)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
+  let existingPersonas = null
+  if (user?.company_id) {
+    const { data: personasData } = await supabase
+      .from('customer_personas_hebrew')
+      .select('*')
+      .eq('company_id', user.company_id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+    
+    existingPersonas = personasData
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
