@@ -19,6 +19,7 @@ interface CreateSimulationRequest {
   customer_persona: string
   difficulty_level: string
   triggered_by_call_id?: string
+  callAnalysis?: any
 }
 
 const scenarioPrompts = {
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateSimulationRequest = await request.json()
-    const { simulation_type, customer_persona, difficulty_level, triggered_by_call_id } = body
+    const { simulation_type, customer_persona, difficulty_level, triggered_by_call_id, callAnalysis } = body
 
     // בניית תרחיש הסימולציה
     let scenarioDescription = "תרחיש סימולציה כללי"
@@ -216,17 +217,19 @@ ${originalCallContext}
     // וידוא שקיים רשומה במטבעות עבור הנציג
     const { data: existingCoins } = await supabase
       .from('agent_coins')
-      .select('id')
-      .eq('user_id', session.user.id) // חזרה לשם המקורי של הטבלה
+      .select('user_id')
+      .eq('user_id', session.user.id)
       .single()
 
     if (!existingCoins) {
       await supabase
         .from('agent_coins')
         .insert({
-          user_id: session.user.id, // חזרה לשם המקורי של הטבלה
+          user_id: session.user.id,
           company_id: user.company_id,
-          total_coins: 0
+          total_coins: 0,
+          earned_today: 0,
+          streak_days: 0
         })
     }
 
@@ -234,7 +237,7 @@ ${originalCallContext}
     await supabase
       .from('agent_notifications')
       .insert({
-        user_id: session.user.id, // חזרה לשם המקורי של הטבלה
+        user_id: session.user.id,
         company_id: user.company_id,
         notification_type: 'simulation_required',
         title: 'סימולציה חדשה נוצרה',

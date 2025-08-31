@@ -117,16 +117,15 @@ export default function CreateSimulationForm({
       
       const scenarioData = await scenarioResponse.json()
       
-      // יצירת הסימולציה עצמה
+      // יצירת הסימולציה עצמה  
       const simulationResponse = await fetch('/api/simulations/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           simulation_type: formData.focusArea || 'אימון כללי',
-          customer_persona: personaId,
+          customer_persona: personaId || 'לקוח ווירטואלי',
           difficulty_level: formData.difficulty,
-          triggered_by_call_id: formData.selectedCallId || null,
-          scenario_id: scenarioData.scenario.id
+          triggered_by_call_id: formData.selectedCallId || null
         })
       })
       
