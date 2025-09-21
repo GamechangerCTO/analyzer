@@ -25,6 +25,97 @@ function getAudioFormatForAPI(fileExtension: string): string {
 // הגדרת max duration לוורסל (5 דקות למשתמשי Pro)
 export const maxDuration = 300;
 
+/**
+ * בניית פרומפט ניתוח על בסיס הנתונים מטבלת prompts
+ */
+function buildAnalysisPromptFromDB(promptData: any, transcript: string): string {
+  const baseInstructions = `אתה מומחה בכיר בניתוח שיחות מכירה ושירות עם ניסיון של 15 שנה.
+
+נתח את השיחה הבאה בהתאם לפרומפט הספציפי לסוג השיחה: ${promptData.call_type}
+
+## תמלול השיחה:
+${transcript}
+
+## הנחיות הניתוח (מבוססות על הפרומפט לסוג השיחה):
+${promptData.system_prompt}
+`;
+
+  // אם יש שדות ניתוח מוגדרים - נבנה JSON מותאם
+  if (promptData.analysis_fields && typeof promptData.analysis_fields === 'object') {
+    const jsonStructure = buildJSONStructureFromFields(promptData.analysis_fields);
+    
+    return `${baseInstructions}
+
+## מבנה הניתוח הנדרש:
+נתח את השיחה לפי השדות הבאים והחזר JSON במבנה המדויק הזה:
+
+${jsonStructure}
+
+## הנחיות נוספות:
+- תן ציון מ-3 עד 10 לכל פרמטר (3 נדיר מאוד, 10 מעולה)
+- ב"תובנות" תן הסבר קצר ובהיר של הביצועים
+- ב"איך_משפרים" תן המלצה מעשית ספציפית + דוגמה מדויקה לנוסח מקצועי
+- כלול general_key_insights, improvement_points, overall_score ו-red_flags
+- החזר רק JSON תקין ללא backticks או markdown
+
+⚠️ חובה! כללי JSON קריטיים:
+- אל תשתמש במרכאות כפולות בתוך ערכי הטקסט
+- וודא שכל ערך טקסט מתחיל ומסתיים במרכאות כפולות
+- אל תכלול line breaks או tabs בתוך ערכי טקסט
+- לפני כל מפתח JSON חייב להיות פסיק (למעט הראשון)`;
+  }
+
+  // אם אין שדות ניתוח - נשתמש במבנה כללי
+  return `${baseInstructions}
+
+## מבנה הניתוח הנדרש:
+החזר JSON במבנה הבא:
+{
+  "ניתוח_כללי": {
+    "ביצועים_כלליים": {"ציון": number, "תובנות": "string", "איך_משפרים": "string"}
+  },
+  "נקודות_חוזק": ["רשימת חוזקות"],
+  "נקודות_לשיפור": ["רשימת שיפורים"],
+  "general_key_insights": ["תובנות מפתח"],
+  "improvement_points": ["נקודות לשיפור"],
+  "overall_score": number,
+  "red_flags": []
+}
+
+החזר רק JSON תקין ללא backticks או markdown!`;
+}
+
+/**
+ * בניית מבנה JSON מתוך שדות הניתוח מהפרומפט
+ */
+function buildJSONStructureFromFields(analysisFields: any): string {
+  const jsonParts: string[] = [];
+  
+  for (const [categoryName, categoryFields] of Object.entries(analysisFields)) {
+    if (typeof categoryFields === 'object' && categoryFields !== null) {
+      const fieldParts: string[] = [];
+      
+      for (const [fieldName, fieldData] of Object.entries(categoryFields as any)) {
+        if (typeof fieldData === 'object' && fieldData !== null) {
+          fieldParts.push(`    "${fieldName}": {"ציון": number, "תובנות": "string", "איך_משפרים": "string"}`);
+        }
+      }
+      
+      if (fieldParts.length > 0) {
+        jsonParts.push(`  "${categoryName}": {\n${fieldParts.join(',\n')}\n  }`);
+      }
+    }
+  }
+  
+  // הוספת שדות חובה
+  jsonParts.push(`  "general_key_insights": ["רשימת תובנות מפתח"]`);
+  jsonParts.push(`  "improvement_points": ["רשימת נקודות לשיפור"]`);
+  jsonParts.push(`  "overall_score": number`);
+  jsonParts.push(`  "red_flags": []`);
+  
+  return `{\n${jsonParts.join(',\n')}\n}`;
+}
+
 // בדיקת מפתח OpenAI API עם לוגים מפורטים
 const apiKey = process.env.OPENAI_API_KEY;
 console.log('🔍 OpenAI API Key check:', {
@@ -875,15 +966,33 @@ export async function POST(request: Request) {
         await addCallLog(call_id, '📊 מתחיל ניתוח תוכן', { model: 'gpt-4.1-2025-04-14' });
 
         // שלב 3: ניתוח תוכן מקצועי עם gpt-4.1-2025-04-14
-        // קבלת הפרומפט המתאים לסוג השיחה
+        // קבלת הפרומפט המתאים לסוג השיחה כולל שדות הניתוח
         const { data: promptData, error: promptError } = await supabase
           .from('prompts')
-          .select('system_prompt')
+          .select('system_prompt, analysis_fields, analysis_criteria, call_type')
           .eq('call_type', callData.call_type)
+          .eq('is_active', true)
           .single();
 
         let systemPrompt = '';
-        if (promptError || !promptData) {
+        let analysisFields = null;
+        
+        if (promptData && !promptError) {
+          // יש פרומפט במסד הנתונים - נשתמש בו
+          await addCallLog(call_id, '✅ נמצא פרומפט מותאם לסוג השיחה', { 
+            call_type: promptData.call_type,
+            has_analysis_fields: !!promptData.analysis_fields 
+          });
+          
+          systemPrompt = buildAnalysisPromptFromDB(promptData, transcript);
+          analysisFields = promptData.analysis_fields;
+        } else {
+          // לא נמצא פרומפט - נשתמש בברירת מחדל
+          await addCallLog(call_id, '⚠️ לא נמצא פרומפט מותאם, משתמש בברירת מחדל', { 
+            call_type: callData.call_type,
+            error: promptError?.message 
+          });
+          
           // פרומפט מקצועי מפורט כברירת מחדל - עדכון להתאמה מלאה
           // בדיקה אם זו שיחת שירות - אם כן, לא לכלול את "שלושת הלמה"
           const isServiceCall = callData.call_type === 'customer_service' || 
@@ -995,12 +1104,6 @@ export async function POST(request: Request) {
             prompt_error: promptError?.message,
             is_service_call: isServiceCall,
             parameters_count: isServiceCall ? 32 : 35
-          });
-        } else {
-          systemPrompt = promptData.system_prompt;
-          await addCallLog(call_id, '✅ פרומפט מותאם לסוג השיחה נטען בהצלחה', { 
-            call_type: callData.call_type,
-            prompt_length: systemPrompt.length
           });
         }
 
@@ -1262,17 +1365,30 @@ export async function POST(request: Request) {
           tone_analysis_report: toneAnalysisReport
         };
 
-        // עדכון הניתוח הסופי בטבלה
+        // עדכון הניתוח הסופי בטבלה כולל שדות הניתוח מהפרומפט
+        const updateData: any = {
+          analysis_report: finalReport,
+          tone_analysis_report: toneAnalysisReport,
+          overall_score: contentAnalysisReport.overall_score || 0,
+          red_flag: contentAnalysisReport.red_flag || false,
+          processing_status: 'completed',
+          analyzed_at: new Date().toISOString()
+        };
+
+        // הוספת שדות הניתוח מהפרומפט אם קיימים
+        if (analysisFields) {
+          updateData.prompt_analysis_fields = analysisFields;
+          updateData.prompt_based_analysis = finalReport;
+          
+          await addCallLog(call_id, '📊 נשמרים שדות ניתוח מותאמים מהפרומפט', { 
+            analysis_fields_count: Object.keys(analysisFields).length,
+            call_type: promptData?.call_type 
+          });
+        }
+
         const { error: updateError } = await supabase
           .from('calls')
-          .update({
-            analysis_report: finalReport,
-            tone_analysis_report: toneAnalysisReport,
-            overall_score: contentAnalysisReport.overall_score || 0,
-            red_flag: contentAnalysisReport.red_flag || false,
-            processing_status: 'completed',
-            analyzed_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', call_id);
           
         if (updateError) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBaseSystemPrompt, getOptimalPrompt, type SimulationPromptParams } from '@/lib/simulation-prompts'
+import { createCustomizedSimulationPrompt, getSimulationPromptFromDB, type SimulationPromptParams } from '@/lib/simulation-prompts-db'
 
 interface RealtimeSimulationProps {
   simulation: any
@@ -63,68 +63,74 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
     return 'shimmer'
   }
 
-  const createAIInstructions = () => {
+  const [aiInstructions, setAiInstructions] = useState('')
+
+  // טעינת פרומפט מהמסד הנתונים
+  useEffect(() => {
+    const loadPromptFromDB = async () => {
+      if (!persona) return
+      
+      try {
+        // קביעת סוג הסימולציה לפי הנתונים
+        const callType = simulation.simulation_type || 'inbound'
+        
+        // יצירת פרמטרים לפרומפט
+        const promptParams: SimulationPromptParams = {
+          personaName: persona.persona_name || 'לקוח',
+          personalityType: persona.personality_type || 'ידידותי',
+          communicationStyle: persona.communication_style || 'ישיר',
+          backgroundStory: persona.background_story || 'לקוח פוטנציאלי',
+          currentSituation: persona.current_situation || 'מעוניין למידע',
+          commonObjections: persona.common_objections || ['המחיר נשמע יקר', 'אני צריך לחשוב'],
+          targetsWeaknesses: persona.targets_weaknesses || [],
+          difficultyLevel: simulation.difficulty_level || 'medium',
+          companyName: company?.name,
+          industry: company?.company_questionnaires?.[0]?.industry,
+          productService: company?.company_questionnaires?.[0]?.product_service,
+          callType: callType as any,
+          specificScenario: simulation.scenario_description,
+          agentWeaknesses: []
+        }
+        
+        // יצירת פרומפט מותאם מהמסד הנתונים
+        const customPrompt = await createCustomizedSimulationPrompt(promptParams)
+        setAiInstructions(customPrompt)
+        
+        console.log('✅ פרומפט סימולציה נטען מהמסד הנתונים')
+      } catch (error) {
+        console.error('❌ שגיאה בטעינת פרומפט מהמסד, משתמש בפרומפט ברירת מחדל:', error)
+        setAiInstructions(createFallbackInstructions())
+      }
+    }
+    
+    loadPromptFromDB()
+  }, [persona, simulation, company])
+
+  const createFallbackInstructions = () => {
     const isGenderMale = getVoiceForPersona() === 'echo'
     const genderText = isGenderMale ? 'לקוח פוטנציאלי' : 'לקוחה פוטנציאלית'
     
-    // מילים דינמיות לפי מגדר
-    const pronouns = {
-      you: isGenderMale ? 'אתה' : 'את',
-      howYouSpeak: isGenderMale ? 'איך אתה מדבר' : 'איך את מדברת',
-      speak: isGenderMale ? 'מדבר' : 'מדברת', 
-      use: isGenderMale ? 'משתמש' : 'משתמשת',
-      beReal: isGenderMale ? 'תהיה אמיתי' : 'תהיי אמיתית',
-      customer: isGenderMale ? 'לקוח' : 'לקוחה',
-      ask: isGenderMale ? 'תשאל' : 'תשאלי',
-      say: isGenderMale ? 'תגיד' : 'תגידי',
-      raise: isGenderMale ? 'תעלה' : 'תעלי',
-      let: isGenderMale ? 'תן' : 'תני',
-      be: isGenderMale ? 'תהיה' : 'תהיי',
-      agree: isGenderMale ? 'תסכים' : 'תסכימי',
-      useFillers: isGenderMale ? 'השתמש' : 'השתמשי',
-      dontBe: isGenderMale ? 'אל תהיה' : 'אל תהיי',
-      dontSay: isGenderMale ? 'אל תגיד' : 'אל תגידי',
-      dontUse: isGenderMale ? 'אל תשתמש' : 'אל תשתמשי',
-      dontGiveIn: isGenderMale ? 'אל תיכנע' : 'אל תכנעי',
-      start: isGenderMale ? 'תתחיל' : 'תתחילי',
-      called: isGenderMale ? 'התקשרת' : 'התקשרת'
-    }
+    return `
+🎯 אתה ${persona?.persona_name || 'לקוח'} - ${genderText} אמיתי במערכת אימון מכירות
 
-    const instructions = `
-${pronouns.you} ${persona?.persona_name || 'דנה'} - ${genderText} אמיתי שמתקשר לחברה.
+## רקע: ${persona?.background_story || 'לקוח פוטנציאלי מעוניין'}
+## מצב נוכחי: ${persona?.current_situation || 'מחפש פתרון מתאים'}
 
-רקע אישי: ${persona?.background_story || 'אמא לשני ילדים, עובדת בחברת הייטק, אוהבת לקנות דברים איכותיים אבל מקפידה על המחיר'}
+## הנחיות:
+- דבר בעברית טבעית בלבד
+- התנהג כמו לקוח אמיתי
+- היה אתגרי אבל הוגן
+- המטרה היא לאמן את הנציג
 
-המצב שלך עכשיו: ${persona?.current_situation || 'שמעת על החברה מחברה טובה ורוצה לבדוק אם זה מתאים לך'}
+## התנגדויות עיקריות:
+${persona?.common_objections?.map((obj: string) => `- ${obj}`).join('\n') || '- אני צריך לחשוב על זה\n- זה נשמע יקר'}
 
-${pronouns.howYouSpeak}:
-- בצורה נורמלית וישירה, כמו כל אחד מאתנו
-- ${pronouns.use} במילים כמו "בטח", "נו", "אוקיי", "כן, אמממ"
-- לא פורמלית מדי - פשוט שיחה רגילה
-- ${persona?.communication_style || 'ידידותית אבל זהירה עם הכסף'}
-
-הבעיות שלך עם קניות:
-${persona?.common_objections?.join('\n') || 'המחיר נשמע יקר בשביל מה שאני מקבלת\nאני לא בטוחה שזה באמת יעבוד בשבילי\nאולי יש משהו דומה יותר זול?'}
-
-איך להתנהג בשיחה:
-✅ ${pronouns.beReal} - כמו שכל ${pronouns.customer} ${pronouns.speak}
-✅ ${pronouns.ask} שאלות כמו: "כמה זה עולה?", "איך זה עובד?", "מה אם זה לא יתאים לי?"
-✅ ${pronouns.say} דברים כמו: "בטח, נשמע מעניין אבל...", "רגע, אני לא מבינה..."
-✅ ${pronouns.raise} התנגדויות באופן טבעי במהלך השיחה
-✅ ${pronouns.let} לנציג להסביר לפני שתגיב
-✅ ${pronouns.be} נחמד אבל לא ${pronouns.agree} מהר
-✅ ${pronouns.useFillers} במילות מילוי כמו "אמממ", "בקיצור", "נו"
-
-❌ ${pronouns.dontBe} רובוט!
-❌ ${pronouns.dontSay} "אני מבינה" כל הזמן
-❌ ${pronouns.dontUse} במילים פורמליות
-❌ ${pronouns.dontGiveIn} מהר מדי
-
-המטרה: לעזור לנציג להתאמן על שיחת מכירה אמיתית איתך.
-${pronouns.start} בלהגיד שלום ותגיד למה ${pronouns.called} בקצרה.
+זכור: המטרה היא ללמד את הנציג! 🎯
 `
+  }
 
-    return instructions
+  const createAIInstructions = () => {
+    return aiInstructions || createFallbackInstructions()
   }
 
   // קבלת ephemeral token מהשרת

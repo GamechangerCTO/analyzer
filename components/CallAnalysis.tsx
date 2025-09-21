@@ -33,6 +33,7 @@ interface CallData {
   tone_analysis_report: any
   transcript_segments?: Array<{ text: string; start: number }> | null
   transcript_words?: Array<{ word: string; start: number }> | null
+  prompt_analysis_fields?: any // שדות ניתוח מהפרומפט
 }
 
 interface CallAnalysisProps {
@@ -794,7 +795,54 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   
 
 
-  // פונקציה לחילוץ הניתוח המפורט החדש
+  // פונקציה חדשה - בניית דוח דינמית מתוך שדות הניתוח מהפרומפט
+  const getDynamicDetailedScores = () => {
+    // בדיקה אם יש שדות ניתוח מותאמים מהפרומפט
+    const promptAnalysisFields = call.prompt_analysis_fields;
+    
+    if (promptAnalysisFields && typeof promptAnalysisFields === 'object') {
+      console.log('🎯 משתמש בשדות ניתוח מותאמים מהפרומפט:', Object.keys(promptAnalysisFields));
+      
+      // בניית דוח דינמי מתוך שדות הפרומפט
+      return Object.entries(promptAnalysisFields).map(([categoryKey, categoryFields]: [string, any]) => {
+        if (typeof categoryFields !== 'object' || categoryFields === null) {
+          return null;
+        }
+        
+        const categoryData = analysis_report[categoryKey] || {};
+        
+        const subcategories = Object.entries(categoryFields).map(([fieldKey, fieldInfo]: [string, any]) => {
+          const subData = categoryData[fieldKey] || {};
+          
+          return {
+            name: fieldInfo.description || fieldKey.replace(/_/g, ' '),
+            score: subData.ציון || subData.score || 0,
+            insights: subData.תובנות || subData.insights || 'לא זמין',
+            improvements: subData.איך_משפרים || subData.improvements || 'לא זמין',
+            weight: fieldInfo.weight || 1.0,
+            rawData: subData
+          };
+        });
+
+        // חישוב ממוצע משוקלל של הקטגוריה
+        const totalWeight = subcategories.reduce((sum, sub) => sum + (sub.weight || 1), 0);
+        const weightedSum = subcategories.reduce((sum, sub) => sum + (sub.score * (sub.weight || 1)), 0);
+        const avgScore = totalWeight > 0 ? weightedSum / totalWeight : 0;
+
+        return {
+          category: categoryKey.replace(/_/g, ' '),
+          score: Math.round(avgScore * 10) / 10,
+          subcategories: subcategories.filter(sub => sub.score > 0) // הסר שדות ריקים
+        };
+      }).filter((item): item is NonNullable<typeof item> => Boolean(item)); // הסר קטגוריות ריקות
+    }
+    
+    console.log('⚠️ לא נמצאו שדות ניתוח מותאמים, משתמש בדוח הסטנדרטי');
+    // אם אין שדות ניתוח מהפרומפט, השתמש בפונקציה הישנה
+    return getDetailedScores();
+  };
+
+  // פונקציה לחילוץ הניתוח המפורט החדש (הפונקציה הישנה)
   const getDetailedScores = () => {
     const categories = [
       {
@@ -933,7 +981,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           score: subData.ציון || subData.score || 0,
           insights: subData.תובנות || subData.הסבר || subData.insights || 'לא זמין',
           improvements: subData.איך_משפרים || subData.improvements || 'לא זמין',
-          // הוסף את כל הנתונים המקוריים לשימוש בתצוגה
+          weight: 1.0, // ברירת מחדל לפונקציה הישנה
           rawData: subData
         };
       });
@@ -977,15 +1025,16 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     }
     
     // חילוץ נקודות מהניתוח המפורט - פרמטרים עם ציונים נמוכים
-    const detailedScores = getDetailedScores();
+    const detailedScores = getDynamicDetailedScores();
     const lowScoringParams = detailedScores
-      .flatMap(category => category.subcategories || [])
-      .filter(param => param.score <= 6)
-      .sort((a, b) => a.score - b.score)
+      .filter(category => category !== null)
+      .flatMap(category => category?.subcategories || [])
+      .filter((param: any) => param && param.score <= 6)
+      .sort((a: any, b: any) => a.score - b.score)
       .slice(0, 3);
     
-    lowScoringParams.forEach(param => {
-      if (param.improvements && allImprovements.length < 3) {
+    lowScoringParams.forEach((param: any) => {
+      if (param && param.improvements && allImprovements.length < 3) {
         allImprovements.push(`${param.name}: ${param.improvements}`);
       }
     });
@@ -1009,15 +1058,16 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     }
     
     // חילוץ נקודות מהניתוח המפורט - פרמטרים עם ציונים גבוהים
-    const detailedScores = getDetailedScores();
+    const detailedScores = getDynamicDetailedScores();
     const highScoringParams = detailedScores
-      .flatMap(category => category.subcategories || [])
-      .filter(param => param.score >= 8)
-      .sort((a, b) => b.score - a.score)
+      .filter(category => category !== null)
+      .flatMap(category => category?.subcategories || [])
+      .filter((param: any) => param && param.score >= 8)
+      .sort((a: any, b: any) => b.score - a.score)
       .slice(0, 3);
     
-    highScoringParams.forEach(param => {
-      if (param.insights && allStrengths.length < 3) {
+    highScoringParams.forEach((param: any) => {
+      if (param && param.insights && allStrengths.length < 3) {
         allStrengths.push(`${param.name}: ${param.insights}`);
       }
     });
@@ -1043,7 +1093,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   
 
   const practical_recommendations = getFieldValue(analysisReport, ['המלצות_פרקטיות', 'practical_recommendations']) || [];
-  const detailed_scores = getDetailedScores();
+  const detailed_scores = getDynamicDetailedScores();
   const finalOverallScore = overall_score_from_report || call.overall_score || 0;
   const finalRedFlag = red_flag_from_report || call.red_flag || false;
   
@@ -1787,15 +1837,18 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
             )}
 
             {/* ניתוח מפורט בטבלאות */}
-            {getDetailedScores().map((categoryData, categoryIndex) => {
-              if (!categoryData.subcategories || categoryData.subcategories.length === 0) return null;
+            {getDynamicDetailedScores().map((categoryData, categoryIndex) => {
+              if (!categoryData || !categoryData.subcategories || categoryData.subcategories.length === 0) return null;
+              
+              // Type assertion for categoryData
+              const safeCategory = categoryData as NonNullable<typeof categoryData>;
               
               return (
                 <div 
                   key={categoryIndex} 
-                  id={`category-${categoryData.category.replace(/\s+/g, '-')}`}
+                  id={`category-${safeCategory.category.replace(/\s+/g, '-')}`}
                   className={`bg-white rounded-tl-xl rounded-br-xl shadow-lg overflow-hidden transition-all duration-300 ${
-                    selectedCategory === categoryData.category 
+                    selectedCategory === safeCategory.category 
                       ? 'ring-4 ring-brand-primary/30 ring-opacity-75 shadow-2xl' 
                       : ''
                   }`}
