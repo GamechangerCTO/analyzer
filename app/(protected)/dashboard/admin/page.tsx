@@ -27,7 +27,8 @@ import {
   ChevronRight,
   Zap,
   Eye,
-  Plus
+  Plus,
+  Calculator
 } from 'lucide-react'
 
 interface AdminStats {
@@ -593,6 +594,35 @@ export default function AdminDashboardPage() {
                 <p className="text-blue-600 text-sm font-semibold flex items-center gap-2">
                   <Star className="w-4 h-4" />
                   מחירים ותוכניות
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          {/* מחשבון עלויות AI */}
+          <Link 
+            href="/dashboard/admin/cost-calculator" 
+            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-purple-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-pink-50"></div>
+            <div className="relative space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Calculator className="w-7 h-7 text-white" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-purple-500 group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">
+                  מחשבון עלויות AI
+                </h3>
+                <p className="text-neutral-600 text-sm leading-relaxed mb-3">
+                  ניתוח עלויות OpenAI, המלצות גבולות וחישוב ROI
+                </p>
+                <p className="text-purple-600 text-sm font-semibold flex items-center gap-2">
+                  <Calculator className="w-4 h-4" />
+                  כלי ניהול עלויות מתקדם
                 </p>
               </div>
             </div>

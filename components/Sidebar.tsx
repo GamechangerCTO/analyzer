@@ -20,7 +20,8 @@ import {
   Building,
   UserPlus,
   Eye,
-  Zap
+  Zap,
+  Calculator
 } from 'lucide-react'
 import Avatar from './Avatar'
 import Image from 'next/image'
