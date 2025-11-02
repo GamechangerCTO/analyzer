@@ -4,30 +4,22 @@
  * מחזיר רשימת חברות שהשותף יכול לגשת אליהן
  */
 
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { validatePartnerAuth } from '@/lib/partner-auth';
+import { validatePartnerApiKey, createErrorResponse } from '@/lib/partner-auth';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     // אימות Partner API Key
-    const authResult = await validatePartnerAuth(request);
+    const authResult = await validatePartnerApiKey(request);
     
     if (!authResult.success || !authResult.partner) {
-      return NextResponse.json(
-        { 
-          error: { 
-            code: 'UNAUTHORIZED', 
-            message: authResult.error || 'Invalid or missing API credentials' 
-          } 
-        },
-        { status: 401 }
-      );
+      return authResult.error || createErrorResponse('UNAUTHORIZED', 'Invalid or missing API credentials', 401);
     }
 
     const partner = authResult.partner;
@@ -43,10 +35,7 @@ export async function GET(request: Request) {
 
       if (error) {
         console.error('Error fetching company:', error);
-        return NextResponse.json(
-          { error: { code: 'NOT_FOUND', message: 'Company not found or no access' } },
-          { status: 404 }
-        );
+        return createErrorResponse('NOT_FOUND', 'Company not found or no access', 404);
       }
 
       return NextResponse.json({
@@ -79,10 +68,7 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Error fetching companies:', error);
-      return NextResponse.json(
-        { error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch companies' } },
-        { status: 500 }
-      );
+      return createErrorResponse('INTERNAL_ERROR', 'Failed to fetch companies', 500);
     }
 
     return NextResponse.json({
@@ -96,10 +82,7 @@ export async function GET(request: Request) {
 
   } catch (error: any) {
     console.error('Unexpected error in companies discovery:', error);
-    return NextResponse.json(
-      { error: { code: 'INTERNAL_ERROR', message: error.message } },
-      { status: 500 }
-    );
+    return createErrorResponse('INTERNAL_ERROR', error.message || 'Unexpected error occurred', 500);
   }
 }
 
