@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import Avatar from './Avatar'
 import Image from 'next/image'
+import SimulationNotificationBell from './SimulationNotificationBell'
 
 interface UserData {
   id: string
@@ -234,6 +235,11 @@ export default function Sidebar({ user, userData }: SidebarProps) {
           </div>
         </div>
       )}
+
+      {/* נוטיפיקציות סימולציה */}
+      <div className="px-4 pb-2">
+        <SimulationNotificationBell />
+      </div>
 
       {/* פרופיל משתמש עם אנימציות מתקדמות */}
       <div className="p-4 border-t border-neutral-200">

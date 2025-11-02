@@ -74,6 +74,14 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
         // קביעת סוג הסימולציה לפי הנתונים
         const callType = simulation.simulation_type || 'inbound'
         
+        // חילוץ פרמטרים חלשים מהסימולציה (אם קיימים)
+        const focusedParameters = simulation.focused_parameters || []
+        const agentWeaknesses = focusedParameters.map((param: any) => ({
+          name: param.hebrewName || param.name,
+          score: param.score,
+          category: param.category
+        }))
+        
         // יצירת פרמטרים לפרומפט
         const promptParams: SimulationPromptParams = {
           personaName: persona.persona_name || 'לקוח',
@@ -89,14 +97,17 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
           productService: company?.company_questionnaires?.[0]?.product_service,
           callType: callType as any,
           specificScenario: simulation.scenario_description,
-          agentWeaknesses: []
+          agentWeaknesses: agentWeaknesses
         }
         
         // יצירת פרומפט מותאם מהמסד הנתונים
         const customPrompt = await createCustomizedSimulationPrompt(promptParams)
         setAiInstructions(customPrompt)
         
-        console.log('✅ פרומפט סימולציה נטען מהמסד הנתונים')
+        console.log('✅ פרומפט סימולציה נטען מהמסד הנתונים', {
+          weaknessesCount: agentWeaknesses.length,
+          weaknesses: agentWeaknesses
+        })
       } catch (error) {
         console.error('❌ שגיאה בטעינת פרומפט מהמסד, משתמש בפרומפט ברירת מחדל:', error)
         setAiInstructions(createFallbackInstructions())
@@ -109,6 +120,25 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   const createFallbackInstructions = () => {
     const isGenderMale = getVoiceForPersona() === 'echo'
     const genderText = isGenderMale ? 'לקוח פוטנציאלי' : 'לקוחה פוטנציאלית'
+    
+    // חילוץ פרמטרים חלשים
+    const focusedParameters = simulation.focused_parameters || []
+    const weaknessSection = focusedParameters.length > 0 ? `
+
+## 🎯 מיקוד מיוחד - תחומים לשיפור:
+הנציג צריך לתרגל את התחומים הבאים שבהם הוא חלש:
+
+${focusedParameters.map((p: any) => `- **${p.hebrewName || p.name}** (ציון נוכחי: ${p.score}/10)
+  תאתגר אותו במיוחד בתחום הזה!`).join('\n')}
+
+**אסטרטגיית האתגר:**
+- אם הנציג לא מטפל טוב בהתנגדות - תן לו עוד התנגדות קשה יותר
+- אם הנציג לא מבצע בירור - היה מעורפל ותמתין שהוא ישאל
+- אם הנציג לא סוגר - תישאר מהסס גם אחרי הצעה טובה
+- זכור: אתה כאן לאמן, לא לנצח! תן רמזים אם הנציג תקוע
+
+🎯 המטרה: לראות שיפור ב-${focusedParameters.length} התחומים האלה!
+` : ''
     
     return `
 🎯 אתה ${persona?.persona_name || 'לקוח'} - ${genderText} אמיתי במערכת אימון מכירות
@@ -124,6 +154,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
 
 ## התנגדויות עיקריות:
 ${persona?.common_objections?.map((obj: string) => `- ${obj}`).join('\n') || '- אני צריך לחשוב על זה\n- זה נשמע יקר'}
+${weaknessSection}
 
 זכור: המטרה היא ללמד את הנציג! 🎯
 `

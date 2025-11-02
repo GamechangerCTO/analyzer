@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import CallStatusBadge from './CallStatusBadge'
 import { getCallStatus } from '@/lib/getCallStatus'
 import AnimatedAnalysis from './AnimatedAnalysis'
+import SimulationTriggerButton from './SimulationTriggerButton'
 
 interface CallData {
   id: string
@@ -2117,31 +2118,17 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 </div>
               )}
 
-              {/* הוספת המלצה לתרגול אם הציון נמוך */}
-              {finalOverallScore < 8 && (
-                <div className="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <h4 className="font-semibold text-purple-700 mb-2 flex items-center">
-                    <span className="mr-2">🏋️‍♂️</span>
-                    המלצה לתרגול נוסף:
-                  </h4>
-                  <p className="text-purple-700">
-                    {finalOverallScore >= 7 
-                      ? 'הביצועים סבירים, אך עדיין יש מקום לשיפור. מומלץ לעבור לחדר הכושר ולבצע סימולציות תרגול כדי להגיע לרמה מעולה.'
-                      : 'בהתבסס על הציון שקיבלת, דרוש שיפור משמעותי. מומלץ בחום לעבור לחדר הכושר ולבצע סימולציות תרגול מרובות כדי לשפר את הביצועים באזורים שזוהו לשיפור.'
-                    }
-                  </p>
-                  <div className="mt-3">
-                    <a 
-                      href="/simulations" 
-                      className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-                    >
-                      🏋️‍♂️ עבור לחדר הכושר
-                    </a>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
+        )}
+
+        {/* כפתור סימולציה ממוקדת - מופיע רק כשהניתוח הושלם והציון נמוך */}
+        {status === 'completed' && call.content_analysis && finalOverallScore < 8 && (
+          <SimulationTriggerButton
+            callId={call.id}
+            contentAnalysis={call.content_analysis}
+            overallScore={finalOverallScore}
+          />
         )}
 
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import SimulationMinutesWidget from './SimulationMinutesWidget'
 
 interface SimulationDashboardProps {
   user: any
@@ -47,12 +48,19 @@ export default function SimulationDashboard({
             </p>
           </div>
           
-          <div className="text-center">
+          <div className="flex items-center gap-4">
+            <SimulationMinutesWidget companyId={user?.company_id} showDetails={false} />
             <Link 
               href="/simulations/create"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all whitespace-nowrap"
             >
               🎯 צור אימון מותאם
+            </Link>
+            <Link 
+              href="/simulations/create-manual"
+              className="bg-gradient-to-r from-green-600 to-teal-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all whitespace-nowrap"
+            >
+              ✍️ סימולציה ידנית
             </Link>
           </div>
         </div>

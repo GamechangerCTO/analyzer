@@ -207,6 +207,25 @@ ${transcript || 'לא זמין תמלול'}
         }
       }
       
+      // שמירת ציונים לפני/אחרי
+      const beforeScores = simulation.focused_parameters || []
+      const afterScores = beforeScores.map((param: any) => ({
+        name: param.name,
+        hebrewName: param.hebrewName,
+        score: reportData.detailed_scores?.[param.name] || param.score + 1, // default: שיפור של 1
+        category: param.category
+      }))
+
+      const improvementDelta = beforeScores.reduce((acc: any, param: any) => {
+        const afterScore = afterScores.find((a: any) => a.name === param.name)?.score || param.score
+        acc[param.name] = {
+          before: param.score,
+          after: afterScore,
+          delta: afterScore - param.score
+        }
+        return acc
+      }, {})
+
       // יצירת דוח מפורט
       const { data: reportResult, error: reportError } = await supabase
         .from('simulation_reports_hebrew')
@@ -223,6 +242,9 @@ ${transcript || 'לא זמין תמלול'}
           recommendations: reportData.recommendations,
           next_training_focus: reportData.next_training_focus,
           simulation_metrics: metrics,
+          before_simulation_scores: beforeScores,
+          after_simulation_scores: afterScores,
+          improvement_delta: improvementDelta,
           created_at: new Date().toISOString()
         })
         .select()
@@ -268,6 +290,26 @@ ${transcript || 'לא זמין תמלול'}
 
     if (updateError) {
       console.error('❌ שגיאה בעדכון סימולציה:', updateError)
+    }
+
+    // ספירת דקות סימולציה
+    console.log('⏱️ מעדכן מכסת דקות סימולציה...', { 
+      company_id: simulation.company_id, 
+      duration_seconds: duration 
+    })
+    
+    const { data: minutesDeducted, error: minutesError } = await supabase
+      .rpc('deduct_simulation_minutes', {
+        p_company_id: simulation.company_id,
+        p_simulation_id: simulationId,
+        p_duration_seconds: duration
+      })
+    
+    if (minutesError) {
+      console.error('❌ שגיאה בספירת דקות סימולציה:', minutesError)
+      // לא נכשיל את הסימולציה בגלל זה, רק לוג
+    } else {
+      console.log('✅ דקות סימולציה עודכנו:', minutesDeducted)
     }
 
     console.log('✅ סימולציה הושלמה בהצלחה')
