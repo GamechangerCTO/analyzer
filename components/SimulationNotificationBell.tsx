@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import { Bell, CheckCircle, Clock, AlertTriangle, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 

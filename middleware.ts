@@ -4,6 +4,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   const res = NextResponse.next()
 
+  // 🆕 Partner API - אימות נפרד (לא דרך Supabase Auth)
+  // נתיבי Partner API יטפלו באימות בעצמם דרך API keys
+  if (request.nextUrl.pathname.startsWith('/api/partner/')) {
+    return res
+  }
+
   // נתיבים פתוחים (אין צורך בהתחברות)
   const publicPaths = ['/login', '/signup', '/signup-complete', '/api', '/not-approved', '/not-found', '/privacy-policy', '/legal-terms', '/subscription-setup', '/test-auth', '/change-password']
   

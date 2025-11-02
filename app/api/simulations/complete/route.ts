@@ -98,8 +98,8 @@ export async function POST(request: NextRequest) {
     const duration = metrics.startTime ? 
       Math.floor((Date.now() - new Date(metrics.startTime).getTime()) / 1000) : 0
 
-    let reportData = null
-    let report = null
+    let reportData: any = null
+    let report: any = null
 
     // יצירת דוח רק אם נדרש
     if (generateReport) {

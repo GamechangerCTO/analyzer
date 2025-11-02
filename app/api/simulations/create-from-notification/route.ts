@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -42,32 +42,63 @@ export async function POST(request: Request) {
       }, { status: 403 })
     }
     
-    // קבלת persona
-    const { data: personas } = await supabase
-      .from('customer_personas_hebrew')
-      .select('*')
-      .eq('company_id', userData.company_id)
-      .eq('is_active', true)
-      .limit(1)
+    // שליפת נתוני החברה עם השאלון
+    const { data: companyData } = await supabase
+      .from('companies')
+      .select(`
+        *,
+        company_questionnaires (*)
+      `)
+      .eq('id', userData.company_id)
+      .single()
     
-    let personaId = personas?.[0]?.id
-    
-    if (!personaId) {
-      const { data: newPersona } = await supabase
-        .from('customer_personas_hebrew')
-        .insert({
-          company_id: userData.company_id,
-          created_by: user.id,
-          customer_name: 'לקוח אוטומטי',
-          business_type: 'כללי',
-          personality_traits: ['מקצועי'],
-          is_active: true
-        })
-        .select()
+    // שליפת שיחות לניתוח (אם יש)
+    let callAnalysisData = undefined
+    if (callIds && callIds.length > 0) {
+      const { data: callData } = await supabase
+        .from('calls')
+        .select('*')
+        .in('id', callIds)
+        .limit(1)
         .single()
       
-      personaId = newPersona.id
+      if (callData) {
+        callAnalysisData = {
+          call_type: callData.call_type || 'מכירות',
+          overall_score: callData.overall_score || 0,
+          content_analysis: callData.analysis_report,
+          tone_analysis: callData.tone_analysis_report,
+          red_flags: [],
+          improvement_areas: weakParameters?.map((p: any) => p.hebrewName || p.name) || []
+        }
+      }
     }
+    
+    // יצירת persona מותאמת אישית עם AI בהתבסס על נתוני החברה
+    const personaResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/simulations/generate-persona`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || ''
+      },
+      body: JSON.stringify({
+        companyId: userData.company_id,
+        agentId: user.id,
+        targetWeaknesses: weakParameters?.map((p: any) => p.hebrewName || p.name) || [],
+        difficulty: 'בינוני',
+        callAnalysis: callAnalysisData
+      })
+    })
+    
+    if (!personaResponse.ok) {
+      console.error('Error generating persona:', await personaResponse.text())
+      return NextResponse.json({ 
+        error: 'שגיאה ביצירת פרסונת לקוח' 
+      }, { status: 500 })
+    }
+    
+    const { persona } = await personaResponse.json()
+    const personaId = persona.id
     
     // יצירת תרחיש
     const focusAreas = weakParameters?.map((p: any) => p.hebrewName || p.name).join(', ') || 'תחומים לשיפור'

@@ -1,0 +1,397 @@
+{
+  "info": {
+    "name": "Partner API v1",
+    "description": "Complete Partner API collection for testing and integration",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "partner-api"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_key}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/partner/v1",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "pk_sandbox_your_key_here",
+      "type": "string"
+    },
+    {
+      "key": "api_secret",
+      "value": "sk_your_secret_here",
+      "type": "string"
+    },
+    {
+      "key": "company_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "agent_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "job_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health & Setup",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is OK\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"ok\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Secret",
+                "value": "{{api_secret}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check if Partner API is accessible and credentials are valid"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Company Management",
+      "item": [
+        {
+          "name": "Create Company",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"company_id\", jsonData.company_id);",
+                  "    console.log(\"Company ID saved: \" + jsonData.company_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Secret",
+                "value": "{{api_secret}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Company\",\n  \"industry\": \"retail\",\n  \"contact_email\": \"admin@testcompany.com\",\n  \"questionnaire_data\": {\n    \"company_size\": \"50-100\",\n    \"main_goal\": \"improve_sales\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/companies/create",
+              "host": ["{{base_url}}"],
+              "path": ["companies", "create"]
+            }
+          }
+        },
+        {
+          "name": "List All Companies",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.companies && jsonData.companies.length > 0) {",
+                  "        pm.collectionVariables.set(\"company_id\", jsonData.companies[0].id);",
+                  "        console.log(\"First Company ID saved: \" + jsonData.companies[0].id);",
+                  "        console.log(\"Total companies: \" + jsonData.total);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Secret",
+                "value": "{{api_secret}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/companies?limit=50&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["companies"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Maximum number of companies to return"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Number of companies to skip"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by company name or industry",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Discover all companies accessible by this API key. Returns paginated list of companies with their IDs."
+          }
+        },
+        {
+          "name": "Get Company",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Secret",
+                "value": "{{api_secret}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/companies/{{company_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["companies", "{{company_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Questionnaire",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-API-Secret",
+                "value": "{{api_secret}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionnaire_data\": {\n    \"company_size\": \"100-200\",\n    \"main_goal\": \"improve_customer_service\",\n    \"call_volume\": \"500_per_day\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/companies/{{company_id}}/questionnaire",
+              "host": ["{{base_url}}"],
+              "path": ["companies", "{{company_id}}", "questionnaire"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Agent Management",
+      "item": [
+        {
+          "name": "Create Agent",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"agent_id\", jsonData.agent_id);",
+                  "    console.log(\"Agent ID saved: \" + jsonData.agent_id);",
+                  "    console.log(\"Temporary Password: \" + jsonData.temporary_password);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Secret",
+                "value": "{{api_secret}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"agent{{$randomInt}}@testcompany.com\",\n  \"name\": \"Test Agent\",\n  \"role\": \"agent\",\n  \"phone\": \"+972-50-1234567\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/companies/{{company_id}}/agents/create",
+              "host": ["{{base_url}}"],
+              "path": ["companies", "{{company_id}}", "agents", "create"]
+            }
+          }
+        },
+        {
+          "name": "List Agents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Secret",
+                "value": "{{api_secret}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/companies/{{company_id}}/agents",
+              "host": ["{{base_url}}"],
+              "path": ["companies", "{{company_id}}", "agents"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Call Analysis",
+      "item": [
+        {
+          "name": "Analyze Call (with webhook)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set(\"job_id\", jsonData.job_id);",
+                  "    console.log(\"Job ID saved: \" + jsonData.job_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-API-Secret",
+                "value": "{{api_secret}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Idempotency-Key",
+                "value": "{{$guid}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"audio_file\": \"https://example.com/sample-call.mp3\",\n  \"company_id\": \"{{company_id}}\",\n  \"agent_id\": \"{{agent_id}}\",\n  \"call_type\": \"sales_call\",\n  \"analysis_type\": \"full\",\n  \"webhook_url\": \"https://webhook.site/your-unique-url\",\n  \"metadata\": {\n    \"call_reference\": \"REF-12345\",\n    \"customer_id\": \"CUST-67890\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/calls/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["calls", "analyze"]
+            },
+            "description": "Submit a call for analysis. Use webhook.site to test webhook callbacks."
+          }
+        },
+        {
+          "name": "Get Job Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Job status retrieved\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    console.log(\"Job Status: \" + jsonData.status);",
+                  "    console.log(\"Progress: \" + jsonData.progress + \"%\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-Secret",
+                "value": "{{api_secret}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/jobs/{{job_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "{{job_id}}", "status"]
+            },
+            "description": "Poll for job status. Keep calling until status is 'completed' or 'failed'."
+          }
+        }
+      ]
+    }
+  ]
+}
+

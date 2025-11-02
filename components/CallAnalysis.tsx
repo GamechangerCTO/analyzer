@@ -2123,10 +2123,10 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         )}
 
         {/* כפתור סימולציה ממוקדת - מופיע רק כשהניתוח הושלם והציון נמוך */}
-        {status === 'completed' && call.content_analysis && finalOverallScore < 8 && (
+        {status === 'completed' && call.analysis_report && finalOverallScore < 8 && (
           <SimulationTriggerButton
             callId={call.id}
-            contentAnalysis={call.content_analysis}
+            contentAnalysis={call.analysis_report}
             overallScore={finalOverallScore}
           />
         )}

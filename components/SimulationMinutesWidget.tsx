@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import { Progress } from '@/components/ui/progress'
 import { Clock, AlertCircle, CheckCircle } from 'lucide-react'
 
@@ -62,7 +62,7 @@ export default function SimulationMinutesWidget({
         throw quotaError
       }
       
-      setQuota(data)
+      setQuota(data as SimulationQuota)
     } catch (err) {
       console.error('Error loading simulation quota:', err)
       setError(err instanceof Error ? err.message : 'שגיאה בטעינת מכסת דקות')

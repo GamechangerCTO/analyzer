@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -43,45 +43,48 @@ export async function POST(request: Request) {
       }, { status: 403 })
     }
     
-    // 3. קבלת או יצירת persona מתאימה
-    const { data: existingPersonas } = await supabase
-      .from('customer_personas_hebrew')
-      .select('*')
-      .eq('company_id', call.company_id)
-      .eq('is_active', true)
-      .limit(1)
+    // 3. שליפת נתוני החברה עם השאלון
+    const { data: companyData } = await supabase
+      .from('companies')
+      .select(`
+        *,
+        company_questionnaires (*)
+      `)
+      .eq('id', call.company_id)
+      .single()
     
-    let personaId = existingPersonas?.[0]?.id
+    // 4. יצירת persona מותאמת אישית עם AI בהתבסס על נתוני החברה
+    const personaResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/simulations/generate-persona`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': request.headers.get('cookie') || ''
+      },
+      body: JSON.stringify({
+        companyId: call.company_id,
+        agentId: call.user_id,
+        targetWeaknesses: weakParameters.map((p: any) => p.hebrewName),
+        difficulty: 'בינוני',
+        callAnalysis: {
+          call_type: call.call_type,
+          overall_score: call.overall_score || 0,
+          content_analysis: call.analysis_report,
+          tone_analysis: call.tone_analysis_report,
+          red_flags: [],
+          improvement_areas: weakParameters.map((p: any) => p.hebrewName)
+        }
+      })
+    })
     
-    if (!personaId) {
-      // יצירת persona בסיסית
-      const { data: newPersona, error: personaError } = await supabase
-        .from('customer_personas_hebrew')
-        .insert({
-          company_id: call.company_id,
-          created_by: call.user_id,
-          customer_name: 'לקוח אימון',
-          business_type: call.companies?.name || 'כללי',
-          company_size: 'בינוני',
-          personality_traits: ['מקצועי', 'מאתגר'],
-          pain_points: ['צריך פתרון איכותי', 'רגיש למחיר'],
-          background_info: `לקוח סימולציה לאימון ושיפור מיומנויות עבור ${call.companies?.name || 'החברה'}`,
-          preferred_communication: 'ישיר ומקצועי',
-          decision_making_style: 'מבוסס נתונים',
-          is_active: true
-        })
-        .select()
-        .single()
-      
-      if (personaError) {
-        console.error('Error creating persona:', personaError)
-        return NextResponse.json({ 
-          error: 'שגיאה ביצירת פרסונת לקוח' 
-        }, { status: 500 })
-      }
-      
-      personaId = newPersona.id
+    if (!personaResponse.ok) {
+      console.error('Error generating persona:', await personaResponse.text())
+      return NextResponse.json({ 
+        error: 'שגיאה ביצירת פרסונת לקוח' 
+      }, { status: 500 })
     }
+    
+    const { persona } = await personaResponse.json()
+    const personaId = persona.id
     
     // 4. יצירת תרחיש ממוקד
     const focusAreas = weakParameters.map((p: any) => p.hebrewName).join(', ')

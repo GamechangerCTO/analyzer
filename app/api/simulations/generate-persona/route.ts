@@ -2,6 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { createBaseSystemPrompt } from '@/lib/simulation-prompts'
+import { 
+  validateCompanyQuestionnaire, 
+  createFallbackPersona,
+  calculateQuestionnaireCompleteness 
+} from '@/lib/questionnaire-validation'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -26,6 +31,10 @@ interface PersonaGenerationRequest {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+  let personaId: string | null = null
+  let companyId: string | undefined = undefined
+  
   try {
     const supabase = createClient()
     
@@ -37,7 +46,33 @@ export async function POST(request: NextRequest) {
 
     // קבלת נתוני הבקשה
     const body: PersonaGenerationRequest = await request.json()
-    const { agentId, companyId, targetWeaknesses, difficulty = 'בינוני', specificScenario, callAnalysis } = body
+    const { agentId, targetWeaknesses, difficulty = 'בינוני', specificScenario, callAnalysis } = body
+    companyId = body.companyId
+
+    // ✅ בדיקת שאלון חברה (קריטי!)
+    if (!companyId) {
+      return NextResponse.json({ 
+        error: 'חובה לספק מזהה חברה ליצירת פרסונה אותנטית' 
+      }, { status: 400 })
+    }
+
+    const validation = await validateCompanyQuestionnaire(companyId)
+    
+    if (!validation.isValid) {
+      return NextResponse.json({ 
+        error: 'לא נמצא שאלון חברה. אנא מלא את השאלון תחילה.',
+        redirect: '/company-questionnaire',
+        code: 'MISSING_QUESTIONNAIRE'
+      }, { status: 400 })
+    }
+
+    if (!validation.isComplete) {
+      console.warn(`⚠️ שאלון לא מלא (${validation.completeness}%): ${validation.missing.join(', ')}`)
+    }
+
+    if (validation.isStale) {
+      console.warn(`⚠️ שאלון לא עודכן ${validation.ageInDays} יום`)
+    }
 
     // קבלת נתוני הנציג והחברה
     let agentAnalysis = null
@@ -59,44 +94,60 @@ export async function POST(request: NextRequest) {
       agentAnalysis = recentCalls
     }
 
-    if (companyId) {
-      // קבלת נתוני החברה מהשאלון
-      const { data: company } = await supabase
-        .from('companies')
-        .select(`
-          *,
-          company_questionnaires (*)
-        `)
-        .eq('id', companyId)
-        .single()
+    // קבלת נתוני החברה מהשאלון
+    const { data: company } = await supabase
+      .from('companies')
+      .select(`
+        *,
+        company_questionnaires (*)
+      `)
+      .eq('id', companyId)
+      .single()
 
-      companyData = company
-    }
+    companyData = company
+    const questionnaire = company?.company_questionnaires?.[0]
 
-    // יצירת פרסונה מותאמת בעברית
-    const personaPrompt = buildPersonaPrompt(agentAnalysis, companyData, targetWeaknesses, difficulty, specificScenario)
-    
-    const personaResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: `אתה מומחה ליצירת פרסונות לקוחות לאימון מכירות בעברית. 
+    // 🤖 ניסיון יצירת פרסונה עם AI
+    let personaData: any = null
+    let usedAI = true
+    let aiError: string | null = null
+
+    try {
+      // יצירת פרסונה מותאמת בעברית
+      const personaPrompt = buildPersonaPrompt(agentAnalysis, companyData, targetWeaknesses, difficulty, specificScenario)
+      
+      const personaResponse = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `אתה מומחה ליצירת פרסונות לקוחות לאימון מכירות בעברית. 
 המטרה שלך היא ליצור לקוח ווירטואלי שיאתגר את הנציג בדיוק בתחומים שהוא צריך לשפר.
 תמיד תחזיר תוצאה במבנה JSON תקין בעברית.`
-        },
-        {
-          role: "user", 
-          content: personaPrompt
-        }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.8
-    })
+          },
+          {
+            role: "user", 
+            content: personaPrompt
+          }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.8
+      })
 
-    const personaData = JSON.parse(personaResponse.choices[0].message.content || '{}')
+      personaData = JSON.parse(personaResponse.choices[0].message.content || '{}')
+      console.log('✅ Generated persona with AI:', personaData.persona_name)
+
+    } catch (aiErrorCaught: any) {
+      console.error('❌ AI generation failed, using fallback:', aiErrorCaught.message)
+      aiError = aiErrorCaught.message
+      usedAI = false
+      
+      // 🛡️ Fallback חכם - יצירת פרסונה מבוססת שאלון בלבד
+      personaData = createFallbackPersona(questionnaire)
+      console.log('🛡️ Created fallback persona:', personaData.persona_name)
+    }
     
-    console.log('Generated persona data:', JSON.stringify(personaData, null, 2))
+    console.log('Generated persona data:', JSON.stringify(personaData, null, 2).substring(0, 300) + '...')
     
     // שמירת הפרסונה במסד הנתונים - עם הגבלת אורך
     const truncateString = (str: string, maxLength: number) => {
@@ -135,16 +186,67 @@ export async function POST(request: NextRequest) {
 
     if (saveError) {
       console.error('Error saving persona:', saveError)
+      
+      // תיעוד כשלון
+      await supabase.from('persona_creation_logs').insert({
+        company_id: companyId,
+        persona_id: null,
+        questionnaire_completeness: validation.completeness,
+        ai_model_used: usedAI ? 'gpt-4o' : 'fallback',
+        generation_time_ms: Date.now() - startTime,
+        success: false,
+        error_message: saveError.message
+      })
+      
       return NextResponse.json({ error: 'Failed to save persona' }, { status: 500 })
     }
 
+    personaId = savedPersona.id
+
+    // 📝 תיעוד הצלחה ב-logs
+    const generationTime = Date.now() - startTime
+    await supabase.from('persona_creation_logs').insert({
+      company_id: companyId,
+      persona_id: personaId,
+      questionnaire_completeness: validation.completeness,
+      ai_model_used: usedAI ? 'gpt-4o' : 'fallback',
+      generation_time_ms: generationTime,
+      success: true,
+      error_message: aiError,
+      prompt_length: usedAI ? buildPersonaPrompt(agentAnalysis, companyData, targetWeaknesses, difficulty, specificScenario).length : 0,
+      response_length: JSON.stringify(personaData).length
+    })
+
+    console.log(`✅ Persona created successfully in ${generationTime}ms`)
+
     return NextResponse.json({ 
       persona: savedPersona,
-      generated_data: personaData 
+      generated_data: personaData,
+      metadata: {
+        usedAI,
+        generationTime,
+        questionnaireCompleteness: validation.completeness,
+        questionnaireAge: validation.ageInDays
+      }
     })
 
   } catch (error) {
     console.error('Error generating persona:', error)
+    
+    // תיעוד שגיאה כללית
+    const supabase = createClient()
+    if (companyId) {
+      await supabase.from('persona_creation_logs').insert({
+        company_id: companyId,
+        persona_id: null,
+        questionnaire_completeness: 0,
+        ai_model_used: 'unknown',
+        generation_time_ms: Date.now() - startTime,
+        success: false,
+        error_message: error instanceof Error ? error.message : 'Unknown error'
+      })
+    }
+    
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -220,13 +322,27 @@ ${targetWeaknesses.length > 0 ? targetWeaknesses.join(', ') : 'בהתבסס על
   }
 
   if (companyData) {
+    const questionnaire = companyData.company_questionnaires?.[0]
     prompt += `
-נתוני החברה:
-- תחום: ${companyData.company_questionnaires?.[0]?.industry || 'לא זמין'}
-- מוצר/שירות: ${companyData.company_questionnaires?.[0]?.product_service || 'לא זמין'}
-- קהל יעד: ${companyData.company_questionnaires?.[0]?.target_audience || 'לא זמין'}
-- בידול מרכזי: ${companyData.company_questionnaires?.[0]?.key_differentiator || 'לא זמין'}
-- תועלות לקוח: ${companyData.company_questionnaires?.[0]?.customer_benefits || 'לא זמין'}
+## 🏢 פרופיל החברה - חשוב מאוד לאותנטיות!
+**הלקוח הווירטואלי חייב להיות נאמן לפרופיל החברה הזו:**
+
+- 🏭 **תחום עסקי**: ${questionnaire?.industry || 'לא זמין'}
+- 📦 **מוצר/שירות**: ${questionnaire?.product_service || 'לא זמין'}
+- 🎯 **קהל יעד**: ${questionnaire?.target_audience || 'לא זמין'}
+- ⭐ **בידול מרכזי**: ${questionnaire?.key_differentiator || 'לא זמין'}
+- 💎 **תועלות לקוח**: ${questionnaire?.customer_benefits || 'לא זמין'}
+- 💰 **מחיר ממוצע**: ${questionnaire?.average_deal_size || 'לא זמין'}
+- ⏱️ **מחזור מכירה**: ${questionnaire?.sales_cycle || 'לא זמין'}
+- 🚩 **התנגדויות נפוצות**: ${questionnaire?.common_objections || 'לא זמין'}
+
+**⚠️ קריטי: הלקוח חייב להיות מישהו שמתאים בדיוק לקהל היעד של החברה!**
+**דוגמה: אם החברה מוכרת תוספי תזונה, הלקוח צריך להיות מישהו שמעוניין בבריאות/כושר/תזונה.**
+**אם זו חברת B2B, הלקוח חייב להיות בעל תפקיד רלוונטי בארגון מתאים.**
+`
+  } else {
+    prompt += `
+⚠️ אזהרה: לא נמצא שאלון חברה. יש ליצור לקוח כללי אך מקצועי.
 `
   }
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase/client'
 import { extractWeakParameters, getTopWeakParameters } from '@/lib/extract-weak-parameters'
 import { Loader2, CheckCircle2, AlertCircle, Clock } from 'lucide-react'
 
