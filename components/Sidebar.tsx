@@ -21,7 +21,9 @@ import {
   UserPlus,
   Eye,
   Zap,
-  Calculator
+  Calculator,
+  Key,
+  Building2
 } from 'lucide-react'
 import Avatar from './Avatar'
 import Image from 'next/image'
@@ -230,6 +232,38 @@ export default function Sidebar({ user, userData }: SidebarProps) {
               >
                 <Users className="w-4 h-4 text-brand-warning group-hover:scale-110 transition-transform" />
                 <span className="group-hover:font-medium transition-all">ניהול צוות</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Partner API - Super Admin בלבד */}
+      {userData.role === 'super_admin' && (
+        <div className="px-4 py-2">
+          <div className="border-t border-neutral-200 pt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Key className="w-4 h-4 text-purple-500" />
+              <span className="text-xs font-medium text-purple-500 uppercase tracking-wider">Partner API</span>
+            </div>
+            
+            <div className="space-y-1">
+              <Link
+                href="/dashboard/admin/partner-api"
+                className="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-neutral-700 hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-purple-600/10 transition-all duration-300"
+                onClick={() => setIsMobileOpen(false)}
+              >
+                <Key className="w-4 h-4 text-purple-600 group-hover:scale-110 transition-transform" />
+                <span className="group-hover:font-medium transition-all">ניהול API Keys</span>
+              </Link>
+              
+              <Link
+                href="/dashboard/admin/companies-list"
+                className="group flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-neutral-700 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-blue-600/10 transition-all duration-300"
+                onClick={() => setIsMobileOpen(false)}
+              >
+                <Building2 className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
+                <span className="group-hover:font-medium transition-all">גילוי חברות</span>
               </Link>
             </div>
           </div>
