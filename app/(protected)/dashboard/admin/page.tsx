@@ -28,7 +28,9 @@ import {
   Zap,
   Eye,
   Plus,
-  Calculator
+  Calculator,
+  Key,
+  Database
 } from 'lucide-react'
 
 interface AdminStats {
@@ -652,6 +654,64 @@ export default function AdminDashboardPage() {
                 <p className="text-neutral-600 text-sm font-semibold flex items-center gap-2">
                   <Settings className="w-4 h-4" />
                   תצורה מתקדמת
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          {/* ניהול API Keys - Partner API */}
+          <Link 
+            href="/dashboard/admin/partner-api" 
+            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-purple-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-indigo-50"></div>
+            <div className="relative space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Key className="w-7 h-7 text-white" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-purple-500 group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">
+                  Partner API Keys
+                </h3>
+                <p className="text-neutral-600 text-sm leading-relaxed mb-3">
+                  ניהול מפתחות API לשותפים עסקיים והתממשקויות חיצוניות
+                </p>
+                <p className="text-purple-600 text-sm font-semibold flex items-center gap-2">
+                  <Key className="w-4 h-4" />
+                  יצירת וניהול מפתחות
+                </p>
+              </div>
+            </div>
+          </Link>
+
+          {/* גילוי חברות - Partner API */}
+          <Link 
+            href="/dashboard/admin/companies-list" 
+            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-cyan-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-50 to-blue-50"></div>
+            <div className="relative space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <Database className="w-7 h-7 text-white" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-cyan-500 group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">
+                  גילוי חברות
+                </h3>
+                <p className="text-neutral-600 text-sm leading-relaxed mb-3">
+                  חיפוש והעתקת Company IDs לשימוש ב-Partner API
+                </p>
+                <p className="text-cyan-600 text-sm font-semibold flex items-center gap-2">
+                  <Database className="w-4 h-4" />
+                  {stats.totalCompanies} חברות זמינות
                 </p>
               </div>
             </div>
