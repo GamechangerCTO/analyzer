@@ -82,6 +82,9 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
           category: param.category
         }))
         
+        // ✅ חילוץ נושאים נבחרים מהסימולציה
+        const selectedTopics = simulation.selected_topics || []
+        
         // יצירת פרמטרים לפרומפט
         const promptParams: SimulationPromptParams = {
           personaName: persona.persona_name || 'לקוח',
@@ -97,7 +100,8 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
           productService: company?.company_questionnaires?.[0]?.product_service,
           callType: callType as any,
           specificScenario: simulation.scenario_description,
-          agentWeaknesses: agentWeaknesses
+          agentWeaknesses: agentWeaknesses,
+          selectedTopics: selectedTopics // ✅ הנושאים שנבחרו
         }
         
         // יצירת פרומפט מותאם מהמסד הנתונים
@@ -259,8 +263,8 @@ ${weaknessSection}
       await pc.setLocalDescription(offer)
 
       // שליחה לOpenAI Realtime API
-      const baseUrl = "https://api.openai.com/v1/realtime/calls"
-      const model = "gpt-realtime"
+      const baseUrl = "https://api.openai.com/v1/realtime"
+      const model = "gpt-realtime-mini-2025-10-06"
       
       console.log('🔑 Ephemeral token:', ephemeralKeyRef.current?.substring(0, 20) + '...')
       console.log('📡 Sending SDP offer to:', `${baseUrl}?model=${model}`)
@@ -378,14 +382,14 @@ ${weaknessSection}
       type: "session.update",
       session: {
         type: "realtime",
-        model: "gpt-realtime",
+        model: "gpt-realtime-mini-2025-10-06",
         modalities: ["text", "audio"],
         instructions: createAIInstructions(),
         voice: getVoiceForPersona(),
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
         input_audio_transcription: {
-          model: "whisper-1"
+          model: "gpt-4o-mini-transcribe"
         },
         turn_detection: {
           type: "server_vad",
