@@ -171,7 +171,6 @@ ${transcript || 'לא זמין תמלול'}
         model: 'gpt-5-nano-2025-08-07',
         input: systemInstruction + '\n\n' + reportPrompt,
         reasoning: { effort: "low" },
-        text: { verbosity: "high" }
       })
 
       const reportContent = reportResponse.output_text || '{}'

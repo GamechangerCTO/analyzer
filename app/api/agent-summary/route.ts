@@ -237,8 +237,7 @@ export async function GET(request: NextRequest) {
     const openaiResponse = await openai.responses.create({
       model: 'gpt-5-mini-2025-08-07',
       input: systemInstruction + '\n\n' + summaryPrompt,
-      reasoning: { effort: "low" }, // סיכום בסיסי של נקודות
-      text: { verbosity: "medium" } // רוצים סיכום מפורט אבל תמציתי
+      reasoning: { effort: "low" } // סיכום בסיסי של נקודות
     })
 
     const rawContent = openaiResponse.output_text || '{}'

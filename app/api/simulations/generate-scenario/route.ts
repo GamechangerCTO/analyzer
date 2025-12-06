@@ -73,7 +73,6 @@ export async function POST(request: NextRequest) {
       model: "gpt-5-nano-2025-08-07",
       input: systemInstruction + '\n\n' + scenarioPrompt,
       reasoning: { effort: "low" }, // יצירה יצירתית של תרחיש
-      text: { verbosity: "high" } // רוצים תרחיש מפורט
     })
 
     const scenarioData = JSON.parse(scenarioResponse.output_text || '{}')

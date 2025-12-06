@@ -115,7 +115,6 @@ export async function POST(request: NextRequest) {
       model: "gpt-5-nano-2025-08-07",
       input: systemInstruction + '\n\n' + reportPrompt,
       reasoning: { effort: "low" }, // דוח בסיסי, לא צריך חשיבה עמוקה
-      text: { verbosity: "high" } // רוצים דוח מפורט
     })
 
     const reportContent = reportResponse.output_text

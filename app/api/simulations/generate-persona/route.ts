@@ -125,7 +125,6 @@ export async function POST(request: NextRequest) {
         model: "gpt-5-nano-2025-08-07",
         input: systemInstruction + '\n\n' + personaPrompt,
         reasoning: { effort: "low" }, // יצירה יצירתית, לא צריך חשיבה עמוקה
-        text: { verbosity: "high" } // רוצים פרטים מלאים על הפרסונה
       })
 
       personaData = JSON.parse(personaResponse.output_text || '{}')

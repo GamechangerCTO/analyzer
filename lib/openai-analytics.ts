@@ -466,7 +466,7 @@ class OpenAIAnalyticsService {
           project_id: 'local-project',
           user_id: null,
           api_key_id: 'local-api-key',
-          model: 'gpt-4o-audio-preview',
+          model: 'gpt-4o-mini-transcribe',
           batch: false,
         });
       }
@@ -485,7 +485,7 @@ class OpenAIAnalyticsService {
           project_id: 'local-project',
           user_id: null,
           api_key_id: 'local-api-key',
-          model: 'gpt-4o-audio-preview',
+          model: 'gpt-4o-mini-transcribe',
           batch: false,
         });
       }
@@ -504,7 +504,7 @@ class OpenAIAnalyticsService {
           project_id: 'local-project',
           user_id: null,
           api_key_id: 'local-api-key',
-          model: 'gpt-4-turbo-2024-04-09',
+          model: 'gpt-5-mini-2025-08-07',
           batch: false,
         });
       }
@@ -611,7 +611,7 @@ class OpenAIAnalyticsService {
           project_id: 'demo-project',
           user_id: null,
           api_key_id: 'demo-key',
-          model: 'gpt-4o-audio-preview',
+          model: 'gpt-4o-mini-transcribe',
           batch: false,
         });
         
@@ -628,7 +628,7 @@ class OpenAIAnalyticsService {
           project_id: 'demo-project',
           user_id: null,
           api_key_id: 'demo-key',
-          model: 'gpt-4o-audio-preview',
+          model: 'gpt-4o-mini-transcribe',
           batch: false,
         });
         
@@ -645,7 +645,7 @@ class OpenAIAnalyticsService {
           project_id: 'demo-project',
           user_id: null,
           api_key_id: 'demo-key',
-          model: 'gpt-4-turbo-2024-04-09',
+          model: 'gpt-5-mini-2025-08-07',
           batch: false,
         });
       }

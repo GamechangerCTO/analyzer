@@ -291,7 +291,6 @@ ${allPreservationPoints.join(', ')}
       model: 'gpt-5-mini-2025-08-07',
       input: systemInstruction + '\n\n' + teamAnalysisPrompt,
       reasoning: { effort: "medium" }, // ניתוח אסטרטגי דורש חשיבה
-      text: { verbosity: "medium" } // תובנות מפורטות אבל לא ארוכות מדי
     })
 
     const rawContent = openaiResponse.output_text || '{}'
