@@ -1204,8 +1204,7 @@ export async function POST(request: Request) {
               
               חשוב מאוד: החזר רק JSON נקי ללא עיטוף Markdown או backticks!`,
           reasoning: { effort: "medium" }, // ✅ ניתוח שיחה דורש חשיבה מעמיקה - זיהוי דפוסים, ניואנסים והמלצות ממוקדות
-          max_tokens: 4000, // מגבלה להימנע מתשובות חתוכות
-          top_p: 0.9
+          max_output_tokens: 4000 // מגבלה להימנע מתשובות חתוכות
         });
 
         await addCallLog(call_id, '✅ תשובת OpenAI התקבלה לניתוח תוכן', { 
