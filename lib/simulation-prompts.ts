@@ -18,6 +18,7 @@ export interface SimulationPromptParams {
   callType: 'inbound' | 'outbound' | 'follow_up' | 'closing' | 'customer_service' | 'upsell' | 'retention'
   specificScenario?: string
   agentWeaknesses?: string[]
+  selectedTopics?: string[] // ✅ נושאים שנבחרו לאימון
 }
 
 export interface ScenarioPromptParams {
