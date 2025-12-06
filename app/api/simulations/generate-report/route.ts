@@ -108,24 +108,17 @@ export async function POST(request: NextRequest) {
     // יצירת פרומפט לדוח
     const reportPrompt = createReportGenerationPrompt(simulation, transcript, metrics)
 
-    // יצירת דוח באמצעות OpenAI
-    const reportResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "אתה מומחה להערכת ביצועי מכירות ויצירת דוחות מפורטים בעברית. צור דוח מקצועי ומפורט על הסימולציה."
-        },
-        {
-          role: "user", 
-          content: reportPrompt
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 2000
+    // ✅ יצירת דוח באמצעות Responses API
+    const systemInstruction = "אתה מומחה להערכת ביצועי מכירות ויצירת דוחות מפורטים בעברית. צור דוח מקצועי ומפורט על הסימולציה."
+    
+    const reportResponse = await openai.responses.create({
+      model: "gpt-5-nano-2025-08-07",
+      input: systemInstruction + '\n\n' + reportPrompt,
+      reasoning: { effort: "low" }, // דוח בסיסי, לא צריך חשיבה עמוקה
+      text: { verbosity: "high" } // רוצים דוח מפורט
     })
 
-    const reportContent = reportResponse.choices[0]?.message?.content
+    const reportContent = reportResponse.output_text
     if (!reportContent) {
       throw new Error('לא נוצר תוכן דוח')
     }

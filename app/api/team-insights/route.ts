@@ -284,22 +284,17 @@ ${allPreservationPoints.join(', ')}
 
     console.log('🚀 מתחיל ניתוח תובנות צוות עם OpenAI...')
     
-    const openaiResponse = await callOpenAIWithBackoff(openai, {
-      model: 'gpt-4o-2024-08-06',
-      messages: [
-        {
-          role: 'system',
-          content: 'אתה יועץ ניהול מומחה בניתוח ביצועי צוותי מכירות ושירות לקוחות. אתה מספק תובנות אסטרטגיות ופרקטיות למנהלים.'
-        },
-        {
-          role: 'user',
-          content: teamAnalysisPrompt
-        }
-      ],
-      temperature: 0.3
-    }, 5) // מקסימום 5 נסיונות
+    // ✅ שימוש ב-Responses API למודלי GPT-5
+    const systemInstruction = 'אתה יועץ ניהול מומחה בניתוח ביצועי צוותי מכירות ושירות לקוחות. אתה מספק תובנות אסטרטגיות ופרקטיות למנהלים.'
+    
+    const openaiResponse = await openai.responses.create({
+      model: 'gpt-5-mini-2025-08-07',
+      input: systemInstruction + '\n\n' + teamAnalysisPrompt,
+      reasoning: { effort: "medium" }, // ניתוח אסטרטגי דורש חשיבה
+      text: { verbosity: "medium" } // תובנות מפורטות אבל לא ארוכות מדי
+    })
 
-    const rawContent = openaiResponse.choices[0].message.content || '{}'
+    const rawContent = openaiResponse.output_text || '{}'
     const cleanedContent = cleanOpenAIResponse(rawContent)
     
     let insightsData

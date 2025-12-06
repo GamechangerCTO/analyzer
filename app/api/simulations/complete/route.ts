@@ -164,20 +164,17 @@ ${transcript || 'לא זמין תמלול'}
 
       console.log('🤖 יוצר דוח AI...')
 
-      const reportResponse = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-2024-04-09',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'אתה מומחה בניתוח סימולציות מכירות. תמיד החזר JSON תקין בעברית עם דוח מפורט ומועיל.' 
-          },
-          { role: 'user', content: reportPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
+      const systemInstruction = 'אתה מומחה בניתוח סימולציות מכירות. תמיד החזר JSON תקין בעברית עם דוח מפורט ומועיל.'
+      
+      // ✅ שימוש ב-Responses API למודלי GPT-5 Nano
+      const reportResponse = await (openai as any).responses.create({
+        model: 'gpt-5-nano-2025-08-07',
+        input: systemInstruction + '\n\n' + reportPrompt,
+        reasoning: { effort: "low" },
+        text: { verbosity: "high" }
       })
 
-      const reportContent = reportResponse.choices[0]?.message?.content || '{}'
+      const reportContent = reportResponse.output_text || '{}'
       console.log('📝 תגובה גולמית מ-OpenAI:', reportContent.substring(0, 200) + '...')
       
       const cleanedContent = cleanOpenAIResponse(reportContent)

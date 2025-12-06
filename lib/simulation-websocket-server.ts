@@ -110,8 +110,8 @@ export class SimulationWebSocketServer {
 
   private async startSimulation(session: SimulationSession) {
     try {
-      // Connect to OpenAI Realtime API
-      const openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', {
+      // Connect to OpenAI Realtime API - ✅ מעודכן למודלים חדשים
+      const openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-realtime-mini-2025-10-06', {
         headers: {
           'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
           'OpenAI-Beta': 'realtime=v1'
@@ -123,7 +123,7 @@ export class SimulationWebSocketServer {
       openaiWs.on('open', () => {
         console.log('Connected to OpenAI Realtime API');
         
-        // Configure the session with our scenario
+        // Configure the session with our scenario - ✅ מעודכן למודלים חדשים
         const sessionConfig = {
           type: 'session.update',
           session: {
@@ -133,7 +133,7 @@ export class SimulationWebSocketServer {
             input_audio_format: 'pcm16',
             output_audio_format: 'pcm16',
             input_audio_transcription: {
-              model: 'whisper-1'
+              model: 'gpt-4o-mini-transcribe'
             }
           }
         };

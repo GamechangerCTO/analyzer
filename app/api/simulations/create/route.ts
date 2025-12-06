@@ -20,6 +20,7 @@ interface CreateSimulationRequest {
   difficulty_level: string
   triggered_by_call_id?: string
   callAnalysis?: any
+  selectedTopics?: string[] // ✅ נושאים שנבחרו לאימון
 }
 
 const scenarioPrompts = {
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateSimulationRequest = await request.json()
-    const { simulation_type, customer_persona, difficulty_level, triggered_by_call_id, callAnalysis } = body
+    const { simulation_type, customer_persona, difficulty_level, triggered_by_call_id, callAnalysis, selectedTopics } = body
 
     // בניית תרחיש הסימולציה
     let scenarioDescription = "תרחיש סימולציה כללי"
@@ -145,52 +146,31 @@ ${originalCallContext}
         // Initialize OpenAI client
         const openai = getOpenAIClient();
         
-        // Try with gpt-4o first (supports json_object)
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: "אתה מומחה ליצירת תרחישי אימון למכירות ושירות. החזר תמיד JSON תקף בעברית."
-            },
-            {
-              role: "user",
-              content: prompt
-            }
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.7
+        const systemInstruction = "אתה מומחה ליצירת תרחישי אימון למכירות ושירות. החזר תמיד JSON תקף בעברית."
+        
+        // ✅ שימוש ב-Responses API למודלי GPT-5 Nano
+        const completion = await (openai as any).responses.create({
+          model: "gpt-5-nano-2025-08-07",
+          input: systemInstruction + '\n\n' + prompt,
+          reasoning: { effort: "low" },
+          text: { verbosity: "high" }
         })
 
-        const scenarioData = JSON.parse(completion.choices[0].message.content || '{}')
+        const responseText = completion.output_text || '{}'
+        // ניקוי JSON
+        let cleanedJson = responseText.replace(/```(?:json|JSON)?\s*/g, '').replace(/```\s*$/g, '').trim()
+        const jsonStart = cleanedJson.indexOf('{')
+        if (jsonStart !== -1) cleanedJson = cleanedJson.substring(jsonStart)
+        const jsonEnd = cleanedJson.lastIndexOf('}')
+        if (jsonEnd !== -1) cleanedJson = cleanedJson.substring(0, jsonEnd + 1)
+        
+        const scenarioData = JSON.parse(cleanedJson)
         scenarioDescription = scenarioData.scenario_description || baseScenario
         enhancedScenario = JSON.stringify(scenarioData)
       } catch (aiError) {
         console.error('Scenario generation failed:', aiError)
-        // Fallback: try without response_format
-        try {
-          const openai = getOpenAIClient();
-          const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content: "אתה מומחה ליצירת תרחישי אימון למכירות ושירות. החזר תמיד תשובה קצרה בעברית."
-              },
-              {
-                role: "user",
-                content: `תן תיאור קצר (1-2 משפטים) לתרחיש סימולציה: ${baseScenario}`
-              }
-            ],
-            temperature: 0.7,
-            max_tokens: 200
-          })
-          
-          scenarioDescription = completion.choices[0].message.content || baseScenario
-        } catch (fallbackError) {
-          console.error('Fallback scenario generation also failed:', fallbackError)
-          scenarioDescription = baseScenario
-        }
+        // Fallback: use base scenario
+        scenarioDescription = baseScenario
       }
     }
 
@@ -214,7 +194,8 @@ ${originalCallContext}
       difficulty_level,
       scenario_description: scenarioDescription,
       status: 'pending',
-      ai_feedback: parsedAiFeedback
+      ai_feedback: parsedAiFeedback,
+      selected_topics: selectedTopics || ['פתיחת_שיחה_ובניית_אמון'] // ✅ ברירת מחדל
     }
     
     const { data: simulation, error: insertError } = await supabase

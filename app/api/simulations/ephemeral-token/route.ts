@@ -25,15 +25,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Simulation not found' }, { status: 404 })
     }
 
-    // יצירת ephemeral token מ-OpenAI
+    // יצירת ephemeral token מ-OpenAI - ✅ מעודכן למודלים חדשים
     const sessionConfig = {
-      model: "gpt-realtime",
+      model: "gpt-realtime-mini-2025-10-06",
       instructions: instructions || "You are a helpful customer for sales training in Hebrew.",
       voice: voice || "shimmer",
       input_audio_format: "pcm16",
       output_audio_format: "pcm16",
       input_audio_transcription: {
-        model: "whisper-1"
+        model: "gpt-4o-mini-transcribe"
       },
       turn_detection: {
         type: "server_vad",

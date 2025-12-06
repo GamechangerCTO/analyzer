@@ -52,7 +52,7 @@ ${promptData.system_prompt}
 ${jsonStructure}
 
 ## הנחיות נוספות:
-- תן ציון מ-3 עד 10 לכל פרמטר (3 נדיר מאוד, 10 מעולה)
+- תן ציון מ-4 עד 10 לכל פרמטר (4-6 חלש/בסיסי, 7-8 טוב, 9-10 מצוין)
 - ב"תובנות" תן הסבר קצר ובהיר של הביצועים
 - ב"איך_משפרים" תן המלצה מעשית ספציפית + דוגמה מדויקה לנוסח מקצועי
 - כלול general_key_insights, improvement_points, overall_score ו-red_flags
@@ -527,7 +527,7 @@ export async function POST(request: Request) {
     
     if (isFullAnalysis) {
       try {
-        await addCallLog(call_id, '📝 מתחיל תהליך תמלול שיחה', { model: 'gpt-4o-transcribe', language: 'he' });
+        await addCallLog(call_id, '📝 מתחיל תהליך תמלול שיחה', { model: 'gpt-4o-mini-transcribe', language: 'he' });
         
         // הורדת קובץ האודיו
         await addCallLog(call_id, '⬇️ מוריד קובץ אודיו מהשרת');
@@ -578,14 +578,14 @@ export async function POST(request: Request) {
         // המרת ה-blob לקובץ שאפשר לשלוח ל-OpenAI API
         const formData = new FormData();
         formData.append('file', correctedBlob, fileName);
-        formData.append('model', 'gpt-4o-transcribe');
+        formData.append('model', 'gpt-4o-mini-transcribe');
         formData.append('language', 'he');
         formData.append('response_format', 'json');
         
         await addCallLog(call_id, '🔄 שולח בקשת תמלול ל-GPT-4o Transcribe API', { 
           request_time: new Date().toISOString(),
           file_size_mb: (audioBlob.size / (1024 * 1024)).toFixed(2),
-          model: 'gpt-4o-transcribe'
+          model: 'gpt-4o-mini-transcribe'
         });
         
         // מנגנון ניסיונות חוזרים לקריאה ל-Whisper API
@@ -669,7 +669,7 @@ export async function POST(request: Request) {
         await addCallLog(call_id, '✅ תמלול הושלם בהצלחה', { 
           transcript_length: transcript.length,
           transcript_words: transcript.split(' ').length,
-          model_used: 'gpt-4o-transcribe',
+          model_used: 'gpt-4o-mini-transcribe',
           response_format: 'json'
         });
         
@@ -726,7 +726,7 @@ export async function POST(request: Request) {
 
     // שלב 2: ניתוח טון ישיר מהאודיו עם GPT-4o
     try {
-      await addCallLog(call_id, '🎭 מתחיל ניתוח טונציה', { model: 'gpt-4o-audio-preview' });
+      await addCallLog(call_id, '🎭 מתחיל ניתוח טונציה', { model: 'gpt-4o-mini-audio-preview-2024-12-17' });
       
       // זיהוי פורמט הקובץ לניתוח טונציה
       const fileExtension = callData.audio_file_path?.split('.').pop()?.toLowerCase() || 'unknown';
@@ -755,7 +755,7 @@ export async function POST(request: Request) {
       });
       
       const toneAnalysisResponse = await openai.chat.completions.create({
-        model: 'gpt-4o-audio-preview',
+        model: 'gpt-4o-mini-audio-preview-2024-12-17',
         modalities: ['text'],
         messages: [
           {
@@ -785,7 +785,7 @@ export async function POST(request: Request) {
                 "טון_לא_מקצועי": boolean
               },
               "ניתוח_פרוזודי": "ניתוח מפורט של קצב דיבור, הפסקות, עוצמה והטמעות",
-              "ציון_טונציה": number, // ציון בין 3-10 (3 נדיר מאוד, 4-6 טווח נמוך, 7-8 טוב, 9-10 מעולה)
+              "ציון_טונציה": number, // ציון בין 4-10 (4-6 חלש/בסיסי, 7-8 טוב, 9-10 מצוין)
               "המלצות_שיפור": ["רשימה של המלצות לשיפור הטון והמקצועיות"],
               "נקודות_חוזק_טונליות": ["רשימה של נקודות חוזק בטון ובאופן התקשורת"]
             }
@@ -963,7 +963,7 @@ export async function POST(request: Request) {
           .eq('id', call_id);
 
         await addCallLog(call_id, '🔄 עדכון סטטוס לניתוח תוכן', { new_status: 'analyzing_content' });
-        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן', { model: 'gpt-4.1-2025-04-14' });
+        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן', { model: 'gpt-5-mini-2025-08-07' });
 
         // שלב 3: ניתוח תוכן מקצועי עם gpt-4.1-2025-04-14
         // קבלת הפרומפט המתאים לסוג השיחה כולל שדות הניתוח
@@ -1000,7 +1000,7 @@ export async function POST(request: Request) {
           
           systemPrompt = `אתה מומחה בכיר בניתוח שיחות מכירה ושירות עם ניסיון של 15 שנה.
           
-          נתח את השיחה לפי ${isServiceCall ? '32' : '35'} פרמטרים מקצועיים והחזר ציון מ-3 עד 10 לכל פרמטר (3 נדיר מאוד):
+          נתח את השיחה לפי ${isServiceCall ? '32' : '35'} פרמטרים מקצועיים והחזר ציון מ-4 עד 10 לכל פרמטר (4-6 חלש/בסיסי, 7-8 טוב, 9-10 מצוין):
           
           **מבנה JSON נדרש:**
           {
@@ -1065,7 +1065,7 @@ export async function POST(request: Request) {
           }
           
           הנחיות:
-          - לכל פרמטר תן ציון מ-3-10 עם הסבר קצר ב"תובנות" (אל תתן ציון 0 או מתחת ל-3!)
+          - לכל פרמטר תן ציון מ-4-10 עם הסבר קצר ב"תובנות" (אל תתן ציון מתחת ל-4!)
           - ב"איך_משפרים" תן המלצה מעשית ספציפית לשיפור + דוגמאות מדויקות לנוסח מקצועי
           - כלול בכל "איך_משפרים" גם דוגמה מדויקה למה הנציג היה צריך לומר במקום או בנוסף למה שאמר
           - דוגמה לפורמט רצוי: "להוסיף שאלות פתוחות יותר. דוגמה: במקום 'האם זה מתאים לך?' אמור 'איך אתה רואה את זה עוזר לעסק שלך?'"
@@ -1168,16 +1168,10 @@ export async function POST(request: Request) {
           request_time: new Date().toISOString()
         });
         
-        const contentAnalysisResponse = await openai.chat.completions.create({
-          model: 'gpt-4o-2024-08-06',
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt
-            },
-            {
-              role: 'user',
-              content: systemPrompt + '\n\n' + `נתח את השיחה הבאה:
+        // ✅ שימוש ב-Responses API למודלי GPT-5
+        const contentAnalysisResponse = await openai.responses.create({
+          model: 'gpt-5-mini-2025-08-07',
+          input: systemPrompt + '\n\n' + `נתח את השיחה הבאה:
               סוג שיחה: ${callData.call_type}
               תמליל השיחה: ${transcript}
               
@@ -1204,14 +1198,13 @@ export async function POST(request: Request) {
               הנחיות:
               1. החזר תמיד JSON תקין - התחל ישירות ב-{ וסיים ב-} ללא backticks או markdown
               2. בציטוטים החלף שמות ב"הנציג" ו"הלקוח"
-              3. תן ציונים מדויקים מ-3-10 לכל פרמטר (3 נדיר מאוד, 4-6 טווח נמוך, 7-8 טוב, 9-10 מעולה)
+              3. תן ציונים מדויקים מ-4-10 לכל פרמטר (4-6 חלש/בסיסי, 7-8 טוב, 9-10 מצוין)
               4. הסבר בקצרה כל ציון
               5. הצע דרכים מעשיות לשיפור
               
-              חשוב מאוד: החזר רק JSON נקי ללא עיטוף Markdown או backticks!`
-            }
-          ],
-          temperature: 0.3, // נמוך יותר ליציבות
+              חשוב מאוד: החזר רק JSON נקי ללא עיטוף Markdown או backticks!`,
+          reasoning: { effort: "medium" }, // ✅ ניתוח שיחה דורש חשיבה מעמיקה - זיהוי דפוסים, ניואנסים והמלצות ממוקדות
+          text: { verbosity: "high" }, // תשובה מפורטת עם המלצות מעשיות
           max_tokens: 4000, // מגבלה להימנע מתשובות חתוכות
           top_p: 0.9
         });
@@ -1223,7 +1216,8 @@ export async function POST(request: Request) {
           completion_time: new Date().toISOString()
         });
 
-        const rawContentResponse = contentAnalysisResponse.choices[0].message.content || '{}';
+        // ✅ Responses API מחזיר output_text במקום choices[0].message.content
+        const rawContentResponse = contentAnalysisResponse.output_text || '{}';
         
         await addCallLog(call_id, '📥 תשובת OpenAI גולמית לתוכן', { 
           raw_length: rawContentResponse.length,

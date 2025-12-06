@@ -39,6 +39,37 @@ export default function CreateSimulationForm({
     customScenarioDescription: ''
   })
 
+  // State לנושאים נבחרים - ברירת מחדל: פתיחת שיחה ובניית אמון
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(['פתיחת_שיחה_ובניית_אמון'])
+
+  // רשימת הנושאים לאימון
+  const simulationTopics = [
+    { id: 'פתיחת_שיחה_ובניית_אמון', label: 'פתיחת שיחה ובניית אמון' },
+    { id: 'איתור_צרכים_וזיהוי_כאב', label: 'איתור צרכים וזיהוי כאב' },
+    { id: 'הקשבה_ואינטראקציה', label: 'הקשבה ואינטראקציה' },
+    { id: 'הצגת_פתרון_והדגשת_ערך', label: 'הצגת פתרון והדגשת ערך' },
+    { id: 'טיפול_בהתנגדויות', label: 'טיפול בהתנגדויות' },
+    { id: 'הנעה_לפעולה_וסגירה', label: 'הנעה לפעולה וסגירה' },
+    { id: 'שפת_תקשורת', label: 'שפת תקשורת' },
+    { id: 'שלושת_הלמה', label: 'שלושת הלמה' }
+  ]
+
+  // פונקציה להחלפת מצב נושא (toggle)
+  const toggleTopic = (topicId: string) => {
+    setSelectedTopics(prev => {
+      if (prev.includes(topicId)) {
+        // אם מנסים לבטל את הנושא האחרון - מונעים
+        if (prev.length === 1) {
+          alert('חובה לבחור לפחות נושא אחד')
+          return prev
+        }
+        return prev.filter(t => t !== topicId)
+      } else {
+        return [...prev, topicId]
+      }
+    })
+  }
+
   const handleNext = () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1)
@@ -86,7 +117,8 @@ export default function CreateSimulationForm({
             targetWeaknesses: formData.focusArea ? [formData.focusArea] : [],
             difficulty: formData.difficulty,
             specificScenario: formData.specificScenario,
-            callAnalysis: selectedCallAnalysis // העברת הניתוח המלא של השיחה
+            callAnalysis: selectedCallAnalysis, // העברת הניתוח המלא של השיחה
+            selectedTopics: selectedTopics // ✅ הנושאים שנבחרו
           })
         })
         
@@ -125,7 +157,8 @@ export default function CreateSimulationForm({
           simulation_type: formData.focusArea || 'אימון כללי',
           customer_persona: personaId || 'לקוח ווירטואלי',
           difficulty_level: formData.difficulty,
-          triggered_by_call_id: formData.selectedCallId || null
+          triggered_by_call_id: formData.selectedCallId || null,
+          selectedTopics: selectedTopics // ✅ הנושאים שנבחרו
         })
       })
       
@@ -426,6 +459,36 @@ export default function CreateSimulationForm({
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
                 rows={3}
               />
+            </div>
+
+            {/* בחירת נושאים לאימון */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                בחר נושאים לאימון (חובה לבחור לפחות אחד)
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {simulationTopics.map(topic => (
+                  <label 
+                    key={topic.id}
+                    className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                      selectedTopics.includes(topic.id)
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedTopics.includes(topic.id)}
+                      onChange={() => toggleTopic(topic.id)}
+                      className="w-4 h-4 text-blue-600 ml-2"
+                    />
+                    <span className="mr-3 text-gray-900">{topic.label}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                נבחרו {selectedTopics.length} מתוך {simulationTopics.length} נושאים
+              </p>
             </div>
           </div>
         )}

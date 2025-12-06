@@ -229,25 +229,19 @@ export async function GET(request: NextRequest) {
 ⚠️ חובה: החזר JSON נקי בלבד ללא markdown או backticks!
 `
 
-    console.log('🚀 מתחיל קריאה ל-OpenAI עם exponential backoff...')
+    console.log('🚀 מתחיל קריאה ל-OpenAI עם Responses API...')
     
-    // שימוש בפונקציה החדשה עם backoff
-    const openaiResponse = await callOpenAIWithBackoff(openai, {
-      model: 'gpt-4o-2024-08-06',
-      messages: [
-        {
-          role: 'system',
-          content: 'אתה מומחה בניתוח נתוני ביצועים ומתמחה בסיכום נקודות לשיפור ושימור לנציגי מכירות ושירות.'
-        },
-        {
-          role: 'user',
-          content: summaryPrompt
-        }
-      ],
-      temperature: 0.3
-    }, 5) // מקסימום 5 נסיונות
+    // ✅ שימוש ב-Responses API למודלי GPT-5
+    const systemInstruction = 'אתה מומחה בניתוח נתוני ביצועים ומתמחה בסיכום נקודות לשיפור ושימור לנציגי מכירות ושירות.'
+    
+    const openaiResponse = await openai.responses.create({
+      model: 'gpt-5-mini-2025-08-07',
+      input: systemInstruction + '\n\n' + summaryPrompt,
+      reasoning: { effort: "low" }, // סיכום בסיסי של נקודות
+      text: { verbosity: "medium" } // רוצים סיכום מפורט אבל תמציתי
+    })
 
-    const rawContent = openaiResponse.choices[0].message.content || '{}'
+    const rawContent = openaiResponse.output_text || '{}'
     
     // שימוש בפונקציית ניקוי הקריטית
     const cleanedContent = cleanOpenAIResponse(rawContent)

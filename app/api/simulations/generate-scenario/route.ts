@@ -63,26 +63,20 @@ export async function POST(request: NextRequest) {
       focusAreas: [focusArea || 'שיפור כללי'] 
     })
     
-    const scenarioResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: `אתה מומחה ליצירת תרחישי אימון מכירות בעברית. 
+    // ✅ שימוש ב-Responses API למודלי GPT-5
+    const systemInstruction = `אתה מומחה ליצירת תרחישי אימון מכירות בעברית. 
 המטרה שלך היא ליצור תרחיש מאתגר וריאליסטי שיעזור לנציג להתפתח בתחומים הנדרשים.
 התרחיש צריך להיות מפורט, מעשי וכולל הדרכות ברורות.
 תמיד תחזיר תוצאה במבנה JSON תקין בעברית.`
-        },
-        {
-          role: "user", 
-          content: scenarioPrompt
-        }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.7
+
+    const scenarioResponse = await openai.responses.create({
+      model: "gpt-5-nano-2025-08-07",
+      input: systemInstruction + '\n\n' + scenarioPrompt,
+      reasoning: { effort: "low" }, // יצירה יצירתית של תרחיש
+      text: { verbosity: "high" } // רוצים תרחיש מפורט
     })
 
-    const scenarioData = JSON.parse(scenarioResponse.choices[0].message.content || '{}')
+    const scenarioData = JSON.parse(scenarioResponse.output_text || '{}')
     
     // שמירת התרחיש במסד הנתונים
     const { data: savedScenario, error: saveError } = await supabase

@@ -20,6 +20,46 @@ export interface SimulationPromptParams {
   callType: 'inbound' | 'outbound' | 'follow_up' | 'closing' | 'customer_service' | 'upsell' | 'retention'
   specificScenario?: string
   agentWeaknesses?: string[]
+  selectedTopics?: string[] // ✅ נושאים שנבחרו לאימון
+}
+
+/**
+ * סינון פרומפט לפי נושאים נבחרים
+ * מוסיף הנחיות מפורשות ל-AI להתמקד בנושאים הנבחרים
+ */
+export function filterPromptByTopics(
+  basePrompt: string, 
+  selectedTopics: string[]
+): string {
+  if (!selectedTopics || selectedTopics.length === 0) {
+    return basePrompt
+  }
+  
+  // מיפוי נושאים לסעיפים בפרומפט
+  const topicSections: Record<string, string> = {
+    'פתיחת_שיחה_ובניית_אמון': 'פתיחת שיחה ובניית אמון',
+    'איתור_צרכים_וזיהוי_כאב': 'איתור צרכים וזיהוי כאב',
+    'הקשבה_ואינטראקציה': 'הקשבה ואינטראקציה',
+    'הצגת_פתרון_והדגשת_ערך': 'הצגת פתרון והדגשת ערך',
+    'טיפול_בהתנגדויות': 'טיפול בהתנגדויות',
+    'הנעה_לפעולה_וסגירה': 'הנעה לפעולה וסגירה',
+    'שפת_תקשורת': 'שפת תקשורת',
+    'שלושת_הלמה': 'שלושת הלמה'
+  }
+  
+  // הוספת הנחיות מפורשות לAI להתמקד בנושאים שנבחרו
+  const focusInstruction = `
+🎯 **התמקד במיוחד בתחומים הבאים:**
+${selectedTopics.map(t => `- ${topicSections[t] || t}`).join('\n')}
+
+**הנחיות לAI:**
+- אתגר את הנציג במיוחד בתחומים אלה
+- העלה התנגדויות וסיטואציות שידרשו מהנציג להפגין מיומנויות בתחומים אלה
+- שים דגש על הערכת הביצועים בתחומים שנבחרו
+- תן משוב מפורט על כל אחד מהנושאים שנבחרו
+`
+  
+  return focusInstruction + '\n\n' + basePrompt
 }
 
 /**
@@ -94,10 +134,16 @@ export async function createCustomizedSimulationPrompt(params: SimulationPromptP
   else if (callType === 'outbound') promptType = 'simulation_outbound'
   
   // שליפת הפרומפט מהמסד
-  const { systemPrompt, error } = await getSimulationPromptFromDB(promptType)
+  let { systemPrompt, error } = await getSimulationPromptFromDB(promptType)
   
   if (error) {
     console.warn(`שימוש בפרומפט fallback בגלל: ${error}`)
+  }
+
+  // ✅ סינון הפרומפט לפי נושאים נבחרים (אם יש)
+  if (params.selectedTopics && params.selectedTopics.length > 0) {
+    systemPrompt = filterPromptByTopics(systemPrompt, params.selectedTopics)
+    console.log(`✅ פרומפט סונן לפי ${params.selectedTopics.length} נושאים נבחרים`)
   }
 
   // התאמה אישית של הפרומפט

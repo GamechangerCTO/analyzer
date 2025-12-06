@@ -116,25 +116,19 @@ export async function POST(request: NextRequest) {
       // יצירת פרסונה מותאמת בעברית
       const personaPrompt = buildPersonaPrompt(agentAnalysis, companyData, targetWeaknesses, difficulty, specificScenario)
       
-      const personaResponse = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `אתה מומחה ליצירת פרסונות לקוחות לאימון מכירות בעברית. 
+      // ✅ שימוש ב-Responses API למודלי GPT-5
+      const systemInstruction = `אתה מומחה ליצירת פרסונות לקוחות לאימון מכירות בעברית. 
 המטרה שלך היא ליצור לקוח ווירטואלי שיאתגר את הנציג בדיוק בתחומים שהוא צריך לשפר.
 תמיד תחזיר תוצאה במבנה JSON תקין בעברית.`
-          },
-          {
-            role: "user", 
-            content: personaPrompt
-          }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.8
+
+      const personaResponse = await openai.responses.create({
+        model: "gpt-5-nano-2025-08-07",
+        input: systemInstruction + '\n\n' + personaPrompt,
+        reasoning: { effort: "low" }, // יצירה יצירתית, לא צריך חשיבה עמוקה
+        text: { verbosity: "high" } // רוצים פרטים מלאים על הפרסונה
       })
 
-      personaData = JSON.parse(personaResponse.choices[0].message.content || '{}')
+      personaData = JSON.parse(personaResponse.output_text || '{}')
       console.log('✅ Generated persona with AI:', personaData.persona_name)
 
     } catch (aiErrorCaught: any) {
@@ -192,7 +186,7 @@ export async function POST(request: NextRequest) {
         company_id: companyId,
         persona_id: null,
         questionnaire_completeness: validation.completeness,
-        ai_model_used: usedAI ? 'gpt-4o' : 'fallback',
+        ai_model_used: usedAI ? 'gpt-5-nano-2025-08-07' : 'fallback',
         generation_time_ms: Date.now() - startTime,
         success: false,
         error_message: saveError.message
@@ -209,7 +203,7 @@ export async function POST(request: NextRequest) {
       company_id: companyId,
       persona_id: personaId,
       questionnaire_completeness: validation.completeness,
-      ai_model_used: usedAI ? 'gpt-4o' : 'fallback',
+      ai_model_used: usedAI ? 'gpt-5-nano-2025-08-07' : 'fallback',
       generation_time_ms: generationTime,
       success: true,
       error_message: aiError,
