@@ -94,26 +94,69 @@ function cleanOpenAIResponse(content: string): string {
     } catch {}
   }
   
-  // ניסיון שלישי: תיקון JSON חתוך
-  // מנסים לסגור את ה-JSON בצורה חכמה
-  let truncated = cleaned
+  // ניסיון שלישי: חילוץ שדות בסיסיים ובניית JSON חדש
+  console.log('🔧 Attempting field extraction from truncated JSON...')
   
-  // מוצא את המפתח האחרון שנסגר בהצלחה
-  const lastCompleteField = truncated.lastIndexOf('",')
-  if (lastCompleteField > 0) {
-    truncated = truncated.substring(0, lastCompleteField + 1) // כולל ה-"
-  } else {
-    // מחפש את המפתח האחרון עם ערך
-    const lastQuote = truncated.lastIndexOf('"')
-    if (lastQuote > 0) {
-      // בודק אם זה סוף של ערך או באמצע
-      const beforeQuote = truncated.substring(0, lastQuote)
-      const lastColon = beforeQuote.lastIndexOf(':')
-      if (lastColon > 0) {
-        // יש ערך שנחתך - מנסים לסגור אותו
-        truncated = truncated.substring(0, lastQuote + 1)
+  const extractedData: Record<string, any> = {}
+  
+  // רשימת שדות חובה שנרצה לחלץ
+  const stringFields = [
+    'persona_name', 'personality_type', 'communication_style', 
+    'industry_context', 'company_size', 'background_story', 
+    'current_situation', 'decision_making_style', 'budget_sensitivity', 
+    'time_pressure', 'openai_instructions'
+  ]
+  
+  const arrayFields = [
+    'pain_points', 'goals_and_objectives', 'common_objections', 'preferred_communication'
+  ]
+  
+  // חילוץ שדות string
+  for (const field of stringFields) {
+    const regex = new RegExp(`"${field}"\\s*:\\s*"([^"]*(?:\\\\.[^"]*)*)"`, 's')
+    const match = cleaned.match(regex)
+    if (match) {
+      extractedData[field] = match[1].replace(/\\"/g, '"').replace(/\\n/g, ' ')
+    }
+  }
+  
+  // חילוץ שדות מערך
+  for (const field of arrayFields) {
+    const regex = new RegExp(`"${field}"\\s*:\\s*\\[([^\\]]*(?:\\[[^\\]]*\\][^\\]]*)*)\\]`, 's')
+    const match = cleaned.match(regex)
+    if (match) {
+      try {
+        // מנסה לפרסר את המערך
+        const arrayContent = match[1]
+        const items = arrayContent.match(/"([^"]+)"/g)
+        if (items) {
+          extractedData[field] = items.map(item => item.replace(/"/g, ''))
+        }
+      } catch {
+        extractedData[field] = []
       }
     }
+  }
+  
+  // חילוץ voice_characteristics
+  const genderMatch = cleaned.match(/"gender"\s*:\s*"(male|female)"/)
+  if (genderMatch) {
+    extractedData.voice_characteristics = { gender: genderMatch[1] }
+  }
+  
+  // בדיקה שיש לפחות את השדות הקריטיים
+  if (extractedData.persona_name) {
+    console.log('✅ Extracted fields from truncated JSON:', Object.keys(extractedData).join(', '))
+    return JSON.stringify(extractedData)
+  }
+  
+  // ניסיון אחרון: סגירה ידנית של JSON חתוך
+  let truncated = cleaned
+  
+  // מוצא את השדה האחרון שנסגר בהצלחה (מחפש "key": "value")
+  const lastCompleteFieldMatch = truncated.match(/.*"[^"]+"\s*:\s*"[^"]*"/s)
+  if (lastCompleteFieldMatch) {
+    truncated = lastCompleteFieldMatch[0]
   }
   
   // סוגרים את כל הסוגריים הפתוחים
@@ -142,12 +185,11 @@ function cleanOpenAIResponse(content: string): string {
   truncated = truncated.replace(/,\s*([}\]])/g, '$1')
   
   try {
-    JSON.parse(truncated)
+    const result = JSON.parse(truncated)
     console.log('🔧 Fixed truncated JSON successfully')
     return truncated
   } catch (e) {
     console.error('❌ Could not fix JSON:', (e as Error).message)
-    // מחזירים לפחות את השדות שהצלחנו לחלץ
     return '{}'
   }
 }
