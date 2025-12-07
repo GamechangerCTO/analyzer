@@ -24,6 +24,9 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   const [dataChannel, setDataChannel] = useState<RTCDataChannel | null>(null)
   const [sessionStarted, setSessionStarted] = useState(false)
   const [currentMessage, setCurrentMessage] = useState('')
+  const [isPaused, setIsPaused] = useState(false) // 🔴 חדש: השהיה
+  const [currentSpeaker, setCurrentSpeaker] = useState<'user' | 'ai' | null>(null) // 🔴 חדש: מי מדבר
+  const [elapsedTime, setElapsedTime] = useState(0) // 🔴 חדש: טיימר בשניות
   const [simulationMetrics, setSimulationMetrics] = useState({
     startTime: null as Date | null,
     responseTime: 0,
@@ -33,6 +36,32 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
 
   const audioElementRef = useRef<HTMLAudioElement | null>(null)
   const ephemeralKeyRef = useRef<string | null>(null)
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null) // 🔴 חדש: ref לטיימר
+
+  // 🔴 חדש: טיימר שמתעדכן כל שניה
+  useEffect(() => {
+    if (status === 'active' && !isPaused) {
+      timerIntervalRef.current = setInterval(() => {
+        setElapsedTime(prev => prev + 1)
+      }, 1000)
+    } else {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+      }
+    }
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+      }
+    }
+  }, [status, isPaused])
+
+  // 🔴 חדש: פורמט זמן MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
 
   // הגדרת פרסונת הלקוח ל-AI (קבלת הפרסונה מהפרמטר או מהסימולציה)
   const persona = customerPersona || simulation.customer_personas_hebrew?.[0]
@@ -328,6 +357,7 @@ ${weaknessSection}
       case 'response.audio_transcript.delta':
         if (event.delta) {
           setCurrentMessage(prev => prev + event.delta)
+          setCurrentSpeaker('ai') // 🔴 חדש: AI מדבר
         }
         break
 
@@ -335,11 +365,13 @@ ${weaknessSection}
         if (event.transcript) {
           setTranscript(prev => [...prev, `🤖 ${persona?.persona_name || 'לקוח'}: ${event.transcript}`])
           setCurrentMessage('')
+          setCurrentSpeaker(null) // 🔴 חדש: AI סיים
         }
         break
 
       case 'input_audio_buffer.speech_started':
         console.log('🎤 הנציג התחיל לדבר')
+        setCurrentSpeaker('user') // 🔴 חדש
         setSimulationMetrics(prev => ({
           ...prev,
           responseTime: Date.now()
@@ -348,6 +380,7 @@ ${weaknessSection}
 
       case 'input_audio_buffer.speech_stopped':
         console.log('🔇 הנציג הפסיק לדבר')
+        setCurrentSpeaker(null) // 🔴 חדש
         break
 
       case 'conversation.item.input_audio_transcription.completed':
@@ -423,6 +456,19 @@ ${weaknessSection}
       }
       dataChannel.send(JSON.stringify(openingMessage))
     }, 1000)
+  }
+
+  // 🔴 חדש: השהיית סימולציה
+  const togglePause = () => {
+    setIsPaused(prev => !prev)
+    // אם מושהה, נשתיק/נפעיל את האודיו
+    if (audioElementRef.current) {
+      if (!isPaused) {
+        audioElementRef.current.pause()
+      } else {
+        audioElementRef.current.play()
+      }
+    }
   }
 
   // סיום הסימולציה
@@ -532,6 +578,18 @@ ${weaknessSection}
               אימון עם {persona?.persona_name || 'לקוח ווירטואלי'} • 
               רמת קושי: {simulation.difficulty_level}
             </p>
+            
+            {/* 🔴 חדש: טיימר גדול */}
+            {status === 'active' && (
+              <div className="mt-3 flex items-center gap-4">
+                <div className="text-3xl font-mono font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-lg">
+                  ⏱️ {formatTime(elapsedTime)}
+                </div>
+                {isPaused && (
+                  <span className="text-orange-600 font-bold animate-pulse">⏸️ מושהה</span>
+                )}
+              </div>
+            )}
           </div>
           
           <div className="text-center">
@@ -590,18 +648,30 @@ ${weaknessSection}
           )}
 
           {status === 'active' && (
-            <div className="flex space-x-3">
+            <div className="flex flex-wrap gap-3 justify-center">
+              {/* 🔴 חדש: כפתור השהיה */}
+              <button
+                onClick={togglePause}
+                className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                  isPaused 
+                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                    : 'bg-orange-500 hover:bg-orange-600 text-white'
+                }`}
+              >
+                {isPaused ? '▶️ המשך' : '⏸️ השהה'}
+              </button>
+              
               <button
                 onClick={stopSimulation}
-                className="bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors flex items-center"
+                className="bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors flex items-center gap-2"
               >
-                ⏹️ עצור סימולציה
+                ⏹️ עצור ללא שמירה
               </button>
               <button
                 onClick={endSimulation}
-                className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center"
+                className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center gap-2"
               >
-                🏁 עצור ושלח לניתוח
+                🏁 סיים ועבור לניתוח
               </button>
             </div>
           )}
@@ -627,9 +697,23 @@ ${weaknessSection}
       {/* תמלול בזמן אמת */}
       {(status === 'active' || status === 'completed') && (
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">
-            💬 תמלול השיחה
-          </h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-gray-900">
+              💬 תמלול השיחה
+            </h3>
+            
+            {/* 🔴 חדש: אינדיקטור מי מדבר */}
+            {currentSpeaker && (
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-full animate-pulse ${
+                currentSpeaker === 'user' 
+                  ? 'bg-blue-100 text-blue-800' 
+                  : 'bg-green-100 text-green-800'
+              }`}>
+                <div className="w-3 h-3 rounded-full bg-current animate-ping" />
+                {currentSpeaker === 'user' ? '🎤 אתה מדבר...' : `🤖 ${persona?.persona_name || 'הלקוח'} מדבר...`}
+              </div>
+            )}
+          </div>
           
           <div className="h-64 overflow-y-auto border rounded-lg p-4 bg-gray-50 space-y-2">
             {transcript.map((message, index) => (
@@ -664,10 +748,10 @@ ${weaknessSection}
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {Math.floor((Date.now() - simulationMetrics.startTime.getTime()) / 1000 / 60)}
+              <div className="text-2xl font-bold text-blue-600 font-mono">
+                {formatTime(elapsedTime)}
               </div>
-              <div className="text-sm text-gray-600">דקות</div>
+              <div className="text-sm text-gray-600">זמן שיחה</div>
             </div>
             
             <div className="text-center">
