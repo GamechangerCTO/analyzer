@@ -31,7 +31,7 @@ interface PersonaGenerationRequest {
 }
 
 
-// 🔧 פונקציה לניקוי JSON מתשובות OpenAI
+// 🔧 פונקציה משופרת לניקוי JSON מתשובות OpenAI (כולל JSON חתוך)
 function cleanOpenAIResponse(content: string): string {
   if (!content) return '{}'
   
@@ -39,57 +39,116 @@ function cleanOpenAIResponse(content: string): string {
   let cleaned = content.replace(/```(?:json|JSON)?\s*/g, '').replace(/```\s*$/g, '')
   cleaned = cleaned.replace(/^`+|`+$/g, '').trim()
   
-  // חיפוש JSON boundaries
+  // חיפוש תחילת JSON
   const jsonStart = cleaned.indexOf('{')
-  if (jsonStart !== -1) {
-    cleaned = cleaned.substring(jsonStart)
-  }
+  if (jsonStart === -1) return '{}'
+  cleaned = cleaned.substring(jsonStart)
   
-  // תיקון מפתחות עברית ללא פסיק
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([א-ת\w_]+"\s*:)/g, '$1, "$2')
+  // ניסיון ראשון: אולי ה-JSON תקין
+  try {
+    JSON.parse(cleaned)
+    return cleaned
+  } catch {}
   
-  // מחפש patterns של מרכאות שנסגרות באמצע ערך
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]+)"(\s*,\s*)([^":}\]]+)"/g, '$1 $3"')
-  
-  // אלגוריתם איזון סוגריים
+  // ניסיון שני: מציאת סוף JSON תקין
   let braceCount = 0
   let lastValidEnd = -1
+  let inString = false
+  let escapeNext = false
   
   for (let i = 0; i < cleaned.length; i++) {
     const char = cleaned[i]
-    if (char === '{') braceCount++
-    else if (char === '}') {
-      braceCount--
-      if (braceCount === 0) {
-        lastValidEnd = i
-        break
+    
+    if (escapeNext) {
+      escapeNext = false
+      continue
+    }
+    
+    if (char === '\\') {
+      escapeNext = true
+      continue
+    }
+    
+    if (char === '"' && !escapeNext) {
+      inString = !inString
+      continue
+    }
+    
+    if (!inString) {
+      if (char === '{') braceCount++
+      else if (char === '}') {
+        braceCount--
+        if (braceCount === 0) {
+          lastValidEnd = i
+          break
+        }
       }
     }
   }
   
   if (lastValidEnd !== -1) {
-    cleaned = cleaned.substring(0, lastValidEnd + 1)
+    const result = cleaned.substring(0, lastValidEnd + 1)
+    try {
+      JSON.parse(result)
+      return result
+    } catch {}
   }
   
-  // תיקון אוטומטי
+  // ניסיון שלישי: תיקון JSON חתוך
+  // מנסים לסגור את ה-JSON בצורה חכמה
+  let truncated = cleaned
+  
+  // מוצא את המפתח האחרון שנסגר בהצלחה
+  const lastCompleteField = truncated.lastIndexOf('",')
+  if (lastCompleteField > 0) {
+    truncated = truncated.substring(0, lastCompleteField + 1) // כולל ה-"
+  } else {
+    // מחפש את המפתח האחרון עם ערך
+    const lastQuote = truncated.lastIndexOf('"')
+    if (lastQuote > 0) {
+      // בודק אם זה סוף של ערך או באמצע
+      const beforeQuote = truncated.substring(0, lastQuote)
+      const lastColon = beforeQuote.lastIndexOf(':')
+      if (lastColon > 0) {
+        // יש ערך שנחתך - מנסים לסגור אותו
+        truncated = truncated.substring(0, lastQuote + 1)
+      }
+    }
+  }
+  
+  // סוגרים את כל הסוגריים הפתוחים
+  let openBraces = (truncated.match(/{/g) || []).length
+  let closeBraces = (truncated.match(/}/g) || []).length
+  let openBrackets = (truncated.match(/\[/g) || []).length
+  let closeBrackets = (truncated.match(/]/g) || []).length
+  
+  // מוודא שהstring נסגר
+  const quoteCount = (truncated.match(/(?<!\\)"/g) || []).length
+  if (quoteCount % 2 !== 0) {
+    truncated += '"'
+  }
+  
+  // מוסיף סוגרים חסרים
+  while (openBrackets > closeBrackets) {
+    truncated += ']'
+    closeBrackets++
+  }
+  while (openBraces > closeBraces) {
+    truncated += '}'
+    closeBraces++
+  }
+  
+  // מנקה פסיקים מיותרים לפני סוגריים
+  truncated = truncated.replace(/,\s*([}\]])/g, '$1')
+  
   try {
-    JSON.parse(cleaned)
-    return cleaned
-  } catch {
-    let fixed = cleaned
-      .replace(/,(\s*[}\]])/g, '$1')
-      .replace(/([^\\]")([^"]*?)\n([^"]*?)(")/g, '$1$2 $3$4')
-    
-    if (!fixed.endsWith('}') && fixed.includes('{')) {
-      fixed += '}'
-    }
-    
-    try {
-      JSON.parse(fixed)
-      return fixed
-    } catch {
-      return '{}'
-    }
+    JSON.parse(truncated)
+    console.log('🔧 Fixed truncated JSON successfully')
+    return truncated
+  } catch (e) {
+    console.error('❌ Could not fix JSON:', (e as Error).message)
+    // מחזירים לפחות את השדות שהצלחנו לחלץ
+    return '{}'
   }
 }
 
