@@ -121,7 +121,7 @@ const apiKey = process.env.OPENAI_API_KEY;
 console.log('🔍 OpenAI API Key check:', {
   hasKey: !!apiKey,
   keyLength: apiKey?.length || 0,
-  keyPrefix: apiKey?.substring(0, 10) + '...' || 'N/A',
+  keyConfigured: !!apiKey && (apiKey?.length || 0) > 20,
   environment: process.env.NODE_ENV,
   vercelEnv: process.env.VERCEL_ENV
 });
@@ -265,7 +265,7 @@ export async function POST(request: Request) {
     console.log('🔍 OpenAI API Key check:', {
       hasKey: !!apiKey,
       keyLength: apiKey?.length || 0,
-      keyPrefix: apiKey?.substring(0, 10) + '...' || 'N/A',
+      keyConfigured: !!apiKey && (apiKey?.length || 0) > 20,
       environment: process.env.NODE_ENV,
       vercelEnv: process.env.VERCEL_ENV
     });
