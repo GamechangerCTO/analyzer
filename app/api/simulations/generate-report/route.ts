@@ -111,12 +111,13 @@ export async function POST(request: NextRequest) {
     // ✅ יצירת דוח באמצעות Responses API
     const systemInstruction = "אתה מומחה להערכת ביצועי מכירות ויצירת דוחות מפורטים בעברית. צור דוח מקצועי ומפורט על הסימולציה."
     
-    const reportResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "system", content: systemInstruction }, { role: "user", content: reportPrompt }],
+    const reportResponse = await openai.responses.create({
+      model: "gpt-5-nano-2025-08-07",
+      input: systemInstruction + '\n\n' + reportPrompt,
+      reasoning: { effort: "low" }, // דוח בסיסי, לא צריך חשיבה עמוקה
     })
 
-    const reportContent = reportResponse.choices[0]?.message?.content
+    const reportContent = reportResponse.output_text
     if (!reportContent) {
       throw new Error('לא נוצר תוכן דוח')
     }

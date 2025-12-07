@@ -963,7 +963,7 @@ export async function POST(request: Request) {
           .eq('id', call_id);
 
         await addCallLog(call_id, '🔄 עדכון סטטוס לניתוח תוכן', { new_status: 'analyzing_content' });
-        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן', { model: 'gpt-4o' });
+        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן', { model: 'gpt-5-mini-2025-08-07' });
 
         // שלב 3: ניתוח תוכן מקצועי עם gpt-4.1-2025-04-14
         // קבלת הפרומפט המתאים לסוג השיחה כולל שדות הניתוח
@@ -1169,9 +1169,9 @@ export async function POST(request: Request) {
         });
         
         // ✅ שימוש ב-Responses API למודלי GPT-5
-        const contentAnalysisResponse = await openai.chat.completions.create({
-          model: 'gpt-4o',
-          messages: [{ role: "system", content: systemPrompt }, { role: "user", content: `נתח את השיחה הבאה:
+        const contentAnalysisResponse = await openai.responses.create({
+          model: 'gpt-5-mini-2025-08-07',
+          input: systemPrompt + '\n\n' + `נתח את השיחה הבאה:
               סוג שיחה: ${callData.call_type}
               תמליל השיחה: ${transcript}
               
@@ -1202,7 +1202,8 @@ export async function POST(request: Request) {
               4. הסבר בקצרה כל ציון
               5. הצע דרכים מעשיות לשיפור
               
-              חשוב מאוד: החזר רק JSON נקי ללא עיטוף Markdown או backticks!` }],
+              חשוב מאוד: החזר רק JSON נקי ללא עיטוף Markdown או backticks!`,
+          reasoning: { effort: "medium" }, // ✅ ניתוח שיחה דורש חשיבה מעמיקה - זיהוי דפוסים, ניואנסים והמלצות ממוקדות
         });
 
         await addCallLog(call_id, '✅ תשובת OpenAI התקבלה לניתוח תוכן', { 
@@ -1213,7 +1214,7 @@ export async function POST(request: Request) {
         });
 
         // ✅ Responses API מחזיר output_text במקום choices[0].message.content
-        const rawContentResponse = contentAnalysisResponse.choices[0]?.message?.content || '{}';
+        const rawContentResponse = contentAnalysisResponse.output_text || '{}';
         
         await addCallLog(call_id, '📥 תשובת OpenAI גולמית לתוכן', { 
           raw_length: rawContentResponse.length,

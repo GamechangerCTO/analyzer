@@ -149,12 +149,13 @@ ${originalCallContext}
         const systemInstruction = "אתה מומחה ליצירת תרחישי אימון למכירות ושירות. החזר תמיד JSON תקף בעברית."
         
         // ✅ שימוש ב-Responses API למודלי GPT-5 Nano
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4o",
-          messages: [{ role: "system", content: systemInstruction }, { role: "user", content: prompt }],
+        const completion = await (openai as any).responses.create({
+          model: "gpt-5-nano-2025-08-07",
+          input: systemInstruction + '\n\n' + prompt,
+          reasoning: { effort: "low" },
         })
 
-        const responseText = completion.choices[0]?.message?.content || '{}'
+        const responseText = completion.output_text || '{}'
         // ניקוי JSON
         let cleanedJson = responseText.replace(/```(?:json|JSON)?\s*/g, '').replace(/```\s*$/g, '').trim()
         const jsonStart = cleanedJson.indexOf('{')

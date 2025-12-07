@@ -69,14 +69,13 @@ export async function POST(request: NextRequest) {
 התרחיש צריך להיות מפורט, מעשי וכולל הדרכות ברורות.
 תמיד תחזיר תוצאה במבנה JSON תקין בעברית.`
 
-    const scenarioResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "system", content: systemInstruction }, { role: "user", content: scenarioPrompt }],
-      temperature: 0.7,
-      response_format: { type: "json_object" }
+    const scenarioResponse = await openai.responses.create({
+      model: "gpt-5-nano-2025-08-07",
+      input: systemInstruction + '\n\n' + scenarioPrompt,
+      reasoning: { effort: "low" }, // יצירה יצירתית של תרחיש
     })
 
-    const scenarioData = JSON.parse(scenarioResponse.choices[0]?.message?.content || '{}')
+    const scenarioData = JSON.parse(scenarioResponse.output_text || '{}')
     
     // שמירת התרחיש במסד הנתונים
     const { data: savedScenario, error: saveError } = await supabase

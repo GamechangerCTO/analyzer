@@ -167,12 +167,13 @@ ${transcript || 'לא זמין תמלול'}
       const systemInstruction = 'אתה מומחה בניתוח סימולציות מכירות. תמיד החזר JSON תקין בעברית עם דוח מפורט ומועיל.'
       
       // ✅ שימוש ב-Responses API למודלי GPT-5 Nano
-      const reportResponse = await openai.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [{ role: "system", content: systemInstruction }, { role: "user", content: reportPrompt }],
+      const reportResponse = await (openai as any).responses.create({
+        model: 'gpt-5-nano-2025-08-07',
+        input: systemInstruction + '\n\n' + reportPrompt,
+        reasoning: { effort: "low" },
       })
 
-      const reportContent = reportResponse.choices[0]?.message?.content || '{}'
+      const reportContent = reportResponse.output_text || '{}'
       console.log('📝 תגובה גולמית מ-OpenAI:', reportContent.substring(0, 200) + '...')
       
       const cleanedContent = cleanOpenAIResponse(reportContent)
