@@ -79,6 +79,12 @@ export default async function ProtectedLayout({
 
   // ✅ בדיקת שאלון חברה - חובה לכל הפעולות (חוץ מדף השאלון עצמו)
   let questionnaireComplete = true
+  
+  // בדיקת הנתיב הנוכחי
+  const headersList = headers()
+  const pathname = headersList.get("x-pathname") || ""
+  const isQuestionnairePage = pathname.includes("company-questionnaire")
+  
   if (userData.company_id) {
     const { data: questionnaire } = await supabase
       .from('company_questionnaires')
@@ -87,13 +93,7 @@ export default async function ProtectedLayout({
       .single()
     
     questionnaireComplete = questionnaire?.is_complete === true
-
-  // בדיקת הנתיב הנוכחי
-  const headersList = headers()
-  const pathname = headersList.get("x-pathname") || ""
-  const isQuestionnairePage = pathname.includes("company-questionnaire")
   }
-
   // בדיקה אם מנהל ללא חבילה - הפניה לבחירת חבילה (רק אם זה לא POC)
   if ((userData.role === 'manager' || userData.role === 'owner') && userData.company_id) {
     console.log('Protected Layout - Auth check:', {
