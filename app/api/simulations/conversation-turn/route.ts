@@ -106,7 +106,7 @@ export async function POST(request: Request) {
           file: audioFile,
           model: 'gpt-4o-mini-transcribe',
           language: 'he',
-          response_format: 'verbose_json'
+          response_format: 'json' // verbose_json לא נתמך במודל זה
         })
         
         userTranscript = transcription.text
