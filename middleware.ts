@@ -3,6 +3,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   const res = NextResponse.next()
+  
+  // ✅ הוספת pathname ל-headers כדי שהלייאאוט יוכל לזהות את הדף הנוכחי
+  res.headers.set('x-pathname', request.nextUrl.pathname)
 
   // 🆕 Partner API - אימות נפרד (לא דרך Supabase Auth)
   // נתיבי Partner API יטפלו באימות בעצמם דרך API keys
@@ -56,4 +59,4 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|avatars).*)'],
-} 
+}

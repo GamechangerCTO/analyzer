@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import Sidebar from '@/components/Sidebar'
@@ -75,6 +75,23 @@ export default async function ProtectedLayout({
     if (!acceptance && !isAdmin) {
       redirect('/legal-terms?requireApproval=1')
     }
+  }
+
+  // ✅ בדיקת שאלון חברה - חובה לכל הפעולות (חוץ מדף השאלון עצמו)
+  let questionnaireComplete = true
+  if (userData.company_id) {
+    const { data: questionnaire } = await supabase
+      .from('company_questionnaires')
+      .select('is_complete')
+      .eq('company_id', userData.company_id)
+      .single()
+    
+    questionnaireComplete = questionnaire?.is_complete === true
+
+  // בדיקת הנתיב הנוכחי
+  const headersList = headers()
+  const pathname = headersList.get("x-pathname") || ""
+  const isQuestionnairePage = pathname.includes("company-questionnaire")
   }
 
   // בדיקה אם מנהל ללא חבילה - הפניה לבחירת חבילה (רק אם זה לא POC)
@@ -165,6 +182,71 @@ export default async function ProtectedLayout({
       <div className="lg:mr-72 min-h-screen">
         <main className="min-h-screen p-4 sm:p-6 lg:p-8">
           <div className="coachee-smooth-appear w-full max-w-7xl mx-auto">
+            {/* ✅ פופאפ שאלון נדרש */}
+            {!questionnaireComplete && !isQuestionnairePage && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                
+                <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 animate-in fade-in zoom-in duration-300">
+                  <div className="flex justify-center mb-6">
+                    <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center">
+                      <svg className="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">
+                    🛑 השאלון לא הושלם
+                  </h2>
+                  
+                  <p className="text-gray-600 text-center mb-6 leading-relaxed">
+                    {(userData.role === 'manager' || userData.role === 'admin') ? (
+                      <>
+                        כדי להשתמש במערכת, יש למלא את <strong>שאלון החברה</strong> תחילה.
+                        <br />
+                        השאלון עוזר לנו להתאים את הניתוחים וההמלצות לעסק שלך.
+                      </>
+                    ) : (
+                      <>
+                        מנהל החברה טרם מילא את <strong>שאלון החברה</strong>.
+                        <br />
+                        אנא פנה למנהל שלך כדי שימלא את השאלון.
+                      </>
+                    )}
+                  </p>
+                  
+                  <div className="space-y-3">
+                    {(userData.role === 'manager' || userData.role === 'admin') ? (
+                      <a
+                        href="/company-questionnaire"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        מלא שאלון עכשיו
+                      </a>
+                    ) : (
+                      <a
+                        href="/dashboard"
+                        className="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        חזור לדשבורד
+                      </a>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-gray-400 text-center mt-4">
+                    מילוי השאלון לוקח כ-5 דקות בלבד
+                  </p>
+                </div>
+              </div>
+            )}
+            
             {children}
           </div>
         </main>
@@ -210,4 +292,4 @@ export default async function ProtectedLayout({
       </div>
     </div>
   )
-} 
+}
