@@ -187,7 +187,7 @@ ${originalCallContext}
     const insertData = {
       agent_id: session.user.id,
       company_id: user.company_id,
-      triggered_by_call_id: triggered_by_call_id || null,
+      triggered_by_call_id: (triggered_by_call_id && triggered_by_call_id.length > 0) ? triggered_by_call_id : null,
       simulation_type,
       customer_persona, // חזרה לשם המקורי של הטבלה
       difficulty_level,
