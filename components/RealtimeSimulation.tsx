@@ -22,6 +22,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null)
   const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null)
   const [dataChannel, setDataChannel] = useState<RTCDataChannel | null>(null)
+  const dataChannelRef = useRef<RTCDataChannel | null>(null) // 🔴 ref לגישה מיידית
   const [sessionStarted, setSessionStarted] = useState(false)
   const [currentMessage, setCurrentMessage] = useState('')
   const [isPaused, setIsPaused] = useState(false) // 🔴 חדש: השהיה
@@ -72,27 +73,42 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   
   // קביעת קול בהתאם לפרסונה
   const getVoiceForPersona = () => {
-    // בדיקה אם יש הגדרה ספציפית בפרסונה
-    if (persona?.voice_characteristics?.gender) {
-      if (persona.voice_characteristics.gender === 'male' || persona.voice_characteristics.gender === 'זכר') {
-        return 'onyx' // קול גברי - יותר טבעי בעברית
-      } else {
-        return 'coral' // קול נשי - יותר טבעי בעברית
-      }
-    }
-    
-    // בדיקה לפי שם הפרסונה
     const personaName = persona?.persona_name || ''
-    const maleNames = ['דני', 'אמיר', 'יוסי', 'דוד', 'מיכאל', 'רון', 'אבי', 'גיל', 'יונתן', 'איתמר', 'יעקב', 'משה', 'אברהם', 'יצחק', 'אהרון', 'שמואל', 'בנימין', 'אליעזר', 'יהושע', 'חיים']
-    const femaleNames = ['דנה', 'מיכל', 'שרה', 'רותי', 'ליאת', 'נועה', 'תמר', 'ענת', 'רונית', 'יעל']
+    console.log('🔊 בוחר קול לפרסונה:', personaName)
     
-    if (maleNames.some(name => personaName.includes(name))) {
-      return 'onyx' // קול גברי - יותר טבעי בעברית
-    } else if (femaleNames.some(name => personaName.includes(name))) {
-      return 'coral' // קול נשי - יותר טבעי בעברית
+    // 1. בדיקה אם יש מגדר מוגדר בפרסונה (מה-AI)
+    if (persona?.voice_characteristics?.gender) {
+      const gender = persona.voice_characteristics.gender
+      console.log('🔊 מגדר מה-AI:', gender)
+      return gender === 'male' ? 'onyx' : 'coral'
     }
     
-    // ברירת מחדל - נקבה (כי רוב פרסונות הלקוחות נשים בניסיון שלי)
+    // 2. ניחוש לפי שם (fallback)
+    const firstName = personaName.split(' ')[0].split('-')[0].trim()
+    const maleEndings = ['ון', 'אל', 'וד', 'יר', 'ן']  // סיומות גבריות נפוצות
+    const femaleEndings = ['ה', 'ית', 'ן', 'י']  // סיומות נשיות נפוצות
+    
+    // שמות נפוצים
+    const commonMale = ['רן', 'אלון', 'דוד', 'משה', 'אבי', 'רועי', 'גיל', 'טל']
+    const commonFemale = ['שירה', 'נועה', 'מיכל', 'יעל', 'דנה', 'תמר', 'הילה', 'עדי']
+    
+    if (commonMale.includes(firstName)) {
+      console.log('🔊 שם גברי מוכר:', firstName)
+      return 'onyx'
+    }
+    if (commonFemale.includes(firstName)) {
+      console.log('🔊 שם נשי מוכר:', firstName)
+      return 'coral'
+    }
+    
+    // לפי סיומת
+    if (firstName.endsWith('ה') || firstName.endsWith('ית')) {
+      console.log('🔊 סיומת נשית:', firstName)
+      return 'coral'
+    }
+    
+    // ברירת מחדל - coral (נשי)
+    console.log('🔊 ברירת מחדל:', firstName)
     return 'coral'
   }
 
@@ -282,6 +298,7 @@ ${weaknessSection}
       // יצירת data channel לעדכונים
       const dc = pc.createDataChannel('oai-events')
       setDataChannel(dc)
+      dataChannelRef.current = dc // 🔴 שמירה ב-ref לגישה מיידית
 
       dc.onopen = () => {
         console.log('🎯 Data channel נפתח - מוכן לתקשורת')
@@ -406,8 +423,9 @@ ${weaknessSection}
 
   // התחלת הסימולציה
   const startSimulation = () => {
-    console.log('🚀 מתחיל סימולציה, dataChannel:', !!dataChannel)
-    if (!dataChannel) {
+    const dc = dataChannelRef.current
+    console.log('🚀 מתחיל סימולציה, dataChannel:', !!dc)
+    if (!dc) {
       console.error('❌ אין dataChannel - לא יכול להתחיל סימולציה')
       return
     }
@@ -446,7 +464,7 @@ ${weaknessSection}
       }
     }
 
-    dataChannel.send(JSON.stringify(sessionUpdate))
+    dc.send(JSON.stringify(sessionUpdate))
 
     // הודעת פתיחה מהלקוח - הAI הוא הלקוח!
     setTimeout(() => {
@@ -461,7 +479,7 @@ ${weaknessSection}
 🚫 אל תשאל "איך אוכל לעזור לך" - זה משפט של איש שירות, ואתה הלקוח!`
         }
       }
-      dataChannel.send(JSON.stringify(openingMessage))
+      dc.send(JSON.stringify(openingMessage))
     }, 1000)
   }
 

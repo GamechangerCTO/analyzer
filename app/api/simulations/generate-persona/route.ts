@@ -305,6 +305,7 @@ export async function POST(request: NextRequest) {
         time_pressure: truncateString(personaData.time_pressure, 20),
         openai_instructions: personaData.openai_instructions,
         scenario_templates: personaData.scenario_templates || {},
+        voice_characteristics: personaData.voice_characteristics || { gender: 'female' }, // 🔴 שמירת מגדר הפרסונה
         targets_weaknesses: targetWeaknesses || [],
         difficulty_level: truncateString(difficulty, 20),
         is_template: false
