@@ -13,8 +13,24 @@ export async function middleware(request: NextRequest) {
     return res
   }
 
-  // נתיבים פתוחים (אין צורך בהתחברות)
-  const publicPaths = ['/login', '/signup', '/signup-complete', '/api', '/not-approved', '/not-found', '/privacy-policy', '/legal-terms', '/subscription-setup', '/test-auth', '/change-password']
+  // 🔐 API endpoints ציבוריים ספציפיים (לא כל /api!)
+  const publicApiPaths = [
+    '/api/auth/callback',      // OAuth callback
+    '/api/signup',             // הרשמה
+    '/api/legal-terms/accept', // קבלת תנאים
+  ]
+  
+  // בדיקה אם זה API endpoint ציבורי
+  const isPublicApiPath = publicApiPaths.some((path) => 
+    request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/')
+  )
+  
+  if (isPublicApiPath) {
+    return res
+  }
+
+  // נתיבים פתוחים (דפים - לא APIs)
+  const publicPaths = ['/login', '/signup', '/signup-complete', '/not-approved', '/not-found', '/privacy-policy', '/legal-terms', '/subscription-setup', '/test-auth', '/change-password', '/company-questionnaire']
   
   // בדיקה האם הנתיב הנוכחי מאושר גם ללא התחברות
   const isPublicPath = publicPaths.some((path) => request.nextUrl.pathname.startsWith(path))
@@ -38,12 +54,20 @@ export async function middleware(request: NextRequest) {
   
   const supabase = createMiddlewareClient({ req: request, res })
 
-  // בדיקת התחברות מפושטת
+  // בדיקת התחברות
   try {
     const { data: { session } } = await supabase.auth.getSession()
     
-    // אם אין משתמש מחובר והנתיב דורש התחברות, מפנים לדף הכניסה
+    // אם אין משתמש מחובר והנתיב דורש התחברות
     if (!session) {
+      // 🔐 עבור API endpoints - החזר 401 במקום redirect
+      if (request.nextUrl.pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { error: 'Unauthorized', message: 'Authentication required' },
+          { status: 401 }
+        )
+      }
+      // עבור דפים - redirect לדף הכניסה
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
@@ -52,7 +76,14 @@ export async function middleware(request: NextRequest) {
     
   } catch (authError) {
     console.error('Middleware auth error:', authError)
-    // במקרה של שגיאה, מפנה ללוגין
+    // 🔐 עבור API endpoints - החזר 401
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication error' },
+        { status: 401 }
+      )
+    }
+    // עבור דפים - redirect לדף הכניסה
     return NextResponse.redirect(new URL('/login', request.url))
   }
 }

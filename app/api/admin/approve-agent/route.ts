@@ -1,10 +1,23 @@
 import { createClient } from '@supabase/supabase-js'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { Database } from '@/types/database.types'
 
 export async function POST(request: NextRequest) {
   try {
-    // יצירת קליינט עם service role key
+    // 🔐 אימות המשתמש מה-session - לא מהבקשה!
+    const supabaseAuth = createRouteHandlerClient<Database>({ cookies })
+    const { data: { session } } = await supabaseAuth.auth.getSession()
+    
+    if (!session) {
+      return NextResponse.json({ error: 'לא מחובר למערכת' }, { status: 401 })
+    }
+
+    // 🔐 קבלת ה-adminId מה-session
+    const adminId = session.user.id
+
+    // יצירת קליינט עם service role key לפעולות ניהול
     const supabaseAdmin = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -16,8 +29,25 @@ export async function POST(request: NextRequest) {
       }
     )
 
+    // 🔐 בדיקת הרשאות - רק admin/owner/super admin יכולים לאשר
+    const { data: currentUser } = await supabaseAdmin
+      .from('users')
+      .select('role, company_id')
+      .eq('id', adminId)
+      .single()
+
+    const { data: isSuperAdmin } = await supabaseAdmin
+      .from('system_admins')
+      .select('id')
+      .eq('user_id', adminId)
+      .single()
+
+    if (!currentUser || (!['admin', 'owner', 'manager'].includes(currentUser.role) && !isSuperAdmin)) {
+      return NextResponse.json({ error: 'אין הרשאה לביצוע פעולה זו' }, { status: 403 })
+    }
+
     const body = await request.json()
-    const { requestId, adminId } = body
+    const { requestId } = body
 
     // קבלת פרטי הבקשה
     const { data: requestData, error: requestError } = await supabaseAdmin

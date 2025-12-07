@@ -70,9 +70,41 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint לבדיקת סטטוס
+// GET endpoint לבדיקת סטטוס - רק למנהלי מערכת
 export async function GET(request: NextRequest) {
   try {
+    // 🔐 בדיקת API key או session
+    const apiKey = request.headers.get('x-api-key')
+    const expectedApiKey = process.env.MONTHLY_RESET_API_KEY
+    
+    // אם יש API key, בדוק אותו
+    if (apiKey) {
+      if (apiKey !== expectedApiKey) {
+        return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
+      }
+    } else {
+      // אם אין API key, בדוק session - רק super admins
+      const { createRouteHandlerClient } = await import('@supabase/auth-helpers-nextjs')
+      const { cookies } = await import('next/headers')
+      const authSupabase = createRouteHandlerClient({ cookies })
+      
+      const { data: { session } } = await authSupabase.auth.getSession()
+      
+      if (!session) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+
+      const { data: isSuperAdmin } = await authSupabase
+        .from('system_admins')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .single()
+
+      if (!isSuperAdmin) {
+        return NextResponse.json({ error: 'Forbidden - Super admin only' }, { status: 403 })
+      }
+    }
+
     const supabase = createClient()
 
     // שימוש בפונקציה החדשה לבדיקת סטטוס

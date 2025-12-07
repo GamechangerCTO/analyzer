@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import RealtimeSimulation from '@/components/RealtimeSimulation'
+import SimulationClient from './SimulationClient'
 
 interface SimulationPageProps {
   params: {
@@ -63,16 +63,16 @@ export default async function SimulationPage({ params }: SimulationPageProps) {
     company = companyData
   }
 
-        return (
+  return (
     <div className="min-h-screen bg-gray-50">
-      <RealtimeSimulation 
+      <SimulationClient 
         simulation={{
           ...simulation,
-          customer_personas_hebrew: customerPersona ? [customerPersona] : []
+          customer_personas_hebrew: customerPersona
         }}
         user={user}
         company={company}
       />
     </div>
   )
-} 
+}

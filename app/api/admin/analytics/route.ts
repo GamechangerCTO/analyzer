@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 import { openaiAnalytics } from '@/lib/openai-analytics';
 
 // Force dynamic rendering for this API route due to searchParams usage
@@ -14,6 +16,25 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export async function GET(request: NextRequest) {
   try {
+    // 🔐 בדיקת הרשאות - רק super admins
+    const supabase = createRouteHandlerClient({ cookies });
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // בדיקה שזה super admin
+    const { data: isSuperAdmin } = await supabase
+      .from('system_admins')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (!isSuperAdmin) {
+      return NextResponse.json({ error: 'Forbidden - Super admin only' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '30');
     const refresh = searchParams.get('refresh') === 'true';
