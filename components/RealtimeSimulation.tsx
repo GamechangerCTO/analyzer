@@ -42,9 +42,9 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
     // בדיקה אם יש הגדרה ספציפית בפרסונה
     if (persona?.voice_characteristics?.gender) {
       if (persona.voice_characteristics.gender === 'male' || persona.voice_characteristics.gender === 'זכר') {
-        return 'echo' // קול גברי
+        return 'onyx' // קול גברי - יותר טבעי בעברית
       } else {
-        return 'shimmer' // קול נשי
+        return 'coral' // קול נשי - יותר טבעי בעברית
       }
     }
     
@@ -54,13 +54,13 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
     const femaleNames = ['דנה', 'מיכל', 'שרה', 'רותי', 'ליאת', 'נועה', 'תמר', 'ענת', 'רונית', 'יעל']
     
     if (maleNames.some(name => personaName.includes(name))) {
-      return 'echo' // קול גברי
+      return 'onyx' // קול גברי - יותר טבעי בעברית
     } else if (femaleNames.some(name => personaName.includes(name))) {
-      return 'shimmer' // קול נשי
+      return 'coral' // קול נשי - יותר טבעי בעברית
     }
     
     // ברירת מחדל - נקבה (כי רוב פרסונות הלקוחות נשים בניסיון שלי)
-    return 'shimmer'
+    return 'coral'
   }
 
   const [aiInstructions, setAiInstructions] = useState('')
@@ -123,7 +123,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
 
   const createFallbackInstructions = () => {
     const isGenderMale = getVoiceForPersona() === 'echo'
-    const genderText = isGenderMale ? 'לקוח פוטנציאלי' : 'לקוחה פוטנציאלית'
+    const genderText = isGenderMale ? 'לקוח' : 'לקוחה'
     
     // חילוץ פרמטרים חלשים
     const focusedParameters = simulation.focused_parameters || []
@@ -144,27 +144,35 @@ ${focusedParameters.map((p: any) => `- **${p.hebrewName || p.name}** (ציון �
 🎯 המטרה: לראות שיפור ב-${focusedParameters.length} התחומים האלה!
 ` : ''
     
-    return `
-🎯 אתה ${persona?.persona_name || 'לקוח'} - ${genderText} אמיתי במערכת אימון מכירות
+    return `🎯 **אתה ${persona?.persona_name || 'הלקוח'}** - ${genderText} במערכת אימון
 
-## רקע: ${persona?.background_story || 'לקוח פוטנציאלי מעוניין'}
-## מצב נוכחי: ${persona?.current_situation || 'מחפש פתרון מתאים'}
+## ⚠️ הבהרה קריטית - קרא בעיון!
+- **אתה = הלקוח** שמתקשר או מקבל שיחה
+- **המשתמש שמולך = איש המכירות/שירות** שמנסה למכור לך
+- **אתה לא איש מכירות!** אל תשאל "איך אוכל לעזור לך"
 
-## הנחיות:
-- דבר בעברית טבעית בלבד
-- התנהג כמו לקוח אמיתי
-- היה אתגרי אבל הוגן
-- המטרה היא לאמן את הנציג
+## 🎭 תפקידך כלקוח:
+- ${persona?.background_story || 'אתה לקוח שמחפש פתרון'}
+- ${persona?.current_situation || 'מעוניין לשמוע על המוצר/שירות'}
 
-## התנגדויות עיקריות:
-${persona?.common_objections?.map((obj: string) => `- ${obj}`).join('\n') || '- אני צריך לחשוב על זה\n- זה נשמע יקר'}
+## 📋 איך להתנהג כלקוח:
+- פתח בהצגה עצמית: "שלום, אני ${persona?.persona_name || 'מתקשר'}, ראיתי את הפרסום שלכם..."
+- שאל שאלות על המוצר/שירות
+- העלה התנגדויות באופן טבעי
+- היה קצת מהסס - אל תסכים מיד
+
+## 🚫 מה לא לעשות:
+- לא לשאול "איך אוכל לעזור לך" - זה משפט של נציג!
+- לא להציע פתרונות - אתה הלקוח!
+- לא לנהל את השיחה - תן לאיש המכירות להוביל
+
+## התנגדויות שלך:
+${persona?.common_objections?.map((obj: string) => `- ${obj}`).join('\n') || '- אני צריך לחשוב על זה\n- נשמע יקר\n- יש לי ספק אחר'}
 ${weaknessSection}
 
-זכור: המטרה היא ללמד את הנציג! 🎯
+🗣️ דבר בעברית טבעית. זכור: אתה **הלקוח**! 🎯
 `
   }
-
-  const createAIInstructions = () => {
     return aiInstructions || createFallbackInstructions()
   }
 
@@ -402,15 +410,19 @@ ${weaknessSection}
 
     dataChannel.send(JSON.stringify(sessionUpdate))
 
-    // הודעת פתיחה מהלקוח
+    // הודעת פתיחה מהלקוח - הAI הוא הלקוח!
     setTimeout(() => {
-              const openingMessage = {
-          type: "response.create",
-          response: {
-            modalities: ["audio"],
-            instructions: `תתחיל את השיחה עם הנציג. תכיר את עצמך כ${persona?.persona_name || 'לקוח פוטנציאלי'} ותביע עניין ראשוני במוצר/שירות. היה חברותי אבל זהיר.`
-          }
+      const openingMessage = {
+        type: "response.create",
+        response: {
+          modalities: ["audio"],
+          instructions: `⚠️ אתה הלקוח, לא איש המכירות!
+פתח את השיחה כלקוח שמתקשר לחברה. אמור משהו כמו:
+"שלום, שמי ${persona?.persona_name || 'דני'}, אני מתקשר כי ראיתי את הפרסום שלכם ורציתי לשמוע עוד..."
+או: "היי, אני מחפש פתרון ל... מישהו המליץ לי עליכם"
+🚫 אל תשאל "איך אוכל לעזור לך" - זה משפט של איש שירות, ואתה הלקוח!`
         }
+      }
       dataChannel.send(JSON.stringify(openingMessage))
     }, 1000)
   }
