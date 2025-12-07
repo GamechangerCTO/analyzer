@@ -190,7 +190,20 @@ export async function POST(request: NextRequest) {
         reasoning: { effort: "low" }, // יצירה יצירתית, לא צריך חשיבה עמוקה
       })
 
-      personaData = JSON.parse(cleanOpenAIResponse(personaResponse.output_text || '{}'))
+      // 🔍 לוג התוכן הגולמי לדיבוג
+      console.log('📄 Raw AI response:', (personaResponse.output_text || '').substring(0, 500))
+      
+      const cleanedContent = cleanOpenAIResponse(personaResponse.output_text || '{}')
+      console.log('🧹 Cleaned content:', cleanedContent.substring(0, 300))
+      
+      personaData = JSON.parse(cleanedContent)
+      
+      // 🛡️ בדיקה שהפרסונה תקינה - אם לא, נפול ל-fallback
+      if (!personaData.persona_name || Object.keys(personaData).length === 0) {
+        console.warn('⚠️ AI returned empty/invalid persona, using fallback')
+        throw new Error('Empty persona from AI')
+      }
+      
       console.log('✅ Generated persona with AI:', personaData.persona_name)
 
     } catch (aiErrorCaught: any) {

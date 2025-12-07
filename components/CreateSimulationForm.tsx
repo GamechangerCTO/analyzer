@@ -377,8 +377,26 @@ export default function CreateSimulationForm({
                         </h4>
                         <p className="text-green-700 text-sm">
                           הפרסונה שתיווצר תתמחה בדיוק בנקודות החולשה שזוהו בשיחה שבחרת. 
-                          זה יהיה אימון ממוקד ואפקטיביי לשיפור הביצועים שלך.
+                          כל ההגדרות ייקבעו אוטומטית מהניתוח.
                         </p>
+                        
+                        {/* 🔴 כפתור התחלה מהירה */}
+                        <button
+                          onClick={handleSubmit}
+                          disabled={isGenerating}
+                          className="mt-4 w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {isGenerating ? (
+                            <>
+                              <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                              יוצר סימולציה...
+                            </>
+                          ) : (
+                            <>
+                              🚀 התחל סימולציה עכשיו
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
                   </div>
