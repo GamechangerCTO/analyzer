@@ -111,9 +111,9 @@ function cleanOpenAIResponse(content: string): string {
     'pain_points', 'goals_and_objectives', 'common_objections', 'preferred_communication'
   ]
   
-  // חילוץ שדות string
+  // חילוץ שדות string (ללא דגל 's' לתאימות ES)
   for (const field of stringFields) {
-    const regex = new RegExp(`"${field}"\\s*:\\s*"([^"]*(?:\\\\.[^"]*)*)"`, 's')
+    const regex = new RegExp(`"${field}"\\s*:\\s*"([^"]*(?:\\\\.[^"]*)*)"`)
     const match = cleaned.match(regex)
     if (match) {
       extractedData[field] = match[1].replace(/\\"/g, '"').replace(/\\n/g, ' ')
@@ -122,7 +122,7 @@ function cleanOpenAIResponse(content: string): string {
   
   // חילוץ שדות מערך
   for (const field of arrayFields) {
-    const regex = new RegExp(`"${field}"\\s*:\\s*\\[([^\\]]*(?:\\[[^\\]]*\\][^\\]]*)*)\\]`, 's')
+    const regex = new RegExp(`"${field}"\\s*:\\s*\\[([^\\]]*(?:\\[[^\\]]*\\][^\\]]*)*)\\]`)
     const match = cleaned.match(regex)
     if (match) {
       try {
@@ -154,9 +154,20 @@ function cleanOpenAIResponse(content: string): string {
   let truncated = cleaned
   
   // מוצא את השדה האחרון שנסגר בהצלחה (מחפש "key": "value")
-  const lastCompleteFieldMatch = truncated.match(/.*"[^"]+"\s*:\s*"[^"]*"/s)
-  if (lastCompleteFieldMatch) {
-    truncated = lastCompleteFieldMatch[0]
+  // מחפש את המיקום האחרון של pattern "key": "value"
+  const lastQuoteIndex = truncated.lastIndexOf('"')
+  if (lastQuoteIndex > 0) {
+    // מחפש אחורה למצוא pattern שלם
+    const beforeLastQuote = truncated.substring(0, lastQuoteIndex + 1)
+    const match = beforeLastQuote.match(/"[^"]+"\s*:\s*"[^"]*"[^"]*$/)
+    if (match && match.index !== undefined) {
+      // מוצא את ה-{ האחרון לפני ה-match
+      const beforeMatch = truncated.substring(0, match.index)
+      const lastBrace = beforeMatch.lastIndexOf('{')
+      if (lastBrace !== -1) {
+        truncated = truncated.substring(0, match.index + match[0].length)
+      }
+    }
   }
   
   // סוגרים את כל הסוגריים הפתוחים
