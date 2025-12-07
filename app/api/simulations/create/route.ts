@@ -17,6 +17,7 @@ function getOpenAIClient() {
 interface CreateSimulationRequest {
   simulation_type: string
   customer_persona: string
+  persona_id?: string // ✅ UUID לקישור לטבלת customer_personas_hebrew
   difficulty_level: string
   triggered_by_call_id?: string
   callAnalysis?: any
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateSimulationRequest = await request.json()
-    const { simulation_type, customer_persona, difficulty_level, triggered_by_call_id, callAnalysis, selectedTopics } = body
+    const { simulation_type, customer_persona, persona_id, difficulty_level, triggered_by_call_id, callAnalysis, selectedTopics } = body
 
     // בניית תרחיש הסימולציה
     let scenarioDescription = "תרחיש סימולציה כללי"
@@ -184,17 +185,23 @@ ${originalCallContext}
       }
     }
     
-    const insertData = {
+    const insertData: Record<string, any> = {
       agent_id: session.user.id,
       company_id: user.company_id,
       triggered_by_call_id: (triggered_by_call_id && triggered_by_call_id.length > 0) ? triggered_by_call_id : null,
       simulation_type,
-      customer_persona, // חזרה לשם המקורי של הטבלה
+      customer_persona, // שם הפרסונה כטקסט
       difficulty_level,
       scenario_description: scenarioDescription,
       status: 'pending',
       ai_feedback: parsedAiFeedback,
-      selected_topics: selectedTopics || ['פתיחת_שיחה_ובניית_אמון'] // ✅ ברירת מחדל
+      selected_topics: selectedTopics || ['פתיחת_שיחה_ובניית_אמון'], // ✅ ברירת מחדל
+      conversation_mode: 'step_by_step' // ✅ מצב סימולציה ברירת מחדל
+    }
+    
+    // ✅ הוספת persona_id אם נשלח (קישור לטבלת customer_personas_hebrew)
+    if (persona_id) {
+      insertData.persona_id = persona_id
     }
     
     const { data: simulation, error: insertError } = await supabase

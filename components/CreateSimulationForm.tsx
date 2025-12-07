@@ -155,7 +155,8 @@ export default function CreateSimulationForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           simulation_type: formData.focusArea || 'אימון כללי',
-          customer_persona: personaId || 'לקוח ווירטואלי',
+          customer_persona: 'לקוח ווירטואלי', // שם הפרסונה כטקסט
+          persona_id: personaId || null, // ✅ UUID לקישור לטבלת customer_personas_hebrew
           difficulty_level: formData.difficulty,
           triggered_by_call_id: formData.selectedCallId || null,
           selectedTopics: selectedTopics // ✅ הנושאים שנבחרו

@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       .from('simulations')
       .select(`
         *,
-        customer_personas_hebrew (*)
+        customer_personas_hebrew:persona_id (*)
       `)
       .eq('id', simulationId)
       .single()

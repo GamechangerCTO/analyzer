@@ -58,11 +58,11 @@ export default function SimulationsDashboard({ userId, userRole, companyId }: Si
         .from('simulations')
         .select(`
           *,
-          customer_personas_hebrew (
+          customer_personas_hebrew:persona_id (
             persona_name,
             personality_type
           ),
-          simulation_reports_hebrew (
+          simulation_reports_hebrew!simulation_id (
             overall_score,
             summary,
             strengths,
