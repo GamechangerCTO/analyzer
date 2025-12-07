@@ -27,6 +27,8 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   const [isPaused, setIsPaused] = useState(false) // 🔴 חדש: השהיה
   const [currentSpeaker, setCurrentSpeaker] = useState<'user' | 'ai' | null>(null) // 🔴 חדש: מי מדבר
   const [elapsedTime, setElapsedTime] = useState(0) // 🔴 חדש: טיימר בשניות
+  const [isRecording, setIsRecording] = useState(false) // 🔴 הקלטה
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null) // 🔴 ההקלטה
   const [simulationMetrics, setSimulationMetrics] = useState({
     startTime: null as Date | null,
     responseTime: 0,
@@ -37,6 +39,8 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   const audioElementRef = useRef<HTMLAudioElement | null>(null)
   const ephemeralKeyRef = useRef<string | null>(null)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null) // 🔴 חדש: ref לטיימר
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null) // 🔴 להקלטה
+  const audioChunksRef = useRef<Blob[]>([]) // 🔴 חלקי ההקלטה
 
   // 🔴 חדש: טיימר שמתעדכן כל שניה
   useEffect(() => {
@@ -415,6 +419,9 @@ ${weaknessSection}
       ...prev,
       startTime: new Date()
     }))
+    
+    // התחלת הקלטה אוטומטית
+    setTimeout(() => startRecording(), 500)
 
     // הגדרת session עם ההוראות
     const sessionUpdate = {
@@ -458,6 +465,39 @@ ${weaknessSection}
     }, 1000)
   }
 
+  // 🔴 פונקציות הקלטה
+  const startRecording = async () => {
+    try {
+      if (mediaStream) {
+        const mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'audio/webm;codecs=opus' })
+        audioChunksRef.current = []
+        mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data) }
+        mediaRecorder.onstop = () => setAudioBlob(new Blob(audioChunksRef.current, { type: 'audio/webm' }))
+        mediaRecorderRef.current = mediaRecorder
+        mediaRecorder.start(1000)
+        setIsRecording(true)
+      }
+    } catch (e) { console.error('Recording error:', e) }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current?.state !== 'inactive') {
+      mediaRecorderRef.current?.stop()
+      setIsRecording(false)
+    }
+  }
+
+  const downloadRecording = () => {
+    if (audioBlob) {
+      const url = URL.createObjectURL(audioBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `simulation_${simulation.id}.webm`
+      a.click()
+      URL.revokeObjectURL(url)
+    }
+  }
+
   // 🔴 חדש: השהיית סימולציה
   const togglePause = () => {
     setIsPaused(prev => !prev)
@@ -476,6 +516,9 @@ ${weaknessSection}
   const stopSimulation = () => {
     try {
       setStatus('ending')
+      
+      // עצירת הקלטה
+      stopRecording()
       
       // ניתוק החיבורים
       if (mediaStream) {
@@ -497,6 +540,9 @@ ${weaknessSection}
   const endSimulation = async () => {
     try {
       setStatus('ending')
+      
+      // עצירת הקלטה
+      stopRecording()
       
       // ניתוק החיבורים
       if (mediaStream) {
@@ -587,6 +633,12 @@ ${weaknessSection}
                 </div>
                 {isPaused && (
                   <span className="text-orange-600 font-bold animate-pulse">⏸️ מושהה</span>
+                )}
+                {isRecording && (
+                  <span className="text-red-600 font-bold animate-pulse flex items-center gap-1">
+                    <span className="w-2 h-2 bg-red-600 rounded-full" />
+                    REC
+                  </span>
                 )}
               </div>
             )}
@@ -785,9 +837,21 @@ ${weaknessSection}
           <h3 className="text-xl font-bold text-green-900 mb-2">
             סימולציה הושלמה בהצלחה!
           </h3>
-          <p className="text-green-700">
+          <p className="text-green-700 mb-4">
             מעביר אותך לדוח המפורט...
           </p>
+          {audioBlob && (
+            <div className="space-y-3">
+              <button
+                onClick={downloadRecording}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
+              >
+                🎧 הורד הקלטת השיחה
+              </button>
+              <audio controls className="w-full mt-2" src={URL.createObjectURL(audioBlob)} />
+              <p className="text-xs text-gray-500">* הקלטה כוללת את הצד שלך בלבד</p>
+            </div>
+          )}
         </div>
       )}
 
