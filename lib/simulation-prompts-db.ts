@@ -201,6 +201,73 @@ function getDifficultyInstructions(level: string): string {
   return instructions[level as keyof typeof instructions] || instructions.medium
 }
 
+
+/**
+ * הוראות טונציה וסגנון דיבור לפי אישיות
+ */
+function getVoiceToneInstructions(personalityType: string, communicationStyle: string): string {
+  const personality = personalityType?.toLowerCase() || ''
+  const style = communicationStyle?.toLowerCase() || ''
+  
+  let toneInstructions = ''
+  
+  // לפי סוג אישיות
+  if (personality.includes('אנליטי') || personality.includes('מדויק')) {
+    toneInstructions += '- דבר באופן מסודר ולוגי\n- שאל שאלות מספריות ומדויקות\n- בקש נתונים והוכחות\n'
+  } else if (personality.includes('דומיננטי') || personality.includes('תובעני')) {
+    toneInstructions += '- דבר בביטחון וישירות\n- היה חד וקצר\n- דרוש תשובות מהירות\n'
+  } else if (personality.includes('חברותי') || personality.includes('ידידותי')) {
+    toneInstructions += '- היה חם ופתוח\n- שתף רגשות והתלבטויות\n- הראה עניין אישי\n'
+  } else if (personality.includes('זהיר') || personality.includes('מהסס')) {
+    toneInstructions += '- דבר לאט ובזהירות\n- הצג חששות רבים\n- בקש זמן לחשוב\n'
+  } else {
+    toneInstructions += '- דבר בצורה טבעית ונעימה\n'
+  }
+  
+  // לפי סגנון תקשורת
+  if (style.includes('ישיר')) {
+    toneInstructions += '- היה ישיר ותכליתי - אל תעקוף\n'
+  } else if (style.includes('רשמי')) {
+    toneInstructions += '- שמור על שפה רשמית ומנומסת\n'
+  } else if (style.includes('לא פורמלי') || style.includes('חברי')) {
+    toneInstructions += '- היה קליל וחברותי בשפה\n'
+  }
+  
+  return toneInstructions || '- דבר בצורה טבעית ונעימה'
+}
+
+/**
+ * יצירת שאלות מותאמות אישית לפי הרקע
+ */
+function getPersonalizedQuestions(params: SimulationPromptParams): string {
+  const questions: string[] = []
+  
+  // שאלות לפי תחום
+  if (params.industry) {
+    questions.push(`שאל על ניסיון קודם בתחום ה${params.industry}`)
+  }
+  
+  // שאלות לפי מוצר
+  if (params.productService) {
+    questions.push(`שאל איך ה${params.productService} עובד בפועל`)
+    questions.push(`שאל על הבדלים מהמתחרים`)
+  }
+  
+  // שאלות לפי סיטואציה
+  if (params.currentSituation) {
+    questions.push(`שאל איך זה יעזור לבעיה הספציפית שלך: "${params.currentSituation}"`)
+  }
+  
+  // שאלות כלליות אם אין מספיק
+  if (questions.length < 3) {
+    questions.push('שאל על מחיר ותנאי תשלום')
+    questions.push('שאל על זמני אספקה/התחלה')
+    questions.push('שאל על אחריות ותמיכה')
+  }
+  
+  return questions.map((q, i) => `${i + 1}. ${q}`).join('\n')
+}
+
 /**
  * פרומפט ברירת מחדל במקרה של כשל
  */
