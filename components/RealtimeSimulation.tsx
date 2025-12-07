@@ -173,8 +173,6 @@ ${weaknessSection}
 🗣️ דבר בעברית טבעית. זכור: אתה **הלקוח**! 🎯
 `
   }
-    return aiInstructions || createFallbackInstructions()
-  }
 
   // קבלת ephemeral token מהשרת
   const getEphemeralToken = async () => {
