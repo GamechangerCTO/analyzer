@@ -122,7 +122,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   }, [persona, simulation, company])
 
   const createFallbackInstructions = () => {
-    const isGenderMale = getVoiceForPersona() === 'echo'
+    const isGenderMale = getVoiceForPersona() === 'onyx'
     const genderText = isGenderMale ? 'לקוח' : 'לקוחה'
     
     // חילוץ פרמטרים חלשים
