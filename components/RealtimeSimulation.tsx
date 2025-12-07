@@ -183,7 +183,7 @@ ${weaknessSection}
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           simulationId: simulation.id,
-          instructions: createAIInstructions(),
+          instructions: aiInstructions || createFallbackInstructions(),
           voice: getVoiceForPersona()
         })
       })
@@ -390,7 +390,7 @@ ${weaknessSection}
         type: "realtime",
         model: "gpt-realtime-mini-2025-10-06",
         modalities: ["text", "audio"],
-        instructions: createAIInstructions(),
+        instructions: aiInstructions || createFallbackInstructions(),
         voice: getVoiceForPersona(),
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
