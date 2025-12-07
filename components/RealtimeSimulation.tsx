@@ -508,8 +508,21 @@ ${weaknessSection}
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
+      {/* 🔴 כפתור סיום בולט - תמיד מוצג כשהסימולציה פעילה */}
+      {(status === 'active' || status === 'ready') && (
+        <div className="fixed top-4 left-4 right-4 z-50 flex justify-center">
+          <button
+            onClick={endSimulation}
+            className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-2xl flex items-center gap-3 transition-all transform hover:scale-105"
+          >
+            <span className="text-2xl">🛑</span>
+            סיום סימולציה ומעבר לניתוח
+          </button>
+        </div>
+      )}
+
       {/* כותרת */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
+      <div className="bg-white rounded-xl shadow-lg p-6 mt-16">
         <div className="flex justify-between items-start mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
