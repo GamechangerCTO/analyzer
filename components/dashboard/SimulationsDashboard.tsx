@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import ProgressLineChart from '@/components/ProgressLineChart'
 
 interface SimulationData {
   id: string
@@ -39,6 +40,10 @@ export default function SimulationsDashboard({ userId, userRole, companyId }: Si
     completed: 0,
     averageScore: 0,
     thisWeek: 0
+  })
+  const [progressData, setProgressData] = useState<{labels: string[], data: number[]}>({
+    labels: [],
+    data: []
   })
 
   const supabase = createClient()
@@ -98,6 +103,20 @@ export default function SimulationsDashboard({ userId, userRole, companyId }: Si
         averageScore: Math.round(avgScore * 10) / 10,
         thisWeek: thisWeekSims
       })
+      
+      // 🔴 חדש: נתוני התקדמות לגרף
+      const completedWithScores = data?.filter(s => 
+        s.status === 'completed' && s.simulation_reports_hebrew?.[0]?.overall_score
+      ).slice(0, 10).reverse() || []
+      
+      if (completedWithScores.length > 0) {
+        setProgressData({
+          labels: completedWithScores.map(s => 
+            new Date(s.created_at).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' })
+          ),
+          data: completedWithScores.map(s => s.simulation_reports_hebrew?.[0]?.overall_score || 0)
+        })
+      }
 
     } catch (error) {
       console.error('שגיאה בטעינת סימולציות:', error)
@@ -169,6 +188,33 @@ export default function SimulationsDashboard({ userId, userRole, companyId }: Si
           <p className="text-2xl font-bold text-purple-600">{stats.thisWeek}</p>
         </div>
       </div>
+
+      {/* 🔴 גרף התקדמות */}
+      {progressData.data.length > 1 && (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 התקדמות ציונים</h3>
+          <ProgressLineChart 
+            title="ציוני סימולציות"
+            height={250}
+            data={{
+              labels: progressData.labels,
+              datasets: [{
+                label: 'ציון',
+                data: progressData.data,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)'
+              }]
+            }}
+          />
+          <div className="mt-4 flex justify-between text-sm text-gray-500">
+            <span>ראשון: {progressData.data[0]}/10</span>
+            <span>אחרון: {progressData.data[progressData.data.length - 1]}/10</span>
+            <span className={progressData.data[progressData.data.length - 1] > progressData.data[0] ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
+              {progressData.data[progressData.data.length - 1] > progressData.data[0] ? '📈 עלייה' : '📉 ירידה'}: {Math.abs(progressData.data[progressData.data.length - 1] - progressData.data[0]).toFixed(1)} נק׳
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* כפתור יצירת סימולציה חדשה */}
       {userRole === 'agent' && (
