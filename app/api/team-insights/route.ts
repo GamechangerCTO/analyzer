@@ -287,13 +287,12 @@ ${allPreservationPoints.join(', ')}
     // ✅ שימוש ב-Responses API למודלי GPT-5
     const systemInstruction = 'אתה יועץ ניהול מומחה בניתוח ביצועי צוותי מכירות ושירות לקוחות. אתה מספק תובנות אסטרטגיות ופרקטיות למנהלים.'
     
-    const openaiResponse = await openai.responses.create({
-      model: 'gpt-5-mini-2025-08-07',
-      input: systemInstruction + '\n\n' + teamAnalysisPrompt,
-      reasoning: { effort: "medium" }, // ניתוח אסטרטגי דורש חשיבה
+    const openaiResponse = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: "system", content: systemInstruction }, { role: "user", content: teamAnalysisPrompt }],
     })
 
-    const rawContent = openaiResponse.output_text || '{}'
+    const rawContent = openaiResponse.choices[0]?.message?.content || '{}'
     const cleanedContent = cleanOpenAIResponse(rawContent)
     
     let insightsData

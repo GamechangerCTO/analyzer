@@ -234,13 +234,12 @@ export async function GET(request: NextRequest) {
     // ✅ שימוש ב-Responses API למודלי GPT-5
     const systemInstruction = 'אתה מומחה בניתוח נתוני ביצועים ומתמחה בסיכום נקודות לשיפור ושימור לנציגי מכירות ושירות.'
     
-    const openaiResponse = await openai.responses.create({
-      model: 'gpt-5-mini-2025-08-07',
-      input: systemInstruction + '\n\n' + summaryPrompt,
-      reasoning: { effort: "low" } // סיכום בסיסי של נקודות
+    const openaiResponse = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: "system", content: systemInstruction }, { role: "user", content: summaryPrompt }],
     })
 
-    const rawContent = openaiResponse.output_text || '{}'
+    const rawContent = openaiResponse.choices[0]?.message?.content || '{}'
     
     // שימוש בפונקציית ניקוי הקריטית
     const cleanedContent = cleanOpenAIResponse(rawContent)
