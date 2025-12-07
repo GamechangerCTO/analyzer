@@ -24,27 +24,16 @@ export default async function ProtectedLayout({
   // זה הדפוס הנכון ממערכת הביטחון של הפרויקט
   const isAdmin = user.email === 'ido.segev23@gmail.com'
   
-  // בדיקה האם המשתמש קיים במערכת ומאושר - תחילה לפי email (דפוס ראשי)
+  // בדיקה האם המשתמש קיים במערכת ומאושר - תחילה לפי ID (תואם RLS)
   let { data: userData, error: userError } = await supabase
     .from('users')
     .select('id, role, is_approved, company_id')
-    .eq('email', user.email!)
+    .eq('id', user.id)
     .maybeSingle()
   
-  // אם לא נמצא לפי email, נסה לפי ID (דפוס משני)
+  // אם לא נמצא - המשתמש לא קיים במערכת
   if (userError || !userData) {
-    const { data: userDataById, error: idError } = await supabase
-      .from('users')
-      .select('id, role, is_approved, company_id')
-      .eq('id', user.id)
-      .maybeSingle()
-    
-    if (!idError && userDataById) {
-      userData = userDataById
-    } else {
-      // אם המשתמש לא קיים במערכת מפנים לדף שגיאה
-      redirect('/not-approved?reason=not-found')
-    }
+    redirect('/not-approved?reason=not-found')
   }
   
   // בדיקה שהמשתמש מאושר
