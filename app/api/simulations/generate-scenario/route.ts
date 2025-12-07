@@ -15,6 +15,34 @@ interface ScenarioGenerationRequest {
   estimatedDuration?: number
 }
 
+
+// 🔧 פונקציה לניקוי JSON מתשובות OpenAI
+function cleanOpenAIResponse(content: string): string {
+  if (!content) return '{}'
+  
+  let cleaned = content.replace(/```(?:json|JSON)?\s*/g, '').replace(/```\s*$/g, '')
+  cleaned = cleaned.replace(/^`+|`+$/g, '').trim()
+  
+  const jsonStart = cleaned.indexOf('{')
+  if (jsonStart !== -1) cleaned = cleaned.substring(jsonStart)
+  
+  // תיקון מפתחות עברית ללא פסיק
+  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([א-ת\w_]+"\s*:)/g, '$1, "$2')
+  
+  let braceCount = 0, lastValidEnd = -1
+  for (let i = 0; i < cleaned.length; i++) {
+    if (cleaned[i] === '{') braceCount++
+    else if (cleaned[i] === '}') { braceCount--; if (braceCount === 0) { lastValidEnd = i; break } }
+  }
+  if (lastValidEnd !== -1) cleaned = cleaned.substring(0, lastValidEnd + 1)
+  
+  try { JSON.parse(cleaned); return cleaned } catch {
+    let fixed = cleaned.replace(/,(\s*[}\]])/g, '$1')
+    if (!fixed.endsWith('}')) fixed += '}'
+    try { JSON.parse(fixed); return fixed } catch { return '{}' }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient()
@@ -75,7 +103,7 @@ export async function POST(request: NextRequest) {
       reasoning: { effort: "low" }, // יצירה יצירתית של תרחיש
     })
 
-    const scenarioData = JSON.parse(scenarioResponse.output_text || '{}')
+    const scenarioData = JSON.parse(cleanOpenAIResponse(scenarioResponse.output_text || '{}'))
     
     // שמירת התרחיש במסד הנתונים
     const { data: savedScenario, error: saveError } = await supabase

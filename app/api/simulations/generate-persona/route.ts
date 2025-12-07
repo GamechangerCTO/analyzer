@@ -30,6 +30,69 @@ interface PersonaGenerationRequest {
   }
 }
 
+
+// 🔧 פונקציה לניקוי JSON מתשובות OpenAI
+function cleanOpenAIResponse(content: string): string {
+  if (!content) return '{}'
+  
+  // ניקוי Markdown blocks
+  let cleaned = content.replace(/```(?:json|JSON)?\s*/g, '').replace(/```\s*$/g, '')
+  cleaned = cleaned.replace(/^`+|`+$/g, '').trim()
+  
+  // חיפוש JSON boundaries
+  const jsonStart = cleaned.indexOf('{')
+  if (jsonStart !== -1) {
+    cleaned = cleaned.substring(jsonStart)
+  }
+  
+  // תיקון מפתחות עברית ללא פסיק
+  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([א-ת\w_]+"\s*:)/g, '$1, "$2')
+  
+  // מחפש patterns של מרכאות שנסגרות באמצע ערך
+  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]+)"(\s*,\s*)([^":}\]]+)"/g, '$1 $3"')
+  
+  // אלגוריתם איזון סוגריים
+  let braceCount = 0
+  let lastValidEnd = -1
+  
+  for (let i = 0; i < cleaned.length; i++) {
+    const char = cleaned[i]
+    if (char === '{') braceCount++
+    else if (char === '}') {
+      braceCount--
+      if (braceCount === 0) {
+        lastValidEnd = i
+        break
+      }
+    }
+  }
+  
+  if (lastValidEnd !== -1) {
+    cleaned = cleaned.substring(0, lastValidEnd + 1)
+  }
+  
+  // תיקון אוטומטי
+  try {
+    JSON.parse(cleaned)
+    return cleaned
+  } catch {
+    let fixed = cleaned
+      .replace(/,(\s*[}\]])/g, '$1')
+      .replace(/([^\\]")([^"]*?)\n([^"]*?)(")/g, '$1$2 $3$4')
+    
+    if (!fixed.endsWith('}') && fixed.includes('{')) {
+      fixed += '}'
+    }
+    
+    try {
+      JSON.parse(fixed)
+      return fixed
+    } catch {
+      return '{}'
+    }
+  }
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now()
   let personaId: string | null = null
@@ -127,7 +190,7 @@ export async function POST(request: NextRequest) {
         reasoning: { effort: "low" }, // יצירה יצירתית, לא צריך חשיבה עמוקה
       })
 
-      personaData = JSON.parse(personaResponse.output_text || '{}')
+      personaData = JSON.parse(cleanOpenAIResponse(personaResponse.output_text || '{}'))
       console.log('✅ Generated persona with AI:', personaData.persona_name)
 
     } catch (aiErrorCaught: any) {
