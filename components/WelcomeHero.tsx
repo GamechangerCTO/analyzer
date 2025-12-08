@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, Sparkles } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 
 interface WelcomeHeroProps {
   agentInfo: {
@@ -37,37 +37,27 @@ export default function WelcomeHero({ agentInfo, targetUserInfo, isViewingOtherA
   const greeting = getTimeBasedGreeting()
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-glacier-primary-500 via-glacier-accent-500 to-glacier-secondary-500 rounded-3xl p-8 shadow-glacier-glow animate-in fade-in duration-700">
-      {/* אפקטים מתקדמים ברקע */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-glacier-float" />
-        <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-glacier-accent-300/20 rounded-full blur-3xl animate-glacier-float-delayed" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-glacier-primary-300/20 to-glacier-accent-300/20 rounded-full blur-3xl animate-glacier-pulse" />
-      </div>
+    <div className="relative overflow-hidden bg-brand-primary rounded-tl-3xl rounded-br-3xl rounded-tr-xl rounded-bl-xl p-8 shadow-md">
+      {/* רקע עדין */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
       
       <div className="relative">
-        {/* כותרת פשוטה עם ברכה לפי שעה */}
-        <div className="text-glacier-neutral-900 text-center">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold animate-in slide-in-from-bottom duration-500 delay-100 text-glacier-neutral-900">
-              {isViewing ? `נתוני ביצועים של ${displayName}` : `${greeting}, ${displayName}!`}
-            </h1>
-            {!isViewing && (
-              <Sparkles className="w-8 h-8 text-glacier-accent-600 animate-glacier-sparkle" />
-            )}
-          </div>
+        {/* כותרת */}
+        <div className="text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            {isViewing ? `נתוני ביצועים של ${displayName}` : `${greeting}, ${displayName}!`}
+          </h1>
           
-          <p className="text-glacier-neutral-700 text-xl mb-3 animate-in slide-in-from-bottom duration-500 delay-200">
+          <p className="text-white/80 text-lg mb-4">
             {isViewing 
-              ? '📊 צפייה בדשבורד אג׳נט' 
+              ? 'צפייה בדשבורד אג׳נט' 
               : isManagerDashboard 
-                ? '📈 דשבורד ניהול הצוות - סקירה מקיפה של ביצועי החברה'
-                : '🚀 פלטפורמת Coachee - חדר הכושר המכירתי שלך'
+                ? 'דשבורד ניהול הצוות - סקירה מקיפה של ביצועי החברה'
+                : 'פלטפורמת Coachee - חדר הכושר המכירתי שלך'
             }
           </p>
           
-          <div className="flex items-center justify-center gap-3 text-glacier-neutral-600 text-sm animate-in slide-in-from-bottom duration-500 delay-300">
+          <div className="inline-flex items-center gap-2 text-white/70 text-sm bg-white/10 px-4 py-2 rounded-lg">
             <Calendar className="w-4 h-4" />
             <span className="font-medium">
               {new Date().toLocaleDateString('he-IL', { 
@@ -82,4 +72,4 @@ export default function WelcomeHero({ agentInfo, targetUserInfo, isViewingOtherA
       </div>
     </div>
   )
-} 
+}

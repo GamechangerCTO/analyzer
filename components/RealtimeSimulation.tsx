@@ -320,7 +320,7 @@ ${weaknessSection}
 
       // שליחה לOpenAI Realtime API
       const baseUrl = "https://api.openai.com/v1/realtime"
-      const model = "gpt-realtime-mini-2025-10-06"
+      const model = "gpt-4o-realtime-preview"
       
       console.log('🔑 Ephemeral token:', ephemeralKeyRef.current?.substring(0, 20) + '...')
       console.log('📡 Sending SDP offer to:', `${baseUrl}?model=${model}`)
@@ -446,7 +446,7 @@ ${weaknessSection}
       type: "session.update",
       session: {
         type: "realtime",
-        model: "gpt-realtime-mini-2025-10-06",
+        model: "gpt-4o-realtime-preview",
         modalities: ["text", "audio"],
         instructions: aiInstructions || createFallbackInstructions(),
         voice: getVoiceForPersona(),
