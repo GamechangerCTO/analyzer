@@ -4,83 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient, clearAuthStorage } from '@/lib/supabase/client'
 import LoginForm from '@/components/LoginForm'
-import { Sparkles } from 'lucide-react'
 import Image from 'next/image'
-
-// Loading Component
-const LoadingScreen = () => (
-  <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-bg-light via-white to-brand-accent-light">
-    <div className="relative">
-      <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-primary-light border-t-brand-primary"></div>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-        <Sparkles className="w-5 h-5 text-brand-primary animate-pulse" />
-      </div>
-    </div>
-  </div>
-)
-
-// Background Decorative Elements
-const BackgroundElements = () => (
-  <div className="absolute inset-0">
-    <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-brand-primary-light/20 to-brand-secondary-light/30 rounded-full blur-3xl animate-pulse"></div>
-    <div className="absolute bottom-10 right-10 w-96 h-96 bg-gradient-to-r from-brand-secondary-light/30 to-brand-primary-light/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-brand-accent-light/30 to-brand-secondary-light/20 rounded-full blur-3xl animate-pulse delay-500"></div>
-  </div>
-)
-
-// Logo Section Component
-const LogoSection = () => (
-  <div className="text-center mb-4 animate-in slide-in-from-top duration-500">
-    <div className="inline-flex items-center justify-center w-40 h-40 mb-1 group hover:scale-110 transition-all duration-300">
-      <Image
-        src="/logo.png"
-        alt="Coachee Logo"
-        width={160}
-        height={160}
-        className="transition-transform duration-300 group-hover:scale-110"
-      />
-    </div>
-    <div className="space-y-1">
-      <p className="text-base text-neutral-600 font-medium">
-        פלטפורמת אימון מכירות ושירות
-      </p>
-    </div>
-  </div>
-)
-
-// Footer Links Component
-const FooterLinks = () => (
-  <div className="mt-4 text-center animate-in slide-in-from-bottom duration-700 delay-400">
-    <div className="flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-6 text-sm">
-      <a 
-        href="/privacy-policy" 
-        className="group text-neutral-600 hover:text-brand-primary transition-all duration-300"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <span className="relative">
-          מדיניות פרטיות
-          <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right"></span>
-        </span>
-      </a>
-      <div className="hidden sm:block w-1 h-1 bg-neutral-300 rounded-full"></div>
-                    <a 
-                href="/legal-terms" 
-                className="group text-neutral-600 hover:text-brand-primary transition-all duration-300"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="relative">
-                  תקנון משפטי
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-brand-primary to-brand-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right"></span>
-                </span>
-              </a>
-    </div>
-    <div className="mt-2 text-xs text-neutral-500">
-      © 2025 Coachee. כל הזכויות שמורות.
-    </div>
-  </div>
-)
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -115,44 +39,71 @@ export default function LoginPage() {
   }, [router, supabase])
 
   if (isLoading) {
-    return <LoadingScreen />
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-neutral-50">
+        <div className="w-10 h-10 border-2 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-bg-light via-white to-brand-accent-light relative overflow-hidden">
-      <BackgroundElements />
+    <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-32 h-32 mb-2">
+            <Image
+              src="/logo.png"
+              alt="Coachee Logo"
+              width={128}
+              height={128}
+              className="object-contain"
+            />
+          </div>
+          <p className="text-sm text-neutral-500">
+            פלטפורמת אימון מכירות ושירות
+          </p>
+        </div>
 
-      <div className="relative flex min-h-screen flex-col items-center justify-center p-2">
-        <div className="w-full max-w-md">
-          <LogoSection />
-
-          {/* Login Form Card */}
-          <div className="backdrop-blur-xl bg-white/95 border-2 border-brand-primary/20 rounded-tl-3xl rounded-br-3xl p-6 shadow-2xl shadow-brand-primary/15 animate-in slide-in-from-bottom duration-500">
-            <div className="mb-6 text-center">
-              <h3 className="text-2xl font-bold text-neutral-800 mb-2">ברוכים הבאים</h3>
-              <p className="text-neutral-600 text-sm">התחבר כדי להתחיל את המסע שלך</p>
-            </div>
-            
-            <LoginForm />
-            
-            {/* Signup Link */}
-            <div className="mt-6 text-center">
-              <p className="text-neutral-600 text-sm mb-3">
-                עדיין אין לכם חשבון?
-              </p>
-              <a
-                href="/signup"
-                className="inline-flex items-center justify-center w-full px-4 py-3 bg-gradient-to-r from-brand-primary to-brand-secondary text-white font-bold rounded-tl-2xl rounded-br-2xl hover:from-brand-primary-dark hover:to-brand-primary transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                <Sparkles className="w-4 h-4 ml-2" />
-                הרשמה והצטרפות
-              </a>
-            </div>
+        {/* Login Form Card */}
+        <div className="bg-white border border-neutral-200 rounded-tl-2xl rounded-br-2xl rounded-tr-lg rounded-bl-lg p-6 shadow-sm">
+          <div className="mb-6 text-center">
+            <h3 className="text-xl font-semibold text-neutral-900 mb-1">ברוכים הבאים</h3>
+            <p className="text-neutral-500 text-sm">התחבר כדי להתחיל</p>
           </div>
           
-          <FooterLinks />
+          <LoginForm />
+          
+          {/* Signup Link */}
+          <div className="mt-6 text-center">
+            <p className="text-neutral-500 text-sm mb-3">
+              עדיין אין לכם חשבון?
+            </p>
+            <a
+              href="/signup"
+              className="inline-flex items-center justify-center w-full px-4 py-3 bg-brand-primary text-white font-medium rounded-xl hover:bg-brand-primary-dark transition-colors"
+            >
+              הרשמה והצטרפות
+            </a>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="mt-6 text-center">
+          <div className="flex justify-center items-center space-x-4 text-sm text-neutral-500">
+            <a href="/privacy-policy" className="hover:text-brand-primary transition-colors">
+              מדיניות פרטיות
+            </a>
+            <span>•</span>
+            <a href="/legal-terms" className="hover:text-brand-primary transition-colors">
+              תקנון משפטי
+            </a>
+          </div>
+          <div className="mt-2 text-xs text-neutral-400">
+            © 2025 Coachee. כל הזכויות שמורות.
+          </div>
         </div>
       </div>
     </div>
   )
-} 
+}

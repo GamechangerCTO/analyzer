@@ -5,11 +5,10 @@ import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { AlertCircle, CheckCircle, User, Settings, Users, Crown, Loader2 } from 'lucide-react'
-import { handleAuthError, createRateLimiter, debounce } from '@/lib/utils'
+import { AlertCircle, CheckCircle, User, Users, Crown, Loader2 } from 'lucide-react'
+import { handleAuthError, createRateLimiter } from '@/lib/utils'
 
-// טיפוסים
-type Role = 'admin' | 'manager' | 'agent';
+type Role = 'admin' | 'manager' | 'agent'
 
 export default function LoginForm() {
   const [view, setView] = useState<'sign_in' | 'sign_up'>('sign_in')
@@ -21,16 +20,12 @@ export default function LoginForm() {
   const [authLoading, setAuthLoading] = useState(false)
   const [authStatus, setAuthStatus] = useState<string>('מוכן להתחברות')
   
-  // Rate limiting protection
   const isProcessingRef = useRef(false)
   const lastAuthAttemptRef = useRef(0)
   const retryCountRef = useRef(0)
   const maxRetries = 3
-  
-  // Create rate limiter instance
   const rateLimiter = useRef(createRateLimiter(3, 60000))
 
-  // בדיקת שגיאות מ-URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const error = urlParams.get('error')
@@ -40,25 +35,15 @@ export default function LoginForm() {
         'auth_callback_error': 'שגיאה בהתחברות - אנא נסה שוב',
         'database_error': 'שגיאה במסד הנתונים - אנא נסה שוב מאוחר יותר',
         'creation_error': 'שגיאה ביצירת החשבון - אנא צור קשר עם התמיכה',
-        'auth_exchange_error': 'שגיאה בחילוף אסימונים - אנא נסה שוב',
-        'processing_error': 'שגיאה בעיבוד הבקשה - אנא נסה שוב',
-        'rate_limit': 'יותר מדי ניסיונות התחברות - אנא המתן דקה ונסה שוב'
+        'rate_limit': 'יותר מדי ניסיונות התחברות - אנא המתן דקה'
       }
       
       setAuthError(errorMessages[error] || 'שגיאה לא ידועה - אנא נסה שוב')
-      
-      // ניקוי השגיאה מה-URL
       const newUrl = window.location.pathname
       window.history.replaceState({}, '', newUrl)
     }
   }, [])
 
-  const toggleView = () => {
-    setView(view === 'sign_in' ? 'sign_up' : 'sign_in')
-    setAuthError(null)
-  }
-
-  // פונקציה להתחברות עם תפקיד נבחר
   const loginWithRole = async () => {
     if (selectedRole === 'admin') {
       router.push('/dashboard')
@@ -70,30 +55,18 @@ export default function LoginForm() {
     setShowRoleSelector(false)
   }
 
-  // Rate limiting helper
   const checkRateLimit = () => {
     const now = Date.now()
     const timeSinceLastAttempt = now - lastAuthAttemptRef.current
     
-    // Prevent multiple simultaneous requests
-    if (isProcessingRef.current) {
-      return false
-    }
-    
-    // Rate limit: minimum 2 seconds between attempts
+    if (isProcessingRef.current) return false
     if (timeSinceLastAttempt < 2000) {
       setAuthError('אנא המתן 2 שניות בין ניסיונות התחברות')
       return false
     }
-    
-    // Reset retry count if more than 30 seconds have passed
-    if (timeSinceLastAttempt > 30000) {
-      retryCountRef.current = 0
-    }
-    
-    // Check if we've exceeded max retries
+    if (timeSinceLastAttempt > 30000) retryCountRef.current = 0
     if (retryCountRef.current >= maxRetries) {
-      setAuthError('יותר מדי ניסיונות התחברות - אנא המתן 5 דקות ונסה שוב')
+      setAuthError('יותר מדי ניסיונות התחברות - אנא המתן 5 דקות')
       return false
     }
     
@@ -103,50 +76,37 @@ export default function LoginForm() {
     return true
   }
 
-  // מאזין לשינויים במצב ההתחברות
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log(`[AUTH] Event: ${event}`, { userEmail: session?.user?.email })
         setAuthStatus(`אירוע: ${event}`)
 
         if (event === 'SIGNED_IN' && session) {
-          // Rate limiting check
-          if (!checkRateLimit()) {
-            return
-          }
+          if (!checkRateLimit()) return
           
           setAuthLoading(true)
           setAuthError(null)
           setAuthStatus('מתחבר...')
           
           try {
-            const currentEmail = session.user.email || '';
-            console.log(`[AUTH] User signed in: ${currentEmail}`);
-            
-            // בדיקה מיוחדת לסופר אדמין
-            const isSuperAdmin = currentEmail === 'ido.segev23@gmail.com';
+            const currentEmail = session.user.email || ''
+            const isSuperAdmin = currentEmail === 'ido.segev23@gmail.com'
             
             if (isSuperAdmin) {
-              console.log("[AUTH] Super admin detected");
-              
-              // וידוא שהסופר אדמין קיים במסד הנתונים
               const { data: adminUser, error: adminError } = await supabase
                 .from('users')
                 .select('*')
                 .eq('email', currentEmail)
-                .maybeSingle();
+                .maybeSingle()
 
               if (adminError) {
-                console.error("[AUTH] Error checking super admin:", adminError);
                 setAuthError(`שגיאה בבדיקת משתמש: ${adminError.message}`)
                 setAuthLoading(false)
                 isProcessingRef.current = false
-                return;
+                return
               }
 
               if (!adminUser) {
-                // יצירת סופר אדמין חדש
                 const { error: createError } = await supabase
                   .from('users')
                   .insert({
@@ -155,74 +115,59 @@ export default function LoginForm() {
                     role: 'admin',
                     full_name: session.user.user_metadata.full_name || 'Super Admin',
                     is_approved: true
-                  });
+                  })
 
                 if (createError) {
-                  console.error("[AUTH] Error creating super admin:", createError);
                   setAuthError(`שגיאה ביצירת מנהל: ${createError.message}`)
                   setAuthLoading(false)
                   isProcessingRef.current = false
-                  return;
+                  return
                 }
 
-                // הוספה לטבלת system_admins
-                await supabase
-                  .from('system_admins')
-                  .upsert({ user_id: session.user.id });
+                await supabase.from('system_admins').upsert({ user_id: session.user.id })
               }
               
               setAuthLoading(false)
-              setShowRoleSelector(true);
+              setShowRoleSelector(true)
               isProcessingRef.current = false
-              return;
-
+              return
             } else {
-              // משתמש רגיל
-              console.log("[AUTH] Regular user detected");
               const { data: userData, error: userError } = await supabase
                 .from('users')
                 .select('*')
                 .eq('email', currentEmail)
-                .maybeSingle();
+                .maybeSingle()
               
               if (userError) {
-                console.error("[AUTH] Error checking user:", userError);
                 setAuthError(`שגיאה בבדיקת משתמש: ${userError.message}`)
                 setAuthLoading(false)
                 isProcessingRef.current = false
-                return;
+                return
               }
               
               if (!userData) {
-                // משתמש חדש - הפנייה לפלואו הרשמה מלא
-                console.log("[AUTH] New user detected, redirecting to complete signup");
-                router.push('/signup-complete');
+                router.push('/signup-complete')
                 setAuthLoading(false)
                 isProcessingRef.current = false
-                return;
+                return
               }
 
               if (!userData.is_approved) {
-                console.log("[AUTH] User not approved, redirecting to approval page");
-                router.push('/not-approved');
+                router.push('/not-approved')
                 setAuthLoading(false)
                 isProcessingRef.current = false
-                return;
+                return
               }
 
-              console.log("[AUTH] User approved, redirecting to dashboard");
-              router.push('/dashboard');
+              router.push('/dashboard')
               setAuthLoading(false)
               isProcessingRef.current = false
             }
 
           } catch (error: any) {
-            console.error("[AUTH] Unexpected error:", error);
-            
-            // Handle rate limit errors specifically
             if (error.message?.includes('429') || error.message?.includes('rate limit')) {
-              setAuthError('יותר מדי ניסיונות התחברות - אנא המתן דקה ונסה שוב')
-              retryCountRef.current = maxRetries // Prevent further attempts
+              setAuthError('יותר מדי ניסיונות - אנא המתן דקה')
+              retryCountRef.current = maxRetries
             } else {
               setAuthError('שגיאה בלתי צפויה - אנא נסה שוב')
             }
@@ -246,34 +191,16 @@ export default function LoginForm() {
   }, [router, supabase])
 
   const roleOptions = [
-    { 
-      value: 'admin' as Role, 
-      label: 'מנהל מערכת', 
-      description: 'גישה מלאה למערכת',
-      icon: Crown,
-      color: 'from-brand-primary to-brand-primary-light'
-    },
-    { 
-      value: 'manager' as Role, 
-      label: 'מנהל צוות', 
-      description: 'ניהול נציגים וצפייה בדוחות',
-      icon: Users,
-      color: 'from-brand-secondary to-brand-secondary-light'
-    },
-    { 
-      value: 'agent' as Role, 
-      label: 'נציג מכירות', 
-      description: 'העלאת שיחות וצפייה בביצועים',
-      icon: User,
-      color: 'from-brand-accent-dark to-brand-secondary'
-    }
+    { value: 'admin' as Role, label: 'מנהל מערכת', description: 'גישה מלאה למערכת', icon: Crown, color: 'bg-brand-primary' },
+    { value: 'manager' as Role, label: 'מנהל צוות', description: 'ניהול נציגים וצפייה בדוחות', icon: Users, color: 'bg-brand-secondary' },
+    { value: 'agent' as Role, label: 'נציג מכירות', description: 'העלאת שיחות וצפייה בביצועים', icon: User, color: 'bg-amber-500' }
   ]
 
   return (
-    <div className="space-y-6">
-      {/* הודעת סטטוס */}
+    <div className="space-y-4">
+      {/* Loading Status */}
       {authLoading && (
-        <div className="bg-white border-2 border-brand-primary/20 rounded-tl-2xl rounded-br-2xl p-4 shadow-sm animate-in slide-in-from-top duration-500">
+        <div className="bg-brand-primary/5 border border-brand-primary/20 rounded-xl p-4">
           <div className="flex items-center gap-3 text-brand-primary">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span className="font-medium">{authStatus}</span>
@@ -281,58 +208,48 @@ export default function LoginForm() {
         </div>
       )}
 
-      {/* הודעת שגיאה */}
+      {/* Error Message */}
       {authError && (
-        <div className="bg-white border-2 border-brand-warning/30 rounded-tr-2xl rounded-bl-2xl p-4 shadow-sm animate-in slide-in-from-top duration-500">
-          <div className="flex items-center gap-3 text-brand-warning">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="flex items-center gap-3 text-red-600">
             <AlertCircle className="w-5 h-5" />
             <span className="font-medium">{authError}</span>
           </div>
         </div>
       )}
 
-      {/* בורר תפקידים לסופר אדמין */}
+      {/* Role Selector for Super Admin */}
       {showRoleSelector && (
-        <div className="bg-white border-2 border-brand-primary/20 rounded-tl-3xl rounded-br-3xl p-6 shadow-lg space-y-6 animate-in slide-in-from-bottom duration-500">
-          <div className="text-center space-y-2">
-            <h3 className="text-2xl font-bold text-neutral-900">בחר תפקיד להתחברות</h3>
-            <p className="text-neutral-600">בחר את התפקיד שבו ברצונך להתחבר למערכת</p>
+        <div className="bg-white border border-neutral-200 rounded-xl p-6 space-y-4">
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-neutral-900 mb-1">בחר תפקיד להתחברות</h3>
+            <p className="text-neutral-500 text-sm">בחר את התפקיד שבו ברצונך להתחבר</p>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-2">
             {roleOptions.map((role) => {
               const Icon = role.icon
               return (
                 <button
                   key={role.value}
                   onClick={() => setSelectedRole(role.value)}
-                  className={`w-full p-4 rounded-tl-2xl rounded-br-2xl border-2 transition-all duration-300 group hover:scale-[1.02] ${
+                  className={`w-full p-4 rounded-xl border-2 transition-colors text-right flex items-center gap-4 ${
                     selectedRole === role.value
-                      ? 'border-brand-primary bg-gradient-to-r from-brand-primary/5 to-brand-secondary/10 shadow-lg shadow-brand-primary/10'
-                      : 'border-neutral-200 bg-white hover:border-brand-primary hover:bg-brand-primary/5'
+                      ? 'border-brand-primary bg-brand-primary/5'
+                      : 'border-neutral-200 hover:border-neutral-300'
                   }`}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-xl bg-gradient-to-r ${role.color} shadow-lg`}>
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1 text-right">
-                      <h4 className="font-bold text-neutral-900 group-hover:text-brand-primary-dark transition-colors">
-                        {role.label}
-                      </h4>
-                      <p className="text-sm text-neutral-600 mt-1">
-                        {role.description}
-                      </p>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 transition-all ${
-                      selectedRole === role.value
-                        ? 'border-brand-primary bg-brand-primary'
-                        : 'border-neutral-300 group-hover:border-brand-primary-light'
-                    }`}>
-                      {selectedRole === role.value && (
-                        <CheckCircle className="w-3 h-3 text-white m-0.5" />
-                      )}
-                    </div>
+                  <div className={`p-2 rounded-lg ${role.color}`}>
+                    <Icon className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-neutral-900">{role.label}</h4>
+                    <p className="text-sm text-neutral-500">{role.description}</p>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border-2 ${
+                    selectedRole === role.value ? 'border-brand-primary bg-brand-primary' : 'border-neutral-300'
+                  }`}>
+                    {selectedRole === role.value && <CheckCircle className="w-3 h-3 text-white" />}
                   </div>
                 </button>
               )
@@ -341,41 +258,37 @@ export default function LoginForm() {
           
           <button
             onClick={loginWithRole}
-            className="w-full py-4 px-6 bg-gradient-to-r from-brand-primary to-brand-secondary text-white rounded-tr-2xl rounded-bl-2xl font-bold shadow-lg shadow-brand-primary/25 hover:shadow-xl hover:shadow-brand-primary/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full py-3 px-6 bg-brand-primary text-white rounded-xl font-medium hover:bg-brand-primary-dark transition-colors"
           >
             המשך עם התפקיד הנבחר
           </button>
         </div>
       )}
 
-      {/* טופס התחברות/הרשמה */}
+      {/* Auth Form */}
       {!showRoleSelector && (
-        <div className="space-y-6">
-          {/* כפתורי החלפה בין התחברות והרשמה */}
-          <div className="flex p-1 bg-neutral-100 rounded-tl-2xl rounded-br-2xl shadow-inner">
+        <div className="space-y-4">
+          {/* Tab Switcher */}
+          <div className="flex p-1 bg-neutral-100 rounded-xl">
             <button
               onClick={() => setView('sign_in')}
-              className={`flex-1 py-3 px-4 rounded-tl-xl rounded-br-xl text-sm font-bold transition-all duration-300 ${
-                view === 'sign_in' 
-                  ? 'bg-white text-brand-primary shadow-lg shadow-brand-primary/10' 
-                  : 'text-neutral-600 hover:text-brand-primary'
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                view === 'sign_in' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
               התחברות
             </button>
             <button
               onClick={() => setView('sign_up')}
-              className={`flex-1 py-3 px-4 rounded-tr-xl rounded-bl-xl text-sm font-bold transition-all duration-300 ${
-                view === 'sign_up' 
-                  ? 'bg-white text-brand-primary shadow-lg shadow-brand-primary/10' 
-                  : 'text-neutral-600 hover:text-brand-primary'
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                view === 'sign_up' ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
               הרשמה
             </button>
           </div>
 
-          {/* Auth component עם עיצוב מעודכן */}
+          {/* Auth Component */}
           <div className="auth-container">
             <Auth
               supabaseClient={supabase}
@@ -385,14 +298,13 @@ export default function LoginForm() {
                 variables: {
                   default: {
                     colors: {
-                      brand: '#472DA6', // brand-primary
-                      brandAccent: '#5336BF', // brand-primary-light
+                      brand: '#472DA6',
+                      brandAccent: '#5336BF',
                       brandButtonText: 'white',
                       defaultButtonBackground: 'transparent',
                       defaultButtonBackgroundHover: '#F8FAFC',
                       defaultButtonBorder: '#E2E8F0',
                       defaultButtonText: '#334155',
-                      dividerBackground: '#E2E8F0',
                       inputBackground: 'white',
                       inputBorder: '#CBD5E1',
                       inputBorderHover: '#472DA6',
@@ -400,80 +312,23 @@ export default function LoginForm() {
                       inputText: '#0F172A',
                       inputLabelText: '#475569',
                       inputPlaceholder: '#94A3B8',
-                      messageText: '#EF4444',
-                      messageTextDanger: '#EF4444',
                       anchorTextColor: '#472DA6',
-                      anchorTextHoverColor: '#5336BF',
                     },
                     space: {
-                      spaceSmall: '6px',
-                      spaceMedium: '12px',
-                      spaceLarge: '20px',
-                      labelBottomMargin: '8px',
-                      anchorBottomMargin: '6px',
-                      emailInputSpacing: '6px',
-                      socialAuthSpacing: '6px',
-                      buttonPadding: '14px 20px',
-                      inputPadding: '14px 20px',
-                    },
-                    fontSizes: {
-                      baseBodySize: '15px',
-                      baseInputSize: '15px',
-                      baseLabelSize: '14px',
-                      baseButtonSize: '15px',
-                    },
-                    fonts: {
-                      bodyFontFamily: `Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
-                      buttonFontFamily: `Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
-                      inputFontFamily: `Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
-                      labelFontFamily: `Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`,
-                    },
-                    borderWidths: {
-                      buttonBorderWidth: '1px',
-                      inputBorderWidth: '1px',
+                      buttonPadding: '12px 16px',
+                      inputPadding: '12px 16px',
                     },
                     radii: {
-                      borderRadiusButton: '1rem',
-                      buttonBorderRadius: '1rem',
-                      inputBorderRadius: '1rem',
+                      borderRadiusButton: '0.75rem',
+                      inputBorderRadius: '0.75rem',
                     },
                   },
                 },
                 style: {
-                  button: {
-                    border: '1px solid #E2E8F0',
-                    borderRadius: '1rem',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                    fontWeight: '600',
-                    transition: 'all 0.2s ease-in-out',
-                  },
-                  anchor: {
-                    color: '#472DA6',
-                    textDecoration: 'none',
-                    fontWeight: '500',
-                  },
-                  container: {
-                    direction: 'rtl',
-                  },
-                  input: {
-                    border: '1px solid #CBD5E1',
-                    borderRadius: '1rem',
-                    direction: 'rtl',
-                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                    transition: 'all 0.2s ease-in-out',
-                  },
-                  label: {
-                    color: '#475569',
-                    direction: 'rtl',
-                    textAlign: 'right',
-                    fontWeight: '500',
-                  },
-                  message: {
-                    color: '#EF4444',
-                    direction: 'rtl',
-                    textAlign: 'right',
-                    fontWeight: '500',
-                  },
+                  button: { borderRadius: '0.75rem', fontWeight: '500' },
+                  input: { borderRadius: '0.75rem' },
+                  label: { direction: 'rtl', textAlign: 'right', fontWeight: '500' },
+                  container: { direction: 'rtl' },
                 },
               }}
               localization={{
@@ -485,7 +340,6 @@ export default function LoginForm() {
                     password_input_placeholder: 'הכנס את הסיסמה שלך',
                     button_label: 'התחבר',
                     loading_button_label: 'מתחבר...',
-                    social_provider_text: 'התחבר עם {{provider}}',
                     link_text: 'יש לך כבר חשבון? התחבר',
                   },
                   sign_up: {
@@ -495,15 +349,13 @@ export default function LoginForm() {
                     password_input_placeholder: 'הכנס סיסמה',
                     button_label: 'הירשם',
                     loading_button_label: 'נרשם...',
-                    social_provider_text: 'הירשם עם {{provider}}',
                     link_text: 'אין לך חשבון? הירשם',
                   },
                   forgotten_password: {
                     email_label: 'כתובת אימייל',
-                    password_label: 'סיסמה',
                     email_input_placeholder: 'הכנס את כתובת האימייל שלך',
                     button_label: 'שלח הוראות איפוס',
-                    loading_button_label: 'שולח הוראות איפוס...',
+                    loading_button_label: 'שולח...',
                     link_text: 'שכחת את הסיסמה?',
                   },
                 },
@@ -519,4 +371,4 @@ export default function LoginForm() {
       )}
     </div>
   )
-} 
+}
