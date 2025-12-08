@@ -55,7 +55,8 @@ ${jsonStructure}
 - תן ציון מ-4 עד 10 לכל פרמטר (4-6 חלש/בסיסי, 7-8 טוב, 9-10 מצוין)
 - ב"תובנות" תן הסבר קצר ובהיר של הביצועים
 - ב"איך_משפרים" תן המלצה מעשית ספציפית + דוגמה מדויקה לנוסח מקצועי
-- כלול general_key_insights, improvement_points, overall_score ו-red_flags
+- כלול general_key_insights, improvement_points, strengths_and_preservation_points, overall_score ו-red_flags
+- ⚠️ חובה לכלול גם נקודות לשימור (strengths_and_preservation_points) - מה הנציג עשה טוב!
 - החזר רק JSON תקין ללא backticks או markdown
 
 ⚠️ חובה! כללי JSON קריטיים למניעת שגיאות:
@@ -79,7 +80,8 @@ ${jsonStructure}
   "נקודות_חוזק": ["רשימת חוזקות"],
   "נקודות_לשיפור": ["רשימת שיפורים"],
   "general_key_insights": ["תובנות מפתח"],
-  "improvement_points": ["נקודות לשיפור"],
+  "improvement_points": ["נקודות לשיפור - מה צריך לתקן"],
+  "strengths_and_preservation_points": ["נקודות לשימור - מה הנציג עשה טוב"],
   "overall_score": number,
   "red_flags": []
 }
@@ -111,7 +113,8 @@ function buildJSONStructureFromFields(analysisFields: any): string {
   
   // הוספת שדות חובה
   jsonParts.push(`  "general_key_insights": ["רשימת תובנות מפתח"]`);
-  jsonParts.push(`  "improvement_points": ["רשימת נקודות לשיפור"]`);
+  jsonParts.push(`  "improvement_points": ["רשימת נקודות לשיפור - מה צריך לתקן"]`);
+  jsonParts.push(`  "strengths_and_preservation_points": ["רשימת נקודות לשימור - מה הנציג עשה טוב ויש להמשיך"]`);
   jsonParts.push(`  "overall_score": number`);
   jsonParts.push(`  "red_flags": []`);
   
@@ -1140,7 +1143,8 @@ export async function POST(request: Request) {
               "למה_דווקא_איתנו": {"ציון": number, "תובנות": "string", "איך_משפרים": "string"}
             }`},
             "general_key_insights": ["רשימת תובנות מפתח"],
-            "improvement_points": ["רשימת נקודות לשיפור"],
+            "improvement_points": ["רשימת נקודות לשיפור - מה צריך לתקן"],
+            "strengths_and_preservation_points": ["רשימת נקודות לשימור - מה הנציג עשה טוב"],
             "overall_score": number,
             "red_flag": boolean
           }
@@ -1151,6 +1155,7 @@ export async function POST(request: Request) {
           - כלול בכל "איך_משפרים" גם דוגמה מדויקה למה הנציג היה צריך לומר במקום או בנוסף למה שאמר
           - דוגמה לפורמט רצוי: "להוסיף שאלות פתוחות יותר. דוגמה: במקום 'האם זה מתאים לך?' אמור 'איך אתה רואה את זה עוזר לעסק שלך?'"
           - ציין נקודות כשל מרכזיות ב-improvement_points
+          - ⚠️ חובה! ציין גם נקודות לשימור ב-strengths_and_preservation_points - מה הנציג עשה טוב ויש להמשיך לעשות!
           - סכם עם תובנות מפתח ב-general_key_insights
           - חשב ממוצע משוקלל כללי ב-overall_score
           
