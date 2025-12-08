@@ -54,21 +54,10 @@ export default function SimulationsDashboard({ userId, userRole, companyId }: Si
 
   const fetchSimulations = async () => {
     try {
+      // שאילתה פשוטה בלי joins מורכבים
       let query = supabase
         .from('simulations')
-        .select(`
-          *,
-          customer_personas_hebrew:persona_id (
-            persona_name,
-            personality_type
-          ),
-          simulation_reports_hebrew!simulation_id (
-            overall_score,
-            summary,
-            strengths,
-            improvement_areas
-          )
-        `)
+        .select('*')
 
       // סינון לפי תפקיד
       if (userRole === 'agent') {
