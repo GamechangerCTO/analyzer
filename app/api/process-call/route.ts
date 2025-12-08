@@ -58,11 +58,13 @@ ${jsonStructure}
 - כלול general_key_insights, improvement_points, overall_score ו-red_flags
 - החזר רק JSON תקין ללא backticks או markdown
 
-⚠️ חובה! כללי JSON קריטיים:
-- אל תשתמש במרכאות כפולות בתוך ערכי הטקסט
-- וודא שכל ערך טקסט מתחיל ומסתיים במרכאות כפולות
+⚠️ חובה! כללי JSON קריטיים למניעת שגיאות:
+- אל תשתמש במרכאות כפולות (") בתוך ערכי הטקסט - השתמש בגרש בודד (') או מקף (-) במקום
+- דוגמאות בתוך טקסט: במקום "הנציג אמר "שלום"" כתוב "הנציג אמר 'שלום'" או "הנציג אמר - שלום"
+- וודא שכל ערך טקסט מתחיל ומסתיים במרכאות כפולות ללא הפרעה באמצע
 - אל תכלול line breaks או tabs בתוך ערכי טקסט
-- לפני כל מפתח JSON חייב להיות פסיק (למעט הראשון)`;
+- לפני כל מפתח JSON חייב להיות פסיק (למעט הראשון)
+- כל משפט בערך טקסט חייב להיות רצוף ללא שבירות`;
   }
 
   // אם אין שדות ניתוח - נשתמש במבנה כללי
@@ -135,7 +137,7 @@ const openai = new OpenAI({
 function cleanOpenAIResponse(content: string): string {
   if (!content) return '{}';
   
-  console.log(`🧹 מנקה תגובת OpenAI (גרסה פשוטה ומדויקת)`, { original_length: content.length });
+  console.log(`🧹 מנקה תגובת OpenAI (גרסה משופרת)`, { original_length: content.length });
   
   // ניקוי בסיסי של Markdown blocks ורווחים
   let cleaned = content
@@ -153,7 +155,7 @@ function cleanOpenAIResponse(content: string): string {
     throw new Error('No valid JSON found in OpenAI response');
   }
   
-  // ניקוי תווי בקרה שגורמים לשגיאות (הבעיה העיקרית!)
+  // ניקוי תווי בקרה שגורמים לשגיאות
   cleaned = cleaned.replace(/[\r\n\t]/g, ' ').replace(/\s+/g, ' ');
   
   // איזון סוגריים בסיסי
@@ -182,14 +184,93 @@ function cleanOpenAIResponse(content: string): string {
     console.log(`✅ JSON תקין אחרי ניקוי פשוט`, { cleaned_length: cleaned.length });
     return cleaned;
   } catch (parseError: any) {
-    console.error(`❌ JSON לא תקין גם אחרי ניקוי פשוט - הבעיה בפרומפט!`, { 
+    console.log(`⚠️ JSON לא תקין - מנסה תיקון מתקדם`, { 
       error: parseError.message,
-      position: parseError.message.match(/position (\d+)/)?.[1],
-      content_preview: cleaned.substring(0, 200)
+      position: parseError.message.match(/position (\d+)/)?.[1]
     });
     
-    // במקום לנסות לתקן, נזרוק שגיאה שתאלץ את המודל ליצור JSON נכון
-    throw new Error(`Failed to parse OpenAI JSON response: ${parseError.message}. Content preview: ${cleaned.substring(0, 200)}`);
+    // תיקון מתקדם: מרכאות בתוך ערכי טקסט
+    // מחפש pattern של "key": "value with "quotes" inside"
+    // ומחליף את המרכאות הפנימיות ב-escaped או מסיר אותן
+    let fixed = cleaned;
+    
+    // תיקון 1: החלפת מרכאות כפולות בתוך ערכים ב-single quotes
+    // מחפש: ": "...text..."text"...text"  (מרכאות פנימיות)
+    fixed = fixed.replace(/"([^"]*)"([^",:}\]]+)"([^"]*?)"/g, (match, p1, p2, p3) => {
+      // אם זה נראה כמו ערך עם מרכאות פנימיות, נחליף ל-single quotes
+      return `"${p1}'${p2}'${p3}"`;
+    });
+    
+    // תיקון 2: מרכאות שמופיעות אחרי "דוגמה:" או "דוגמה לנוסח:"
+    fixed = fixed.replace(/דוגמה[^"]*:\s*"([^"]+)"/g, (match, inner) => {
+      // החלפת מרכאות פנימיות ב-single quotes
+      const cleanInner = inner.replace(/"/g, "'");
+      return `דוגמה: '${cleanInner}'`;
+    });
+    
+    // תיקון 3: הסרת מרכאות לא חוקיות (מופיעות אחרי ערך לפני פסיק או סוגר)
+    fixed = fixed.replace(/"(\s*[,}\]])/g, '"$1');
+    
+    // תיקון 4: מרכאות כפולות רצופות
+    fixed = fixed.replace(/""+/g, '"');
+    
+    // תיקון 5: פסיקים כפולים
+    fixed = fixed.replace(/,\s*,/g, ',');
+    
+    // תיקון 6: פסיק לפני סוגר סגירה
+    fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
+    
+    try {
+      JSON.parse(fixed);
+      console.log(`✅ JSON תוקן בהצלחה אחרי תיקון מתקדם`, { fixed_length: fixed.length });
+      return fixed;
+    } catch (secondError: any) {
+      console.log(`⚠️ עדיין לא תקין - מנסה recovery חלקי`);
+      
+      // ניסיון אחרון: חיתוך עד לנקודה האחרונה התקינה
+      const errorPosition = secondError.message.match(/position (\d+)/)?.[1];
+      if (errorPosition) {
+        const pos = parseInt(errorPosition);
+        // מוצאים את הסגירה האחרונה התקינה לפני השגיאה
+        let truncated = fixed.substring(0, pos);
+        
+        // מחפשים את ה-} האחרון שסוגר אובייקט שלם
+        let depth = 0;
+        let lastValidClose = -1;
+        for (let i = 0; i < truncated.length; i++) {
+          if (truncated[i] === '{') depth++;
+          if (truncated[i] === '}') {
+            depth--;
+            if (depth >= 0) lastValidClose = i;
+          }
+        }
+        
+        if (lastValidClose > 0) {
+          truncated = truncated.substring(0, lastValidClose + 1);
+          // סוגרים את כל הסוגריים הפתוחים
+          let openBraces = (truncated.match(/{/g) || []).length;
+          let closeBraces = (truncated.match(/}/g) || []).length;
+          while (openBraces > closeBraces) {
+            truncated += '}';
+            closeBraces++;
+          }
+          
+          try {
+            JSON.parse(truncated);
+            console.log(`✅ JSON שוחזר חלקית`, { recovered_length: truncated.length, original_length: cleaned.length });
+            return truncated;
+          } catch {
+            // לא הצלחנו לשחזר
+          }
+        }
+      }
+      
+      console.error(`❌ כל ניסיונות התיקון נכשלו`, { 
+        error: secondError.message,
+        content_preview: fixed.substring(0, 300)
+      });
+      throw new Error(`Failed to parse OpenAI JSON response: ${parseError.message}. Content preview: ${cleaned.substring(0, 200)}`);
+    }
   }
 }
 
