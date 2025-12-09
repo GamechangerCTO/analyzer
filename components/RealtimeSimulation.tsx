@@ -80,7 +80,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
     if (persona?.voice_characteristics?.gender) {
       const gender = persona.voice_characteristics.gender
       console.log('🔊 מגדר מה-AI:', gender)
-      return gender === 'male' ? 'onyx' : 'coral'
+      return gender === 'male' ? 'ash' : 'coral'
     }
     
     // 2. ניחוש לפי שם (fallback)
@@ -94,7 +94,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
     
     if (commonMale.includes(firstName)) {
       console.log('🔊 שם גברי מוכר:', firstName)
-      return 'onyx'
+      return 'ash'
     }
     if (commonFemale.includes(firstName)) {
       console.log('🔊 שם נשי מוכר:', firstName)
@@ -171,7 +171,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   }, [persona, simulation, company])
 
   const createFallbackInstructions = () => {
-    const isGenderMale = getVoiceForPersona() === 'onyx'
+    const isGenderMale = getVoiceForPersona() === 'ash'
     const genderText = isGenderMale ? 'לקוח' : 'לקוחה'
     
     // חילוץ פרמטרים חלשים
