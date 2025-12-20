@@ -347,6 +347,9 @@ export async function POST(request: NextRequest) {
         company_size: truncateString(personaData.company_size, 50),
         background_story: personaData.background_story,
         current_situation: personaData.current_situation,
+        emotional_state: truncateString(personaData.emotional_state, 50), // 🔴 מצב רגשי
+        speaking_style: truncateString(personaData.speaking_style, 50), // 🔴 סגנון דיבור
+        opening_line: personaData.opening_line, // 🔴 משפט פתיחה
         pain_points: personaData.pain_points || [],
         goals_and_objectives: personaData.goals_and_objectives || [],
         common_objections: personaData.common_objections || [],
@@ -358,7 +361,7 @@ export async function POST(request: NextRequest) {
         time_pressure: truncateString(personaData.time_pressure, 20),
         openai_instructions: personaData.openai_instructions,
         scenario_templates: personaData.scenario_templates || {},
-        voice_characteristics: personaData.voice_characteristics || { gender: 'female' }, // 🔴 שמירת מגדר הפרסונה
+        voice_characteristics: personaData.voice_characteristics || { gender: 'female' },
         targets_weaknesses: targetWeaknesses || [],
         difficulty_level: truncateString(difficulty, 20),
         is_template: false
@@ -570,32 +573,42 @@ ${targetWeaknesses.join(', ')}
   "communication_style": "סגנון תקשורת (דוגמה: ישירה, מנומסת, תוקפנית)",
   "industry_context": "הקשר תעשייתי",
   "company_size": "גודל חברה (דוגמה: סטארטאפ, חברה קטנה, בינונית, תאגיד)",
-  "background_story": "סיפור רקע של הלקוח בעברית - מי הוא, מה הניסיון שלו",
-  "current_situation": "המצב הנוכחי והצרכים של הלקוח",
-  "pain_points": ["נקודות כאב בעברית"],
+  "background_story": "סיפור רקע מפורט של הלקוח - מי הוא, מה הניסיון שלו, מה קרה לו שהוביל לפנייה",
+  "current_situation": "המצב הנוכחי והצרכים של הלקוח - למה הוא מתקשר עכשיו",
+  "emotional_state": "מצב רגשי נוכחי (לחוץ/סקפטי/רגוע/כעוס/מתלהב/מהסס/חסר סבלנות)",
+  "speaking_style": "סגנון דיבור (פורמלי/לא פורמלי/קצר וענייני/מפורט/רגשי/עסקי)",
+  "pain_points": ["נקודות כאב ספציפיות בעברית"],
   "goals_and_objectives": ["מטרות ויעדים בעברית"],
-  "common_objections": ["התנגדויות נפוצות שהוא יעלה בעברית"],
+  "common_objections": ["התנגדויות ספציפיות שהוא יעלה - לפחות 3-5 התנגדויות"],
   "objection_patterns": {
-    "price": "איך הוא מתנגד למחיר",
-    "trust": "איך הוא מבטא חוסר אמון",
-    "timing": "איך הוא מתנגד לזמנים"
+    "price": "איך בדיוק הוא מתנגד למחיר - משפט מדויק",
+    "trust": "איך הוא מבטא חוסר אמון - משפט מדויק",
+    "timing": "איך הוא מתנגד לזמנים - משפט מדויק",
+    "competition": "איך הוא מזכיר מתחרים - משפט מדויק",
+    "authority": "איך הוא מתחמק מהחלטה - משפט מדויק"
   },
   "preferred_communication": ["דרכי תקשורת מועדפות"],
-  "decision_making_style": "איך הוא מקבל החלטות",
+  "decision_making_style": "איך הוא מקבל החלטות (מהיר/שקול/צריך אישור/משתף אחרים)",
   "budget_sensitivity": "רגישות לתקציב (גבוהה/בינונית/נמוכה)",
   "time_pressure": "לחץ זמן (דחוף/רגיל/גמיש)",
-  "openai_instructions": "הוראות מפורטות לAI בעברית - איך להתנהג כלקוח הזה בסימולציה",
+  "opening_line": "המשפט הראשון שהלקוח יגיד כשהשיחה מתחילה - חייב להיות טבעי ואותנטי",
+  "openai_instructions": "הוראות מפורטות לAI בעברית - איך להתנהג כלקוח הזה בסימולציה. כלול: טון דיבור, קצב תגובה, מתי להעלות התנגדויות, מתי להתרכך, סימנים שמראים התקדמות",
   "scenario_templates": {
-    "opening": "איך מתחילים איתו שיחה",
-    "objections": "איך הוא מעלה התנגדויות",
-    "closing": "איך מנסים לסגור איתו"
+    "opening": "איך הלקוח פותח את השיחה",
+    "objections": "איך ומתי הוא מעלה התנגדויות",
+    "softening": "מה גורם לו להתרכך ולהקשיב",
+    "closing": "מה הוא צריך לשמוע כדי להסכים"
   },
   "voice_characteristics": {
     "gender": "male או female - המגדר של הפרסונה (לקביעת הקול בסימולציה)"
   }
 }
 
-חשוב: כל הטקסט בעברית בלבד!`
+חשוב מאוד:
+1. כל הטקסט בעברית בלבד!
+2. הפרסונה חייבת להיות ריאליסטית ומאתגרת
+3. ה-opening_line הוא קריטי - זה מה שהלקוח יגיד ראשון!
+4. ההתנגדויות חייבות להיות ספציפיות ולא כלליות`
 
   return prompt
 }

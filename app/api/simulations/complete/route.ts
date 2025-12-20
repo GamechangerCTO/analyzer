@@ -51,40 +51,77 @@ export async function POST(request: Request) {
     const persona = simulation.customer_personas_hebrew
     const selectedTopics = simulation.selected_topics || ['כללי']
     
+    // שליפת שיחה מקורית אם יש
+    let originalCallAnalysis = null
+    if (simulation.source_call_id) {
+      const { data: originalCall } = await supabase
+        .from('calls')
+        .select('content_analysis, tone_analysis, overall_score')
+        .eq('id', simulation.source_call_id)
+        .single()
+      originalCallAnalysis = originalCall
+    }
+
     const analysisPrompt = `אתה מנתח מקצועי של שיחות מכירות ושירות. נתח את הסימולציה הבאה והפק דוח מפורט.
 
 **פרטי הסימולציה:**
 - פרסונת לקוח: ${persona?.persona_name || 'לקוח כללי'}
 - סוג אישיות: ${persona?.personality_type || 'סטנדרטי'}
+- מצב רגשי: ${persona?.emotional_state || 'לא ידוע'}
 - נושאים לאימון: ${selectedTopics.join(', ')}
 - משך: ${duration ? Math.floor(duration / 60) + ' דקות' : 'לא ידוע'}
 
 **תמלול השיחה:**
 ${finalTranscript || 'לא זמין'}
 
+${originalCallAnalysis ? `
+**השוואה לשיחה המקורית:**
+- ציון השיחה המקורית: ${originalCallAnalysis.overall_score}/10
+- חולשות שזוהו: ${JSON.stringify(originalCallAnalysis.content_analysis?.improvement_points || [])}
+` : ''}
+
 **הפק דוח JSON עם המבנה הבא:**
 {
-  "overall_score": [1-10],
+  "overall_score": [1-10 - ציון כללי],
   "communication_score": [1-10],
   "objection_handling_score": [1-10],
   "rapport_building_score": [1-10],
   "closing_score": [1-10],
   "product_knowledge_score": [1-10],
-  "summary": "סיכום קצר של הביצוע",
-  "strengths": ["נקודת חוזק 1", "נקודת חוזק 2"],
-  "improvement_areas": ["תחום לשיפור 1", "תחום לשיפור 2"],
-  "action_items": ["המלצה 1", "המלצה 2", "המלצה 3"],
+  "summary": "סיכום קצר של הביצוע הכללי",
+  "strengths": ["נקודת חוזק 1 - מה עשה טוב", "נקודת חוזק 2"],
+  "improvement_areas": ["תחום לשיפור 1 - מה צריך לתקן", "תחום לשיפור 2"],
+  "action_items": ["המלצה מעשית 1", "המלצה מעשית 2", "המלצה מעשית 3"],
+  "key_quotes": [
+    {"speaker": "נציג/לקוח", "quote": "ציטוט חשוב מהשיחה", "context": "הקשר ומשמעות"},
+    {"speaker": "נציג/לקוח", "quote": "ציטוט נוסף", "context": "הקשר"}
+  ],
+  "what_should_have_said": [
+    {"situation": "מתי", "said": "מה הנציג אמר", "should_say": "מה היה צריך להגיד"},
+    {"situation": "מתי", "said": "מה הנציג אמר", "should_say": "מה היה צריך להגיד"}
+  ],
   "detailed_feedback": {
-    "opening": "משוב על פתיחת השיחה",
-    "needs_discovery": "משוב על איתור צרכים",
-    "objection_handling": "משוב על טיפול בהתנגדויות",
-    "closing": "משוב על סגירה"
-  }
+    "opening": "משוב על פתיחת השיחה - מה טוב ומה לשפר",
+    "needs_discovery": "משוב על איתור צרכים - מה טוב ומה לשפר",
+    "objection_handling": "משוב על טיפול בהתנגדויות - מה טוב ומה לשפר",
+    "closing": "משוב על סגירה - מה טוב ומה לשפר"
+  },
+  "comparison_to_original": ${originalCallAnalysis ? `{
+    "improved": ["תחום שהשתפר"],
+    "still_needs_work": ["תחום שעדיין דורש עבודה"],
+    "score_change": "השוואת ציונים ומגמה"
+  }` : 'null'}
 }
+
+⚠️ חובה:
+1. כלול לפחות 3 נקודות חוזק (strengths)
+2. כלול לפחות 3 נקודות לשיפור (improvement_areas)
+3. כלול לפחות 2 ציטוטים חשובים (key_quotes)
+4. כלול לפחות 2 דוגמאות למה היה צריך להגיד (what_should_have_said)
 
 החזר רק JSON תקין, ללא הסברים נוספים.`
 
-    let reportData = {
+    let reportData: any = {
       overall_score: 6,
       communication_score: 6,
       objection_handling_score: 6,
@@ -92,10 +129,13 @@ ${finalTranscript || 'לא זמין'}
       closing_score: 6,
       product_knowledge_score: 6,
       summary: 'הסימולציה הושלמה',
-      strengths: ['השתתפות פעילה'],
-      improvement_areas: ['להמשיך לתרגל'],
-      action_items: ['לתרגל יותר'],
-      detailed_feedback: {}
+      strengths: ['השתתפות פעילה בסימולציה', 'נכונות לתרגל'],
+      improvement_areas: ['להמשיך לתרגל', 'לשפר טכניקות'],
+      action_items: ['לתרגל יותר', 'לחזור על הסימולציה'],
+      key_quotes: [],
+      what_should_have_said: [],
+      detailed_feedback: {},
+      comparison_to_original: null
     }
     
     try {
@@ -160,7 +200,7 @@ ${finalTranscript || 'לא זמין'}
       }
     }
     
-    // שמירת הדוח
+    // שמירת הדוח המורחב
     const { data: report, error: reportError } = await supabase
       .from('simulation_reports_hebrew')
       .insert({
@@ -173,10 +213,14 @@ ${finalTranscript || 'לא זמין'}
         rapport_building_score: reportData.rapport_building_score || 6,
         closing_score: reportData.closing_score || 6,
         product_knowledge_score: reportData.product_knowledge_score || 6,
+        summary: reportData.summary || 'הסימולציה הושלמה',
         detailed_feedback: reportData.detailed_feedback || {},
         improvement_areas: reportData.improvement_areas || [],
         strengths: reportData.strengths || [],
-        action_items: reportData.action_items || []
+        action_items: reportData.action_items || [],
+        key_quotes: reportData.key_quotes || [],
+        what_should_have_said: reportData.what_should_have_said || [],
+        comparison_to_original: reportData.comparison_to_original || null
       })
       .select()
       .single()

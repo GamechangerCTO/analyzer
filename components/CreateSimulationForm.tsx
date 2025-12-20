@@ -17,51 +17,35 @@ export default function CreateSimulationForm({
   existingPersonas 
 }: CreateSimulationFormProps) {
   const router = useRouter()
-  const [currentStep, setCurrentStep] = useState(1)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [formData, setFormData] = useState({
-    // שלב 1: בחירת מקור
-    sourceType: 'analysis', // 'analysis' | 'custom' | 'existing'
-    selectedCallId: '',
-    
-    // שלב 2: הגדרות סימולציה
-    difficulty: 'בינוני',
-    focusArea: '',
-    specificScenario: '',
-    estimatedDuration: 10,
-    
-    // שלב 3: פרסונה
-    useExistingPersona: false,
-    selectedPersonaId: '',
-    
-    // שלב 4: תרחיש
-    customScenarioTitle: '',
-    customScenarioDescription: ''
-  })
-
-  // State לנושאים נבחרים - ברירת מחדל: פתיחת שיחה ובניית אמון
+  
+  // שלב נוכחי בתהליך
+  const [creationMode, setCreationMode] = useState<'select' | 'call-based' | 'topic-based' | null>(null)
+  
+  // נתונים לאופציה 1 - על בסיס שיחה
+  const [selectedCallId, setSelectedCallId] = useState('')
+  
+  // נתונים לאופציה 2 - על בסיס נושאים
   const [selectedTopics, setSelectedTopics] = useState<string[]>(['פתיחת_שיחה_ובניית_אמון'])
 
-  // רשימת הנושאים לאימון
+  // רשימת 8 הנושאים לאימון
   const simulationTopics = [
-    { id: 'פתיחת_שיחה_ובניית_אמון', label: 'פתיחת שיחה ובניית אמון' },
-    { id: 'איתור_צרכים_וזיהוי_כאב', label: 'איתור צרכים וזיהוי כאב' },
-    { id: 'הקשבה_ואינטראקציה', label: 'הקשבה ואינטראקציה' },
-    { id: 'הצגת_פתרון_והדגשת_ערך', label: 'הצגת פתרון והדגשת ערך' },
-    { id: 'טיפול_בהתנגדויות', label: 'טיפול בהתנגדויות' },
-    { id: 'הנעה_לפעולה_וסגירה', label: 'הנעה לפעולה וסגירה' },
-    { id: 'שפת_תקשורת', label: 'שפת תקשורת' },
-    { id: 'שלושת_הלמה', label: 'שלושת הלמה' }
+    { id: 'פתיחת_שיחה_ובניית_אמון', label: 'פתיחת שיחה ובניית אמון', icon: '👋', desc: 'יצירת רושם ראשוני חיובי וחיבור עם הלקוח' },
+    { id: 'איתור_צרכים_וזיהוי_כאב', label: 'איתור צרכים וזיהוי כאב', icon: '🔍', desc: 'שאלות פתוחות והבנת הבעיה האמיתית' },
+    { id: 'הקשבה_ואינטראקציה', label: 'הקשבה ואינטראקציה', icon: '👂', desc: 'הקשבה אקטיבית ושיקוף' },
+    { id: 'הצגת_פתרון_והדגשת_ערך', label: 'הצגת פתרון והדגשת ערך', icon: '💡', desc: 'הצגת המוצר כפתרון לבעיה' },
+    { id: 'טיפול_בהתנגדויות', label: 'טיפול בהתנגדויות', icon: '🛡️', desc: 'התמודדות עם התנגדויות מחיר, זמן ואמון' },
+    { id: 'הנעה_לפעולה_וסגירה', label: 'הנעה לפעולה וסגירה', icon: '🎯', desc: 'טכניקות סגירה ויצירת דחיפות' },
+    { id: 'שפת_תקשורת', label: 'שפת תקשורת', icon: '💬', desc: 'בהירות, מקצועיות ושפה חיובית' },
+    { id: 'שלושת_הלמה', label: 'שלושת הלמה', icon: '❓', desc: 'למה דווקא אנחנו, למה עכשיו, למה איתנו' }
   ]
 
   // פונקציה להחלפת מצב נושא (toggle)
   const toggleTopic = (topicId: string) => {
     setSelectedTopics(prev => {
       if (prev.includes(topicId)) {
-        // אם מנסים לבטל את הנושא האחרון - מונעים
         if (prev.length === 1) {
-          alert('חובה לבחור לפחות נושא אחד')
-          return prev
+          return prev // חובה לבחור לפחות נושא אחד
         }
         return prev.filter(t => t !== topicId)
       } else {
@@ -70,66 +54,60 @@ export default function CreateSimulationForm({
     })
   }
 
-  const handleNext = () => {
-    if (currentStep < 4) {
-      setCurrentStep(currentStep + 1)
-    }
+  // בחירת כל הנושאים
+  const selectAllTopics = () => {
+    setSelectedTopics(simulationTopics.map(t => t.id))
   }
 
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
+  // ניקוי כל הנושאים (חוץ מאחד)
+  const clearTopics = () => {
+    setSelectedTopics([simulationTopics[0].id])
   }
 
+  // יצירת הסימולציה
   const handleSubmit = async () => {
     setIsGenerating(true)
     
     try {
-      // יצירת פרסונה אם נדרש
-      let personaId = formData.selectedPersonaId
-      
-      if (!formData.useExistingPersona) {
-        // חילוץ נתוני השיחה הנבחרת לניתוח מפורט
-        let selectedCallAnalysis = null
-        if (formData.selectedCallId && formData.sourceType === 'analysis') {
-          const selectedCall = recentCalls.find(call => call.id === formData.selectedCallId)
-          if (selectedCall) {
-            selectedCallAnalysis = {
-              call_type: selectedCall.call_type,
-              overall_score: selectedCall.overall_score,
-              content_analysis: selectedCall.content_analysis,
-              tone_analysis: selectedCall.tone_analysis,
-              red_flags: selectedCall.red_flags || [],
-              improvement_areas: selectedCall.improvement_areas || [],
-              duration_seconds: selectedCall.duration_seconds,
-              created_at: selectedCall.created_at
-            }
+      // חילוץ נתוני השיחה הנבחרת (אם יש)
+      let selectedCallAnalysis = null
+      if (selectedCallId && creationMode === 'call-based') {
+        const selectedCall = recentCalls.find(call => call.id === selectedCallId)
+        if (selectedCall) {
+          selectedCallAnalysis = {
+            call_type: selectedCall.call_type,
+            overall_score: selectedCall.overall_score,
+            content_analysis: selectedCall.content_analysis,
+            tone_analysis: selectedCall.tone_analysis,
+            red_flags: selectedCall.red_flags || [],
+            improvement_areas: selectedCall.improvement_areas || [],
+            duration_seconds: selectedCall.duration_seconds,
+            created_at: selectedCall.created_at
           }
         }
+      }
 
-        const personaResponse = await fetch('/api/simulations/generate-persona', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            agentId: user.id,
-            companyId: user.company_id,
-            targetWeaknesses: formData.focusArea ? [formData.focusArea] : [],
-            difficulty: formData.difficulty,
-            specificScenario: formData.specificScenario,
-            callAnalysis: selectedCallAnalysis, // העברת הניתוח המלא של השיחה
-            selectedTopics: selectedTopics // ✅ הנושאים שנבחרו
-          })
+      // יצירת פרסונה
+      const personaResponse = await fetch('/api/simulations/generate-persona', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentId: user.id,
+          companyId: user.company_id,
+          targetWeaknesses: [], // נקבע אוטומטית מהניתוח
+          difficulty: 'אוטומטי', // נקבע לפי ניתוח השיחות
+          callAnalysis: selectedCallAnalysis,
+          selectedTopics: creationMode === 'topic-based' ? selectedTopics : []
         })
-        
-        if (!personaResponse.ok) {
-          throw new Error('Failed to generate persona')
-        }
-        
-        const personaData = await personaResponse.json()
-        personaId = personaData.persona.id
+      })
+      
+      if (!personaResponse.ok) {
+        throw new Error('Failed to generate persona')
       }
       
+      const personaData = await personaResponse.json()
+      const personaId = personaData.persona.id
+
       // יצירת תרחיש
       const scenarioResponse = await fetch('/api/simulations/generate-scenario', {
         method: 'POST',
@@ -137,9 +115,9 @@ export default function CreateSimulationForm({
         body: JSON.stringify({
           personaId,
           companyId: user.company_id,
-          difficulty: formData.difficulty,
-          focusArea: formData.focusArea,
-          estimatedDuration: formData.estimatedDuration
+          difficulty: 'אוטומטי',
+          focusArea: '',
+          estimatedDuration: 10 // 10 דקות מקסימום
         })
       })
       
@@ -147,19 +125,19 @@ export default function CreateSimulationForm({
         throw new Error('Failed to generate scenario')
       }
       
-      const scenarioData = await scenarioResponse.json()
-      
-      // יצירת הסימולציה עצמה  
+      // יצירת הסימולציה עצמה
       const simulationResponse = await fetch('/api/simulations/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          simulation_type: formData.focusArea || 'אימון כללי',
-          customer_persona: 'לקוח ווירטואלי', // שם הפרסונה כטקסט
-          persona_id: personaId || null, // ✅ UUID לקישור לטבלת customer_personas_hebrew
-          difficulty_level: formData.difficulty,
-          triggered_by_call_id: formData.selectedCallId || null,
-          selectedTopics: selectedTopics // ✅ הנושאים שנבחרו
+          simulation_type: creationMode === 'call-based' ? 'אימון מבוסס שיחה' : 'אימון לפי נושאים',
+          customer_persona: 'לקוח ווירטואלי',
+          persona_id: personaId,
+          difficulty_level: 'אוטומטי',
+          triggered_by_call_id: selectedCallId || null,
+          selectedTopics: creationMode === 'topic-based' ? selectedTopics : [],
+          source_call_id: selectedCallId || null,
+          max_duration_seconds: 600 // 10 דקות
         })
       })
       
@@ -168,8 +146,6 @@ export default function CreateSimulationForm({
       }
       
       const simulation = await simulationResponse.json()
-      
-      // ניווט לסימולציה
       router.push(`/simulations/${simulation.simulation.id}`)
       
     } catch (error) {
@@ -180,540 +156,310 @@ export default function CreateSimulationForm({
     }
   }
 
-  return (
-    <div className="bg-white rounded-xl shadow-lg">
-      {/* Progress Bar */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center space-x-4">
-          {[1, 2, 3, 4].map((step) => (
-            <div key={step} className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step <= currentStep 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-600'
-              }`}>
-                {step}
-              </div>
-              {step < 4 && (
-                <div className={`w-12 h-1 mx-2 ${
-                  step < currentStep ? 'bg-blue-600' : 'bg-gray-200'
-                }`} />
-              )}
-            </div>
-          ))}
+  // מסך בחירת אופציה
+  if (!creationMode || creationMode === 'select') {
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+            🎯 יצירת סימולציה חדשה
+          </h1>
+          <p className="text-gray-600 text-lg">
+            בחר איך תרצה לבנות את הסימולציה שלך
+          </p>
         </div>
-        
-        <div className="mt-4">
-          <h2 className="text-xl font-bold text-gray-900">
-            {currentStep === 1 && 'בחר מקור לסימולציה'}
-            {currentStep === 2 && 'הגדר את האימון'}
-            {currentStep === 3 && 'בחר לקוח ווירטואלי'}
-            {currentStep === 4 && 'סיכום וביצוע'}
-          </h2>
-        </div>
-      </div>
 
-      <div className="p-6">
-        {/* Step 1: Source Selection */}
-        {currentStep === 1 && (
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              איך תרצה לבנות את הסימולציה?
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {/* אופציה 1: על בסיס שיחה */}
+          <button
+            onClick={() => setCreationMode('call-based')}
+            disabled={recentCalls.length === 0}
+            className={`p-8 border-3 rounded-2xl text-right transition-all transform hover:scale-102 ${
+              recentCalls.length === 0 
+                ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60' 
+                : 'border-blue-200 bg-blue-50 hover:border-blue-500 hover:shadow-lg'
+            }`}
+          >
+            <div className="text-5xl mb-4">📊</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">
+              על בסיס שיחה קיימת
             </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button
-                onClick={() => setFormData({...formData, sourceType: 'analysis'})}
-                className={`p-6 border-2 rounded-lg text-center transition-all ${
-                  formData.sourceType === 'analysis' 
-                    ? 'border-blue-600 bg-blue-50' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="text-3xl mb-3">📊</div>
-                <h4 className="font-medium text-gray-900 mb-2">
-                  מבוסס על ניתוח שיחות
-                </h4>
-                <p className="text-sm text-gray-600">
-                  צור סימולציה המבוססת על נקודות החולשה מהניתוחים שלך
-                </p>
-              </button>
-
-              <button
-                onClick={() => setFormData({...formData, sourceType: 'custom'})}
-                className={`p-6 border-2 rounded-lg text-center transition-all ${
-                  formData.sourceType === 'custom' 
-                    ? 'border-blue-600 bg-blue-50' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="text-3xl mb-3">🎨</div>
-                <h4 className="font-medium text-gray-900 mb-2">
-                  מותאם אישית
-                </h4>
-                <p className="text-sm text-gray-600">
-                  צור סימולציה עם תרחיש והגדרות שאתה בוחר
-                </p>
-              </button>
-
-              <button
-                onClick={() => setFormData({...formData, sourceType: 'existing'})}
-                className={`p-6 border-2 rounded-lg text-center transition-all ${
-                  formData.sourceType === 'existing' 
-                    ? 'border-blue-600 bg-blue-50' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="text-3xl mb-3">🎭</div>
-                <h4 className="font-medium text-gray-900 mb-2">
-                  לקוח קיים
-                </h4>
-                <p className="text-sm text-gray-600">
-                  השתמש באחד מהלקוחות הווירטואליים הקיימים
-                </p>
-              </button>
+            <p className="text-gray-600 mb-4">
+              הפרסונה והתרחיש ייבנו מניתוח שיחה אמיתית שלך - 
+              <span className="font-medium text-blue-700"> תתרגל בדיוק את מה שצריך לשפר!</span>
+            </p>
+            <div className="flex items-center text-sm text-blue-600">
+              <span className="bg-blue-100 px-3 py-1 rounded-full">
+                {recentCalls.length} שיחות זמינות
+              </span>
             </div>
+          </button>
 
-            {formData.sourceType === 'analysis' && recentCalls.length > 0 && (
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  בחר שיחה לניתוח ויצירת פרסונה מותאמת:
-                </label>
-                <div className="space-y-3">
-                  {recentCalls.slice(0, 5).map((call) => {
-                    // חילוץ נקודות שיפור מהניתוח
-                    let improvementAreas = []
-                    try {
-                      if (call.content_analysis) {
-                        const content = typeof call.content_analysis === 'string' ? 
-                          JSON.parse(call.content_analysis) : call.content_analysis
-                        if (content.איך_משפרים || content.improvement_areas) {
-                          improvementAreas = Array.isArray(content.איך_משפרים) ? 
-                            content.איך_משפרים : 
-                            (Array.isArray(content.improvement_areas) ? 
-                             content.improvement_areas : 
-                             [content.איך_משפרים || content.improvement_areas])
-                        }
-                      }
-                    } catch (e) {
-                      // אם לא הצלחנו לחלץ, נשאיר ריק
-                    }
+          {/* אופציה 2: על בסיס נושאים */}
+          <button
+            onClick={() => setCreationMode('topic-based')}
+            className="p-8 border-3 border-green-200 bg-green-50 rounded-2xl text-right transition-all transform hover:scale-102 hover:border-green-500 hover:shadow-lg"
+          >
+            <div className="text-5xl mb-4">📚</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">
+              בחירת נושאים לאימון
+            </h3>
+            <p className="text-gray-600 mb-4">
+              בחר מתוך 8 נושאי ליבה של מכירות ושירות -
+              <span className="font-medium text-green-700"> אימון ממוקד לפי הצרכים שלך!</span>
+            </p>
+            <div className="flex items-center text-sm text-green-600">
+              <span className="bg-green-100 px-3 py-1 rounded-full">
+                8 נושאים לבחירה
+              </span>
+            </div>
+          </button>
+        </div>
 
-                    return (
-                      <button
-                        key={call.id}
-                        onClick={() => setFormData({...formData, selectedCallId: call.id})}
-                        className={`w-full text-right p-4 border rounded-lg transition-all ${
-                          formData.selectedCallId === call.id
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900 mb-1">{call.call_type}</div>
-                              <div className="text-sm text-gray-500">
-                                {new Date(call.created_at).toLocaleDateString('he-IL')} • 
-                                {call.duration_seconds ? ` ${Math.round(call.duration_seconds / 60)} דקות` : ''}
-                              </div>
-                            </div>
-                            <div className="text-center ml-4">
-                              <div className={`text-lg font-bold ${
-                                call.overall_score >= 8 ? 'text-green-600' :
-                                call.overall_score >= 6 ? 'text-yellow-600' :
-                                'text-red-600'
-                              }`}>
-                                {call.overall_score}/10
-                              </div>
-                              {call.red_flags && call.red_flags.length > 0 && (
-                                <div className="text-xs text-red-600">🚩 {call.red_flags.length} דגלים</div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          {improvementAreas.length > 0 && (
-                            <div className="bg-orange-50 border border-orange-200 rounded p-3">
-                              <div className="text-sm font-medium text-orange-900 mb-1">
-                                נקודות לשיפור שזוהו:
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                {improvementAreas.slice(0, 3).map((area: string, index: number) => (
-                                  <span key={index} className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">
-                                    {area}
-                                  </span>
-                                ))}
-                                {improvementAreas.length > 3 && (
-                                  <span className="text-xs text-orange-600">+{improvementAreas.length - 3} נוספות</span>
-                                )}
-                              </div>
-                            </div>
-                          )}
+        {recentCalls.length === 0 && (
+          <div className="mt-6 text-center">
+            <p className="text-gray-500 text-sm">
+              💡 העלה שיחות לניתוח כדי לאפשר סימולציות מבוססות שיחה
+            </p>
+          </div>
+        )}
+      </div>
+    )
+  }
 
-                          {formData.selectedCallId === call.id && (
-                            <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                              <div className="flex items-center space-x-2">
-                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span className="text-sm text-blue-800">
-                                  ייווצר לקוח ווירטואלי שיתרגל בדיוק את החולשות שזוהו בשיחה זו
-                                </span>
-                              </div>
-                            </div>
-                          )}
+  // אופציה 1: בחירת שיחה
+  if (creationMode === 'call-based') {
+    return (
+      <div className="bg-white rounded-xl shadow-lg">
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200">
+          <button
+            onClick={() => setCreationMode('select')}
+            className="text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-2"
+          >
+            ← חזרה לבחירת אופציה
+          </button>
+          <h2 className="text-2xl font-bold text-gray-900">
+            📊 בחר שיחה לבסס עליה את הסימולציה
+          </h2>
+          <p className="text-gray-600 mt-2">
+            הפרסונה תאתגר אותך בדיוק בנקודות החולשה שזוהו בשיחה
+          </p>
+        </div>
+
+        <div className="p-6">
+          <div className="space-y-4">
+            {recentCalls.map((call) => {
+              // חילוץ נקודות שיפור מהניתוח
+              let improvementAreas: string[] = []
+              let strengths: string[] = []
+              try {
+                if (call.content_analysis) {
+                  const content = typeof call.content_analysis === 'string' ? 
+                    JSON.parse(call.content_analysis) : call.content_analysis
+                  if (content.improvement_points || content.איך_משפרים) {
+                    improvementAreas = Array.isArray(content.improvement_points) ? 
+                      content.improvement_points : 
+                      (Array.isArray(content.איך_משפרים) ? content.איך_משפרים : [])
+                  }
+                  if (content.strengths_and_preservation_points || content.נקודות_חוזק) {
+                    strengths = Array.isArray(content.strengths_and_preservation_points) ? 
+                      content.strengths_and_preservation_points : 
+                      (Array.isArray(content.נקודות_חוזק) ? content.נקודות_חוזק : [])
+                  }
+                }
+              } catch (e) {}
+
+              return (
+                <button
+                  key={call.id}
+                  onClick={() => setSelectedCallId(call.id)}
+                  className={`w-full text-right p-5 border-2 rounded-xl transition-all ${
+                    selectedCallId === call.id
+                      ? 'border-blue-600 bg-blue-50 shadow-md'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="font-bold text-gray-900 text-lg">{call.call_type}</span>
+                        <span className="text-sm text-gray-500">
+                          {new Date(call.created_at).toLocaleDateString('he-IL')}
+                        </span>
+                      </div>
+                      
+                      {improvementAreas.length > 0 && (
+                        <div className="mb-2">
+                          <span className="text-sm text-red-600 font-medium">📍 לשיפור: </span>
+                          <span className="text-sm text-gray-600">
+                            {improvementAreas.slice(0, 2).join(', ')}
+                            {improvementAreas.length > 2 && ` +${improvementAreas.length - 2}`}
+                          </span>
                         </div>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {formData.selectedCallId && (
-                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-start space-x-3">
-                      <div className="text-xl">🎯</div>
-                      <div>
-                        <h4 className="font-medium text-green-900 mb-1">
-                          אימון מותאם אישית
-                        </h4>
-                        <p className="text-green-700 text-sm">
-                          הפרסונה שתיווצר תתמחה בדיוק בנקודות החולשה שזוהו בשיחה שבחרת. 
-                          כל ההגדרות ייקבעו אוטומטית מהניתוח.
-                        </p>
-                        
-                        {/* 🔴 כפתור התחלה מהירה */}
-                        <button
-                          onClick={handleSubmit}
-                          disabled={isGenerating}
-                          className="mt-4 w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                          {isGenerating ? (
-                            <>
-                              <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-                              יוצר סימולציה...
-                            </>
-                          ) : (
-                            <>
-                              🚀 התחל סימולציה עכשיו
-                            </>
-                          )}
-                        </button>
+                      )}
+                      
+                      {strengths.length > 0 && (
+                        <div>
+                          <span className="text-sm text-green-600 font-medium">✓ חוזקות: </span>
+                          <span className="text-sm text-gray-600">
+                            {strengths.slice(0, 2).join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="text-center mr-4">
+                      <div className={`text-2xl font-bold ${
+                        call.overall_score >= 8 ? 'text-green-600' :
+                        call.overall_score >= 6 ? 'text-yellow-600' :
+                        'text-red-600'
+                      }`}>
+                        {call.overall_score}/10
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+                </button>
+              )
+            })}
           </div>
-        )}
 
-        {/* Step 2: Simulation Settings */}
-        {currentStep === 2 && (
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              הגדר את פרמטרי האימון
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  רמת קושי
-                </label>
-                <select
-                  value={formData.difficulty}
-                  onChange={(e) => setFormData({...formData, difficulty: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="קל">קל - לקוח נעים ושיתופי</option>
-                  <option value="בינוני">בינוני - לקוח עם כמה התנגדויות</option>
-                  <option value="קשה">קשה - לקוח תובעני עם התנגדויות חזקות</option>
-                  <option value="מתקדם">מתקדם - לקוח מאוד מורכב</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  משך זמן משוער (דקות)
-                </label>
-                <select
-                  value={formData.estimatedDuration}
-                  onChange={(e) => setFormData({...formData, estimatedDuration: parseInt(e.target.value)})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value={5}>5 דקות - אימון מהיר</option>
-                  <option value={10}>10 דקות - אימון רגיל</option>
-                  <option value={15}>15 דקות - אימון מפורט</option>
-                  <option value={20}>20 דקות - אימון מעמיק</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                תחום מיקוד (אופציונלי)
-              </label>
-              <select
-                value={formData.focusArea}
-                onChange={(e) => setFormData({...formData, focusArea: e.target.value})}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">בחר תחום מיקוד</option>
-                <option value="התמודדות עם התנגדויות">התמודדות עם התנגדויות</option>
-                <option value="בניית קשר">בניית קשר עם הלקוח</option>
-                <option value="סגירת עסקה">טכניקות סגירת עסקה</option>
-                <option value="הצגת מוצר">הצגת מוצר ויתרונות</option>
-                <option value="זיהוי צרכים">זיהוי וברור צרכי הלקוח</option>
-                <option value="תמחור ומיקוח">דיונים על מחיר ומיקוח</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                תרחיש ספציפי (אופציונלי)
-              </label>
-              <textarea
-                value={formData.specificScenario}
-                onChange={(e) => setFormData({...formData, specificScenario: e.target.value})}
-                placeholder="תאר תרחיש ספציפי שברצונך להתאמן עליו..."
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-                rows={3}
-              />
-            </div>
-
-            {/* בחירת נושאים לאימון */}
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                בחר נושאים לאימון (חובה לבחור לפחות אחד)
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {simulationTopics.map(topic => (
-                  <label 
-                    key={topic.id}
-                    className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                      selectedTopics.includes(topic.id)
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedTopics.includes(topic.id)}
-                      onChange={() => toggleTopic(topic.id)}
-                      className="w-4 h-4 text-blue-600 ml-2"
-                    />
-                    <span className="mr-3 text-gray-900">{topic.label}</span>
-                  </label>
-                ))}
-              </div>
-              <p className="text-sm text-gray-500 mt-2">
-                נבחרו {selectedTopics.length} מתוך {simulationTopics.length} נושאים
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Persona Selection */}
-        {currentStep === 3 && (
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              בחר או צור לקוח ווירטואלי
-            </h3>
-
-            <div className="flex space-x-4 mb-6">
-              <button
-                onClick={() => setFormData({...formData, useExistingPersona: true})}
-                className={`flex-1 p-4 border-2 rounded-lg text-center transition-all ${
-                  formData.useExistingPersona 
-                    ? 'border-blue-600 bg-blue-50' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="text-2xl mb-2">🎭</div>
-                <div className="font-medium">השתמש בלקוח קיים</div>
-              </button>
-              <button
-                onClick={() => setFormData({...formData, useExistingPersona: false})}
-                className={`flex-1 p-4 border-2 rounded-lg text-center transition-all ${
-                  !formData.useExistingPersona 
-                    ? 'border-blue-600 bg-blue-50' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="text-2xl mb-2">✨</div>
-                <div className="font-medium">צור לקוח חדש</div>
-              </button>
-            </div>
-
-            {formData.useExistingPersona && (
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  בחר לקוח מהרשימה:
-                </label>
-                {existingPersonas.length > 0 ? (
-                  <div className="space-y-2">
-                    {existingPersonas.map((persona) => (
-                      <button
-                        key={persona.id}
-                        onClick={() => setFormData({...formData, selectedPersonaId: persona.id})}
-                        className={`w-full text-right p-4 border rounded-lg transition-all ${
-                          formData.selectedPersonaId === persona.id
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-900 mb-1">
-                              {persona.persona_name}
-                            </div>
-                            <div className="text-sm text-gray-500 mb-2">
-                              {persona.personality_type} • {persona.communication_style}
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              {persona.current_situation}
-                            </div>
-                          </div>
-                          <div className="text-left ml-4">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              persona.difficulty_level === 'קל' ? 'bg-green-100 text-green-800' :
-                              persona.difficulty_level === 'בינוני' ? 'bg-yellow-100 text-yellow-800' :
-                              persona.difficulty_level === 'קשה' ? 'bg-red-100 text-red-800' :
-                              'bg-purple-100 text-purple-800'
-                            }`}>
-                              {persona.difficulty_level}
-                            </span>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <div className="text-4xl mb-2">🤷‍♂️</div>
-                    <p>אין לקוחות ווירטואליים קיימים</p>
-                    <p className="text-sm">נצור לך לקוח חדש מותאם אישית</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!formData.useExistingPersona && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start space-x-3">
-                  <div className="text-2xl">🤖</div>
-                  <div>
-                    <h4 className="font-medium text-blue-900 mb-1">
-                      יצירת לקוח ווירטואלי חכם
-                    </h4>
-                    <p className="text-blue-700 text-sm">
-                      נבין את הצרכים שלך ונצור לקוח ווירטואלי מותאם במיוחד עבורך, 
-                      בהתבסס על {formData.selectedCallId ? 'הניתוח שבחרת' : 'ההגדרות שקבעת'}.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Step 4: Summary */}
-        {currentStep === 4 && (
-          <div className="space-y-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              סיכום ויצירת הסימולציה
-            </h3>
-
-            <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {selectedCallId && (
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">🎯</span>
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">הגדרות אימון</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• רמת קושי: <strong>{formData.difficulty}</strong></li>
-                    <li>• משך זמן: <strong>{formData.estimatedDuration} דקות</strong></li>
-                    {formData.focusArea && (
-                      <li>• תחום מיקוד: <strong>{formData.focusArea}</strong></li>
-                    )}
-                  </ul>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">לקוח ווירטואלי</h4>
-                  <p className="text-sm text-gray-600">
-                    {formData.useExistingPersona 
-                      ? existingPersonas.find(p => p.id === formData.selectedPersonaId)?.persona_name || 'לא נבחר'
-                      : 'יווצר לקוח חדש מותאם אישית'}
+                  <h4 className="font-bold text-blue-900">מוכן לסימולציה!</h4>
+                  <p className="text-blue-700 text-sm">
+                    הלקוח הווירטואלי יאתגר אותך בנקודות החולשה שזוהו
                   </p>
                 </div>
               </div>
-
-              {formData.selectedCallId && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">מבוסס על שיחה</h4>
-                  <p className="text-sm text-gray-600">
-                    {recentCalls.find(c => c.id === formData.selectedCallId)?.call_type} • 
-                    {new Date(recentCalls.find(c => c.id === formData.selectedCallId)?.created_at).toLocaleDateString('he-IL')}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <div className="text-xl">⏱️</div>
-                <div>
-                  <h4 className="font-medium text-yellow-900 mb-1">
-                    זמן יצירה משוער
-                  </h4>
-                  <p className="text-yellow-700 text-sm">
-                    יצירת הסימולציה עלולה לקחת 30-60 שניות. 
-                    אנחנו יוצרים לך לקוח ווירטואלי מותאם במיוחד עם תרחיש מפורט.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between pt-6 border-t border-gray-200">
-          <button
-            onClick={handleBack}
-            disabled={currentStep === 1}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            ← חזור
-          </button>
-
-          <div className="flex space-x-3">
-            {currentStep < 4 ? (
-              <button
-                onClick={handleNext}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                המשך →
-              </button>
-            ) : (
+              
               <button
                 onClick={handleSubmit}
                 disabled={isGenerating}
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-3"
               >
                 {isGenerating ? (
-                  <span className="flex items-center space-x-2">
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>יוצר סימולציה...</span>
-                  </span>
+                  <>
+                    <div className="animate-spin w-6 h-6 border-3 border-white border-t-transparent rounded-full" />
+                    יוצר סימולציה...
+                  </>
                 ) : (
-                  '🚀 צור סימולציה'
+                  <>
+                    🚀 התחל סימולציה
+                  </>
                 )}
               </button>
-            )}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // אופציה 2: בחירת נושאים
+  if (creationMode === 'topic-based') {
+    return (
+      <div className="bg-white rounded-xl shadow-lg">
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200">
+          <button
+            onClick={() => setCreationMode('select')}
+            className="text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-2"
+          >
+            ← חזרה לבחירת אופציה
+          </button>
+          <h2 className="text-2xl font-bold text-gray-900">
+            📚 בחר נושאים לאימון
+          </h2>
+          <p className="text-gray-600 mt-2">
+            הלקוח הווירטואלי יאתגר אותך בנושאים שתבחר
+          </p>
+        </div>
+
+        <div className="p-6">
+          {/* כפתורי בחירה מהירה */}
+          <div className="flex gap-3 mb-6">
+            <button
+              onClick={selectAllTopics}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+            >
+              ✓ בחר הכל
+            </button>
+            <button
+              onClick={clearTopics}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+            >
+              ✕ נקה בחירה
+            </button>
+            <span className="mr-auto px-4 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+              נבחרו {selectedTopics.length} מתוך {simulationTopics.length}
+            </span>
+          </div>
+
+          {/* רשימת נושאים */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {simulationTopics.map(topic => (
+              <button
+                key={topic.id}
+                onClick={() => toggleTopic(topic.id)}
+                className={`p-4 border-2 rounded-xl text-right transition-all ${
+                  selectedTopics.includes(topic.id)
+                    ? 'border-green-500 bg-green-50 shadow-md'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">{topic.icon}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900">{topic.label}</span>
+                      {selectedTopics.includes(topic.id) && (
+                        <span className="text-green-600">✓</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">{topic.desc}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* כפתור התחלה */}
+          <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-2xl">🎯</span>
+              <div>
+                <h4 className="font-bold text-green-900">מוכן לסימולציה!</h4>
+                <p className="text-green-700 text-sm">
+                  הלקוח הווירטואלי יאתגר אותך ב-{selectedTopics.length} נושאים שבחרת
+                </p>
+              </div>
+            </div>
+            
+            <button
+              onClick={handleSubmit}
+              disabled={isGenerating || selectedTopics.length === 0}
+              className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+              {isGenerating ? (
+                <>
+                  <div className="animate-spin w-6 h-6 border-3 border-white border-t-transparent rounded-full" />
+                  יוצר סימולציה...
+                </>
+              ) : (
+                <>
+                  🚀 התחל סימולציה
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  return null
 }

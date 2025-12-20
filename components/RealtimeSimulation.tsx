@@ -43,11 +43,22 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null) // 🔴 להקלטה
   const audioChunksRef = useRef<Blob[]>([]) // 🔴 חלקי ההקלטה
 
-  // 🔴 חדש: טיימר שמתעדכן כל שניה
+  // 🔴 טיימר שמתעדכן כל שניה - מקסימום 10 דקות!
+  const MAX_DURATION_SECONDS = 600 // 10 דקות
+  
   useEffect(() => {
     if (status === 'active' && !isPaused) {
       timerIntervalRef.current = setInterval(() => {
-        setElapsedTime(prev => prev + 1)
+        setElapsedTime(prev => {
+          const newTime = prev + 1
+          // סיום אוטומטי אחרי 10 דקות
+          if (newTime >= MAX_DURATION_SECONDS) {
+            console.log('⏰ הגיע למקסימום זמן - מסיים סימולציה')
+            endSimulation()
+            return prev
+          }
+          return newTime
+        })
       }, 1000)
     } else {
       if (timerIntervalRef.current) {
@@ -71,8 +82,8 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   // הגדרת פרסונת הלקוח ל-AI (קבלת הפרסונה מהפרמטר או מהסימולציה)
   const persona = customerPersona || simulation.customer_personas_hebrew?.[0]
   
-  // קביעת קול בהתאם לפרסונה
-  const getVoiceForPersona = () => {
+  // קביעת קול בהתאם לפרסונה - קולות חדשים!
+  const getVoiceForPersona = (): 'echo' | 'ash' | 'coral' | 'shimmer' => {
     const personaName = persona?.persona_name || ''
     console.log('🔊 בוחר קול לפרסונה:', personaName)
     
@@ -80,21 +91,21 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
     if (persona?.voice_characteristics?.gender) {
       const gender = persona.voice_characteristics.gender
       console.log('🔊 מגדר מה-AI:', gender)
-      return gender === 'male' ? 'onyx' : 'coral'
+      // echo = גברי חזק, ash = גברי רך
+      // coral = נשי חם, shimmer = נשי בהיר
+      return gender === 'male' ? 'echo' : 'coral'
     }
     
     // 2. ניחוש לפי שם (fallback)
     const firstName = personaName.split(' ')[0].split('-')[0].trim()
-    const maleEndings = ['ון', 'אל', 'וד', 'יר', 'ן']  // סיומות גבריות נפוצות
-    const femaleEndings = ['ה', 'ית', 'ן', 'י']  // סיומות נשיות נפוצות
     
     // שמות נפוצים
-    const commonMale = ['רן', 'אלון', 'דוד', 'משה', 'אבי', 'רועי', 'גיל', 'טל']
-    const commonFemale = ['שירה', 'נועה', 'מיכל', 'יעל', 'דנה', 'תמר', 'הילה', 'עדי']
+    const commonMale = ['רן', 'אלון', 'דוד', 'משה', 'אבי', 'רועי', 'גיל', 'טל', 'יוסי', 'עמית', 'אורי']
+    const commonFemale = ['שירה', 'נועה', 'מיכל', 'יעל', 'דנה', 'תמר', 'הילה', 'עדי', 'רונית', 'גלית', 'אורית']
     
     if (commonMale.includes(firstName)) {
       console.log('🔊 שם גברי מוכר:', firstName)
-      return 'onyx'
+      return 'echo'
     }
     if (commonFemale.includes(firstName)) {
       console.log('🔊 שם נשי מוכר:', firstName)
@@ -318,9 +329,9 @@ ${weaknessSection}
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
 
-      // שליחה לOpenAI Realtime API
+      // שליחה לOpenAI Realtime API - מודל חדש!
       const baseUrl = "https://api.openai.com/v1/realtime"
-      const model = "gpt-realtime-mini-2025-10-06"
+      const model = "gpt-realtime-mini-2025-12-15"
       
       console.log('🔑 Ephemeral token:', ephemeralKeyRef.current?.substring(0, 20) + '...')
       console.log('📡 Sending SDP offer to:', `${baseUrl}?model=${model}`)
@@ -441,12 +452,12 @@ ${weaknessSection}
     // התחלת הקלטה אוטומטית
     setTimeout(() => startRecording(), 500)
 
-    // הגדרת session עם ההוראות
+    // הגדרת session עם ההוראות - מודל חדש!
     const sessionUpdate = {
       type: "session.update",
       session: {
         type: "realtime",
-        model: "gpt-realtime-mini-2025-10-06",
+        model: "gpt-realtime-mini-2025-12-15",
         modalities: ["text", "audio"],
         instructions: aiInstructions || createFallbackInstructions(),
         voice: getVoiceForPersona(),
@@ -466,17 +477,27 @@ ${weaknessSection}
 
     dc.send(JSON.stringify(sessionUpdate))
 
-    // הודעת פתיחה מהלקוח - הAI הוא הלקוח!
+    // 🔴 הלקוח (AI) מתחיל את השיחה - משפט פתיחה מהפרסונה או ברירת מחדל
     setTimeout(() => {
+      const openingLine = persona?.opening_line || 
+        `שלום, אני ${persona?.persona_name || 'מתקשר'}, ראיתי את הפרסום שלכם ורציתי לשמוע עוד...`
+      
       const openingMessage = {
         type: "response.create",
         response: {
           modalities: ["audio"],
-          instructions: `⚠️ אתה הלקוח, לא איש המכירות!
-פתח את השיחה כלקוח שמתקשר לחברה. אמור משהו כמו:
-"שלום, שמי ${persona?.persona_name || 'דני'}, אני מתקשר כי ראיתי את הפרסום שלכם ורציתי לשמוע עוד..."
-או: "היי, אני מחפש פתרון ל... מישהו המליץ לי עליכם"
-🚫 אל תשאל "איך אוכל לעזור לך" - זה משפט של איש שירות, ואתה הלקוח!`
+          instructions: `⚠️ אתה הלקוח ${persona?.persona_name || ''}, לא איש המכירות!
+          
+📢 פתח את השיחה עם המשפט הבא (או גרסה טבעית שלו):
+"${openingLine}"
+
+🎭 מצב רגשי: ${persona?.emotional_state || 'מעוניין אך זהיר'}
+💬 סגנון דיבור: ${persona?.speaking_style || 'ישיר וענייני'}
+
+🚫 חשוב מאוד:
+- אל תשאל "איך אוכל לעזור לך" - זה משפט של נציג!
+- אתה הלקוח שמתקשר/מקבל שיחה
+- חכה שהנציג ינהל את השיחה`
         }
       }
       dc.send(JSON.stringify(openingMessage))
@@ -643,12 +664,19 @@ ${weaknessSection}
               רמת קושי: {simulation.difficulty_level}
             </p>
             
-            {/* 🔴 חדש: טיימר גדול */}
+            {/* 🔴 טיימר גדול עם זמן נותר */}
             {status === 'active' && (
               <div className="mt-3 flex items-center gap-4">
-                <div className="text-3xl font-mono font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-lg">
-                  ⏱️ {formatTime(elapsedTime)}
+                <div className={`text-3xl font-mono font-bold px-4 py-2 rounded-lg ${
+                  elapsedTime >= 540 ? 'text-red-600 bg-red-50 animate-pulse' : // אחרי 9 דקות
+                  elapsedTime >= 480 ? 'text-orange-600 bg-orange-50' : // אחרי 8 דקות
+                  'text-blue-600 bg-blue-50'
+                }`}>
+                  ⏱️ {formatTime(elapsedTime)} / 10:00
                 </div>
+                {elapsedTime >= 540 && (
+                  <span className="text-red-600 font-bold animate-pulse">⚠️ פחות מדקה!</span>
+                )}
                 {isPaused && (
                   <span className="text-orange-600 font-bold animate-pulse">⏸️ מושהה</span>
                 )}
