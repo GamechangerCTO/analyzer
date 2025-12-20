@@ -143,26 +143,24 @@ module.exports = {
         },
       },
       boxShadow: {
-        // Updated shadows to work with new color scheme
-        'brand-soft': '0 4px 25px rgba(71, 45, 166, 0.08)',
-        'brand-hover': '0 8px 40px rgba(71, 45, 166, 0.12)',
-        'brand-strong': '0 12px 50px rgba(71, 45, 166, 0.16)',
+        // Clean, subtle shadows
+        'brand-soft': '0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03)',
+        'brand-hover': '0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03)',
+        'brand-strong': '0 10px 15px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.03)',
         
-        // Legacy glacier shadows mapped to new brand
-        'glacier-soft': '0 4px 25px rgba(71, 45, 166, 0.08)',
-        'glacier-hover': '0 8px 40px rgba(71, 45, 166, 0.12)',
-        'glacier-strong': '0 12px 50px rgba(71, 45, 166, 0.16)',
+        // Legacy glacier shadows - now cleaner
+        'glacier-soft': '0 1px 3px rgba(0, 0, 0, 0.05)',
+        'glacier-hover': '0 4px 6px rgba(0, 0, 0, 0.05)',
+        'glacier-strong': '0 10px 15px rgba(0, 0, 0, 0.05)',
       },
       animation: {
-        // Brand-specific animations
-        'brand-pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'brand-bounce': 'bounce 1s infinite',
-        'brand-fade-in': 'fadeIn 0.5s ease-in-out',
-        
-        // Legacy glacier animations
-        'glacier-pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'glacier-bounce': 'bounce 1s infinite',
-        'glacier-fade-in': 'fadeIn 0.5s ease-in-out',
+        // Minimal animations - only essential ones
+        'brand-fade-in': 'fadeIn 0.3s ease-out',
+      },
+      borderRadius: {
+        // Leaf shape utilities
+        'leaf': '1rem 0.5rem',
+        'leaf-lg': '1.5rem 0.75rem',
       },
       backgroundImage: {
         'brand-gradient': 'linear-gradient(135deg, #472DA6 0%, #5336BF 50%, #3DA61F 100%)',
