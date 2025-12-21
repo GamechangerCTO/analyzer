@@ -21,6 +21,17 @@ export interface SimulationPromptParams {
   specificScenario?: string
   agentWeaknesses?: string[]
   selectedTopics?: string[] // ✅ נושאים שנבחרו לאימון
+  // ✅ פרטי שאלון החברה המלאים
+  companyQuestionnaire?: {
+    sector?: string
+    product_info?: string
+    avg_product_cost?: string
+    audience?: string
+    product_types?: string
+    differentiators?: string
+    customer_benefits?: string
+    company_benefits?: string
+  }
 }
 
 /**
@@ -160,10 +171,19 @@ ${params.backgroundStory}
 ### 🎯 המצב הנוכחי שלך:
 ${params.currentSituation}
 
-### 🏢 החברה שאתה מתקשר אליה:
-- שם: ${params.companyName || 'החברה'}
-- תחום: ${params.industry || 'כללי'}
-- מוצר/שירות: ${params.productService || 'שירות'}
+### 🏢 החברה שאתה מתקשר אליה (פרטים מלאים):
+- **שם החברה:** ${params.companyName || 'החברה'}
+- **תחום פעילות:** ${params.companyQuestionnaire?.sector || params.industry || 'כללי'}
+- **מוצר/שירות שמעניין אותך:** ${params.companyQuestionnaire?.product_info || params.productService || 'שירות'}
+${params.companyQuestionnaire?.avg_product_cost ? `- **טווח מחיר משוער:** ${params.companyQuestionnaire.avg_product_cost}` : ''}
+${params.companyQuestionnaire?.audience ? `- **אתה שייך לקהל היעד:** ${params.companyQuestionnaire.audience}` : ''}
+${params.companyQuestionnaire?.product_types ? `- **סוגי המוצרים/שירותים:** ${params.companyQuestionnaire.product_types}` : ''}
+
+### 💎 מה הם טוענים שמייחד אותם (תאתגר את זה!):
+${params.companyQuestionnaire?.differentiators ? `הם אומרים שהבידול שלהם: "${params.companyQuestionnaire.differentiators}"
+→ **שאל אותם:** "מה מבדיל אתכם באמת מהמתחרים?"` : ''}
+${params.companyQuestionnaire?.customer_benefits ? `הם טוענים לתועלות: "${params.companyQuestionnaire.customer_benefits}"
+→ **שאל אותם:** "איך בדיוק אני ארגיש את זה?"` : ''}
 
 ## 🚫 ההתנגדויות הספציפיות שלך (העלה בהדרגה):
 ${params.commonObjections.map((obj, i) => `${i + 1}. ${obj}`).join('\n')}

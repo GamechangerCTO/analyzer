@@ -145,7 +145,10 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
         // ✅ חילוץ נושאים נבחרים מהסימולציה
         const selectedTopics = simulation.selected_topics || []
         
-        // יצירת פרמטרים לפרומפט
+        // שליפת נתוני השאלון של החברה
+        const questionnaire = company?.company_questionnaires?.[0]
+        
+        // יצירת פרמטרים לפרומפט - כולל כל פרטי השאלון!
         const promptParams: SimulationPromptParams = {
           personaName: persona.persona_name || 'לקוח',
           personalityType: persona.personality_type || 'ידידותי',
@@ -156,12 +159,23 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
           targetsWeaknesses: persona.targets_weaknesses || [],
           difficultyLevel: simulation.difficulty_level || 'medium',
           companyName: company?.name,
-          industry: company?.company_questionnaires?.[0]?.industry,
-          productService: company?.company_questionnaires?.[0]?.product_service,
+          industry: questionnaire?.sector,
+          productService: questionnaire?.product_info,
           callType: callType as any,
           specificScenario: simulation.scenario_description,
           agentWeaknesses: agentWeaknesses,
-          selectedTopics: selectedTopics // ✅ הנושאים שנבחרו
+          selectedTopics: selectedTopics,
+          // ✅ כל פרטי השאלון לפרומפט מותאם!
+          companyQuestionnaire: questionnaire ? {
+            sector: questionnaire.sector,
+            product_info: questionnaire.product_info,
+            avg_product_cost: questionnaire.avg_product_cost,
+            audience: questionnaire.audience,
+            product_types: questionnaire.product_types,
+            differentiators: questionnaire.differentiators,
+            customer_benefits: questionnaire.customer_benefits,
+            company_benefits: questionnaire.company_benefits
+          } : undefined
         }
         
         // יצירת פרומפט מותאם מהמסד הנתונים
