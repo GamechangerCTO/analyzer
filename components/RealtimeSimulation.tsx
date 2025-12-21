@@ -253,9 +253,13 @@ ${weaknessSection}
       }
 
       const data = await response.json()
-      ephemeralKeyRef.current = data.client_secret?.value
+      // GA API מחזיר { value: "ek_..." } ישירות
+      ephemeralKeyRef.current = data.value
+      
+      console.log('🔑 Ephemeral token:', data.value?.substring(0, 20) + '...')
       
       if (!ephemeralKeyRef.current) {
+        console.error('❌ No ephemeral token in response:', data)
         throw new Error('No ephemeral token received')
       }
 

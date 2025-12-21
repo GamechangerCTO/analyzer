@@ -88,13 +88,13 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text()
       console.error('❌ שגיאה ביצירת ephemeral token:', response.status, errorText)
       return NextResponse.json(
-        { error: `Failed to create ephemeral token: ${response.status}` },
+        { error: `Failed to create ephemeral token: ${response.status}`, details: errorText },
         { status: 500 }
       )
     }
 
     const data = await response.json()
-    console.log('✅ Ephemeral token נוצר בהצלחה')
+    console.log('✅ Ephemeral token נוצר בהצלחה:', data.value?.substring(0, 20) + '...')
 
     // עדכון סטטוס הסימולציה
     await supabase
