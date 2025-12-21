@@ -99,6 +99,7 @@ export async function validateCompanyQuestionnaire(
  */
 export function createFallbackPersona(questionnaire: any): any {
   if (!questionnaire) {
+    const isMale = Math.random() > 0.5
     return {
       persona_name: 'לקוח פוטנציאלי',
       personality_type: 'מקצועי ומעורב',
@@ -107,6 +108,9 @@ export function createFallbackPersona(questionnaire: any): any {
       company_size: 'בינוני',
       background_story: 'לקוח פוטנציאלי המעוניין במוצרים/שירותים שלנו',
       current_situation: 'מחפש פתרון לצרכים שלו',
+      emotional_state: 'סקפטי אך פתוח', // 🔴 שדה חדש
+      speaking_style: 'ישיר וענייני', // 🔴 שדה חדש
+      opening_line: 'שלום, ראיתי את הפרסום שלכם ורציתי לשאול כמה שאלות...', // 🔴 שדה חדש
       pain_points: ['צורך בפתרון איכותי', 'רגישות למחיר', 'חוסר ודאות'],
       goals_and_objectives: ['מציאת פתרון מתאים', 'ערך תמורת כסף'],
       common_objections: ['מחיר', 'זמן', 'אמון'],
@@ -126,7 +130,7 @@ export function createFallbackPersona(questionnaire: any): any {
         closing: 'בקש זמן לחשוב לפני החלטה'
       },
       voice_characteristics: {
-        gender: Math.random() > 0.5 ? 'male' : 'female'
+        gender: isMale ? 'male' : 'female'
       }
     }
   }
@@ -159,6 +163,9 @@ export function createFallbackPersona(questionnaire: any): any {
     company_size: 'בינוני',
     background_story: `${firstName} הוא לקוח פוטנציאלי ב${industry}. הוא שמע על ${productService} ומעוניין להבין אם זה מתאים לצרכים שלו.`,
     current_situation: `מחפש ${productService} שיעניק לו ${benefits}`,
+    emotional_state: 'סקפטי אך מתעניין', // 🔴 שדה חדש
+    speaking_style: 'מקצועי וישיר', // 🔴 שדה חדש
+    opening_line: `שלום, שמעתי על ${productService} שלכם ורציתי לשאול כמה שאלות...`, // 🔴 שדה חדש
     pain_points: [
       `קושי למצוא ${productService} איכותי`,
       'חששות לגבי מחיר',
