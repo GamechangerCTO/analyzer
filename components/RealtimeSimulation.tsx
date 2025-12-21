@@ -452,19 +452,17 @@ ${weaknessSection}
     // התחלת הקלטה אוטומטית
     setTimeout(() => startRecording(), 500)
 
-    // הגדרת session עם ההוראות - מודל חדש!
+    // הגדרת session עם ההוראות - ללא שדות לא נתמכים
     const sessionUpdate = {
       type: "session.update",
       session: {
-        type: "realtime",
-        model: "gpt-realtime-mini-2025-12-15",
         modalities: ["text", "audio"],
         instructions: aiInstructions || createFallbackInstructions(),
         voice: getVoiceForPersona(),
         input_audio_format: "pcm16",
         output_audio_format: "pcm16",
         input_audio_transcription: {
-          model: "gpt-4o-mini-transcribe"
+          model: "whisper-1"
         },
         turn_detection: {
           type: "server_vad",
@@ -475,6 +473,7 @@ ${weaknessSection}
       }
     }
 
+    console.log('📤 שולח session.update:', JSON.stringify(sessionUpdate, null, 2))
     dc.send(JSON.stringify(sessionUpdate))
 
     // 🔴 הלקוח (AI) מתחיל את השיחה - משפט פתיחה מהפרסונה או ברירת מחדל
