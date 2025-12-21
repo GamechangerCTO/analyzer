@@ -103,7 +103,29 @@ export async function POST(request: NextRequest) {
       reasoning: { effort: "low" }, // יצירה יצירתית של תרחיש
     })
 
-    const scenarioData = JSON.parse(cleanOpenAIResponse(scenarioResponse.output_text || '{}'))
+    let scenarioData: any = {}
+    try {
+      scenarioData = JSON.parse(cleanOpenAIResponse(scenarioResponse.output_text || '{}'))
+    } catch (parseError) {
+      console.error('❌ Failed to parse scenario JSON:', parseError)
+    }
+    
+    // Fallback values אם ה-AI לא החזיר נתונים תקינים
+    const finalScenario = {
+      scenario_title: scenarioData.scenario_title || `תרחיש אימון - ${persona.persona_name}`,
+      scenario_description: scenarioData.scenario_description || `תרחיש אימון עם ${persona.persona_name}`,
+      scenario_category: scenarioData.scenario_category || 'מכירה_ראשונית',
+      industry_specific_context: scenarioData.industry_specific_context || null,
+      product_context: scenarioData.product_context || null,
+      competitive_context: scenarioData.competitive_context || null,
+      learning_objectives: scenarioData.learning_objectives || ['שיפור מיומנויות מכירה'],
+      success_criteria: scenarioData.success_criteria || ['סגירת עסקה או קביעת פגישת המשך'],
+      key_challenges: scenarioData.key_challenges || ['טיפול בהתנגדויות'],
+      required_skills: scenarioData.required_skills || ['הקשבה אקטיבית', 'שכנוע'],
+      opening_scenario: scenarioData.opening_scenario || `שלום, אני ${persona.persona_name}...`,
+      expected_flow: scenarioData.expected_flow || {},
+      possible_outcomes: scenarioData.possible_outcomes || {}
+    }
     
     // שמירת התרחיש במסד הנתונים
     const { data: savedScenario, error: saveError } = await supabase
@@ -112,21 +134,21 @@ export async function POST(request: NextRequest) {
         company_id: companyId,
         created_by: session.user.id,
         persona_id: personaId,
-        scenario_title: scenarioData.scenario_title,
-        scenario_description: scenarioData.scenario_description,
-        scenario_category: scenarioData.scenario_category,
-        industry_specific_context: scenarioData.industry_specific_context,
-        product_context: scenarioData.product_context,
-        competitive_context: scenarioData.competitive_context,
-        learning_objectives: scenarioData.learning_objectives || [],
-        success_criteria: scenarioData.success_criteria || [],
-        key_challenges: scenarioData.key_challenges || [],
+        scenario_title: finalScenario.scenario_title,
+        scenario_description: finalScenario.scenario_description,
+        scenario_category: finalScenario.scenario_category,
+        industry_specific_context: finalScenario.industry_specific_context,
+        product_context: finalScenario.product_context,
+        competitive_context: finalScenario.competitive_context,
+        learning_objectives: finalScenario.learning_objectives,
+        success_criteria: finalScenario.success_criteria,
+        key_challenges: finalScenario.key_challenges,
         estimated_duration_minutes: estimatedDuration,
         difficulty_level: difficulty,
-        required_skills: scenarioData.required_skills || [],
-        opening_scenario: scenarioData.opening_scenario,
-        expected_flow: scenarioData.expected_flow || {},
-        possible_outcomes: scenarioData.possible_outcomes || {},
+        required_skills: finalScenario.required_skills,
+        opening_scenario: finalScenario.opening_scenario,
+        expected_flow: finalScenario.expected_flow,
+        possible_outcomes: finalScenario.possible_outcomes,
         is_template: false
       })
       .select()
