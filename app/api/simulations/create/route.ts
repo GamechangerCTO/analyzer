@@ -196,7 +196,7 @@ ${originalCallContext}
       status: 'pending',
       ai_feedback: parsedAiFeedback,
       selected_topics: selectedTopics || ['פתיחת_שיחה_ובניית_אמון'], // ✅ ברירת מחדל
-      conversation_mode: 'step_by_step' // ✅ מצב סימולציה ברירת מחדל
+      conversation_mode: 'realtime' // ✅ סימולציה בזמן אמת
     }
     
     // ✅ הוספת persona_id אם נשלח (קישור לטבלת customer_personas_hebrew)

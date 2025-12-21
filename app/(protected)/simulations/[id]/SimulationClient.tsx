@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import StepByStepSimulation from '@/components/StepByStepSimulation'
+import RealtimeSimulation from '@/components/RealtimeSimulation'
 import { ArrowRight, User, Target, AlertTriangle, CheckCircle } from 'lucide-react'
 
 interface SimulationClientProps {
@@ -213,12 +213,12 @@ export default function SimulationClient({ simulation, user, company }: Simulati
         </div>
       </div>
       
-      {/* Main Simulation Component */}
-      <StepByStepSimulation
-        simulationId={simulation.id}
-        persona={persona}
-        onComplete={handleComplete}
-        onError={handleError}
+      {/* Main Simulation Component - Realtime */}
+      <RealtimeSimulation
+        simulation={simulation}
+        customerPersona={persona}
+        user={user}
+        company={company}
       />
       
       {/* Company Context */}

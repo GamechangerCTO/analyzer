@@ -25,13 +25,13 @@ export default async function SimulationPage({ params }: SimulationPageProps) {
     .eq('agent_id', session.user.id)
     .single()
 
-  // קבלת פרסונה נפרדת
+  // קבלת פרסונה נפרדת - לפי persona_id (UUID) ולא customer_persona (טקסט)
   let customerPersona = null
-  if (simulation?.customer_persona) {
+  if (simulation?.persona_id) {
     const { data: personaData } = await supabase
       .from('customer_personas_hebrew')
       .select('*')
-      .eq('id', simulation.customer_persona)
+      .eq('id', simulation.persona_id)
       .single()
     
     customerPersona = personaData
