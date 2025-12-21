@@ -427,7 +427,12 @@ ${weaknessSection}
 
       case 'error':
         console.error('❌ שגיאה מהשרת:', event)
-        setStatus('error')
+        console.error('❌ פרטי שגיאה:', JSON.stringify(event.error, null, 2))
+        console.error('❌ event_id:', event.event_id)
+        // לא להפסיק על שגיאות קלות
+        if (event.error?.code === 'session_expired' || event.error?.code === 'invalid_session') {
+          setStatus('error')
+        }
         break
 
       default:
