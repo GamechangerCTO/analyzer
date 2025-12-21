@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
           },
           output: {
             format: {
-              type: "audio/pcm"
+              type: "audio/pcm",
+              rate: 24000
             },
             voice: voice || "coral" // קול נשי כברירת מחדל
           }
