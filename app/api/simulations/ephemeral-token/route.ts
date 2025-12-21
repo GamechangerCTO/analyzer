@@ -25,21 +25,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Simulation not found' }, { status: 404 })
     }
 
-    // יצירת ephemeral token מ-OpenAI - ✅ מודל דצמבר 2025!
+    // יצירת ephemeral token מ-OpenAI - ✅ GA API (דצמבר 2025)
+    // https://platform.openai.com/docs/guides/realtime-webrtc
     const sessionConfig = {
-      model: "gpt-realtime-mini-2025-12-15",
-      instructions: instructions || "You are a helpful customer for sales training in Hebrew.",
-      voice: voice || "coral", // קול נשי כברירת מחדל
-      input_audio_format: "pcm16",
-      output_audio_format: "pcm16",
-      input_audio_transcription: {
-        model: "gpt-4o-mini-transcribe"
-      },
-      turn_detection: {
-        type: "server_vad",
-        threshold: 0.5,
-        prefix_padding_ms: 300,
-        silence_duration_ms: 500
+      session: {
+        type: "realtime",
+        model: "gpt-realtime-mini-2025-12-15",
+        instructions: instructions || "You are a helpful customer for sales training in Hebrew.",
+        audio: {
+          input: {
+            format: {
+              type: "audio/pcm",
+              rate: 24000
+            },
+            transcription: {
+              model: "gpt-4o-transcribe"
+            },
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 500
+            }
+          },
+          output: {
+            format: {
+              type: "audio/pcm"
+            },
+            voice: voice || "coral" // קול נשי כברירת מחדל
+          }
+        }
       }
     }
 
@@ -55,14 +70,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // GA API - משתמש ב-client_secrets endpoint (לא sessions)
     const response = await fetch(
-      "https://api.openai.com/v1/realtime/sessions",
+      "https://api.openai.com/v1/realtime/client_secrets",
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-          "OpenAI-Beta": "realtime=v1"
+          "Content-Type": "application/json"
+          // ללא OpenAI-Beta header ב-GA API
         },
         body: JSON.stringify(sessionConfig),
       }

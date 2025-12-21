@@ -329,20 +329,20 @@ ${weaknessSection}
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
 
-      // שליחה לOpenAI Realtime API - מודל חדש!
-      const baseUrl = "https://api.openai.com/v1/realtime"
-      const model = "gpt-realtime-mini-2025-12-15"
+      // שליחה לOpenAI Realtime API - GA API (דצמבר 2025)
+      // https://platform.openai.com/docs/guides/realtime-webrtc
+      const baseUrl = "https://api.openai.com/v1/realtime/calls"
       
       console.log('🔑 Ephemeral token:', ephemeralKeyRef.current?.substring(0, 20) + '...')
-      console.log('📡 Sending SDP offer to:', `${baseUrl}?model=${model}`)
+      console.log('📡 Sending SDP offer to:', baseUrl)
       
-      const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
+      const sdpResponse = await fetch(baseUrl, {
         method: "POST",
         body: offer.sdp,
         headers: {
           Authorization: `Bearer ${ephemeralKeyRef.current}`,
-          "Content-Type": "application/sdp",
-          "OpenAI-Beta": "realtime=v1"
+          "Content-Type": "application/sdp"
+          // ללא OpenAI-Beta header ב-GA API
         },
       })
 
@@ -452,23 +452,35 @@ ${weaknessSection}
     // התחלת הקלטה אוטומטית
     setTimeout(() => startRecording(), 500)
 
-    // הגדרת session עם ההוראות - ללא שדות לא נתמכים
+    // הגדרת session עם ההוראות - GA API format
     const sessionUpdate = {
       type: "session.update",
       session: {
+        type: "realtime",
         modalities: ["text", "audio"],
         instructions: aiInstructions || createFallbackInstructions(),
-        voice: getVoiceForPersona(),
-        input_audio_format: "pcm16",
-        output_audio_format: "pcm16",
-        input_audio_transcription: {
-          model: "whisper-1"
-        },
-        turn_detection: {
-          type: "server_vad",
-          threshold: 0.6,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 800
+        audio: {
+          input: {
+            format: {
+              type: "audio/pcm",
+              rate: 24000
+            },
+            transcription: {
+              model: "gpt-4o-transcribe"
+            },
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.6,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 800
+            }
+          },
+          output: {
+            format: {
+              type: "audio/pcm"
+            },
+            voice: getVoiceForPersona()
+          }
         }
       }
     }
