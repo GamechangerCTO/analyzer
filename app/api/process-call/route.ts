@@ -633,6 +633,38 @@ export async function POST(request: Request) {
     let transcriptSegments: any[] = [];
     let transcriptWords: any[] = [];
     
+    // 🔴 בדיקת אורך שיחה - מקסימום 1400 שניות (23.3 דקות) למודל gpt-4o-mini-transcribe
+    const MAX_AUDIO_DURATION_SECONDS = 1400;
+    if (audioDurationSeconds > MAX_AUDIO_DURATION_SECONDS) {
+      const maxMinutes = Math.floor(MAX_AUDIO_DURATION_SECONDS / 60);
+      const currentMinutes = Math.floor(audioDurationSeconds / 60);
+      const currentSeconds = Math.round(audioDurationSeconds % 60);
+      
+      await addCallLog(call_id, '❌ שיחה ארוכה מדי לתמלול', { 
+        audio_duration_seconds: audioDurationSeconds,
+        max_allowed_seconds: MAX_AUDIO_DURATION_SECONDS,
+        current_duration: `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')}`,
+        max_duration: `${maxMinutes}:00`
+      });
+      
+      await supabase
+        .from('calls')
+        .update({
+          processing_status: 'error',
+          error_message: `השיחה ארוכה מדי (${currentMinutes} דקות). המקסימום הוא ${maxMinutes} דקות. אנא העלה קובץ קצר יותר או פצל את השיחה.`
+        })
+        .eq('id', call_id);
+        
+      return NextResponse.json(
+        { 
+          error: 'שיחה ארוכה מדי',
+          details: `אורך השיחה: ${currentMinutes} דקות ו-${currentSeconds} שניות. המקסימום המותר: ${maxMinutes} דקות.`,
+          suggestion: 'אנא העלה קובץ קצר יותר או פצל את השיחה לחלקים.'
+        },
+        { status: 400 }
+      );
+    }
+    
     if (isFullAnalysis) {
       try {
         await addCallLog(call_id, '📝 מתחיל תהליך תמלול שיחה', { model: 'gpt-4o-mini-transcribe', language: 'he' });
@@ -1071,7 +1103,11 @@ export async function POST(request: Request) {
           .eq('id', call_id);
 
         await addCallLog(call_id, '🔄 עדכון סטטוס לניתוח תוכן', { new_status: 'analyzing_content' });
-        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן', { model: 'gpt-5-mini-2025-08-07' });
+        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן דו-שלבי', { 
+          step1_model: 'gpt-5.2-preview-2025-08-27',
+          step2_model: 'gpt-4o-mini',
+          description: 'GPT-5.2 לניתוח עמוק → GPT-4o-mini לניקוי JSON'
+        });
 
         // שלב 3: ניתוח תוכן מקצועי עם gpt-4.1-2025-04-14
         // קבלת הפרומפט המתאים לסוג השיחה כולל שדות הניתוח
@@ -1271,11 +1307,68 @@ export async function POST(request: Request) {
           }
         }
 
-        // ניתוח התוכן עם Structured Outputs
-        await addCallLog(call_id, '🔄 שולח בקשה לניתוח תוכן עם Structured Outputs', {
+        // 🧠 שלב 1: ניתוח עמוק עם GPT-5.2 (בלי structured outputs)
+        await addCallLog(call_id, '🔄 שלב 1: שולח בקשה לניתוח תוכן עמוק עם GPT-5.2', {
           transcript_length: transcript?.length || 0,
           prompt_length: systemPrompt.length,
           request_time: new Date().toISOString(),
+          model: 'gpt-5.2-preview-2025-08-27'
+        });
+        
+        // קריאה ראשונה - ניתוח עמוק עם GPT-5.2 (יותר חכם)
+        const deepAnalysisResponse = await openai.chat.completions.create({
+          model: 'gpt-5.2-preview-2025-08-27',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: `נתח את השיחה הבאה בצורה מעמיקה:
+
+              סוג שיחה: ${callData.call_type}
+              תמליל השיחה: ${transcript || 'אין תמליל זמין'}
+              
+              מידע נוסף:
+              ${companyName ? `חברה: ${companyName}` : ''}
+              ${userData ? `תפקיד המשתמש: ${userData.role}` : ''}
+              ${callData.agent_notes ? `הערות נציג: ${callData.agent_notes}` : ''}
+              
+              ${companyQuestionnaire ? `📋 שאלון החברה:
+              ${JSON.stringify(companyQuestionnaire, null, 2)}
+              
+              ⚠️ חשוב מאוד: עבור על כל מה שהלקוח מילא בשאלון החברה והתייחס בניתוח בהתאם!` : ''}
+              
+              ${callData.analysis_notes ? `🎯 פרמטרים מיוחדים לניתוח זה:
+              ${callData.analysis_notes}
+              
+⚠️ חשוב: התמקד במיוחד בפרמטרים הנ"ל בעת הניתוח.` : ''}
+              
+              ניתוח טונציה: ${JSON.stringify(toneAnalysisReport)}
+              
+              הנחיות:
+              1. תן ציונים מ-4 עד 10 (4-6 חלש, 7-8 טוב, 9-10 מצוין)
+              2. בציטוטים החלף שמות ב"הנציג" ו"הלקוח"
+              3. כתוב דוגמאות לשיפור ללא מרכאות - השתמש בגרש יחיד או מקף
+              4. כל קטגוריה צריכה לכלול ציון ממוצע, תובנות והצעות לשיפור
+              5. החזר את התוצאה בפורמט JSON`
+            }
+          ],
+          temperature: 0.3
+        });
+        
+        const deepAnalysisRaw = deepAnalysisResponse.choices[0]?.message?.content || '{}';
+        
+        await addCallLog(call_id, '✅ שלב 1 הושלם - ניתוח עמוק עם GPT-5.2', { 
+          response_length: deepAnalysisRaw.length,
+          model: deepAnalysisResponse.model,
+          token_usage: deepAnalysisResponse.usage
+        });
+        
+        // 🧹 שלב 2: ניקוי וארגון JSON עם GPT-4o-mini + Structured Outputs
+        await addCallLog(call_id, '🔄 שלב 2: ניקוי וארגון JSON עם GPT-4o-mini + Structured Outputs', {
+          raw_analysis_length: deepAnalysisRaw.length,
           model: 'gpt-4o-mini'
         });
         
@@ -1398,53 +1491,46 @@ export async function POST(request: Request) {
           }
         };
         
-        // ✅ שימוש ב-Chat Completions API עם Structured Outputs
+        // ✅ שימוש ב-Chat Completions API עם Structured Outputs לניקוי הפלט
         const contentAnalysisResponse = await openai.chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [
             {
               role: 'system',
-              content: systemPrompt
+              content: `אתה ממיר ניתוח שיחה לפורמט JSON מובנה.
+              
+              קיבלת ניתוח שיחה מפורט. המשימה שלך היא:
+              1. לחלץ את כל המידע מהניתוח
+              2. לארגן אותו בפורמט ה-JSON המוגדר
+              3. לוודא שכל השדות מלאים בצורה הגיונית
+              4. לשמור על הציונים והתובנות כפי שניתנו
+              
+              אם חסר מידע - תן ערכים סבירים בהתבסס על הניתוח.
+              ציונים חייבים להיות בין 4-10.`
             },
             {
               role: 'user',
-              content: `נתח את השיחה הבאה:
+              content: `להלן ניתוח שיחה מפורט שנעשה על ידי מודל AI מתקדם.
+              אנא ארגן אותו בפורמט ה-JSON המובנה:
 
-              סוג שיחה: ${callData.call_type}
-              תמליל השיחה: ${transcript}
+              ${deepAnalysisRaw}
               
-              מידע נוסף:
-              ${companyName ? `חברה: ${companyName}` : ''}
-              ${userData ? `תפקיד המשתמש: ${userData.role}` : ''}
-              ${callData.agent_notes ? `הערות נציג: ${callData.agent_notes}` : ''}
+              סוג השיחה: ${callData.call_type}
               
-              ${companyQuestionnaire ? `📋 שאלון החברה:
-              ${JSON.stringify(companyQuestionnaire, null, 2)}
-              
-              ⚠️ חשוב מאוד: עבור על כל מה שהלקוח מילא בשאלון החברה והתייחס בניתוח בהתאם!` : ''}
-              
-              ${callData.analysis_notes ? `🎯 פרמטרים מיוחדים לניתוח זה:
-              ${callData.analysis_notes}
-              
-⚠️ חשוב: התמקד במיוחד בפרמטרים הנ"ל בעת הניתוח.` : ''}
-              
-              ניתוח טונציה: ${JSON.stringify(toneAnalysisReport)}
-              
-              הנחיות:
-1. תן ציונים מ-4 עד 10 (4-6 חלש, 7-8 טוב, 9-10 מצוין)
-              2. בציטוטים החלף שמות ב"הנציג" ו"הלקוח"
-3. כתוב דוגמאות לשיפור ללא מרכאות - השתמש בגרש יחיד או מקף
-4. כל קטגוריה צריכה לכלול ציון ממוצע, תובנות והצעות לשיפור`
+              שים לב:
+              - ציונים חייבים להיות מספרים בין 4-10
+              - כל השדות הנדרשים חייבים להיות מלאים
+              - שמור על התוכן המקורי כמה שאפשר`
             }
           ],
           response_format: {
             type: "json_schema",
             json_schema: contentAnalysisSchema
           },
-          temperature: 0.3
+          temperature: 0.2
         });
 
-        await addCallLog(call_id, '✅ תשובת OpenAI התקבלה לניתוח תוכן (Structured Outputs)', { 
+        await addCallLog(call_id, '✅ שלב 2 הושלם - JSON נוקה עם GPT-4o-mini + Structured Outputs', { 
           token_usage: contentAnalysisResponse.usage,
           model: contentAnalysisResponse.model,
           response_id: contentAnalysisResponse.id,
@@ -1455,7 +1541,7 @@ export async function POST(request: Request) {
         const rawContentResponse = contentAnalysisResponse.choices[0]?.message?.content || '{}';
         
         // ✅ עם Structured Outputs ה-JSON תמיד תקין - פשוט parse ישירות
-        await addCallLog(call_id, '📥 תשובת Structured Outputs לתוכן', { 
+        await addCallLog(call_id, '📥 תשובת JSON סופית נקייה', { 
           raw_length: rawContentResponse.length,
           first_200_chars: rawContentResponse.substring(0, 200)
         });
