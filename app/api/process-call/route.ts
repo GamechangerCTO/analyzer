@@ -198,36 +198,26 @@ function cleanOpenAIResponse(content: string): string {
       position: parseError.message.match(/position (\d+)/)?.[1]
     });
     
-    // תיקון מתקדם: מרכאות בתוך ערכי טקסט
-    // מחפש pattern של "key": "value with "quotes" inside"
-    // ומחליף את המרכאות הפנימיות ב-escaped או מסיר אותן
+    // תיקון מתקדם: גרשיים בודדות ומרכאות בתוך ערכי טקסט
     let fixed = cleaned;
     
-    // תיקון 1: החלפת מרכאות כפולות בתוך ערכים ב-single quotes
-    // מחפש: ": "...text..."text"...text"  (מרכאות פנימיות)
-    fixed = fixed.replace(/"([^"]*)"([^",:}\]]+)"([^"]*?)"/g, (match, p1, p2, p3) => {
-      // אם זה נראה כמו ערך עם מרכאות פנימיות, נחליף ל-single quotes
-      return `"${p1}'${p2}'${p3}"`;
-    });
+    // 🔧 תיקון קריטי ראשון: המרת גרשיים בודדות לכפולות במפתחות וערכים
+    // OpenAI לפעמים מחזיר: { 'key': 'value' } במקום { "key": "value" }
+    fixed = fixed.replace(/'([\u0590-\u05FF\w_]+)'(\s*:)/g, '"$1"$2');
+    fixed = fixed.replace(/:\s*'([^']*)'/g, ': "$1"');
     
-    // תיקון 2: מרכאות שמופיעות אחרי "דוגמה:" או "דוגמה לנוסח:"
-    fixed = fixed.replace(/דוגמה[^"]*:\s*"([^"]+)"/g, (match, inner) => {
-      // החלפת מרכאות פנימיות ב-single quotes
-      const cleanInner = inner.replace(/"/g, "'");
-      return `דוגמה: '${cleanInner}'`;
-    });
-    
-    // תיקון 3: הסרת מרכאות לא חוקיות (מופיעות אחרי ערך לפני פסיק או סוגר)
-    fixed = fixed.replace(/"(\s*[,}\]])/g, '"$1');
-    
-    // תיקון 4: מרכאות כפולות רצופות
+    // תיקון 2: מרכאות כפולות רצופות
     fixed = fixed.replace(/""+/g, '"');
     
-    // תיקון 5: פסיקים כפולים
+    // תיקון 3: פסיקים כפולים
     fixed = fixed.replace(/,\s*,/g, ',');
     
-    // תיקון 6: פסיק לפני סוגר סגירה
+    // תיקון 4: פסיק לפני סוגר סגירה
     fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
+    
+    // תיקון 5: מרכאות פנימיות בדוגמאות - החלפה לגרש יחיד
+    // רק בתוך ערכי טקסט ארוכים שמכילים מילים כמו "דוגמה"
+    fixed = fixed.replace(/("איך_משפרים"\s*:\s*"[^"]*)"([^"]+)"([^"]*")/g, '$1\'$2\'$3');
     
     try {
       JSON.parse(fixed);
