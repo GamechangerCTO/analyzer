@@ -140,9 +140,9 @@ const openai = new OpenAI({
 function cleanOpenAIResponse(content: string): string {
   if (!content) return '{}';
   
-  console.log(`🧹 מנקה תגובת OpenAI (גרסה פשוטה)`, { original_length: content.length });
+  console.log(`🧹 מנקה תגובת OpenAI`, { original_length: content.length });
   
-  // ניקוי בסיסי בלבד - ללא שינוי מרכאות!
+  // ניקוי בסיסי
   let cleaned = content
     .replace(/```(?:json|JSON)?\s*/g, '')
     .replace(/```\s*$/g, '')
@@ -157,6 +157,14 @@ function cleanOpenAIResponse(content: string): string {
     console.error('❌ לא נמצא תחילת JSON valid');
     throw new Error('No valid JSON found in OpenAI response');
   }
+  
+  // 🔧 תיקון מפתחות JSON בלבד (לא ערכים!)
+  // תיקון: 'key": -> "key": (מפתח שמתחיל עם ' ונגמר עם ")
+  cleaned = cleaned.replace(/,\s*'([^']+)":/g, ', "$1":');
+  cleaned = cleaned.replace(/{\s*'([^']+)":/g, '{ "$1":');
+  // תיקון: 'key': -> "key": (מפתח עם גרשיים בודדות משני הצדדים)
+  cleaned = cleaned.replace(/,\s*'([^']+)':/g, ', "$1":');
+  cleaned = cleaned.replace(/{\s*'([^']+)':/g, '{ "$1":')
   
   // איזון סוגריים - מוצאים את הסוגר הסוגר המתאים
   let braceCount = 0;

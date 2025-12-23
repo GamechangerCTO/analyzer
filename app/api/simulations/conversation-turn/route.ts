@@ -18,6 +18,11 @@ function cleanOpenAIResponse(content: string): string {
     cleaned = cleaned.substring(jsonStart)
   }
   
+  // 🔧 תיקון מפתחות JSON בלבד (לא ערכים!)
+  cleaned = cleaned.replace(/,\s*'([^']+)":/g, ', "$1":')
+  cleaned = cleaned.replace(/{\s*'([^']+)":/g, '{ "$1":')
+  cleaned = cleaned.replace(/,\s*'([^']+)':/g, ', "$1":')
+  cleaned = cleaned.replace(/{\s*'([^']+)':/g, '{ "$1":')
   
   // אלגוריתם איזון סוגריים
   let braceCount = 0

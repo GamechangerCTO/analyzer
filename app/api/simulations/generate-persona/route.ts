@@ -44,6 +44,12 @@ function cleanOpenAIResponse(content: string): string {
   if (jsonStart === -1) return '{}'
   cleaned = cleaned.substring(jsonStart)
   
+  // 🔧 תיקון מפתחות JSON בלבד (לא ערכים!)
+  cleaned = cleaned.replace(/,\s*'([^']+)":/g, ', "$1":')
+  cleaned = cleaned.replace(/{\s*'([^']+)":/g, '{ "$1":')
+  cleaned = cleaned.replace(/,\s*'([^']+)':/g, ', "$1":')
+  cleaned = cleaned.replace(/{\s*'([^']+)':/g, '{ "$1":')
+  
   // ניסיון ראשון: אולי ה-JSON תקין
   try {
     JSON.parse(cleaned)

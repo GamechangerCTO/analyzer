@@ -43,7 +43,7 @@ async function callOpenAIWithBackoff(openai: any, params: any, maxRetries = 5) {
 function cleanOpenAIResponse(content: string): string {
   if (!content) return '{}';
   
-  // ניקוי בסיסי בלבד - ללא שינוי מרכאות!
+  // ניקוי בסיסי
   let cleaned = content.replace(/```(?:json|JSON)?\s*/g, '').replace(/```\s*$/g, '');
   cleaned = cleaned.replace(/^`+|`+$/g, '').trim();
   
@@ -52,6 +52,12 @@ function cleanOpenAIResponse(content: string): string {
   if (jsonStart !== -1) {
     cleaned = cleaned.substring(jsonStart);
   }
+  
+  // 🔧 תיקון מפתחות JSON בלבד (לא ערכים!)
+  cleaned = cleaned.replace(/,\s*'([^']+)":/g, ', "$1":');
+  cleaned = cleaned.replace(/{\s*'([^']+)":/g, '{ "$1":');
+  cleaned = cleaned.replace(/,\s*'([^']+)':/g, ', "$1":');
+  cleaned = cleaned.replace(/{\s*'([^']+)':/g, '{ "$1":')
   
   // איזון סוגריים עם מעקב אחרי מחרוזות
   let braceCount = 0;

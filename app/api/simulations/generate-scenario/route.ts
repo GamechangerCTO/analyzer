@@ -26,6 +26,11 @@ function cleanOpenAIResponse(content: string): string {
   const jsonStart = cleaned.indexOf('{')
   if (jsonStart !== -1) cleaned = cleaned.substring(jsonStart)
   
+  // 🔧 תיקון מפתחות JSON בלבד (לא ערכים!)
+  cleaned = cleaned.replace(/,\s*'([^']+)":/g, ', "$1":')
+  cleaned = cleaned.replace(/{\s*'([^']+)":/g, '{ "$1":')
+  cleaned = cleaned.replace(/,\s*'([^']+)':/g, ', "$1":')
+  cleaned = cleaned.replace(/{\s*'([^']+)':/g, '{ "$1":')
   
   // תיקון מפתחות עברית ללא פסיק
   cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([א-ת\w_]+"\s*:)/g, '$1, "$2')
