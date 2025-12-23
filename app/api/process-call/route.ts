@@ -1523,8 +1523,8 @@ export async function POST(request: Request) {
             
             // מידע טכני על הכשל
             technical_recovery_info: {
-              recovery_method: "intelligent_fallback_after_cleaning_failure",
-              original_error: cleaningError.message,
+              recovery_method: "intelligent_fallback_after_structured_outputs_failure",
+              original_error: parseError.message,
               content_preview: rawContentResponse.substring(0, 200),
               transcript_analyzed: !!transcript,
               word_count: transcript?.split(' ').length || 0,
