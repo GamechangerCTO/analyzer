@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       session: {
         type: "realtime",
         model: "gpt-realtime-mini-2025-12-15",
-        instructions: instructions || "You are a helpful customer for sales training in Hebrew.",
+        instructions: instructions || "אני לקוח שמתקשר לחברה. המשתמש שמדבר איתי הוא נציג מכירות שמנסה למכור לי. אני שואל שאלות, מעלה התנגדויות, ומחכה שישכנעו אותי.",
         audio: {
           input: {
             format: {
