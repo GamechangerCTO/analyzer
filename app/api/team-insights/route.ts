@@ -53,6 +53,10 @@ function cleanOpenAIResponse(content: string): string {
     cleaned = cleaned.substring(jsonStart);
   }
   
+  // 🔧 תיקון קריטי: המרת גרשיים בודדות לגרשיים כפולות
+  cleaned = cleaned.replace(/'([\u0590-\u05FF\w_]+)'(\s*:)/g, '"$1"$2');
+  cleaned = cleaned.replace(/:\s*'([^']*)'/g, ': "$1"');
+  
   // תיקון קריטי חדש - מפתחות שמופיעים ללא פסיק אחרי ערך
   cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([א-ת\w_]+"\s*:)/g, (match, p1, p2) => {
     return `${p1}, "${p2}`;

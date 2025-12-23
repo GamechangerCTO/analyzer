@@ -161,6 +161,12 @@ function cleanOpenAIResponse(content: string): string {
   // ניקוי תווי בקרה שגורמים לשגיאות
   cleaned = cleaned.replace(/[\r\n\t]/g, ' ').replace(/\s+/g, ' ');
   
+  // 🔧 תיקון קריטי: המרת גרשיים בודדות לגרשיים כפולות במפתחות JSON
+  // OpenAI לפעמים מחזיר: { 'key': "value" } במקום { "key": "value" }
+  cleaned = cleaned.replace(/'([\u0590-\u05FF\w_]+)'(\s*:)/g, '"$1"$2');
+  // תיקון גם לערכים: : 'value' -> : "value"
+  cleaned = cleaned.replace(/:\s*'([^']*)'/g, ': "$1"');
+  
   // איזון סוגריים בסיסי
   let braceCount = 0;
   let lastValidEnd = -1;

@@ -18,6 +18,10 @@ function cleanOpenAIResponse(content: string): string {
     cleaned = cleaned.substring(jsonStart)
   }
   
+  // 🔧 תיקון קריטי: המרת גרשיים בודדות לגרשיים כפולות
+  cleaned = cleaned.replace(/'([\u0590-\u05FF\w_]+)'(\s*:)/g, '"$1"$2')
+  cleaned = cleaned.replace(/:\s*'([^']*)'/g, ': "$1"')
+  
   // אלגוריתם איזון סוגריים
   let braceCount = 0
   let lastValidEnd = -1
