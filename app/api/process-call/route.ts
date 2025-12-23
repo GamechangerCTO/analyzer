@@ -1264,126 +1264,211 @@ export async function POST(request: Request) {
           }
         }
 
-        // ניתוח התוכן עם gpt-4.1-2025-04-14
-        await addCallLog(call_id, '🔄 שולח בקשה לניתוח תוכן ל-gpt-4.1-2025-04-14', {
+        // ניתוח התוכן עם Structured Outputs
+        await addCallLog(call_id, '🔄 שולח בקשה לניתוח תוכן עם Structured Outputs', {
           transcript_length: transcript?.length || 0,
           prompt_length: systemPrompt.length,
-          request_time: new Date().toISOString()
+          request_time: new Date().toISOString(),
+          model: 'gpt-4o-mini'
         });
         
-        // ✅ שימוש ב-Responses API למודלי GPT-5
-        const contentAnalysisResponse = await openai.responses.create({
-          model: 'gpt-5-mini-2025-08-07',
-          input: systemPrompt + '\n\n' + `נתח את השיחה הבאה:
-              סוג שיחה: ${callData.call_type}
-              תמליל השיחה: ${transcript}
-              
-              מידע נוסף:
-              ${companyName ? `חברה: ${companyName}` : ''}
-              ${userData ? `תפקיד המשתמש: ${userData.role}` : ''}
-              ${callData.agent_notes ? `הערות נציג: ${callData.agent_notes}` : ''}
-              
-              ${companyQuestionnaire ? `📋 שאלון החברה:
-              ${JSON.stringify(companyQuestionnaire, null, 2)}
-              
-              ⚠️ חשוב מאוד: עבור על כל מה שהלקוח מילא בשאלון החברה והתייחס בניתוח בהתאם!` : ''}
-              
-              ${callData.analysis_notes ? `🎯 פרמטרים מיוחדים לניתוח זה:
-              ${callData.analysis_notes}
-              
-              ⚠️ חשוב: התמקד במיוחד בפרמטרים הנ"ל בעת הניתוח, ותן להם משקל גבוה יותר בהערכה הכללית.` : ''}
-              
-              מידע זמנים מהתמליל (למיקום מדויק של ציטוטים):
-              ${transcriptSegments.length > 0 ? `רגעי זמן מפורטים: ${JSON.stringify(transcriptSegments.slice(0, 10))}` : 'לא זמין מידע זמנים'}
-              
-              ניתוח טונציה: ${JSON.stringify(toneAnalysisReport)}
-              
-              הנחיות:
-              1. החזר תמיד JSON תקין - התחל ישירות ב-{ וסיים ב-} ללא backticks או markdown
-              2. בציטוטים החלף שמות ב"הנציג" ו"הלקוח"
-              3. תן ציונים מדויקים מ-4-10 לכל פרמטר (4-6 חלש/בסיסי, 7-8 טוב, 9-10 מצוין)
-              4. הסבר בקצרה כל ציון
-              5. הצע דרכים מעשיות לשיפור
-              
-              חשוב מאוד: החזר רק JSON נקי ללא עיטוף Markdown או backticks!`,
-          reasoning: { effort: "medium" }, // ✅ ניתוח שיחה דורש חשיבה מעמיקה - זיהוי דפוסים, ניואנסים והמלצות ממוקדות
+        // ✅ JSON Schema לניתוח תוכן - מבטיח JSON תקין תמיד
+        const contentAnalysisSchema = {
+          name: "call_analysis",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              overall_score: { type: "number", description: "ציון כללי 4-10" },
+              red_flag: { type: "boolean", description: "האם יש דגל אדום" },
+              executive_summary: { type: "string", description: "סיכום מנהלים קצר" },
+              general_key_insights: { 
+                type: "array", 
+                items: { type: "string" },
+                description: "תובנות מפתח מהשיחה"
+              },
+              improvement_points: { 
+                type: "array", 
+                items: { type: "string" },
+                description: "נקודות לשיפור"
+              },
+              strengths_and_preservation_points: { 
+                type: "array", 
+                items: { type: "string" },
+                description: "נקודות חוזק לשימור"
+              },
+              analysis_sections: {
+                type: "object",
+                description: "ניתוח לפי קטגוריות",
+                additionalProperties: false,
+                properties: {
+                  פתיחת_שיחה_ובניית_אמון: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      ציון_ממוצע: { type: "number" },
+                      תובנות: { type: "string" },
+                      איך_משפרים: { type: "string" }
+                    },
+                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
+                  },
+                  איתור_צרכים_וזיהוי_כאב: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      ציון_ממוצע: { type: "number" },
+                      תובנות: { type: "string" },
+                      איך_משפרים: { type: "string" }
+                    },
+                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
+                  },
+                  הקשבה_ואינטראקציה: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      ציון_ממוצע: { type: "number" },
+                      תובנות: { type: "string" },
+                      איך_משפרים: { type: "string" }
+                    },
+                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
+                  },
+                  הצגת_פתרון_והדגשת_ערך: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      ציון_ממוצע: { type: "number" },
+                      תובנות: { type: "string" },
+                      איך_משפרים: { type: "string" }
+                    },
+                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
+                  },
+                  טיפול_בהתנגדויות: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      ציון_ממוצע: { type: "number" },
+                      תובנות: { type: "string" },
+                      איך_משפרים: { type: "string" }
+                    },
+                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
+                  },
+                  הנעה_לפעולה_וסגירה: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      ציון_ממוצע: { type: "number" },
+                      תובנות: { type: "string" },
+                      איך_משפרים: { type: "string" }
+                    },
+                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
+                  },
+                  שפת_תקשורת: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      ציון_ממוצע: { type: "number" },
+                      תובנות: { type: "string" },
+                      איך_משפרים: { type: "string" }
+                    },
+                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
+                  },
+                  סיכום_שיחה: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      ציון_ממוצע: { type: "number" },
+                      תובנות: { type: "string" },
+                      איך_משפרים: { type: "string" }
+                    },
+                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
+                  }
+                },
+                required: ["פתיחת_שיחה_ובניית_אמון", "איתור_צרכים_וזיהוי_כאב", "הקשבה_ואינטראקציה", "הצגת_פתרון_והדגשת_ערך", "טיפול_בהתנגדויות", "הנעה_לפעולה_וסגירה", "שפת_תקשורת", "סיכום_שיחה"]
+              }
+            },
+            required: ["overall_score", "red_flag", "executive_summary", "general_key_insights", "improvement_points", "strengths_and_preservation_points", "analysis_sections"],
+            additionalProperties: false
+          }
+        };
+        
+        // ✅ שימוש ב-Chat Completions API עם Structured Outputs
+        const contentAnalysisResponse = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt
+            },
+            {
+              role: 'user',
+              content: `נתח את השיחה הבאה:
+
+סוג שיחה: ${callData.call_type}
+תמליל השיחה: ${transcript}
+
+מידע נוסף:
+${companyName ? `חברה: ${companyName}` : ''}
+${userData ? `תפקיד המשתמש: ${userData.role}` : ''}
+${callData.agent_notes ? `הערות נציג: ${callData.agent_notes}` : ''}
+
+${companyQuestionnaire ? `📋 שאלון החברה:
+${JSON.stringify(companyQuestionnaire, null, 2)}
+
+⚠️ חשוב מאוד: עבור על כל מה שהלקוח מילא בשאלון החברה והתייחס בניתוח בהתאם!` : ''}
+
+${callData.analysis_notes ? `🎯 פרמטרים מיוחדים לניתוח זה:
+${callData.analysis_notes}
+
+⚠️ חשוב: התמקד במיוחד בפרמטרים הנ"ל בעת הניתוח.` : ''}
+
+ניתוח טונציה: ${JSON.stringify(toneAnalysisReport)}
+
+הנחיות:
+1. תן ציונים מ-4 עד 10 (4-6 חלש, 7-8 טוב, 9-10 מצוין)
+2. בציטוטים החלף שמות ב"הנציג" ו"הלקוח"
+3. כתוב דוגמאות לשיפור ללא מרכאות - השתמש בגרש יחיד או מקף
+4. כל קטגוריה צריכה לכלול ציון ממוצע, תובנות והצעות לשיפור`
+            }
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: contentAnalysisSchema
+          },
+          temperature: 0.3
         });
 
-        await addCallLog(call_id, '✅ תשובת OpenAI התקבלה לניתוח תוכן', { 
+        await addCallLog(call_id, '✅ תשובת OpenAI התקבלה לניתוח תוכן (Structured Outputs)', { 
           token_usage: contentAnalysisResponse.usage,
           model: contentAnalysisResponse.model,
           response_id: contentAnalysisResponse.id,
           completion_time: new Date().toISOString()
         });
 
-        // ✅ Responses API מחזיר output_text במקום choices[0].message.content
-        const rawContentResponse = contentAnalysisResponse.output_text || '{}';
+        // ✅ Chat Completions API עם Structured Outputs - ה-JSON תמיד תקין!
+        const rawContentResponse = contentAnalysisResponse.choices[0]?.message?.content || '{}';
         
-        await addCallLog(call_id, '📥 תשובת OpenAI גולמית לתוכן', { 
+        // ✅ עם Structured Outputs ה-JSON תמיד תקין - פשוט parse ישירות
+        await addCallLog(call_id, '📥 תשובת Structured Outputs לתוכן', { 
           raw_length: rawContentResponse.length,
-          starts_with_backticks: rawContentResponse.startsWith('```'),
-          starts_with_brace: rawContentResponse.trim().startsWith('{'),
-          first_200_chars: rawContentResponse.substring(0, 200),
-          ends_with_brace: rawContentResponse.trim().endsWith('}'),
-          potential_truncation: rawContentResponse.length > 8000, // OpenAI לפעמים חותך תשובות ארוכות
-          brace_balance_check: {
-            open_braces: (rawContentResponse.match(/\{/g) || []).length,
-            close_braces: (rawContentResponse.match(/\}/g) || []).length
-          }
+          first_200_chars: rawContentResponse.substring(0, 200)
         });
         
-        // בדיקה מקדימה לזיהוי בעיות פוטנציאליות
-        const openBraces = (rawContentResponse.match(/\{/g) || []).length;
-        const closeBraces = (rawContentResponse.match(/\}/g) || []).length;
-        const potentialIssues = [];
-        
-        if (openBraces !== closeBraces) {
-          potentialIssues.push(`איזון סוגריים: ${openBraces} פתיחות, ${closeBraces} סגירות`);
-        }
-        
-        if (rawContentResponse.length > 8000) {
-          potentialIssues.push("תשובה ארוכה מאוד - יכולה להיות חתוכה");
-        }
-        
-        if (!rawContentResponse.trim().endsWith('}')) {
-          potentialIssues.push("התשובה לא מסתיימת בסוגריים");
-        }
-        
-        await addCallLog(call_id, '🔍 בדיקה מקדימה של תשובת OpenAI', { 
-          potential_issues: potentialIssues,
-          requires_advanced_recovery: potentialIssues.length > 0
-        });
-        
-        let cleanedContentResponse;
         let contentAnalysisReport;
         
         try {
-          cleanedContentResponse = cleanOpenAIResponse(rawContentResponse);
+          // ✅ Structured Outputs מבטיח JSON תקין - אין צורך ב-cleanOpenAIResponse!
+          contentAnalysisReport = JSON.parse(rawContentResponse);
           
-          await addCallLog(call_id, '🧹 תשובה אחרי ניקוי לתוכן', { 
-            cleaned_length: cleanedContentResponse.length,
-            is_valid_json_start: cleanedContentResponse.trim().startsWith('{'),
-            cleaned_preview: cleanedContentResponse.substring(0, 300),
-            cleaning_success: rawContentResponse !== cleanedContentResponse,
-            length_difference: rawContentResponse.length - cleanedContentResponse.length,
-            quote_count: (cleanedContentResponse.match(/"/g) || []).length,
-            quote_balanced: (cleanedContentResponse.match(/"/g) || []).length % 2 === 0,
-            ends_with_quote: cleanedContentResponse.trim().endsWith('"'),
-            ends_with_brace: cleanedContentResponse.trim().endsWith('}')
+          await addCallLog(call_id, '✅ JSON נותח בהצלחה (Structured Outputs)', { 
+            overall_score: contentAnalysisReport.overall_score,
+            sections_count: Object.keys(contentAnalysisReport.analysis_sections || {}).length
           });
           
-          contentAnalysisReport = JSON.parse(cleanedContentResponse);
-          
-        } catch (cleaningError: any) {
-          await addCallLog(call_id, '❌ שגיאה בניקוי או ניתוח JSON של ניתוח תוכן', { 
-            error: cleaningError.message,
+        } catch (parseError: any) {
+          // Fallback למקרה נדיר שה-Structured Outputs נכשל
+          await addCallLog(call_id, '⚠️ שגיאה לא צפויה ב-Structured Outputs - יוצר fallback', { 
+            error: parseError.message,
             raw_content_preview: rawContentResponse.substring(0, 500)
-          });
-          
-          // ברירת מחדל מתקדמת לניתוח תוכן עם ניסיון חילוץ מידע מהתמליל
-          await addCallLog(call_id, '🔄 יוצר fallback אינטליגנטי לניתוח תוכן', { 
-            transcript_length: transcript?.length || 0,
-            call_type: callData.call_type
           });
           
           // ניסיון לחלץ תובנות בסיסיות מהתמליל עצמו
