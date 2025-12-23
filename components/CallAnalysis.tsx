@@ -57,8 +57,49 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   const [retryAttempts, setRetryAttempts] = useState(0)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [actualDuration, setActualDuration] = useState<number | null>(null)
+  const [isReanalyzing, setIsReanalyzing] = useState(false)
+  const [reanalyzeMessage, setReanalyzeMessage] = useState<string | null>(null)
   
   const audioRef = useRef<HTMLAudioElement>(null)
+  
+  // 🔄 פונקציה לניתוח מחדש של השיחה
+  const handleReanalyze = async () => {
+    if (isReanalyzing) return
+    
+    setIsReanalyzing(true)
+    setReanalyzeMessage(null)
+    
+    try {
+      console.log('🔄 מתחיל ניתוח מחדש של שיחה:', call.id)
+      
+      const response = await fetch('/api/process-call', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          call_id: call.id,
+          reanalyze: true
+        })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'שגיאה בניתוח מחדש')
+      }
+      
+      setReanalyzeMessage('✅ הניתוח מחדש החל! הדף יתרענן בעוד מספר שניות...')
+      setStatus('processing')
+      
+      // רענון הדף אחרי 3 שניות
+      setTimeout(() => {
+        window.location.reload()
+      }, 3000)
+      
+    } catch (error: any) {
+      console.error('❌ שגיאה בניתוח מחדש:', error)
+      setReanalyzeMessage(`❌ שגיאה: ${error.message}`)
+      setIsReanalyzing(false)
+    }
+  }
   
   // פונקציה לרענון URL חתום במקרה של פקיעה
   const refreshAudioUrl = async () => {
@@ -1224,8 +1265,51 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   <CallStatusBadge status={status} />
                 </div>
               </div>
+              
+              {/* 🔄 כפתור ניתוח מחדש */}
+              <button
+                onClick={handleReanalyze}
+                disabled={isReanalyzing || status === 'processing' || status === 'transcribing' || status === 'analyzing_tone' || status === 'analyzing_content'}
+                className={`relative group overflow-hidden transition-all duration-300 ${
+                  isReanalyzing || status === 'processing' || status === 'transcribing' 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'hover:scale-105'
+                }`}
+                title="נתח את השיחה מחדש"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/30 to-amber-500/30 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+                <div className="relative flex items-center px-5 py-3 bg-gradient-to-r from-orange-500/80 to-amber-500/80 hover:from-orange-600/90 hover:to-amber-600/90 text-white rounded-2xl font-bold shadow-xl hover:shadow-2xl backdrop-blur-xl border border-white/30">
+                  {isReanalyzing ? (
+                    <>
+                      <svg className="w-5 h-5 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      מנתח...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      נתח מחדש
+                    </>
+                  )}
+                </div>
+              </button>
             </div>
           </div>
+          
+          {/* הודעת ניתוח מחדש */}
+          {reanalyzeMessage && (
+            <div className={`mt-4 p-4 rounded-xl border-r-4 ${
+              reanalyzeMessage.includes('✅') 
+                ? 'bg-green-50 border-green-500 text-green-700' 
+                : 'bg-red-50 border-red-500 text-red-700'
+            }`}>
+              <p className="font-medium">{reanalyzeMessage}</p>
+            </div>
+          )}
         </div>
       </div>
 

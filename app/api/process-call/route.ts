@@ -377,6 +377,7 @@ export async function POST(request: Request) {
     // קבלת ה-ID של השיחה מגוף הבקשה
     const requestBody = await request.json();
     call_id = requestBody.call_id;
+    const isReanalyze = requestBody.reanalyze === true;
 
     if (!call_id) {
       return NextResponse.json(
@@ -385,7 +386,27 @@ export async function POST(request: Request) {
       );
     }
 
-    await addCallLog(call_id, '🚀 התחלת תהליך ניתוח שיחה', { timestamp: new Date().toISOString() });
+    await addCallLog(call_id, isReanalyze ? '🔄 התחלת ניתוח מחדש' : '🚀 התחלת תהליך ניתוח שיחה', { 
+      timestamp: new Date().toISOString(),
+      reanalyze: isReanalyze 
+    });
+    
+    // אם זה ניתוח מחדש - מאפסים את התוצאות הקודמות
+    if (isReanalyze) {
+      await supabase
+        .from('calls')
+        .update({ 
+          processing_status: 'pending',
+          error_message: null,
+          analysis_report: null,
+          tone_analysis_report: null,
+          overall_score: null,
+          red_flag: null
+        })
+        .eq('id', call_id);
+      
+      await addCallLog(call_id, '🗑️ תוצאות קודמות נמחקו לניתוח מחדש');
+    }
 
     // קבלת פרטי השיחה
     const { data: callData, error: callError } = await supabase
