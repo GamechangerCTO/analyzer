@@ -1104,7 +1104,7 @@ export async function POST(request: Request) {
 
         await addCallLog(call_id, '🔄 עדכון סטטוס לניתוח תוכן', { new_status: 'analyzing_content' });
         await addCallLog(call_id, '📊 מתחיל ניתוח תוכן דו-שלבי', { 
-          step1_model: 'gpt-5.2-preview-2025-08-27',
+          step1_model: 'gpt-5.2-2025-12-11',
           step2_model: 'gpt-4o-mini',
           description: 'GPT-5.2 לניתוח עמוק → GPT-4o-mini לניקוי JSON'
         });
@@ -1312,12 +1312,12 @@ export async function POST(request: Request) {
           transcript_length: transcript?.length || 0,
           prompt_length: systemPrompt.length,
           request_time: new Date().toISOString(),
-          model: 'gpt-5.2-preview-2025-08-27'
+          model: 'gpt-5.2-2025-12-11'
         });
         
         // קריאה ראשונה - ניתוח עמוק עם GPT-5.2 (יותר חכם)
         const deepAnalysisResponse = await openai.chat.completions.create({
-          model: 'gpt-5.2-preview-2025-08-27',
+          model: 'gpt-5.2-2025-12-11',
           messages: [
             {
               role: 'system',
