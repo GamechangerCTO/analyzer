@@ -476,12 +476,23 @@ ${weaknessSection}
     setTimeout(() => startRecording(), 500)
 
     // הגדרת session עם ההוראות - GA API format
+    // 🔴 הוספת הנחיות קריטיות בהתחלה כדי למנוע בלבול בתפקיד
+    const criticalRoleInstructions = `# ⛔ תפקיד: לקוח - לא נציג מכירות!
+
+אתה ${persona?.persona_name || 'לקוח'}, לקוח שמתעניין בשירות.
+המשתמש הוא נציג המכירות שמנסה למכור לך.
+לעולם אל תציע מוצרים - אתה הקונה!
+לעולם אל תשאל "איך אוכל לעזור" - זה משפט של נציג!
+
+---
+
+`
     const sessionUpdate = {
       type: "session.update",
       session: {
         type: "realtime",
         modalities: ["text", "audio"],
-        instructions: aiInstructions || createFallbackInstructions(),
+        instructions: criticalRoleInstructions + (aiInstructions || createFallbackInstructions()),
         audio: {
           input: {
             format: {
@@ -521,18 +532,22 @@ ${weaknessSection}
         type: "response.create",
         response: {
           modalities: ["audio"],
-          instructions: `⚠️ אתה הלקוח ${persona?.persona_name || ''}, לא איש המכירות!
-          
-📢 פתח את השיחה עם המשפט הבא (או גרסה טבעית שלו):
+          instructions: `# ⛔ אתה ${persona?.persona_name || 'הלקוח'} - הלקוח!
+
+## 🚨 חוקים קריטיים:
+- אתה לא נציג מכירות!
+- אל תציע מוצרים או שירותים
+- אל תשאל "איך אוכל לעזור" - זה משפט של נציג!
+- אתה הלקוח שמתקשר לברר על שירות
+
+## 📢 התחל עכשיו עם המשפט הזה:
 "${openingLine}"
 
-🎭 מצב רגשי: ${persona?.emotional_state || 'מעוניין אך זהיר'}
-💬 סגנון דיבור: ${persona?.speaking_style || 'ישיר וענייני'}
+## 🎭 פרטים:
+- מצב רגשי: ${persona?.emotional_state || 'מעוניין אך זהיר'}
+- סגנון דיבור: ${persona?.speaking_style || 'ישיר וענייני'}
 
-🚫 חשוב מאוד:
-- אל תשאל "איך אוכל לעזור לך" - זה משפט של נציג!
-- אתה הלקוח שמתקשר/מקבל שיחה
-- חכה שהנציג ינהל את השיחה`
+אחרי המשפט הפתיחה - המתן לנציג שינהל את השיחה.`
         }
       }
       dc.send(JSON.stringify(openingMessage))
