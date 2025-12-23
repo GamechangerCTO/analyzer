@@ -44,10 +44,6 @@ function cleanOpenAIResponse(content: string): string {
   if (jsonStart === -1) return '{}'
   cleaned = cleaned.substring(jsonStart)
   
-  // 🔧 תיקון קריטי: המרת גרשיים בודדות לגרשיים כפולות
-  cleaned = cleaned.replace(/'([\u0590-\u05FF\w_]+)'(\s*:)/g, '"$1"$2')
-  cleaned = cleaned.replace(/:\s*'([^']*)'/g, ': "$1"')
-  
   // ניסיון ראשון: אולי ה-JSON תקין
   try {
     JSON.parse(cleaned)

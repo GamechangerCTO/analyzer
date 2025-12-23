@@ -43,7 +43,7 @@ async function callOpenAIWithBackoff(openai: any, params: any, maxRetries = 5) {
 function cleanOpenAIResponse(content: string): string {
   if (!content) return '{}';
   
-  // ניקוי Markdown blocks
+  // ניקוי בסיסי בלבד - ללא שינוי מרכאות!
   let cleaned = content.replace(/```(?:json|JSON)?\s*/g, '').replace(/```\s*$/g, '');
   cleaned = cleaned.replace(/^`+|`+$/g, '').trim();
   
@@ -53,40 +53,22 @@ function cleanOpenAIResponse(content: string): string {
     cleaned = cleaned.substring(jsonStart);
   }
   
-  // 🔧 תיקון קריטי: המרת גרשיים בודדות לגרשיים כפולות
-  cleaned = cleaned.replace(/'([\u0590-\u05FF\w_]+)'(\s*:)/g, '"$1"$2');
-  cleaned = cleaned.replace(/:\s*'([^']*)'/g, ': "$1"');
-  
-  // תיקון קריטי חדש - מפתחות שמופיעים ללא פסיק אחרי ערך
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([א-ת\w_]+"\s*:)/g, (match, p1, p2) => {
-    return `${p1}, "${p2}`;
-  });
-  
-  // תיקון מרכאות שנסגרות באמצע הערך
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]*")\s*([^,\s][^":]*":\s*)/g, (match, p1, p2) => {
-    return `${p1}, ${p2}`;
-  });
-  
-  // מחפש patterns של: "key":"value", text" ומתקן אותם
-  cleaned = cleaned.replace(/("[\u0590-\u05FF\w_]+"\s*:\s*"[^"]+)"(\s*,\s*)([^":}\]]+)"/g, (match, p1, p2, p3) => {
-    return `${p1} ${p3.trim()}"`;
-  });
-  
-  // תיקון נוסף למקרים של מרכאות כפולות באמצע ערך
-  cleaned = cleaned.replace(/:\s*"([^"]*)"(,)([^":{}[\]]+)"/g, ':"$1 $3"');
-  
-  // אלגוריתם איזון סוגריים
+  // איזון סוגריים עם מעקב אחרי מחרוזות
   let braceCount = 0;
   let lastValidEnd = -1;
+  let inString = false;
+  let escapeNext = false;
   
   for (let i = 0; i < cleaned.length; i++) {
     const char = cleaned[i];
-    if (char === '{') braceCount++;
-    else if (char === '}') {
-      braceCount--;
-      if (braceCount === 0) {
-        lastValidEnd = i;
-        break;
+    if (escapeNext) { escapeNext = false; continue; }
+    if (char === '\\') { escapeNext = true; continue; }
+    if (char === '"') { inString = !inString; continue; }
+    if (!inString) {
+      if (char === '{') braceCount++;
+      else if (char === '}') {
+        braceCount--;
+        if (braceCount === 0) { lastValidEnd = i; break; }
       }
     }
   }
@@ -95,20 +77,12 @@ function cleanOpenAIResponse(content: string): string {
     cleaned = cleaned.substring(0, lastValidEnd + 1);
   }
   
-  // תיקון אוטומטי
+  // בדיקה ותיקון מינימלי
   try {
     JSON.parse(cleaned);
     return cleaned;
   } catch (error) {
-    let fixed = cleaned
-      .replace(/,(\s*[}\]])/g, '$1')
-      .replace(/([^\\]")([^"]*?)\n([^"]*?)(")/g, '$1$2 $3$4')
-      .replace(/\\"/g, '"').replace(/\\n/g, ' ');
-    
-    if (!fixed.endsWith('}') && fixed.includes('{')) {
-      fixed += '}';
-    }
-    
+    let fixed = cleaned.replace(/,(\s*[}\]])/g, '$1').replace(/,\s*,/g, ',');
     try {
       JSON.parse(fixed);
       return fixed;

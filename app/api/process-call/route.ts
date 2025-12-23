@@ -140,9 +140,9 @@ const openai = new OpenAI({
 function cleanOpenAIResponse(content: string): string {
   if (!content) return '{}';
   
-  console.log(`🧹 מנקה תגובת OpenAI (גרסה משופרת)`, { original_length: content.length });
+  console.log(`🧹 מנקה תגובת OpenAI (גרסה פשוטה)`, { original_length: content.length });
   
-  // ניקוי בסיסי של Markdown blocks ורווחים
+  // ניקוי בסיסי בלבד - ללא שינוי מרכאות!
   let cleaned = content
     .replace(/```(?:json|JSON)?\s*/g, '')
     .replace(/```\s*$/g, '')
@@ -158,27 +158,38 @@ function cleanOpenAIResponse(content: string): string {
     throw new Error('No valid JSON found in OpenAI response');
   }
   
-  // ניקוי תווי בקרה שגורמים לשגיאות
-  cleaned = cleaned.replace(/[\r\n\t]/g, ' ').replace(/\s+/g, ' ');
-  
-  // 🔧 תיקון קריטי: המרת גרשיים בודדות לגרשיים כפולות במפתחות JSON
-  // OpenAI לפעמים מחזיר: { 'key': "value" } במקום { "key": "value" }
-  cleaned = cleaned.replace(/'([\u0590-\u05FF\w_]+)'(\s*:)/g, '"$1"$2');
-  // תיקון גם לערכים: : 'value' -> : "value"
-  cleaned = cleaned.replace(/:\s*'([^']*)'/g, ': "$1"');
-  
-  // איזון סוגריים בסיסי
+  // איזון סוגריים - מוצאים את הסוגר הסוגר המתאים
   let braceCount = 0;
   let lastValidEnd = -1;
+  let inString = false;
+  let escapeNext = false;
   
   for (let i = 0; i < cleaned.length; i++) {
     const char = cleaned[i];
+    
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+    
+    if (char === '\\') {
+      escapeNext = true;
+      continue;
+    }
+    
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+    
+    if (!inString) {
     if (char === '{') braceCount++;
     else if (char === '}') {
         braceCount--;
         if (braceCount === 0) {
           lastValidEnd = i;
         break;
+        }
       }
     }
   }
@@ -187,41 +198,29 @@ function cleanOpenAIResponse(content: string): string {
     cleaned = cleaned.substring(0, lastValidEnd + 1);
   }
   
-  // בדיקה אם ה-JSON תקין כעת
+  // בדיקה אם ה-JSON תקין
   try {
     JSON.parse(cleaned);
-    console.log(`✅ JSON תקין אחרי ניקוי פשוט`, { cleaned_length: cleaned.length });
+    console.log(`✅ JSON תקין`, { cleaned_length: cleaned.length });
     return cleaned;
   } catch (parseError: any) {
-    console.log(`⚠️ JSON לא תקין - מנסה תיקון מתקדם`, { 
+    console.log(`⚠️ JSON לא תקין`, { 
       error: parseError.message,
       position: parseError.message.match(/position (\d+)/)?.[1]
     });
     
-    // תיקון מתקדם: גרשיים בודדות ומרכאות בתוך ערכי טקסט
+    // תיקון מינימלי בלבד - פסיקים ורווחים
     let fixed = cleaned;
     
-    // 🔧 תיקון קריטי ראשון: המרת גרשיים בודדות לכפולות במפתחות וערכים
-    // OpenAI לפעמים מחזיר: { 'key': 'value' } במקום { "key": "value" }
-    fixed = fixed.replace(/'([\u0590-\u05FF\w_]+)'(\s*:)/g, '"$1"$2');
-    fixed = fixed.replace(/:\s*'([^']*)'/g, ': "$1"');
-    
-    // תיקון 2: מרכאות כפולות רצופות
-    fixed = fixed.replace(/""+/g, '"');
-    
-    // תיקון 3: פסיקים כפולים
-    fixed = fixed.replace(/,\s*,/g, ',');
-    
-    // תיקון 4: פסיק לפני סוגר סגירה
+    // תיקון 1: פסיק לפני סוגר סגירה
     fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
     
-    // תיקון 5: מרכאות פנימיות בדוגמאות - החלפה לגרש יחיד
-    // רק בתוך ערכי טקסט ארוכים שמכילים מילים כמו "דוגמה"
-    fixed = fixed.replace(/("איך_משפרים"\s*:\s*"[^"]*)"([^"]+)"([^"]*")/g, '$1\'$2\'$3');
+    // תיקון 2: פסיקים כפולים
+    fixed = fixed.replace(/,\s*,/g, ',');
     
     try {
       JSON.parse(fixed);
-      console.log(`✅ JSON תוקן בהצלחה אחרי תיקון מתקדם`, { fixed_length: fixed.length });
+      console.log(`✅ JSON תוקן בהצלחה`, { fixed_length: fixed.length });
       return fixed;
     } catch (secondError: any) {
       console.log(`⚠️ עדיין לא תקין - מנסה recovery חלקי`);
@@ -268,7 +267,7 @@ function cleanOpenAIResponse(content: string): string {
         error: secondError.message,
         content_preview: fixed.substring(0, 300)
       });
-      throw new Error(`Failed to parse OpenAI JSON response: ${parseError.message}. Content preview: ${cleaned.substring(0, 200)}`);
+    throw new Error(`Failed to parse OpenAI JSON response: ${parseError.message}. Content preview: ${cleaned.substring(0, 200)}`);
     }
   }
 }
@@ -1403,29 +1402,29 @@ export async function POST(request: Request) {
               role: 'user',
               content: `נתח את השיחה הבאה:
 
-סוג שיחה: ${callData.call_type}
-תמליל השיחה: ${transcript}
-
-מידע נוסף:
-${companyName ? `חברה: ${companyName}` : ''}
-${userData ? `תפקיד המשתמש: ${userData.role}` : ''}
-${callData.agent_notes ? `הערות נציג: ${callData.agent_notes}` : ''}
-
-${companyQuestionnaire ? `📋 שאלון החברה:
-${JSON.stringify(companyQuestionnaire, null, 2)}
-
-⚠️ חשוב מאוד: עבור על כל מה שהלקוח מילא בשאלון החברה והתייחס בניתוח בהתאם!` : ''}
-
-${callData.analysis_notes ? `🎯 פרמטרים מיוחדים לניתוח זה:
-${callData.analysis_notes}
-
+              סוג שיחה: ${callData.call_type}
+              תמליל השיחה: ${transcript}
+              
+              מידע נוסף:
+              ${companyName ? `חברה: ${companyName}` : ''}
+              ${userData ? `תפקיד המשתמש: ${userData.role}` : ''}
+              ${callData.agent_notes ? `הערות נציג: ${callData.agent_notes}` : ''}
+              
+              ${companyQuestionnaire ? `📋 שאלון החברה:
+              ${JSON.stringify(companyQuestionnaire, null, 2)}
+              
+              ⚠️ חשוב מאוד: עבור על כל מה שהלקוח מילא בשאלון החברה והתייחס בניתוח בהתאם!` : ''}
+              
+              ${callData.analysis_notes ? `🎯 פרמטרים מיוחדים לניתוח זה:
+              ${callData.analysis_notes}
+              
 ⚠️ חשוב: התמקד במיוחד בפרמטרים הנ"ל בעת הניתוח.` : ''}
-
-ניתוח טונציה: ${JSON.stringify(toneAnalysisReport)}
-
-הנחיות:
+              
+              ניתוח טונציה: ${JSON.stringify(toneAnalysisReport)}
+              
+              הנחיות:
 1. תן ציונים מ-4 עד 10 (4-6 חלש, 7-8 טוב, 9-10 מצוין)
-2. בציטוטים החלף שמות ב"הנציג" ו"הלקוח"
+              2. בציטוטים החלף שמות ב"הנציג" ו"הלקוח"
 3. כתוב דוגמאות לשיפור ללא מרכאות - השתמש בגרש יחיד או מקף
 4. כל קטגוריה צריכה לכלול ציון ממוצע, תובנות והצעות לשיפור`
             }
