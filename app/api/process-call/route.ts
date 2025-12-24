@@ -1361,9 +1361,13 @@ export async function POST(request: Request) {
         
         const deepAnalysisRaw = deepAnalysisResponse.choices[0]?.message?.content || '{}';
         
+        // 📊 לוג דיבאג לניתוח הגולמי מ-GPT-5.2
+        console.log('🤖 GPT-5.2 Raw Response:', deepAnalysisRaw.substring(0, 500) + '...');
+        
         await addCallLog(call_id, '✅ GPT-5.2 הושלם - מנסה לנתח JSON ישירות', { 
           response_length: deepAnalysisRaw.length,
           model: deepAnalysisResponse.model,
+          raw_preview_start: deepAnalysisRaw.substring(0, 200),
           token_usage: deepAnalysisResponse.usage
         });
         
@@ -1372,16 +1376,19 @@ export async function POST(request: Request) {
         
         // 🧹 ניסיון ראשון: cleanOpenAIResponse ישירות על התוצאה של GPT-5.2 (35 פרמטרים מלאים!)
         try {
-          await addCallLog(call_id, '🔄 מנסה לנקות JSON ישירות (35 פרמטרים)', {
-            raw_length: deepAnalysisRaw.length
-          });
-          
           const cleanedContent = cleanOpenAIResponse(deepAnalysisRaw);
+          
+          // 📊 לוג דיבאג לניתוח המנוקה
+          console.log('🧹 Cleaned Content:', cleanedContent.substring(0, 500) + '...');
+          
           contentAnalysisReport = JSON.parse(cleanedContent);
           
           await addCallLog(call_id, '✅ JSON נותח בהצלחה ישירות! (35 פרמטרים מלאים)', { 
             overall_score: contentAnalysisReport.overall_score,
             has_analysis_sections: !!contentAnalysisReport.analysis_sections,
+            // בדיקת מבנה הנתונים
+            has_parameters_wrapper: !!(contentAnalysisReport['פתיחת_שיחה_ובניית_אמון']?.פרמטרים),
+            sample_category_keys: Object.keys(contentAnalysisReport['פתיחת_שיחה_ובניית_אמון'] || {}),
             sections_count: contentAnalysisReport.analysis_sections ? Object.keys(contentAnalysisReport.analysis_sections).length : 0,
             method: 'GPT-5.2 ישירות'
           });
@@ -1542,10 +1549,17 @@ export async function POST(request: Request) {
           });
           
           const fallbackContent = fallbackResponse.choices[0]?.message?.content || '{}';
+          
+          // 📊 לוג דיבאג ל-Fallback
+          console.log('🛡️ Fallback Response:', fallbackContent.substring(0, 500) + '...');
+          
           contentAnalysisReport = JSON.parse(fallbackContent);
           
           await addCallLog(call_id, '✅ Fallback הצליח - JSON מובנה עם 35 פרמטרים', { 
             overall_score: contentAnalysisReport.overall_score,
+            has_parameters_wrapper: !!(contentAnalysisReport['פתיחת_שיחה_ובניית_אמון']?.פרמטרים),
+            sample_category_keys: Object.keys(contentAnalysisReport['פתיחת_שיחה_ובניית_אמון'] || {}),
+          });
             method: 'Structured Outputs Fallback',
             token_usage: fallbackResponse.usage
           });
