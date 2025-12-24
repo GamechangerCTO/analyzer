@@ -882,12 +882,14 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     }
     
     console.log('⚠️ לא נמצאו שדות ניתוח מותאמים, משתמש בדוח הסטנדרטי');
+    console.log('📊 analysis_report:', analysis_report);
     // אם אין שדות ניתוח מהפרומפט, השתמש בפונקציה הישנה
     return getDetailedScores();
   };
 
   // פונקציה לחילוץ הניתוח המפורט החדש (הפונקציה הישנה)
   const getDetailedScores = () => {
+    console.log('🔍 getDetailedScores - analysis_report keys:', Object.keys(analysis_report || {}));
     const categories = [
       {
         category: 'פתיחת שיחה ובניית אמון',
@@ -949,6 +951,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         key: 'הנעה_לפעולה_וסגירה',
         subcategories: [
           { name: 'הנעה לפעולה', key: 'הנעה_לפעולה' },
+          { name: 'סגירה ברורה', key: 'סגירה_ברורה' },
           { name: 'פתרון מוצלח', key: 'פתרון_מוצלח' },
           { name: 'סיכום ברור', key: 'סיכום_ברור' },
           { name: 'מתן מעקב', key: 'מתן_מעקב' }
@@ -997,7 +1000,16 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       const analysisSource = analysis_report.analysis_sections || analysis_report;
       const categoryData = analysisSource[category.key] || {};
       
-
+      // לוג לדיבאג
+      if (category.key === 'פתיחת_שיחה_ובניית_אמון') {
+        console.log('🔍 First category debug:', {
+          key: category.key,
+          hasData: !!categoryData,
+          dataKeys: Object.keys(categoryData),
+          sampleSubData: categoryData['פתיח_אנרגטי'],
+          analysisSourceKeys: Object.keys(analysisSource || {}),
+        });
+      }
       
       const subcategories = category.subcategories.map(sub => {
         // נסה מפתחות שונים כי יש מפתחות עם גרשיים מוזרים
