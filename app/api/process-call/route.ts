@@ -1103,10 +1103,10 @@ export async function POST(request: Request) {
           .eq('id', call_id);
 
         await addCallLog(call_id, '🔄 עדכון סטטוס לניתוח תוכן', { new_status: 'analyzing_content' });
-        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן דו-שלבי', { 
-          step1_model: 'gpt-5.2-2025-12-11',
-          step2_model: 'gpt-4o-mini',
-          description: 'GPT-5.2 לניתוח עמוק → GPT-4o-mini לניקוי JSON'
+        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן עם GPT-5.2', { 
+          model: 'gpt-5.2-2025-12-11',
+          fallback: 'Structured Outputs עם 35 פרמטרים',
+          description: 'ניסיון ראשון: GPT-5.2 ישירות. אם נכשל JSON: fallback ל-Structured Outputs'
         });
 
         // שלב 3: ניתוח תוכן מקצועי עם gpt-4.1-2025-04-14
@@ -1360,268 +1360,211 @@ export async function POST(request: Request) {
         
         const deepAnalysisRaw = deepAnalysisResponse.choices[0]?.message?.content || '{}';
         
-        await addCallLog(call_id, '✅ שלב 1 הושלם - ניתוח עמוק עם GPT-5.2', { 
+        await addCallLog(call_id, '✅ GPT-5.2 הושלם - מנסה לנתח JSON ישירות', { 
           response_length: deepAnalysisRaw.length,
           model: deepAnalysisResponse.model,
           token_usage: deepAnalysisResponse.usage
         });
         
-        // 🧹 שלב 2: ניקוי וארגון JSON עם GPT-4o-mini + Structured Outputs
-        await addCallLog(call_id, '🔄 שלב 2: ניקוי וארגון JSON עם GPT-4o-mini + Structured Outputs', {
-          raw_analysis_length: deepAnalysisRaw.length,
-          model: 'gpt-4o-mini'
-        });
-        
-        // ✅ JSON Schema לניתוח תוכן - מבטיח JSON תקין תמיד
-        const contentAnalysisSchema = {
-          name: "call_analysis",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              overall_score: { type: "number", description: "ציון כללי 4-10" },
-              red_flag: { type: "boolean", description: "האם יש דגל אדום" },
-              executive_summary: { type: "string", description: "סיכום מנהלים קצר" },
-              general_key_insights: { 
-                type: "array", 
-                items: { type: "string" },
-                description: "תובנות מפתח מהשיחה"
-              },
-              improvement_points: { 
-                type: "array", 
-                items: { type: "string" },
-                description: "נקודות לשיפור"
-              },
-              strengths_and_preservation_points: { 
-                type: "array", 
-                items: { type: "string" },
-                description: "נקודות חוזק לשימור"
-              },
-              analysis_sections: {
-                type: "object",
-                description: "ניתוח לפי קטגוריות",
-                additionalProperties: false,
-                properties: {
-                  פתיחת_שיחה_ובניית_אמון: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      ציון_ממוצע: { type: "number" },
-                      תובנות: { type: "string" },
-                      איך_משפרים: { type: "string" }
-                    },
-                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
-                  },
-                  איתור_צרכים_וזיהוי_כאב: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      ציון_ממוצע: { type: "number" },
-                      תובנות: { type: "string" },
-                      איך_משפרים: { type: "string" }
-                    },
-                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
-                  },
-                  הקשבה_ואינטראקציה: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      ציון_ממוצע: { type: "number" },
-                      תובנות: { type: "string" },
-                      איך_משפרים: { type: "string" }
-                    },
-                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
-                  },
-                  הצגת_פתרון_והדגשת_ערך: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      ציון_ממוצע: { type: "number" },
-                      תובנות: { type: "string" },
-                      איך_משפרים: { type: "string" }
-                    },
-                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
-                  },
-                  טיפול_בהתנגדויות: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      ציון_ממוצע: { type: "number" },
-                      תובנות: { type: "string" },
-                      איך_משפרים: { type: "string" }
-                    },
-                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
-                  },
-                  הנעה_לפעולה_וסגירה: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      ציון_ממוצע: { type: "number" },
-                      תובנות: { type: "string" },
-                      איך_משפרים: { type: "string" }
-                    },
-                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
-                  },
-                  שפת_תקשורת: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      ציון_ממוצע: { type: "number" },
-                      תובנות: { type: "string" },
-                      איך_משפרים: { type: "string" }
-                    },
-                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
-                  },
-                  סיכום_שיחה: {
-                    type: "object",
-                    additionalProperties: false,
-                    properties: {
-                      ציון_ממוצע: { type: "number" },
-                      תובנות: { type: "string" },
-                      איך_משפרים: { type: "string" }
-                    },
-                    required: ["ציון_ממוצע", "תובנות", "איך_משפרים"]
-                  }
-                },
-                required: ["פתיחת_שיחה_ובניית_אמון", "איתור_צרכים_וזיהוי_כאב", "הקשבה_ואינטראקציה", "הצגת_פתרון_והדגשת_ערך", "טיפול_בהתנגדויות", "הנעה_לפעולה_וסגירה", "שפת_תקשורת", "סיכום_שיחה"]
-              }
-            },
-            required: ["overall_score", "red_flag", "executive_summary", "general_key_insights", "improvement_points", "strengths_and_preservation_points", "analysis_sections"],
-            additionalProperties: false
-          }
-        };
-        
-        // ✅ שימוש ב-Chat Completions API עם Structured Outputs לניקוי הפלט
-        const contentAnalysisResponse = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content: `אתה ממיר ניתוח שיחה לפורמט JSON מובנה.
-              
-              קיבלת ניתוח שיחה מפורט. המשימה שלך היא:
-              1. לחלץ את כל המידע מהניתוח
-              2. לארגן אותו בפורמט ה-JSON המוגדר
-              3. לוודא שכל השדות מלאים בצורה הגיונית
-              4. לשמור על הציונים והתובנות כפי שניתנו
-              
-              אם חסר מידע - תן ערכים סבירים בהתבסס על הניתוח.
-              ציונים חייבים להיות בין 4-10.`
-            },
-            {
-              role: 'user',
-              content: `להלן ניתוח שיחה מפורט שנעשה על ידי מודל AI מתקדם.
-              אנא ארגן אותו בפורמט ה-JSON המובנה:
-
-              ${deepAnalysisRaw}
-              
-              סוג השיחה: ${callData.call_type}
-              
-              שים לב:
-              - ציונים חייבים להיות מספרים בין 4-10
-              - כל השדות הנדרשים חייבים להיות מלאים
-              - שמור על התוכן המקורי כמה שאפשר`
-            }
-          ],
-          response_format: {
-            type: "json_schema",
-            json_schema: contentAnalysisSchema
-          },
-          temperature: 0.2
-        });
-
-        await addCallLog(call_id, '✅ שלב 2 הושלם - JSON נוקה עם GPT-4o-mini + Structured Outputs', { 
-          token_usage: contentAnalysisResponse.usage,
-          model: contentAnalysisResponse.model,
-          response_id: contentAnalysisResponse.id,
-          completion_time: new Date().toISOString()
-        });
-
-        // ✅ Chat Completions API עם Structured Outputs - ה-JSON תמיד תקין!
-        const rawContentResponse = contentAnalysisResponse.choices[0]?.message?.content || '{}';
-        
-        // ✅ עם Structured Outputs ה-JSON תמיד תקין - פשוט parse ישירות
-        await addCallLog(call_id, '📥 תשובת JSON סופית נקייה', { 
-          raw_length: rawContentResponse.length,
-          first_200_chars: rawContentResponse.substring(0, 200)
-        });
-        
         let contentAnalysisReport;
+        let usedFallback = false;
         
+        // 🧹 ניסיון ראשון: cleanOpenAIResponse ישירות על התוצאה של GPT-5.2 (35 פרמטרים מלאים!)
         try {
-          // ✅ Structured Outputs מבטיח JSON תקין - אין צורך ב-cleanOpenAIResponse!
-          contentAnalysisReport = JSON.parse(rawContentResponse);
+          await addCallLog(call_id, '🔄 מנסה לנקות JSON ישירות (35 פרמטרים)', {
+            raw_length: deepAnalysisRaw.length
+          });
           
-          await addCallLog(call_id, '✅ JSON נותח בהצלחה (Structured Outputs)', { 
+          const cleanedContent = cleanOpenAIResponse(deepAnalysisRaw);
+          contentAnalysisReport = JSON.parse(cleanedContent);
+          
+          await addCallLog(call_id, '✅ JSON נותח בהצלחה ישירות! (35 פרמטרים מלאים)', { 
             overall_score: contentAnalysisReport.overall_score,
-            sections_count: Object.keys(contentAnalysisReport.analysis_sections || {}).length
+            has_analysis_sections: !!contentAnalysisReport.analysis_sections,
+            sections_count: contentAnalysisReport.analysis_sections ? Object.keys(contentAnalysisReport.analysis_sections).length : 0,
+            method: 'GPT-5.2 ישירות'
           });
           
-        } catch (parseError: any) {
-          // Fallback למקרה נדיר שה-Structured Outputs נכשל
-          await addCallLog(call_id, '⚠️ שגיאה לא צפויה ב-Structured Outputs - יוצר fallback', { 
-            error: parseError.message,
-            raw_content_preview: rawContentResponse.substring(0, 500)
+        } catch (directParseError: any) {
+          // ❌ נכשל - נפעיל Fallback עם Structured Outputs
+          usedFallback = true;
+          
+          await addCallLog(call_id, '⚠️ JSON ישיר נכשל - מפעיל Fallback (Structured Outputs)', {
+            error: directParseError.message,
+            activating_fallback: true
           });
           
-          // ניסיון לחלץ תובנות בסיסיות מהתמליל עצמו
-          let basicInsights = ["ניתוח כללי של השיחה בוצע בהצלחה", "הנציג הראה מעורבות ותשומת לב"];
-          let basicRecommendations = ["המשך לפתח כישורי תקשורת", "שמור על רמת מקצועיות גבוהה"];
-          let estimatedScore = 6;
-          let hasRedFlags = false;
-          
-          if (transcript && transcript.length > 100) {
-            // חיפוש מילות מפתח חיוביות
-            const positiveWords = ['תודה', 'מעולה', 'נהדר', 'מצוין', 'מקצועי', 'שירות טוב', 'מרוצה'];
-            const negativeWords = ['בעיה', 'אכזבה', 'זועם', 'נורא', 'גרוע', 'לא מרוצה', 'תלונה', 'כועס'];
-            
-            const positiveCount = positiveWords.filter(word => transcript.includes(word)).length;
-            const negativeCount = negativeWords.filter(word => transcript.includes(word)).length;
-            
-            if (positiveCount > negativeCount) {
-              estimatedScore = Math.min(8, 6 + positiveCount);
-              basicInsights = ["זוהו ביטויים חיוביים בשיחה", "הלקוח הראה שביעות רצון מהטיפול"];
-              basicRecommendations = ["המשך גישה מקצועית זו", "שמור על רמת השירות הגבוהה"];
-            } else if (negativeCount > 0) {
-              estimatedScore = Math.max(3, 6 - negativeCount);
-              hasRedFlags = negativeCount > 2;
-              basicInsights = ["הלקוח הביע חוסר שביעות רצון", "יש הזדמנות לשיפור בטיפול"];
-              basicRecommendations = ["שפר את טכניקות ההקשבה", "תן מענה ממוקד יותר לצרכי הלקוח"];
+          // 🔴 Fallback: שימוש ב-Structured Outputs עם 35 פרמטרים מלאים
+          const fullAnalysisSchema = {
+            name: "call_analysis_full",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                overall_score: { type: "number" },
+                red_flag: { type: "boolean" },
+                executive_summary: { type: "string" },
+                general_key_insights: { type: "array", items: { type: "string" } },
+                improvement_points: { type: "array", items: { type: "string" } },
+                strengths_and_preservation_points: { type: "array", items: { type: "string" } },
+                פתיחת_שיחה_ובניית_אמון: {
+                  type: "object",
+                  properties: {
+                    פתיח_אנרגטי: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    הצגת_נציג_וחברה: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    בניית_כימיה: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    הצגת_תועלת_מהירה: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    בניית_אמון: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    שימוש_בשם_פרטי: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    שאלת_סיבת_הפנייה: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false }
+                  },
+                  required: ["פתיח_אנרגטי", "הצגת_נציג_וחברה", "בניית_כימיה", "הצגת_תועלת_מהירה", "בניית_אמון", "שימוש_בשם_פרטי", "שאלת_סיבת_הפנייה"],
+                  additionalProperties: false
+                },
+                איתור_צרכים_וזיהוי_כאב: {
+                  type: "object",
+                  properties: {
+                    שאילת_שאלות: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    איתור_כאב_צורך: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    זיהוי_סגנון_תקשורת: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    זיהוי_איתותי_קנייה: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false }
+                  },
+                  required: ["שאילת_שאלות", "איתור_כאב_צורך", "זיהוי_סגנון_תקשורת", "זיהוי_איתותי_קנייה"],
+                  additionalProperties: false
+                },
+                הקשבה_ואינטראקציה: {
+                  type: "object",
+                  properties: {
+                    הקשבה_פעילה: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    יחס_דיבור_הקשבה: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    זרימה_ושטף: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    הצפת_יתר: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false }
+                  },
+                  required: ["הקשבה_פעילה", "יחס_דיבור_הקשבה", "זרימה_ושטף", "הצפת_יתר"],
+                  additionalProperties: false
+                },
+                הצגת_פתרון_והדגשת_ערך: {
+                  type: "object",
+                  properties: {
+                    פתרון_מותאם: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    תועלות_וערכים: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    תועלות_רגשיות: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    עדויות_הוכחות: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    ערך_הפתרון: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    מומחיות_מקצועית: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false }
+                  },
+                  required: ["פתרון_מותאם", "תועלות_וערכים", "תועלות_רגשיות", "עדויות_הוכחות", "ערך_הפתרון", "מומחיות_מקצועית"],
+                  additionalProperties: false
+                },
+                טיפול_בהתנגדויות: {
+                  type: "object",
+                  properties: {
+                    זיהוי_התנגדות_אמיתית_מזויפת: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    צריך_לחשוב: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    אין_זמן: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    זה_לא_רלוונטי: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false }
+                  },
+                  required: ["זיהוי_התנגדות_אמיתית_מזויפת", "צריך_לחשוב", "אין_זמן", "זה_לא_רלוונטי"],
+                  additionalProperties: false
+                },
+                הנעה_לפעולה_וסגירה: {
+                  type: "object",
+                  properties: {
+                    הנעה_לפעולה: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    סגירה_ברורה: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    פתרון_מוצלח: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    סיכום_ברור: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    מתן_מעקב: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false }
+                  },
+                  required: ["הנעה_לפעולה", "סגירה_ברורה", "פתרון_מוצלח", "סיכום_ברור", "מתן_מעקב"],
+                  additionalProperties: false
+                },
+                שפת_תקשורת: {
+                  type: "object",
+                  properties: {
+                    התלהבות_אנרגיה: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    שפה_חיובית_ונחרצת: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false }
+                  },
+                  required: ["התלהבות_אנרגיה", "שפה_חיובית_ונחרצת"],
+                  additionalProperties: false
+                },
+                סיכום_שיחה: {
+                  type: "object",
+                  properties: {
+                    סיכום_שיחה_ברור: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false },
+                    צידה_לדרך: { type: "object", properties: { ציון: { type: "number" }, תובנות: { type: "string" }, איך_משפרים: { type: "string" } }, required: ["ציון", "תובנות", "איך_משפרים"], additionalProperties: false }
+                  },
+                  required: ["סיכום_שיחה_ברור", "צידה_לדרך"],
+                  additionalProperties: false
+                }
+              },
+              required: ["overall_score", "red_flag", "executive_summary", "general_key_insights", "improvement_points", "strengths_and_preservation_points", "פתיחת_שיחה_ובניית_אמון", "איתור_צרכים_וזיהוי_כאב", "הקשבה_ואינטראקציה", "הצגת_פתרון_והדגשת_ערך", "טיפול_בהתנגדויות", "הנעה_לפעולה_וסגירה", "שפת_תקשורת", "סיכום_שיחה"],
+              additionalProperties: false
             }
-            
-            // בדיקה לאורך השיחה
-            if (transcript.length > 2000) {
-              basicInsights.push("שיחה מפורטת שכללה טיפול מעמיק בנושא");
-            } else if (transcript.length < 500) {
-              basicInsights.push("שיחה קצרה שנפתרה במהירות ויעילות");
-            }
-          }
-          
-          contentAnalysisReport = {
-            overall_score: estimatedScore,
-            red_flag: hasRedFlags,
-            general_key_insights: basicInsights,
-            improvement_points: basicRecommendations,
-            strengths_and_preservation_points: estimatedScore >= 7 ? 
-              ["גישה מקצועית", "טיפול מוקפד"] : 
-              ["נדרש שיפור בטיפול"],
-            executive_summary: `הניתוח הושלם בהצלחה (ציון כללי: ${estimatedScore}/10). ${hasRedFlags ? 'זוהו מספר נקודות לשיפור שחשוב להתייחס אליהן בהמשך' : 'השיחה נוהלה ברמה סבירה עם ביצועים טובים'}. המלצה לבדוק את הנקודות המפורטות לשיפור מתמשך.`,
-            
-            // מידע טכני על הכשל
-            technical_recovery_info: {
-              recovery_method: "intelligent_fallback_after_structured_outputs_failure",
-              original_error: parseError.message,
-              content_preview: rawContentResponse.substring(0, 200),
-              transcript_analyzed: !!transcript,
-              word_count: transcript?.split(' ').length || 0,
-              estimated_quality: estimatedScore >= 7 ? 'טוב' : estimatedScore >= 5 ? 'בינוני' : 'נמוך'
-            },
-            
-            // הוספת שדות נדרשים למערכת
-            tone_analysis_report: toneAnalysisReport,
-            recovery_timestamp: new Date().toISOString()
           };
+          
+          await addCallLog(call_id, '🔄 Fallback: שולח לניתוח מחדש עם Structured Outputs (35 פרמטרים)', {
+            model: 'gpt-4o-mini',
+            original_analysis_length: deepAnalysisRaw.length
+          });
+          
+          const fallbackResponse = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: systemPrompt
+              },
+              {
+                role: 'user',
+                content: `נתח את השיחה הבאה והחזר JSON מובנה עם כל 35 הפרמטרים:
+
+                סוג שיחה: ${callData.call_type}
+                תמליל השיחה: ${transcript || 'אין תמליל זמין'}
+                
+                ניתוח קודם לעזרה:
+                ${deepAnalysisRaw}
+                
+                ניתוח טונציה: ${JSON.stringify(toneAnalysisReport)}
+                
+                הנחיות:
+                1. ציונים מ-4 עד 10
+                2. כל פרמטר צריך ציון, תובנות, ואיך משפרים
+                3. החזר JSON תקין!`
+              }
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: fullAnalysisSchema
+            },
+            temperature: 0.3
+          });
+          
+          const fallbackContent = fallbackResponse.choices[0]?.message?.content || '{}';
+          contentAnalysisReport = JSON.parse(fallbackContent);
+          
+          await addCallLog(call_id, '✅ Fallback הצליח - JSON מובנה עם 35 פרמטרים', { 
+            overall_score: contentAnalysisReport.overall_score,
+            method: 'Structured Outputs Fallback',
+            token_usage: fallbackResponse.usage
+          });
         }
+        
+        // 📊 לוג סופי
+        await addCallLog(call_id, '📥 תוצאת ניתוח תוכן סופית', { 
+          overall_score: contentAnalysisReport.overall_score,
+          used_fallback: usedFallback,
+          method: usedFallback ? 'Structured Outputs' : 'GPT-5.2 ישירות'
+        });
+        
+        // המשך עיבוד - הלוג הישן
+        await addCallLog(call_id, '✅ JSON נותח בהצלחה', { 
+          overall_score: contentAnalysisReport.overall_score,
+          sections_count: Object.keys(contentAnalysisReport).length,
+          used_fallback: usedFallback
+        });
+        
+        // ✅ הגענו לכאן עם contentAnalysisReport תקין (מ-GPT-5.2 ישירות או מ-Fallback)
         
         await addCallLog(call_id, '✅ ניתוח תוכן הושלם', { 
           overall_score: contentAnalysisReport.overall_score,
