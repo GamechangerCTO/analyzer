@@ -1003,6 +1003,16 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       // 🔧 תיקון: הפרמטרים יכולים להיות ישירות או בתוך שדה "פרמטרים"
       const categoryData = rawCategoryData.פרמטרים || rawCategoryData;
       
+      // 🔍 DEBUG: הדפס נתונים לקטגוריה ספציפית
+      if (category.key === 'פתיחת_שיחה_ובניית_אמון') {
+        console.log('🔍 DEBUG Category Data:', {
+          key: category.key,
+          rawKeys: Object.keys(rawCategoryData),
+          finalKeys: Object.keys(categoryData),
+          hasSubCategory: !!categoryData['פתיח_אנרגטי']
+        });
+      }
+      
       const subcategories = category.subcategories.map(sub => {
         // נסה מפתחות שונים כי יש מפתחות עם גרשיים מוזרים
         const possibleKeys = [

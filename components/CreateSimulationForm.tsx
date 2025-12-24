@@ -70,44 +70,44 @@ export default function CreateSimulationForm({
     
     try {
       // חילוץ נתוני השיחה הנבחרת (אם יש)
-      let selectedCallAnalysis = null
+        let selectedCallAnalysis = null
       if (selectedCallId && creationMode === 'call-based') {
         const selectedCall = recentCalls.find(call => call.id === selectedCallId)
-        if (selectedCall) {
-          selectedCallAnalysis = {
-            call_type: selectedCall.call_type,
-            overall_score: selectedCall.overall_score,
-            content_analysis: selectedCall.content_analysis,
-            tone_analysis: selectedCall.tone_analysis,
-            red_flags: selectedCall.red_flags || [],
-            improvement_areas: selectedCall.improvement_areas || [],
-            duration_seconds: selectedCall.duration_seconds,
-            created_at: selectedCall.created_at
+          if (selectedCall) {
+            selectedCallAnalysis = {
+              call_type: selectedCall.call_type,
+              overall_score: selectedCall.overall_score,
+              content_analysis: selectedCall.content_analysis,
+              tone_analysis: selectedCall.tone_analysis,
+              red_flags: selectedCall.red_flags || [],
+              improvement_areas: selectedCall.improvement_areas || [],
+              duration_seconds: selectedCall.duration_seconds,
+              created_at: selectedCall.created_at
+            }
           }
         }
-      }
 
       // יצירת פרסונה
-      const personaResponse = await fetch('/api/simulations/generate-persona', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          agentId: user.id,
-          companyId: user.company_id,
+        const personaResponse = await fetch('/api/simulations/generate-persona', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agentId: user.id,
+            companyId: user.company_id,
           targetWeaknesses: [], // נקבע אוטומטית מהניתוח
           difficulty: 'אוטומטי', // נקבע לפי ניתוח השיחות
           callAnalysis: selectedCallAnalysis,
           selectedTopics: creationMode === 'topic-based' ? selectedTopics : []
+          })
         })
-      })
-      
-      if (!personaResponse.ok) {
-        throw new Error('Failed to generate persona')
-      }
-      
-      const personaData = await personaResponse.json()
+        
+        if (!personaResponse.ok) {
+          throw new Error('Failed to generate persona')
+        }
+        
+        const personaData = await personaResponse.json()
       const personaId = personaData.persona.id
-
+      
       // יצירת תרחיש
       const scenarioResponse = await fetch('/api/simulations/generate-scenario', {
         method: 'POST',
@@ -125,7 +125,7 @@ export default function CreateSimulationForm({
         throw new Error('Failed to generate scenario')
       }
       
-      // יצירת הסימולציה עצמה
+      // יצירת הסימולציה עצמה  
       const simulationResponse = await fetch('/api/simulations/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -158,7 +158,7 @@ export default function CreateSimulationForm({
 
   // מסך בחירת אופציה
   if (!creationMode || creationMode === 'select') {
-    return (
+  return (
       <div className="bg-white rounded-xl shadow-lg p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-3">
@@ -192,7 +192,7 @@ export default function CreateSimulationForm({
               <span className="bg-blue-100 px-3 py-1 rounded-full">
                 {recentCalls.length} שיחות זמינות
               </span>
-            </div>
+              </div>
           </button>
 
           {/* אופציה 2: על בסיס נושאים */}
@@ -215,13 +215,13 @@ export default function CreateSimulationForm({
             </div>
           </button>
         </div>
-
+        
         {recentCalls.length === 0 && (
           <div className="mt-6 text-center">
             <p className="text-gray-500 text-sm">
               💡 העלה שיחות לניתוח כדי לאפשר סימולציות מבוססות שיחה
             </p>
-          </div>
+        </div>
         )}
       </div>
     )
@@ -233,30 +233,30 @@ export default function CreateSimulationForm({
       <div className="bg-white rounded-xl shadow-lg">
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
-          <button
+              <button
             onClick={() => setCreationMode('select')}
             className="text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-2"
           >
             ← חזרה לבחירת אופציה
-          </button>
+              </button>
           <h2 className="text-2xl font-bold text-gray-900">
             📊 בחר שיחה לבסס עליה את הסימולציה
           </h2>
           <p className="text-gray-600 mt-2">
             הפרסונה תאתגר אותך בדיוק בנקודות החולשה שזוהו בשיחה
           </p>
-        </div>
+            </div>
 
         <div className="p-6">
           <div className="space-y-4">
             {recentCalls.map((call) => {
-              // חילוץ נקודות שיפור מהניתוח
+                    // חילוץ נקודות שיפור מהניתוח
               let improvementAreas: string[] = []
               let strengths: string[] = []
-              try {
-                if (call.content_analysis) {
-                  const content = typeof call.content_analysis === 'string' ? 
-                    JSON.parse(call.content_analysis) : call.content_analysis
+                    try {
+                      if (call.content_analysis) {
+                        const content = typeof call.content_analysis === 'string' ? 
+                          JSON.parse(call.content_analysis) : call.content_analysis
                   if (content.improvement_points || content.איך_משפרים) {
                     improvementAreas = Array.isArray(content.improvement_points) ? 
                       content.improvement_points : 
@@ -270,9 +270,9 @@ export default function CreateSimulationForm({
                 }
               } catch (e) {}
 
-              return (
-                <button
-                  key={call.id}
+                    return (
+                      <button
+                        key={call.id}
                   onClick={() => setSelectedCallId(call.id)}
                   className={`w-full text-right p-5 border-2 rounded-xl transition-all ${
                     selectedCallId === call.id
@@ -280,8 +280,8 @@ export default function CreateSimulationForm({
                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <span className="font-bold text-gray-900 text-lg">{call.call_type}</span>
                         <span className="text-sm text-gray-500">
@@ -305,30 +305,30 @@ export default function CreateSimulationForm({
                           <span className="text-sm text-gray-600">
                             {strengths.slice(0, 2).join(', ')}
                           </span>
-                        </div>
+                              </div>
                       )}
-                    </div>
+                            </div>
                     
                     <div className="text-center mr-4">
                       <div className={`text-2xl font-bold ${
-                        call.overall_score >= 8 ? 'text-green-600' :
-                        call.overall_score >= 6 ? 'text-yellow-600' :
-                        'text-red-600'
-                      }`}>
-                        {call.overall_score}/10
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
+                                call.overall_score >= 8 ? 'text-green-600' :
+                                call.overall_score >= 6 ? 'text-yellow-600' :
+                                'text-red-600'
+                              }`}>
+                                {call.overall_score}/10
+                              </div>
+                              </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
 
           {selectedCallId && (
             <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-2xl">🎯</span>
-                <div>
+                      <div>
                   <h4 className="font-bold text-blue-900">מוכן לסימולציה!</h4>
                   <p className="text-blue-700 text-sm">
                     הלקוח הווירטואלי יאתגר אותך בנקודות החולשה שזוהו
@@ -336,26 +336,26 @@ export default function CreateSimulationForm({
                 </div>
               </div>
               
-              <button
-                onClick={handleSubmit}
-                disabled={isGenerating}
+                        <button
+                          onClick={handleSubmit}
+                          disabled={isGenerating}
                 className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-3"
-              >
-                {isGenerating ? (
-                  <>
+                        >
+                          {isGenerating ? (
+                            <>
                     <div className="animate-spin w-6 h-6 border-3 border-white border-t-transparent rounded-full" />
-                    יוצר סימולציה...
-                  </>
-                ) : (
-                  <>
+                              יוצר סימולציה...
+                            </>
+                          ) : (
+                            <>
                     🚀 התחל סימולציה
-                  </>
+                            </>
+                          )}
+                        </button>
+                  </div>
                 )}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
+          </div>
     )
   }
 
@@ -377,7 +377,7 @@ export default function CreateSimulationForm({
           <p className="text-gray-600 mt-2">
             הלקוח הווירטואלי יאתגר אותך בנושאים שתבחר
           </p>
-        </div>
+              </div>
 
         <div className="p-6">
           {/* כפתורי בחירה מהירה */}
@@ -413,13 +413,13 @@ export default function CreateSimulationForm({
               >
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">{topic.icon}</span>
-                  <div className="flex-1">
+                          <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-gray-900">{topic.label}</span>
                       {selectedTopics.includes(topic.id) && (
                         <span className="text-green-600">✓</span>
-                      )}
-                    </div>
+                )}
+              </div>
                     <p className="text-sm text-gray-600 mt-1">{topic.desc}</p>
                   </div>
                 </div>
@@ -431,7 +431,7 @@ export default function CreateSimulationForm({
           <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-xl">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-2xl">🎯</span>
-              <div>
+                <div>
                 <h4 className="font-bold text-green-900">מוכן לסימולציה!</h4>
                 <p className="text-green-700 text-sm">
                   הלקוח הווירטואלי יאתגר אותך ב-{selectedTopics.length} נושאים שבחרת
@@ -439,12 +439,12 @@ export default function CreateSimulationForm({
               </div>
             </div>
             
-            <button
-              onClick={handleSubmit}
+              <button
+                onClick={handleSubmit}
               disabled={isGenerating || selectedTopics.length === 0}
               className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-3"
-            >
-              {isGenerating ? (
+              >
+                {isGenerating ? (
                 <>
                   <div className="animate-spin w-6 h-6 border-3 border-white border-t-transparent rounded-full" />
                   יוצר סימולציה...
@@ -453,12 +453,12 @@ export default function CreateSimulationForm({
                 <>
                   🚀 התחל סימולציה
                 </>
-              )}
-            </button>
-          </div>
+                )}
+              </button>
         </div>
       </div>
-    )
+    </div>
+  )
   }
 
   return null
