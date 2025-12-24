@@ -1105,7 +1105,7 @@ export async function POST(request: Request) {
         await addCallLog(call_id, '🔄 עדכון סטטוס לניתוח תוכן', { new_status: 'analyzing_content' });
         await addCallLog(call_id, '📊 מתחיל ניתוח תוכן דו-שלבי', { 
           step1_model: 'gpt-5.2-2025-12-11',
-          step2_model: 'gpt-4o',
+          step2_model: 'gpt-4o-mini',
           description: 'GPT-5.2 לניתוח עמוק → GPT-4o-mini לניקוי JSON'
         });
 
@@ -1366,10 +1366,10 @@ export async function POST(request: Request) {
           token_usage: deepAnalysisResponse.usage
         });
         
-        // 🧹 שלב 2: ניקוי וארגון JSON עם GPT-4o + Structured Outputs
-        await addCallLog(call_id, '🔄 שלב 2: ניקוי וארגון JSON עם GPT-4o + Structured Outputs', {
+        // 🧹 שלב 2: ניקוי וארגון JSON עם GPT-4o-mini + Structured Outputs
+        await addCallLog(call_id, '🔄 שלב 2: ניקוי וארגון JSON עם GPT-4o-mini + Structured Outputs', {
           raw_analysis_length: deepAnalysisRaw.length,
-          model: 'gpt-4o'
+          model: 'gpt-4o-mini'
         });
         
         // ✅ JSON Schema לניתוח תוכן - מבטיח JSON תקין תמיד
@@ -1493,7 +1493,7 @@ export async function POST(request: Request) {
         
         // ✅ שימוש ב-Chat Completions API עם Structured Outputs לניקוי הפלט
         const contentAnalysisResponse = await openai.chat.completions.create({
-          model: 'gpt-4o',
+          model: 'gpt-4o-mini',
           messages: [
             {
               role: 'system',
