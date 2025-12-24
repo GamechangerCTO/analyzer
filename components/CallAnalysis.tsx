@@ -851,7 +851,9 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           return null;
         }
         
-        const categoryData = analysis_report[categoryKey] || {};
+        // חיפוש ב-analysis_sections אם קיים, אחרת ישירות ב-analysis_report
+        const analysisSource = analysis_report.analysis_sections || analysis_report;
+        const categoryData = analysisSource[categoryKey] || {};
         
         const subcategories = Object.entries(categoryFields).map(([fieldKey, fieldInfo]: [string, any]) => {
           const subData = categoryData[fieldKey] || {};
@@ -991,7 +993,9 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     });
 
     return filteredCategories.map(category => {
-      const categoryData = analysis_report[category.key] || {};
+      // חיפוש ב-analysis_sections אם קיים, אחרת ישירות ב-analysis_report
+      const analysisSource = analysis_report.analysis_sections || analysis_report;
+      const categoryData = analysisSource[category.key] || {};
       
 
       
