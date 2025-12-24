@@ -1559,7 +1559,6 @@ export async function POST(request: Request) {
             overall_score: contentAnalysisReport.overall_score,
             has_parameters_wrapper: !!(contentAnalysisReport['פתיחת_שיחה_ובניית_אמון']?.פרמטרים),
             sample_category_keys: Object.keys(contentAnalysisReport['פתיחת_שיחה_ובניית_אמון'] || {}),
-          });
             method: 'Structured Outputs Fallback',
             token_usage: fallbackResponse.usage
           });
