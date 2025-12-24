@@ -815,17 +815,6 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   const tone_analysis_report = call.tone_analysis_report || {};
   const analysis_report = analysisReport; // נוסיף alias לתאימות
   
-  // 🔍 DEBUG: הדפס את הנתונים שהתקבלו
-  console.log('🔍 DEBUG CallAnalysis:', {
-    call_id: call.id,
-    processing_status: call.processing_status,
-    has_analysis_report: !!call.analysis_report,
-    analysis_report_keys: Object.keys(analysis_report),
-    analysis_report_preview: JSON.stringify(analysis_report).substring(0, 500),
-    has_פתיחת_שיחה: !!analysis_report['פתיחת_שיחה_ובניית_אמון'],
-    פתיחת_שיחה_data: analysis_report['פתיחת_שיחה_ובניית_אמון'],
-  });
-  
   // פונקציה להתמודדות עם שמות שדות בפורמטים שונים
   const getFieldValue = (report: any, fieldNames: string[]) => {
     if (!report) return null;
@@ -864,7 +853,10 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
         
         // חיפוש ב-analysis_sections אם קיים, אחרת ישירות ב-analysis_report
         const analysisSource = analysis_report.analysis_sections || analysis_report;
-        const categoryData = analysisSource[categoryKey] || {};
+        const rawCategoryData = analysisSource[categoryKey] || {};
+        
+        // 🔧 תיקון: הפרמטרים יכולים להיות ישירות או בתוך שדה "פרמטרים"
+        const categoryData = rawCategoryData.פרמטרים || rawCategoryData;
         
         const subcategories = Object.entries(categoryFields).map(([fieldKey, fieldInfo]: [string, any]) => {
           const subData = categoryData[fieldKey] || {};
@@ -892,15 +884,12 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
       }).filter((item): item is NonNullable<typeof item> => Boolean(item)); // הסר קטגוריות ריקות
     }
     
-    console.log('⚠️ לא נמצאו שדות ניתוח מותאמים, משתמש בדוח הסטנדרטי');
-    console.log('📊 analysis_report:', analysis_report);
     // אם אין שדות ניתוח מהפרומפט, השתמש בפונקציה הישנה
     return getDetailedScores();
   };
 
   // פונקציה לחילוץ הניתוח המפורט החדש (הפונקציה הישנה)
   const getDetailedScores = () => {
-    console.log('🔍 getDetailedScores - analysis_report keys:', Object.keys(analysis_report || {}));
     const categories = [
       {
         category: 'פתיחת שיחה ובניית אמון',
@@ -1009,18 +998,10 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
     return filteredCategories.map(category => {
       // חיפוש ב-analysis_sections אם קיים, אחרת ישירות ב-analysis_report
       const analysisSource = analysis_report.analysis_sections || analysis_report;
-      const categoryData = analysisSource[category.key] || {};
+      const rawCategoryData = analysisSource[category.key] || {};
       
-      // לוג לדיבאג
-      if (category.key === 'פתיחת_שיחה_ובניית_אמון') {
-        console.log('🔍 First category debug:', {
-          key: category.key,
-          hasData: !!categoryData,
-          dataKeys: Object.keys(categoryData),
-          sampleSubData: categoryData['פתיח_אנרגטי'],
-          analysisSourceKeys: Object.keys(analysisSource || {}),
-        });
-      }
+      // 🔧 תיקון: הפרמטרים יכולים להיות ישירות או בתוך שדה "פרמטרים"
+      const categoryData = rawCategoryData.פרמטרים || rawCategoryData;
       
       const subcategories = category.subcategories.map(sub => {
         // נסה מפתחות שונים כי יש מפתחות עם גרשיים מוזרים
