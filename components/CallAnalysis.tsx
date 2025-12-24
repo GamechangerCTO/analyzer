@@ -815,6 +815,17 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
   const tone_analysis_report = call.tone_analysis_report || {};
   const analysis_report = analysisReport; // נוסיף alias לתאימות
   
+  // 🔍 DEBUG: הדפס את הנתונים שהתקבלו
+  console.log('🔍 DEBUG CallAnalysis:', {
+    call_id: call.id,
+    processing_status: call.processing_status,
+    has_analysis_report: !!call.analysis_report,
+    analysis_report_keys: Object.keys(analysis_report),
+    analysis_report_preview: JSON.stringify(analysis_report).substring(0, 500),
+    has_פתיחת_שיחה: !!analysis_report['פתיחת_שיחה_ובניית_אמון'],
+    פתיחת_שיחה_data: analysis_report['פתיחת_שיחה_ובניית_אמון'],
+  });
+  
   // פונקציה להתמודדות עם שמות שדות בפורמטים שונים
   const getFieldValue = (report: any, fieldNames: string[]) => {
     if (!report) return null;
