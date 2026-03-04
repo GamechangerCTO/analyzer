@@ -145,11 +145,11 @@ export default function CostCalculator() {
 
   const getRecommendationColor = (recommendation: string) => {
     switch (recommendation) {
-      case 'highly_recommended': return 'bg-green-100 text-green-800 border-green-200'
-      case 'recommended': return 'bg-blue-100 text-blue-800 border-blue-200'
-      case 'consider_carefully': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'highly_recommended': return 'bg-brand-success-light text-brand-success-dark border-brand-accent-dark'
+      case 'recommended': return 'bg-brand-info-light text-brand-primary border-brand-info-light'
+      case 'consider_carefully': return 'bg-brand-warning-light text-brand-warning-dark border-brand-warning-light'
       case 'not_recommended': return 'bg-red-100 text-red-800 border-red-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+      default: return 'bg-neutral-100 text-neutral-700 border-neutral-200'
     }
   }
 
@@ -222,10 +222,10 @@ export default function CostCalculator() {
                 </Button>
 
                 {callCost && (
-                  <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <div className="mt-4 p-4 bg-brand-info-light/50 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-semibold">עלות כוללת:</span>
-                      <span className="text-lg font-bold text-blue-600">
+                      <span className="text-lg font-bold text-brand-primary">
                         ${callCost.estimatedCost}
                       </span>
                     </div>
@@ -294,10 +294,10 @@ export default function CostCalculator() {
                 </Button>
 
                 {simulationCost && (
-                  <div className="mt-4 p-4 bg-red-50 rounded-lg">
+                  <div className="mt-4 p-4 bg-brand-warning-light/50 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-semibold">עלות כוללת:</span>
-                      <span className="text-lg font-bold text-red-600">
+                      <span className="text-lg font-bold text-brand-warning-dark">
                         ${simulationCost.estimatedCost}
                       </span>
                     </div>
@@ -436,7 +436,7 @@ export default function CostCalculator() {
                     <ul className="text-sm space-y-1">
                       {recommendations.analysis.expectedBenefits.map((benefit, index) => (
                         <li key={index} className="flex items-start gap-2">
-                          <CheckCircle className="w-3 h-3 mt-1 text-green-500" />
+                          <CheckCircle className="w-3 h-3 mt-1 text-brand-success" />
                           {benefit}
                         </li>
                       ))}
@@ -461,27 +461,27 @@ export default function CostCalculator() {
               
               {actualCosts && (
                 <div className="grid md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <h4 className="font-semibold text-blue-800">עלות כוללת</h4>
-                    <p className="text-2xl font-bold text-blue-600">
+                  <div className="p-4 bg-brand-info-light/40 rounded-lg">
+                    <h4 className="font-semibold text-brand-primary-dark">עלות כוללת</h4>
+                    <p className="text-2xl font-bold text-brand-primary">
                       ${actualCosts.actualCosts.totalCost}
                     </p>
                   </div>
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <h4 className="font-semibold text-green-800">עיבוד שיחות</h4>
-                    <p className="text-2xl font-bold text-green-600">
+                  <div className="p-4 bg-brand-success-light/40 rounded-lg">
+                    <h4 className="font-semibold text-brand-success-dark">עיבוד שיחות</h4>
+                    <p className="text-2xl font-bold text-brand-success">
                       ${actualCosts.actualCosts.callsCost}
                     </p>
-                    <p className="text-sm text-green-600">
+                    <p className="text-sm text-brand-success-dark">
                       {actualCosts.actualCosts.callsCount} שיחות
                     </p>
                   </div>
-                  <div className="p-4 bg-purple-50 rounded-lg">
-                    <h4 className="font-semibold text-purple-800">סימולציות</h4>
-                    <p className="text-2xl font-bold text-purple-600">
+                  <div className="p-4 bg-brand-accent-light/40 rounded-lg">
+                    <h4 className="font-semibold text-brand-secondary-dark">סימולציות</h4>
+                    <p className="text-2xl font-bold text-brand-secondary">
                       ${actualCosts.actualCosts.simulationsCost}
                     </p>
-                    <p className="text-sm text-purple-600">
+                    <p className="text-sm text-brand-secondary-dark">
                       {actualCosts.actualCosts.simulationsCount} סימולציות
                     </p>
                   </div>
@@ -503,30 +503,30 @@ export default function CostCalculator() {
               <div className="space-y-6">
                 <div className="grid md:grid-cols-3 gap-4">
                   <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold text-green-600 mb-2">שימוש חסכני</h4>
+                    <h4 className="font-semibold text-brand-success-dark mb-2">שימוש חסכני</h4>
                     <ul className="text-sm space-y-1">
                       <li>• 30 סימולציות/חודש</li>
                       <li>• 5 דקות ממוצע</li>
                       <li>• 5 סוכנים</li>
-                      <li className="font-semibold text-green-600">~$45/חודש</li>
+                      <li className="font-semibold text-brand-success-dark">~$45/חודש</li>
                     </ul>
                   </div>
                   <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold text-blue-600 mb-2">שימוש מאוזן</h4>
+                    <h4 className="font-semibold text-brand-primary mb-2">שימוש מאוזן</h4>
                     <ul className="text-sm space-y-1">
                       <li>• 100 סימולציות/חודש</li>
                       <li>• 8 דקות ממוצע</li>
                       <li>• 10 סוכנים</li>
-                      <li className="font-semibold text-blue-600">~$240/חודש</li>
+                      <li className="font-semibold text-brand-primary">~$240/חודש</li>
                     </ul>
                   </div>
                   <div className="p-4 border rounded-lg">
-                    <h4 className="font-semibold text-purple-600 mb-2">שימוש אינטנסיבי</h4>
+                    <h4 className="font-semibold text-brand-secondary mb-2">שימוש אינטנסיבי</h4>
                     <ul className="text-sm space-y-1">
                       <li>• 300 סימולציות/חודש</li>
                       <li>• 12 דקות ממוצע</li>
                       <li>• 20 סוכנים</li>
-                      <li className="font-semibold text-purple-600">~$1,080/חודש</li>
+                      <li className="font-semibold text-brand-secondary">~$1,080/חודש</li>
                     </ul>
                   </div>
                 </div>

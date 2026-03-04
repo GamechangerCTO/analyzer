@@ -14,7 +14,12 @@
     "deploy-check": "chmod +x scripts/deploy-check.sh && ./scripts/deploy-check.sh",
     "type-check": "tsc --noEmit",
     "build-and-start": "npm run build && npm run start",
-    "setup-prompts": "npx tsx scripts/setup-prompts.ts"
+    "setup-prompts": "npx tsx scripts/setup-prompts.ts",
+    "test": "vitest run --config vitest.config.mts",
+    "test:watch": "vitest --config vitest.config.mts",
+    "test:coverage": "vitest run --config vitest.config.mts --coverage",
+    "test:security": "vitest run --config vitest.config.mts __tests__/security",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
@@ -50,17 +55,23 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20.9.2",
     "@types/nodemailer": "^6.4.0",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@types/ws": "^8.5.0",
+    "@vitejs/plugin-react": "^5.1.4",
     "autoprefixer": "^10.4.16",
     "dotenv": "^16.5.0",
     "eslint": "^8.53.0",
     "eslint-config-next": "14.1.0",
+    "jsdom": "^28.1.0",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.3.5",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vitest": "^4.0.18"
   }
 }

@@ -19,12 +19,12 @@ export async function middleware(request: NextRequest) {
     '/api/signup',             // הרשמה
     '/api/legal-terms/accept', // קבלת תנאים
   ]
-  
+
   // בדיקה אם זה API endpoint ציבורי
-  const isPublicApiPath = publicApiPaths.some((path) => 
+  const isPublicApiPath = publicApiPaths.some((path) =>
     request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + '/')
   )
-  
+
   if (isPublicApiPath) {
     return res
   }

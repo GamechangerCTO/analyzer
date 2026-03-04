@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validatePartnerApiKey, createErrorResponse, canAccessCompany, logPartnerRequest } from '@/lib/partner-auth';
 import { createClient } from '@supabase/supabase-js';
 import type { GetCompanyResponse } from '@/types/partner-api.types';
+import { isValidUUID } from '@/lib/api-auth';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,7 +39,11 @@ export async function GET(
     
     const partner = authResult.partner!;
     const companyId = params.id;
-    
+
+    if (!isValidUUID(companyId)) {
+      return createErrorResponse('INVALID_PARAMETER', 'Invalid company ID format', 400);
+    }
+
     // בדיקת הרשאה לגשת לחברה
     if (!canAccessCompany(partner, companyId)) {
       await logPartnerRequest(partner.key_id!, request, 403, Date.now() - startTime);

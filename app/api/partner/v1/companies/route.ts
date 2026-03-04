@@ -7,6 +7,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { validatePartnerApiKey, createErrorResponse } from '@/lib/partner-auth';
+import { sanitizePagination } from '@/lib/api-auth';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,8 +50,7 @@ export async function GET(request: NextRequest) {
     // אם השותף לא מוגבל, החזר את כל החברות
     // (בעתיד ניתן להוסיף pagination כאן)
     const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '50');
-    const offset = parseInt(url.searchParams.get('offset') || '0');
+    const { limit, offset } = sanitizePagination(url.searchParams.get('limit'), url.searchParams.get('offset'));
     const search = url.searchParams.get('search') || '';
 
     let query = supabase

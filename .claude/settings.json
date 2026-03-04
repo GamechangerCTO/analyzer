@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"bg-\\\\|text-\\\\|border-\" /Users/idosegev/Downloads/TriRoars/KA/analyzer/components/ui/*.tsx)",
+      "Bash(git add \"app/\\(protected\\)/dashboard/calls/[id]/page.tsx\" \"app/api/admin/approve-agent/route.ts\" \"app/api/admin/delete-user/route.ts\" \"app/api/admin/reject-agent/route.ts\" \"app/api/agent-summary/route.ts\" \"app/api/partner/v1/companies/[id]/route.ts\" \"app/api/partner/v1/companies/route.ts\" \"app/api/process-call/route.ts\" \"app/api/simulations/complete/route.ts\" \"app/api/simulations/create/route.ts\" \"app/api/simulations/ephemeral-token/route.ts\" \"app/api/simulations/generate-persona/route.ts\" \"app/api/simulations/generate-report/route.ts\" \"app/api/simulations/generate-scenario/route.ts\" \"app/api/team-insights/route.ts\" \"app/api/test-env/route.ts\" app/globals.css app/signup/page.tsx components/AddAgentForm.tsx components/CostCalculator.tsx components/DashboardStats.tsx components/LoadingDashboard.tsx components/RealtimeSimulation.tsx components/SimulationReport.tsx lib/cost-model.ts lib/openai-analytics.ts lib/simulation-prompts-db.ts lib/simulation-websocket-server.ts middleware.ts next.config.js package-lock.json package.json lib/api-auth.ts CLAUDE.md __tests__/ vitest.config.mts playwright.config.ts)",
+      "Bash(git pull --rebase origin main)",
+      "Bash(git stash)",
+      "Bash(git stash pop)",
+      "Bash(git add .)",
+      "Bash(git rebase --continue --no-edit)",
+      "Bash(GIT_EDITOR=true git rebase --continue)",
+      "Bash(git add -A)"
+    ]
+  }
+}

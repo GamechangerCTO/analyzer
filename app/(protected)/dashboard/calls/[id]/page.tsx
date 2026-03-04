@@ -84,12 +84,11 @@ export default function CallPage({ params }: CallPageProps) {
   }, [params.id, supabase])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+    <div className="min-h-screen bg-brand-bg relative overflow-hidden">
       {/* אלמנטים דקורטיביים ברקע */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-indigo-400/20 to-cyan-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-purple-400/10 to-pink-600/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-20 -right-20 w-80 h-80 bg-brand-info-light/30 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-brand-accent-light/30 rounded-full blur-3xl"></div>
       </div>
       
       <div className="relative z-10 py-8 px-4">
@@ -99,14 +98,12 @@ export default function CallPage({ params }: CallPageProps) {
           <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden transition-all duration-500 hover:shadow-3xl hover:scale-[1.001]">
             
             {/* שורת ניווט והכותרת משופרת */}
-            <div className="relative bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
-              {/* דקורציה ברקע */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600"></div>
+            <div className="relative bg-brand-primary text-white overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-brand-accent-dark"></div>
               
               <div className="relative z-10 p-8">
                 {/* breadcrumb משופר */}
-                <nav className="flex items-center mb-6 text-blue-200 text-sm" aria-label="Breadcrumb">
+                <nav className="flex items-center mb-6 text-brand-info-light text-sm" aria-label="Breadcrumb">
                   <Link 
                     href="/dashboard" 
                     className="flex items-center group hover:text-white transition-all duration-200 hover:bg-white/10 px-3 py-1 rounded-lg"
@@ -116,7 +113,7 @@ export default function CallPage({ params }: CallPageProps) {
                     </svg>
                     <span>דשבורד</span>
                   </Link>
-                  <svg className="w-4 h-4 mx-2 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 mx-2 text-brand-accent-dark" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                   </svg>
                   <span className="text-white font-medium">ניתוח שיחה</span>
@@ -125,7 +122,7 @@ export default function CallPage({ params }: CallPageProps) {
                 {/* כותרת משופרת */}
                 <div className="flex items-center">
                   <div className="relative">
-                    <div className="bg-gradient-to-br from-blue-400 to-purple-600 p-4 rounded-2xl shadow-lg">
+                    <div className="bg-brand-primary-light p-4 rounded-2xl shadow-lg">
                       <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                       </svg>
@@ -133,10 +130,10 @@ export default function CallPage({ params }: CallPageProps) {
                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
                   </div>
                   <div className="mr-6">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent mb-2">
+                    <h1 className="text-4xl font-bold text-white mb-2">
                       ניתוח שיחה מתקדם
                     </h1>
-                    <p className="text-blue-200 text-lg font-medium">
+                    <p className="text-brand-info-light text-lg font-medium">
 ניתוח מקצועי בהתאם לפרמטרים של החברה                    </p>
                   </div>
                 </div>
@@ -149,8 +146,8 @@ export default function CallPage({ params }: CallPageProps) {
                 <div className="flex flex-col justify-center items-center py-20">
                   {/* מחוון טעינה משופר */}
                   <div className="relative mb-8">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full animate-ping opacity-20"></div>
-                    <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 rounded-full p-6">
+                    <div className="absolute inset-0 bg-brand-primary rounded-full animate-ping opacity-20"></div>
+                    <div className="relative bg-brand-primary rounded-full p-6">
                       <svg className="w-12 h-12 text-white animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -162,7 +159,7 @@ export default function CallPage({ params }: CallPageProps) {
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-gray-800 mb-4">טוען נתוני שיחה...</h3>
                     <div className="bg-gray-100 rounded-full h-2 w-80 overflow-hidden">
-                      <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-full rounded-full animate-pulse w-full"></div>
+                      <div className="bg-brand-primary h-full rounded-full animate-pulse w-full"></div>
                     </div>
                     <p className="text-gray-600 mt-4 font-medium">מבצע ניתוח מתקדם של תוכן השיחה</p>
                   </div>
@@ -171,7 +168,7 @@ export default function CallPage({ params }: CallPageProps) {
 
               {error && (
                 <div className="max-w-2xl mx-auto">
-                  <div className="bg-gradient-to-r from-red-50 to-pink-50 border-r-4 border-red-500 rounded-2xl p-8 shadow-lg animate-fade-in">
+                  <div className="bg-red-50 border-r-4 border-red-500 rounded-2xl p-8 shadow-lg">
                     <div className="flex items-start">
                       <div className="flex-shrink-0">
                         <div className="bg-red-100 rounded-full p-3">
@@ -182,17 +179,17 @@ export default function CallPage({ params }: CallPageProps) {
                       </div>
                       <div className="mr-4 flex-1">
                         <h3 className="text-2xl font-bold text-red-800 mb-3">אירעה שגיאה</h3>
-                        <p className="text-gray-700 text-lg leading-relaxed mb-6">{error}</p>
+                        <p className="text-neutral-700 text-lg leading-relaxed mb-6">{error}</p>
                         <div className="flex flex-col sm:flex-row gap-4">
                           <button
                             onClick={() => window.location.reload()}
-                            className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full hover:from-red-600 hover:to-red-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+                            className="px-6 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all shadow-lg font-medium"
                           >
                             נסה שנית
                           </button>
                           <button
                             onClick={() => window.location.href = '/dashboard'}
-                            className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-full hover:from-gray-600 hover:to-gray-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+                            className="px-6 py-3 bg-neutral-500 text-white rounded-full hover:bg-neutral-600 transition-all shadow-lg font-medium"
                           >
                             חזור לדשבורד
                           </button>

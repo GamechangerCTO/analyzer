@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     const systemInstruction = "אתה מומחה להערכת ביצועי מכירות ויצירת דוחות מפורטים בעברית. צור דוח מקצועי ומפורט על הסימולציה."
     
     const reportResponse = await openai.responses.create({
-      model: "gpt-5-nano-2025-08-07",
+      model: "gpt-5-nano",
       input: systemInstruction + '\n\n' + reportPrompt,
       reasoning: { effort: "low" }, // דוח בסיסי, לא צריך חשיבה עמוקה
     })

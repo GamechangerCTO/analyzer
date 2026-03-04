@@ -272,7 +272,7 @@ ${allPreservationPoints.join(', ')}
     const systemInstruction = 'אתה יועץ ניהול מומחה בניתוח ביצועי צוותי מכירות ושירות לקוחות. אתה מספק תובנות אסטרטגיות ופרקטיות למנהלים.'
     
     const openaiResponse = await openai.responses.create({
-      model: 'gpt-5-mini-2025-08-07',
+      model: 'gpt-5-mini',
       input: systemInstruction + '\n\n' + teamAnalysisPrompt,
       reasoning: { effort: "medium" }, // ניתוח אסטרטגי דורש חשיבה
     })

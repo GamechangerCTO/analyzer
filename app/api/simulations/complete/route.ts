@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { isValidUUID } from '@/lib/api-auth'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
     if (authError || !user) {
       return NextResponse.json({ error: 'לא מאומת' }, { status: 401 })
     }
-    
+
     // שליפת הסימולציה
     const { data: simulation, error: simError } = await supabase
       .from('simulations')
@@ -137,11 +138,11 @@ ${originalCallAnalysis ? `
       detailed_feedback: {},
       comparison_to_original: null
     }
-    
+
     try {
       // שימוש ב-GPT-5-nano ליצירת הדוח
       const response = await (openai as any).responses.create({
-        model: 'gpt-5-nano-2025-08-07',
+        model: 'gpt-5-nano',
         input: analysisPrompt,
         reasoning: { effort: 'low' }
       })

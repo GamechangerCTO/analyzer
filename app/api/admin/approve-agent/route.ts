@@ -1,33 +1,14 @@
-import { createClient } from '@supabase/supabase-js'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { Database } from '@/types/database.types'
+import { authenticateApiRoute, isValidUUID } from '@/lib/api-auth'
 
 export async function POST(request: NextRequest) {
   try {
-    // 🔐 אימות המשתמש מה-session - לא מהבקשה!
-    const supabaseAuth = createRouteHandlerClient<Database>({ cookies })
-    const { data: { session } } = await supabaseAuth.auth.getSession()
-    
-    if (!session) {
-      return NextResponse.json({ error: 'לא מחובר למערכת' }, { status: 401 })
-    }
+    // אימות session + בדיקת הרשאת admin
+    const auth = await authenticateApiRoute({ requiredRoles: ['admin'] })
+    if (!auth.success) return auth.error
+    const { user: adminUser, supabaseAdmin } = auth
 
-    // 🔐 קבלת ה-adminId מה-session
-    const adminId = session.user.id
-
-    // יצירת קליינט עם service role key לפעולות ניהול
-    const supabaseAdmin = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    const adminId = adminUser.id // שימוש ב-session במקום body
 
     // 🔐 בדיקת הרשאות - רק admin/owner/super admin יכולים לאשר
     const { data: currentUser } = await supabaseAdmin
@@ -48,6 +29,10 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { requestId } = body
+
+    if (!requestId || !isValidUUID(requestId)) {
+      return NextResponse.json({ error: 'מזהה בקשה לא תקין' }, { status: 400 })
+    }
 
     // קבלת פרטי הבקשה
     const { data: requestData, error: requestError } = await supabaseAdmin
@@ -114,10 +99,10 @@ export async function POST(request: NextRequest) {
     // יצירת התראה למנהל שביקש
     await createNotificationForRequester(supabaseAdmin, requestData, 'approved')
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: `הנציג ${requestData.full_name} אושר בהצלחה!`,
-      tempPassword: tempPassword 
+      tempPassword: tempPassword
     })
 
   } catch (error) {
@@ -128,12 +113,12 @@ export async function POST(request: NextRequest) {
 
 async function createNotificationForRequester(
   supabaseAdmin: any,
-  request: any, 
+  request: any,
   action: 'approved' | 'rejected',
   reason?: string
 ) {
   try {
-    const message = action === 'approved' 
+    const message = action === 'approved'
       ? `בקשתך להוספת הנציג ${request.full_name} אושרה על ידי מנהל המערכת`
       : `בקשתך להוספת הנציג ${request.full_name} נדחתה${reason ? `: ${reason}` : ''}`
 
@@ -159,4 +144,4 @@ async function createNotificationForRequester(
 
 function generateTempPassword() {
   return Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8)
-} 
+}

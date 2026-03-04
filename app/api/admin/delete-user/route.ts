@@ -1,62 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { Database } from '@/types/database.types'
+import { authenticateApiRoute, isValidUUID } from '@/lib/api-auth'
 
 export async function DELETE(request: NextRequest) {
   try {
-    // 🔐 אימות המשתמש מה-session - לא מהבקשה!
-    const supabaseAuth = createRouteHandlerClient<Database>({ cookies })
-    const { data: { session } } = await supabaseAuth.auth.getSession()
-    
-    if (!session) {
-      return NextResponse.json({ 
-        error: 'לא מחובר למערכת' 
-      }, { status: 401 })
-    }
-
-    // 🔐 קבלת ה-adminId מה-session, לא מהבקשה!
-    const adminId = session.user.id
-
-    // יצירת קליינט עם service role key לפעולות ניהול
-    const supabaseAdmin = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    // אימות session + בדיקת הרשאת admin
+    const auth = await authenticateApiRoute({ requiredRoles: ['admin'] })
+    if (!auth.success) return auth.error
+    const { supabaseAdmin } = auth
 
     const body = await request.json()
-    const { userId } = body  // רק userId מהבקשה - adminId מה-session!
+    const { userId } = body
 
-    if (!userId) {
-      return NextResponse.json({ 
-        error: 'חסר מזהה משתמש למחיקה' 
+    if (!userId || !isValidUUID(userId)) {
+      return NextResponse.json({
+        error: 'מזהה משתמש לא תקין'
       }, { status: 400 })
-    }
-
-    // 🔐 בדיקה שהמשתמש המחובר הוא אדמין או super admin
-    const { data: adminUser } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('id', adminId)
-      .single()
-
-    const { data: isSuperAdmin } = await supabaseAdmin
-      .from('system_admins')
-      .select('id')
-      .eq('user_id', adminId)
-      .single()
-
-    if (!adminUser || (adminUser.role !== 'admin' && !isSuperAdmin)) {
-      return NextResponse.json({ 
-        error: 'אין הרשאה לביצוע פעולה זו' 
-      }, { status: 403 })
     }
 
     // קבלת פרטי המשתמש לפני המחיקה
@@ -67,8 +25,8 @@ export async function DELETE(request: NextRequest) {
       .single()
 
     if (getUserError || !userToDelete) {
-      return NextResponse.json({ 
-        error: 'משתמש לא נמצא' 
+      return NextResponse.json({
+        error: 'משתמש לא נמצא'
       }, { status: 404 })
     }
 
@@ -119,7 +77,7 @@ export async function DELETE(request: NextRequest) {
     // שלב 5: עדכון מכסת החברה (אם המשתמש היה משויך לחברה)
     if (userToDelete.company_id) {
       console.log('📊 Updating company quotas...')
-      
+
       // ספירת משתמשים נוכחיים בחברה
       const { data: companyUsers, error: countError } = await supabaseAdmin
         .from('users')
@@ -132,7 +90,7 @@ export async function DELETE(request: NextRequest) {
     // שלב 6: מחיקת המשתמש מ-Supabase Auth (אופציונלי)
     console.log('🗑️ Deleting user from auth...')
     const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
-    
+
     if (authDeleteError) {
       console.warn('⚠️ Warning deleting from auth:', authDeleteError)
       // לא נכשיל את כל התהליך בגלל זה
@@ -140,8 +98,8 @@ export async function DELETE(request: NextRequest) {
 
     console.log('✅ User deleted successfully')
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: `המשתמש ${userToDelete.full_name || userToDelete.email} נמחק בהצלחה`,
       deletedUser: {
         id: userToDelete.id,
@@ -152,8 +110,8 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Error in delete-user API:', error)
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'שגיאה פנימית בשרת' 
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'שגיאה פנימית בשרת'
     }, { status: 500 })
   }
-} 
+}

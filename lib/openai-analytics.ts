@@ -504,7 +504,7 @@ class OpenAIAnalyticsService {
           project_id: 'local-project',
           user_id: null,
           api_key_id: 'local-api-key',
-          model: 'gpt-5-mini-2025-08-07',
+          model: 'gpt-5-mini',
           batch: false,
         });
       }
@@ -645,7 +645,7 @@ class OpenAIAnalyticsService {
           project_id: 'demo-project',
           user_id: null,
           api_key_id: 'demo-key',
-          model: 'gpt-5-mini-2025-08-07',
+          model: 'gpt-5-mini',
           batch: false,
         });
       }

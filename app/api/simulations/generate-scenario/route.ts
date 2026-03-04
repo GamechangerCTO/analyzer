@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 תמיד תחזיר תוצאה במבנה JSON תקין בעברית.`
 
     const scenarioResponse = await openai.responses.create({
-      model: "gpt-5-nano-2025-08-07",
+      model: "gpt-5-nano",
       input: systemInstruction + '\n\n' + scenarioPrompt,
       reasoning: { effort: "low" }, // יצירה יצירתית של תרחיש
     })

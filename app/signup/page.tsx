@@ -241,14 +241,14 @@ export default function SignupPage() {
 
   if (plansLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-brand-bg flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-brand-bg">
       <div className="max-w-4xl mx-auto p-6">
         {/* כותרת */}
         <div className="text-center mb-8">
@@ -258,8 +258,8 @@ export default function SignupPage() {
           <p className="text-lg text-gray-600">
             פתחו חשבון חדש עבור החברה שלכם ובחרו את החבילה המתאימה
           </p>
-          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-sm text-blue-800">
+          <div className="mt-4 bg-brand-info-light/50 border border-brand-info-light rounded-lg p-3">
+            <p className="text-sm text-brand-primary-dark">
               <strong>שימו לב:</strong> רק מנהלי חברות יכולים להירשם ישירות. 
               נציגי מכירות יתווספו על ידי המנהל לאחר מכן.
             </p>
@@ -273,7 +273,7 @@ export default function SignupPage() {
               <div key={step} className="flex items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                   currentStep >= step 
-                    ? 'bg-blue-600 text-white' 
+                    ? 'bg-brand-primary text-white' 
                     : 'bg-gray-200 text-gray-600'
                 }`}>
                   {step}
@@ -312,7 +312,7 @@ export default function SignupPage() {
                   type="text"
                   value={signupData.companyName}
                   onChange={(e) => setSignupData({...signupData, companyName: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                   placeholder="שם החברה שלכם"
                 />
               </div>
@@ -325,7 +325,7 @@ export default function SignupPage() {
                   <select
                     value={signupData.companySize}
                     onChange={(e) => setSignupData({...signupData, companySize: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                   >
                     <option value="">בחרו גודל</option>
                     <option value="1-5">1-5 עובדים</option>
@@ -343,7 +343,7 @@ export default function SignupPage() {
                   <select
                     value={signupData.companySector}
                     onChange={(e) => setSignupData({...signupData, companySector: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                   >
                     <option value="">בחרו תחום</option>
                     <option value="technology">טכנולוגיה</option>
@@ -368,7 +368,7 @@ export default function SignupPage() {
                     type="text"
                     value={signupData.fullName}
                     onChange={(e) => setSignupData({...signupData, fullName: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     placeholder="השם המלא שלכם"
                   />
                 </div>
@@ -381,7 +381,7 @@ export default function SignupPage() {
                     type="text"
                     value={signupData.jobTitle}
                     onChange={(e) => setSignupData({...signupData, jobTitle: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     placeholder="למשל: מנהל מכירות, מנכ״ל"
                   />
                 </div>
@@ -396,7 +396,7 @@ export default function SignupPage() {
                     type="email"
                     value={signupData.email}
                     onChange={(e) => setSignupData({...signupData, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     placeholder="your@email.com"
                   />
                 </div>
@@ -409,7 +409,7 @@ export default function SignupPage() {
                     type="tel"
                     value={signupData.phone}
                     onChange={(e) => setSignupData({...signupData, phone: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                     placeholder="050-1234567"
                   />
                 </div>
@@ -423,7 +423,7 @@ export default function SignupPage() {
                   type="password"
                   value={signupData.password}
                   onChange={(e) => setSignupData({...signupData, password: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
                   placeholder="לפחות 6 תווים"
                 />
               </div>
@@ -437,14 +437,14 @@ export default function SignupPage() {
 
             <button
               onClick={handleStepNext}
-              className="w-full mt-6 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              className="w-full mt-6 bg-brand-primary text-white py-3 px-6 rounded-lg hover:bg-brand-primary-dark transition-colors flex items-center justify-center gap-2"
             >
               המשך לבחירת חבילה
               <ArrowRight className="w-4 h-4" />
             </button>
 
             <div className="text-center mt-4">
-              <Link href="/login" className="text-blue-600 hover:text-blue-800 text-sm">
+              <Link href="/login" className="text-brand-primary hover:text-brand-primary-dark text-sm">
                 כבר יש לכם חשבון? התחברו כאן
               </Link>
             </div>
@@ -455,7 +455,7 @@ export default function SignupPage() {
         {currentStep === 2 && (
           <div>
             <div className="text-center mb-8">
-              <Star className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+              <Star className="w-12 h-12 text-brand-primary mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-gray-800">בחרו את החבילה המתאימה</h2>
               <p className="text-gray-600">כל החבילות כוללות גישה מלאה לכל התכונות</p>
             </div>
@@ -467,7 +467,7 @@ export default function SignupPage() {
                   onClick={() => setSignupData({...signupData, billingCycle: 'monthly'})}
                   className={`px-6 py-2 rounded-md font-medium transition-all ${
                     signupData.billingCycle === 'monthly'
-                      ? 'bg-white text-blue-600 shadow-sm'
+                      ? 'bg-white text-brand-primary shadow-sm'
                       : 'text-gray-600 hover:text-gray-800'
                   }`}
                 >
@@ -477,7 +477,7 @@ export default function SignupPage() {
                   onClick={() => setSignupData({...signupData, billingCycle: 'yearly'})}
                   className={`px-6 py-2 rounded-md font-medium transition-all ${
                     signupData.billingCycle === 'yearly'
-                      ? 'bg-white text-blue-600 shadow-sm'
+                      ? 'bg-white text-brand-primary shadow-sm'
                       : 'text-gray-600 hover:text-gray-800'
                   }`}
                 >
@@ -503,10 +503,10 @@ export default function SignupPage() {
                     onClick={() => setSignupData({...signupData, selectedPlan: plan.id})}
                     className={`relative bg-white rounded-lg border-2 p-6 cursor-pointer transition-all hover:shadow-lg ${
                       isSelected 
-                        ? 'border-blue-500 ring-2 ring-blue-100' 
+                        ? 'border-brand-primary ring-2 ring-brand-info-light' 
                         : plan.is_popular
                         ? 'border-green-500 ring-2 ring-green-100'
-                        : 'border-gray-200 hover:border-blue-300'
+                        : 'border-gray-200 hover:border-brand-info-light'
                     }`}
                   >
                     {plan.is_popular && (
@@ -520,7 +520,7 @@ export default function SignupPage() {
                     <div className="text-center">
                       <h3 className="text-xl font-bold text-gray-800 mb-2">{plan.name}</h3>
                       <div className="mb-4">
-                        <span className="text-3xl font-bold text-blue-600">${price}</span>
+                        <span className="text-3xl font-bold text-brand-primary">${price}</span>
                         <span className="text-gray-500 text-sm">
                           /{signupData.billingCycle === 'yearly' ? 'שנה' : 'חודש'}
                         </span>
@@ -528,13 +528,13 @@ export default function SignupPage() {
 
                       <div className="bg-gray-50 rounded-lg p-3 mb-4">
                         <div className="flex items-center justify-center gap-2 mb-2">
-                          <Users className="w-5 h-5 text-blue-600" />
+                          <Users className="w-5 h-5 text-brand-primary" />
                           <span className="text-lg font-bold text-gray-800">
                             עד {plan.max_agents} נציגים
                           </span>
                         </div>
                         <div className="flex items-center justify-center gap-2">
-                          <Clock className="w-4 h-4 text-blue-600" />
+                          <Clock className="w-4 h-4 text-brand-primary" />
                           <span className="text-sm text-gray-600">
                             {plan.base_minutes.toLocaleString()} דקות
                           </span>
@@ -555,7 +555,7 @@ export default function SignupPage() {
                       )}
 
                       {isSelected && (
-                        <div className="mt-4 flex items-center justify-center text-blue-600">
+                        <div className="mt-4 flex items-center justify-center text-brand-primary">
                           <Check className="w-5 h-5 ml-2" />
                           <span className="font-medium">נבחר</span>
                         </div>
@@ -582,7 +582,7 @@ export default function SignupPage() {
               <button
                 onClick={handleStepNext}
                 disabled={!signupData.selectedPlan}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-3 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-dark transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 המשך לאישור
                 <ArrowRight className="w-4 h-4" />
@@ -613,8 +613,8 @@ export default function SignupPage() {
                   {signupData.phone && <p className="text-sm text-gray-600">טלפון: {signupData.phone}</p>}
                 </div>
 
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <h3 className="font-medium text-gray-800 mb-2">החבילה שנבחרה</h3>
+                <div className="bg-brand-info-light/50 rounded-lg p-4">
+                  <h3 className="font-medium text-neutral-800 mb-2">החבילה שנבחרה</h3>
                   {(() => {
                     const selectedPlan = plans.find(p => p.id === signupData.selectedPlan)
                     if (!selectedPlan) return null
@@ -628,7 +628,7 @@ export default function SignupPage() {
                         <p className="text-sm text-gray-600">חבילה: {selectedPlan.name}</p>
                         <p className="text-sm text-gray-600">עד {selectedPlan.max_agents} נציגים</p>
                         <p className="text-sm text-gray-600">{selectedPlan.base_minutes.toLocaleString()} דקות</p>
-                        <p className="font-medium text-blue-600">
+                        <p className="font-medium text-brand-primary">
                           ${price} /{signupData.billingCycle === 'yearly' ? 'שנה' : 'חודש'}
                         </p>
                       </>

@@ -32,16 +32,16 @@ export default function LoadingDashboard() {
   }, [])
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-glacier-neutral-50 via-white to-glacier-primary-50/30">
+    <div className="flex justify-center items-center min-h-screen bg-brand-bg">
       <div className="text-center max-w-md animate-in fade-in duration-500">
         
         {/* לוגו ראשי */}
         <div className="relative mb-8">
-          <div className="w-24 h-24 bg-gradient-to-br from-glacier-primary-400 to-glacier-accent-500 rounded-3xl flex items-center justify-center mx-auto shadow-glacier-glow animate-glacier-pulse">
+          <div className="w-24 h-24 bg-brand-primary rounded-3xl flex items-center justify-center mx-auto shadow-brand-strong">
             <TrendingUp className="w-12 h-12 text-white" />
           </div>
           {/* אפקטי זוהר */}
-          <div className="absolute -inset-4 bg-gradient-to-br from-glacier-primary-200/50 to-glacier-accent-200/50 rounded-full blur-xl opacity-60 animate-glacier-glow"></div>
+          <div className="absolute -inset-4 bg-brand-info-light/40 rounded-full blur-xl opacity-60"></div>
         </div>
 
         {/* כותרת */}
@@ -129,7 +129,7 @@ export default function LoadingDashboard() {
         <div className="relative">
           <div className="w-full bg-glacier-neutral-200 rounded-full h-3 overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-glacier-primary-500 to-glacier-accent-500 rounded-full transition-all duration-500 animate-glacier-shimmer"
+              className="h-full bg-brand-primary rounded-full transition-all duration-500"
               style={{ 
                 width: `${((currentStep + 1) / loadingSteps.length) * 100}%`,
                 backgroundSize: '200% 100%'

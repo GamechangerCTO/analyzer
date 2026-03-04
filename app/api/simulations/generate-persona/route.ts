@@ -303,7 +303,7 @@ export async function POST(request: NextRequest) {
 תמיד תחזיר תוצאה במבנה JSON תקין בעברית.`
 
       const personaResponse = await openai.responses.create({
-        model: "gpt-5-nano-2025-08-07",
+        model: "gpt-5-nano",
         input: systemInstruction + '\n\n' + personaPrompt,
         reasoning: { effort: "low" }, // יצירה יצירתית, לא צריך חשיבה עמוקה
       })
@@ -383,7 +383,7 @@ export async function POST(request: NextRequest) {
         company_id: companyId,
         persona_id: null,
         questionnaire_completeness: validation.completeness,
-        ai_model_used: usedAI ? 'gpt-5-nano-2025-08-07' : 'fallback',
+        ai_model_used: usedAI ? 'gpt-5-nano' : 'fallback',
         generation_time_ms: Date.now() - startTime,
         success: false,
         error_message: saveError.message
@@ -400,7 +400,7 @@ export async function POST(request: NextRequest) {
       company_id: companyId,
       persona_id: personaId,
       questionnaire_completeness: validation.completeness,
-      ai_model_used: usedAI ? 'gpt-5-nano-2025-08-07' : 'fallback',
+      ai_model_used: usedAI ? 'gpt-5-nano' : 'fallback',
       generation_time_ms: generationTime,
       success: true,
       error_message: aiError,

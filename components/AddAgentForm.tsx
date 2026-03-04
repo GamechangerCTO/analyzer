@@ -133,9 +133,9 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
       {/* Message Display */}
       {message && (
         <div className={`mb-6 p-4 rounded-2xl animate-in slide-in-from-top duration-500 ${
-          message.type === 'success' 
-            ? 'bg-gradient-to-r from-glacier-success-50 to-green-100 border border-glacier-success-200'
-            : 'bg-gradient-to-r from-red-50 to-red-100 border border-red-200'
+          message.type === 'success'
+            ? 'bg-brand-success-light/50 border border-brand-accent-dark'
+            : 'bg-red-50 border border-red-200'
         }`}>
           <div className="flex items-center space-x-3">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
@@ -242,7 +242,7 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
           <button
             type="submit"
             disabled={isSubmitting}
-            className="group relative px-8 py-4 bg-gradient-to-r from-glacier-primary to-glacier-primary-dark text-white font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] transform-gpu shadow-lg hover:shadow-xl disabled:hover:scale-100 min-w-[200px]"
+            className="group relative px-8 py-4 bg-brand-primary text-white font-bold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-primary-dark hover:scale-[1.02] transform-gpu shadow-lg hover:shadow-xl disabled:hover:scale-100 min-w-[200px]"
           >
             <div className="flex items-center justify-center gap-3">
               {isSubmitting ? (
@@ -264,7 +264,7 @@ export default function AddAgentForm({ companyId, requesterId }: AddAgentFormPro
         </div>
 
         {/* Info Box */}
-        <div className="mt-8 p-6 bg-gradient-to-r from-glacier-accent-50 to-glacier-secondary-50 border border-glacier-accent-200 rounded-2xl">
+        <div className="mt-8 p-6 bg-brand-accent-light/50 border border-brand-accent-dark rounded-2xl">
           <div className="flex items-start space-x-3">
             <div className="w-10 h-10 bg-glacier-accent rounded-xl flex items-center justify-center flex-shrink-0">
               <User className="w-5 h-5 text-white" />

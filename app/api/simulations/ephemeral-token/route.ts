@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isValidUUID } from '@/lib/api-auth'
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient()
-    
+
     // בדיקת אימות
     const { data: { session }, error: authError } = await supabase.auth.getSession()
     if (authError || !session) {
@@ -12,6 +13,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { simulationId, instructions, voice } = await request.json()
+
+    if (!simulationId || !isValidUUID(simulationId)) {
+      return NextResponse.json({ error: 'Invalid simulation ID' }, { status: 400 })
+    }
 
     // ווידוא שהסימולציה שייכת למשתמש
     const { data: simulation } = await supabase
@@ -28,34 +33,19 @@ export async function POST(request: NextRequest) {
     // יצירת ephemeral token מ-OpenAI - ✅ GA API (דצמבר 2025)
     // https://platform.openai.com/docs/guides/realtime-webrtc
     const sessionConfig = {
-      session: {
-        type: "realtime",
-        model: "gpt-realtime-mini-2025-12-15",
-        instructions: instructions || "אני לקוח שמתקשר לחברה. המשתמש שמדבר איתי הוא נציג מכירות שמנסה למכור לי. אני שואל שאלות, מעלה התנגדויות, ומחכה שישכנעו אותי.",
-        audio: {
-          input: {
-            format: {
-              type: "audio/pcm",
-              rate: 24000
-            },
-            transcription: {
-              model: "gpt-4o-transcribe"
-            },
-            turn_detection: {
-              type: "server_vad",
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 500
-            }
-          },
-          output: {
-            format: {
-              type: "audio/pcm",
-              rate: 24000
-            },
-            voice: voice || "coral" // קול נשי כברירת מחדל
-          }
-        }
+      model: "gpt-realtime-1.5",
+      instructions: instructions || "אני לקוח שמתקשר לחברה. המשתמש שמדבר איתי הוא נציג מכירות שמנסה למכור לי. אני שואל שאלות, מעלה התנגדויות, ומחכה שישכנעו אותי.",
+      voice: voice || "shimmer",
+      input_audio_format: "pcm16",
+      output_audio_format: "pcm16",
+      input_audio_transcription: {
+        model: "gpt-4o-mini-transcribe"
+      },
+      turn_detection: {
+        type: "server_vad",
+        threshold: 0.5,
+        prefix_padding_ms: 300,
+        silence_duration_ms: 500
       }
     }
 

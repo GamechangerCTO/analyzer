@@ -2,6 +2,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { checkApiRateLimit } from '@/lib/api-auth'
 
 // Initialize OpenAI client only when needed to avoid build-time errors
 function getOpenAIClient() {
@@ -85,6 +86,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Rate limiting - 5 simulations per minute per user
+    const rateCheck = checkApiRateLimit(`sim_create_${session.user.id}`, 5)
+    if (!rateCheck.allowed) {
+      return NextResponse.json({ error: 'יותר מדי בקשות. נסה שוב בעוד דקה.' }, { status: 429 })
+    }
+
     // שליפת פרטי המשתמש
     const { data: user } = await supabase
       .from('users')
@@ -151,7 +158,7 @@ ${originalCallContext}
         
         // ✅ שימוש ב-Responses API למודלי GPT-5 Nano
         const completion = await (openai as any).responses.create({
-          model: "gpt-5-nano-2025-08-07",
+          model: "gpt-5-nano",
           input: systemInstruction + '\n\n' + prompt,
           reasoning: { effort: "low" },
         })

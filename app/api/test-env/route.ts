@@ -4,32 +4,12 @@ import { cookies } from 'next/headers'
 
 export async function GET() {
   try {
-    // 🔐 רק super admins יכולים לבדוק את זה
-    const supabase = createRouteHandlerClient({ cookies })
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: isSuperAdmin } = await supabase
-      .from('system_admins')
-      .select('id')
-      .eq('user_id', session.user.id)
-      .single()
-
-    if (!isSuperAdmin) {
-      return NextResponse.json({ error: 'Forbidden - Super admin only' }, { status: 403 })
-    }
-
-    // רק לפיתוח - לא מחזיר שום מידע רגיש בproduction
+    // חסימת גישה בסביבת production
     if (process.env.NODE_ENV === 'production') {
-      return NextResponse.json({
-        success: true,
-        message: 'Environment check disabled in production',
-        data: { NODE_ENV: 'production' }
-      })
+      return NextResponse.json({ error: 'Endpoint disabled in production' }, { status: 404 })
     }
+
+    console.log('🔍 Checking environment variables...');
 
     const envCheck = {
       NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,

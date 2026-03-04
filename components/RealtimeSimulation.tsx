@@ -318,9 +318,9 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
 
-      // שליחה לOpenAI Realtime API - GA API (דצמבר 2025)
-      // https://platform.openai.com/docs/guides/realtime-webrtc
-      const baseUrl = "https://api.openai.com/v1/realtime/calls"
+      // שליחה לOpenAI Realtime API
+      const baseUrl = "https://api.openai.com/v1/realtime"
+      const model = "gpt-realtime-1.5"
       
       console.log('🔑 Ephemeral token:', ephemeralKeyRef.current?.substring(0, 20) + '...')
       console.log('📡 Sending SDP offer to:', baseUrl)
@@ -446,8 +446,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
     // התחלת הקלטה אוטומטית
     setTimeout(() => startRecording(), 500)
 
-    // הגדרת session עם ההוראות - GA API format
-    // פרומפט קצר וברור בגוף ראשון
+    // הגדרת session עם ההוראות - פרומפט קצר וברור בגוף ראשון
     const rolePrefix = `אני ${persona?.persona_name || 'לקוח'}, לקוח שמתקשר לחברה.
 המשתמש שמדבר איתי הוא נציג מכירות שמנסה למכור לי.
 אני שואל שאלות, מעלה התנגדויות, ומחכה שישכנעו אותי.
@@ -457,31 +456,20 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
       type: "session.update",
       session: {
         type: "realtime",
+        model: "gpt-realtime-1.5",
         modalities: ["text", "audio"],
         instructions: rolePrefix + (aiInstructions || createFallbackInstructions()),
-        audio: {
-          input: {
-            format: {
-              type: "audio/pcm",
-              rate: 24000
-            },
-            transcription: {
-              model: "gpt-4o-transcribe"
-            },
-            turn_detection: {
-              type: "server_vad",
-              threshold: 0.6,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 800
-            }
-          },
-          output: {
-            format: {
-              type: "audio/pcm",
-              rate: 24000
-            },
-            voice: getVoiceForPersona()
-          }
+        voice: getVoiceForPersona(),
+        input_audio_format: "pcm16",
+        output_audio_format: "pcm16",
+        input_audio_transcription: {
+          model: "gpt-4o-mini-transcribe"
+        },
+        turn_detection: {
+          type: "server_vad",
+          threshold: 0.6,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 800
         }
       }
     }

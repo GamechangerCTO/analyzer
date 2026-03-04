@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { Database } from '@/types/database.types';
 import OpenAI from 'openai';
 import { addCallLog } from '@/lib/addCallLog';
+import { checkApiRateLimit } from '@/lib/api-auth';
 
 // פונקציה לקביעת הפורמט הנכון ל-GPT-4o-audio-preview
 function getAudioFormatForAPI(fileExtension: string): string {
@@ -398,21 +399,30 @@ export async function POST(request: Request) {
 
     if (!call_id) {
       return NextResponse.json(
-        { error: 'חסר מזהה שיחה (call_id)' }, 
+        { error: 'חסר מזהה שיחה (call_id)' },
         { status: 400 }
       );
     }
 
-    await addCallLog(call_id, isReanalyze ? '🔄 התחלת ניתוח מחדש' : '🚀 התחלת תהליך ניתוח שיחה', { 
+    // Rate limiting - 10 requests per minute per call_id
+    const rateCheck = checkApiRateLimit(`process_call_${call_id}`, 10)
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: 'יותר מדי בקשות. נסה שוב בעוד דקה.' },
+        { status: 429 }
+      );
+    }
+
+    await addCallLog(call_id, isReanalyze ? '🔄 התחלת ניתוח מחדש' : '🚀 התחלת תהליך ניתוח שיחה', {
       timestamp: new Date().toISOString(),
-      reanalyze: isReanalyze 
+      reanalyze: isReanalyze
     });
-    
+
     // אם זה ניתוח מחדש - מאפסים את התוצאות הקודמות
     if (isReanalyze) {
       await supabase
         .from('calls')
-        .update({ 
+        .update({
           processing_status: 'pending',
           error_message: null,
           analysis_report: null,
@@ -421,7 +431,7 @@ export async function POST(request: Request) {
           red_flag: null
         })
         .eq('id', call_id);
-      
+
       await addCallLog(call_id, '🗑️ תוצאות קודמות נמחקו לניתוח מחדש');
     }
 
@@ -886,7 +896,7 @@ export async function POST(request: Request) {
 
     // שלב 2: ניתוח טון ישיר מהאודיו עם GPT-4o
     try {
-      await addCallLog(call_id, '🎭 מתחיל ניתוח טונציה', { model: 'gpt-4o-mini-audio-preview-2024-12-17' });
+      await addCallLog(call_id, '🎭 מתחיל ניתוח טונציה', { model: 'gpt-audio-1.5' });
       
       // זיהוי פורמט הקובץ לניתוח טונציה
       const fileExtension = callData.audio_file_path?.split('.').pop()?.toLowerCase() || 'unknown';
@@ -915,7 +925,7 @@ export async function POST(request: Request) {
       });
       
       const toneAnalysisResponse = await openai.chat.completions.create({
-        model: 'gpt-4o-mini-audio-preview-2024-12-17',
+        model: 'gpt-audio-1.5',
         modalities: ['text'],
         messages: [
           {
@@ -1123,13 +1133,9 @@ export async function POST(request: Request) {
           .eq('id', call_id);
 
         await addCallLog(call_id, '🔄 עדכון סטטוס לניתוח תוכן', { new_status: 'analyzing_content' });
-        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן עם GPT-5.2', { 
-          model: 'gpt-5.2-2025-12-11',
-          fallback: 'Structured Outputs עם 35 פרמטרים',
-          description: 'ניסיון ראשון: GPT-5.2 ישירות. אם נכשל JSON: fallback ל-Structured Outputs'
-        });
+        await addCallLog(call_id, '📊 מתחיל ניתוח תוכן', { model: 'gpt-5-mini' });
 
-        // שלב 3: ניתוח תוכן מקצועי עם gpt-4.1-2025-04-14
+        // שלב 3: ניתוח תוכן מקצועי עם gpt-5-mini
         // קבלת הפרומפט המתאים לסוג השיחה כולל שדות הניתוח
         const { data: promptData, error: promptError } = await supabase
           .from('prompts')
@@ -1328,26 +1334,18 @@ export async function POST(request: Request) {
           }
         }
 
-        // 🧠 שלב 1: ניתוח עמוק עם GPT-5.2 (בלי structured outputs)
-        await addCallLog(call_id, '🔄 שלב 1: שולח בקשה לניתוח תוכן עמוק עם GPT-5.2', {
+        // ניתוח התוכן עם gpt-5-mini
+        await addCallLog(call_id, '🔄 שולח בקשה לניתוח תוכן ל-gpt-5-mini', {
           transcript_length: transcript?.length || 0,
           prompt_length: systemPrompt.length,
           request_time: new Date().toISOString(),
           model: 'gpt-5.2-2025-12-11'
         });
         
-        // קריאה ראשונה - ניתוח עמוק עם GPT-5.2 (יותר חכם)
-        const deepAnalysisResponse = await openai.chat.completions.create({
-          model: 'gpt-5.2-2025-12-11',
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt
-            },
-            {
-              role: 'user',
-              content: `נתח את השיחה הבאה בצורה מעמיקה:
-
+        // ✅ שימוש ב-Responses API למודלי GPT-5
+        const contentAnalysisResponse = await openai.responses.create({
+          model: 'gpt-5-mini',
+          input: systemPrompt + '\n\n' + `נתח את השיחה הבאה:
               סוג שיחה: ${callData.call_type}
               תמליל השיחה: ${transcript || 'אין תמליל זמין'}
               

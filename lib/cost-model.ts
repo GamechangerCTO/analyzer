@@ -1,70 +1,68 @@
 /**
  * מודל עלויות מפורט למערכת הניתוח והסימולציות
- * מחירים מעודכנים לפי OpenAI API Pricing (דצמבר 2024)
+ * מחירים מעודכנים לפי OpenAI API Pricing (מרץ 2026)
  */
 
 export interface ModelPricing {
   model: string
-  inputTokenPrice: number  // $ per 1K tokens
-  outputTokenPrice: number // $ per 1K tokens
-  audioInputPrice?: number // $ per minute (for audio models)
-  audioOutputPrice?: number // $ per minute (for audio models)
-  realtimeInputPrice?: number // $ per minute (for realtime models)
-  realtimeOutputPrice?: number // $ per minute (for realtime models)
+  inputTokenPrice: number  // $ per 1M tokens
+  outputTokenPrice: number // $ per 1M tokens
+  audioInputPrice?: number // $ per 1M tokens (for audio models)
+  audioOutputPrice?: number // $ per 1M tokens (for audio models)
+  realtimeInputPrice?: number // $ per 1M tokens (for realtime models)
+  realtimeOutputPrice?: number // $ per 1M tokens (for realtime models)
   description: string
   usage: string[]
 }
 
-// מחירי המודלים החדשים (2025 - GPT-5 Family)
-// הערה: מחירים TBD - יעודכנו עם פרסום רשמי מ-OpenAI
+// מחירי המודלים - מעודכן מרץ 2026
 export const MODEL_PRICING: Record<string, ModelPricing> = {
   // תמלול אודיו
   'gpt-4o-mini-transcribe': {
     model: 'gpt-4o-mini-transcribe',
-    inputTokenPrice: 0,        // TBD - לעדכן כשיפורסמו מחירים
-    outputTokenPrice: 0,       // TBD
-    audioInputPrice: 0,        // TBD - $ per minute
-    description: 'GPT-4o Mini - תמלול אודיו מהיר וחסכוני',
-    usage: ['תמלול קבצי אודיו', 'תמלול WebSocket']
+    inputTokenPrice: 0.15,     // $0.15 per 1M tokens
+    outputTokenPrice: 0.60,    // $0.60 per 1M tokens
+    description: 'GPT-4o Mini Transcribe - תמלול אודיו מהיר וחסכוני',
+    usage: ['תמלול קבצי אודיו', 'תמלול WebSocket בסימולציות']
   },
-  
-  // ניתוח רגשות וטונציה
-  'gpt-4o-mini-audio-preview-2024-12-17': {
-    model: 'gpt-4o-mini-audio-preview-2024-12-17',
-    inputTokenPrice: 0,        // TBD
-    outputTokenPrice: 0,       // TBD
-    audioInputPrice: 0,        // TBD - $ per minute
-    audioOutputPrice: 0,       // TBD - $ per minute
-    description: 'GPT-4o Mini Audio - ניתוח רגשות וטונציה',
+
+  // ניתוח רגשות וטונציה מאודיו
+  'gpt-audio-1.5': {
+    model: 'gpt-audio-1.5',
+    inputTokenPrice: 2.50,     // $2.50 per 1M text tokens
+    outputTokenPrice: 10.00,   // $10.00 per 1M text tokens
+    audioInputPrice: 32.00,    // $32.00 per 1M audio tokens
+    audioOutputPrice: 64.00,   // $64.00 per 1M audio tokens
+    description: 'GPT Audio 1.5 - ניתוח רגשות וטונציה מאודיו',
     usage: ['ניתוח טונציה מאודיו']
   },
-  
+
   // ניתוח מתקדם - GPT-5 Mini
-  'gpt-5-mini-2025-08-07': {
-    model: 'gpt-5-mini-2025-08-07',
-    inputTokenPrice: 0,        // TBD
-    outputTokenPrice: 0,       // TBD
+  'gpt-5-mini': {
+    model: 'gpt-5-mini',
+    inputTokenPrice: 0.25,     // $0.25 per 1M tokens
+    outputTokenPrice: 2.00,    // $2.00 per 1M tokens
     description: 'GPT-5 Mini - ניתוח מתקדם עם reasoning',
-    usage: ['ניתוח שיחות', 'סיכום צוות', 'סיכום נציג', 'דוח כללי']
+    usage: ['ניתוח שיחות', 'תובנות צוות', 'סיכום נציג']
   },
-  
+
   // מודל מהיר וחסכוני - GPT-5 Nano
-  'gpt-5-nano-2025-08-07': {
-    model: 'gpt-5-nano-2025-08-07',
-    inputTokenPrice: 0,        // TBD
-    outputTokenPrice: 0,       // TBD
-    description: 'GPT-5 Nano - מהיר וחסכוני לטאסקים פשוטים',
-    usage: ['דוח סימולציה', 'פרסונה', 'תרחיש']
+  'gpt-5-nano': {
+    model: 'gpt-5-nano',
+    inputTokenPrice: 0.05,     // $0.05 per 1M tokens
+    outputTokenPrice: 0.40,    // $0.40 per 1M tokens
+    description: 'GPT-5 Nano - מהיר וחסכוני ליצירת תוכן',
+    usage: ['דוח סימולציה', 'יצירת פרסונה', 'יצירת תרחיש']
   },
-  
-  // סימולציות קוליות - Realtime Mini
-  'gpt-realtime-mini-2025-10-06': {
-    model: 'gpt-realtime-mini-2025-10-06',
-    inputTokenPrice: 0,        // TBD
-    outputTokenPrice: 0,       // TBD
-    realtimeInputPrice: 0,     // TBD - $ per minute
-    realtimeOutputPrice: 0,    // TBD - $ per minute
-    description: 'GPT Realtime Mini - סימולציות קוליות בזמן אמת',
+
+  // סימולציות קוליות בזמן אמת
+  'gpt-realtime-1.5': {
+    model: 'gpt-realtime-1.5',
+    inputTokenPrice: 4.00,      // $4.00 per 1M text tokens
+    outputTokenPrice: 16.00,    // $16.00 per 1M text tokens
+    realtimeInputPrice: 32.00,  // $32.00 per 1M audio tokens
+    realtimeOutputPrice: 64.00, // $64.00 per 1M audio tokens
+    description: 'GPT Realtime 1.5 - סימולציות קוליות בזמן אמת',
     usage: ['סימולציות קוליות בזמן אמת']
   }
 }
@@ -93,60 +91,66 @@ export interface SimulationCostEstimate {
 
 /**
  * מחשבון עלויות לעיבוד שיחה רגילה
- * עודכן למודלים חדשים: GPT-4o Mini Transcribe, GPT-4o Mini Audio, GPT-5 Mini
+ * מודלים: gpt-4o-mini-transcribe, gpt-audio-1.5, gpt-5-mini
  */
 export function calculateCallProcessingCost(durationMinutes: number, callType: string = 'sales_call'): CallCostEstimate {
   let totalCost = 0
   const breakdown: any = {}
 
-  // 1. תמלול עם gpt-4o-mini-transcribe (מחליף את gpt-4o-transcribe)
-  const transcriptionCost = durationMinutes * (MODEL_PRICING['gpt-4o-mini-transcribe'].audioInputPrice || 0)
+  // 1. תמלול עם gpt-4o-mini-transcribe
+  // הערכה: ~150 tokens per minute of audio
+  const transcriptTokens = durationMinutes * 150
+  const transcriptionCost = (transcriptTokens / 1_000_000) * MODEL_PRICING['gpt-4o-mini-transcribe'].inputTokenPrice
   breakdown.transcription = transcriptionCost
   totalCost += transcriptionCost
 
-  // 2. ניתוח טון עם gpt-4o-mini-audio-preview-2024-12-17 (מחליף את gpt-4o-audio-preview)
-  const toneAnalysisCost = durationMinutes * (MODEL_PRICING['gpt-4o-mini-audio-preview-2024-12-17'].audioInputPrice || 0)
+  // 2. ניתוח טון עם gpt-audio-1.5 (אודיו + טקסט)
+  const toneAudioTokens = durationMinutes * 1500 // ~1500 audio tokens per minute
+  const toneAnalysisCost = (toneAudioTokens / 1_000_000) * (MODEL_PRICING['gpt-audio-1.5'].audioInputPrice || 0)
   breakdown.toneAnalysis = toneAnalysisCost
   totalCost += toneAnalysisCost
 
-  // 3. ניתוח תוכן עם gpt-5-mini-2025-08-07 (מחליף את gpt-4o-2024-08-06)
-  // הערכה: ~500 tokens input + 1000 tokens output לדקה
+  // 3. ניתוח תוכן עם gpt-5-mini (responses API)
+  // הערכה: ~750 tokens input + 750 tokens output לדקה
   const avgTokensPerMinute = 1500
-  const contentInputCost = (avgTokensPerMinute * durationMinutes * 0.5 / 1000) * (MODEL_PRICING['gpt-5-mini-2025-08-07'].inputTokenPrice || 0)
-  const contentOutputCost = (avgTokensPerMinute * durationMinutes * 0.5 / 1000) * (MODEL_PRICING['gpt-5-mini-2025-08-07'].outputTokenPrice || 0)
+  const contentInputCost = (avgTokensPerMinute * durationMinutes * 0.5 / 1_000_000) * MODEL_PRICING['gpt-5-mini'].inputTokenPrice
+  const contentOutputCost = (avgTokensPerMinute * durationMinutes * 0.5 / 1_000_000) * MODEL_PRICING['gpt-5-mini'].outputTokenPrice
   breakdown.contentAnalysis = contentInputCost + contentOutputCost
   totalCost += breakdown.contentAnalysis
 
   return {
     callType,
     avgDurationMinutes: durationMinutes,
-    estimatedCost: Math.round(totalCost * 100) / 100, // Round to 2 decimal places
+    estimatedCost: Math.round(totalCost * 100) / 100,
     breakdown
   }
 }
 
 /**
  * מחשבון עלויות לסימולציה בזמן אמת
- * עודכן למודלים חדשים: GPT Realtime Mini, GPT-4o Mini Transcribe, GPT-5 Nano
+ * מודלים: gpt-realtime-1.5, gpt-4o-mini-transcribe, gpt-5-nano
  */
 export function calculateSimulationCost(durationMinutes: number, simulationType: string = 'realtime'): SimulationCostEstimate {
   let totalCost = 0
   const breakdown: any = {}
 
-  // 1. Realtime Audio עם gpt-realtime-mini-2025-10-06 (מחליף את gpt-realtime)
-  const realtimeInputCost = durationMinutes * (MODEL_PRICING['gpt-realtime-mini-2025-10-06'].realtimeInputPrice || 0)
-  const realtimeOutputCost = durationMinutes * (MODEL_PRICING['gpt-realtime-mini-2025-10-06'].realtimeOutputPrice || 0)
+  // 1. Realtime Audio עם gpt-realtime-1.5
+  // הערכה: ~1500 audio tokens per minute input + output
+  const realtimeAudioTokens = durationMinutes * 1500
+  const realtimeInputCost = (realtimeAudioTokens / 1_000_000) * (MODEL_PRICING['gpt-realtime-1.5'].realtimeInputPrice || 0)
+  const realtimeOutputCost = (realtimeAudioTokens / 1_000_000) * (MODEL_PRICING['gpt-realtime-1.5'].realtimeOutputPrice || 0)
   breakdown.realtimeAudio = realtimeInputCost + realtimeOutputCost
   totalCost += breakdown.realtimeAudio
 
-  // 2. תמלול עם gpt-4o-mini-transcribe (מחליף את whisper-1)
-  breakdown.transcription = durationMinutes * (MODEL_PRICING['gpt-4o-mini-transcribe'].audioInputPrice || 0)
+  // 2. תמלול עם gpt-4o-mini-transcribe
+  const transcriptTokens = durationMinutes * 150
+  breakdown.transcription = (transcriptTokens / 1_000_000) * MODEL_PRICING['gpt-4o-mini-transcribe'].inputTokenPrice
   totalCost += breakdown.transcription
 
-  // 3. דוח סימולציה עם gpt-5-nano-2025-08-07 (מחליף את GPT-4 Turbo)
+  // 3. דוח סימולציה עם gpt-5-nano
   // הערכה: ~1000 tokens input + 2000 tokens output
-  const reportInputCost = (1000 / 1000) * (MODEL_PRICING['gpt-5-nano-2025-08-07'].inputTokenPrice || 0)
-  const reportOutputCost = (2000 / 1000) * (MODEL_PRICING['gpt-5-nano-2025-08-07'].outputTokenPrice || 0)
+  const reportInputCost = (1000 / 1_000_000) * MODEL_PRICING['gpt-5-nano'].inputTokenPrice
+  const reportOutputCost = (2000 / 1_000_000) * MODEL_PRICING['gpt-5-nano'].outputTokenPrice
   breakdown.reportGeneration = reportInputCost + reportOutputCost
   totalCost += breakdown.reportGeneration
 

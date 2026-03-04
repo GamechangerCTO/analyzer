@@ -37,20 +37,20 @@ const StatsCard = ({ title, value, icon, trend, subtitle, color, delay = 0, leaf
     return () => clearTimeout(timer)
   }, [delay])
 
-  // צבעי רקע עדינים - solid colors
+  // צבעי רקע פסטליים אחידים
   const bgClasses = {
-    primary: 'bg-brand-info-light/50',
-    accent: 'bg-brand-accent-light/50',
-    success: 'bg-green-50',
-    warning: 'bg-amber-50'
+    primary: 'bg-brand-info-light/40',
+    accent: 'bg-brand-accent-light/40',
+    success: 'bg-brand-success-light/40',
+    warning: 'bg-brand-warning-light/40'
   }
 
-  // צבעי אייקון
+  // צבעי אייקון - פסטליים עם טקסט כהה
   const iconBgClasses = {
-    primary: 'bg-brand-primary text-white',
-    accent: 'bg-brand-secondary text-white',
-    success: 'bg-green-500 text-white',
-    warning: 'bg-amber-500 text-white'
+    primary: 'bg-brand-info-light text-brand-primary',
+    accent: 'bg-brand-accent-light text-brand-secondary-dark',
+    success: 'bg-brand-success-light text-brand-success-dark',
+    warning: 'bg-brand-warning-light text-brand-warning-dark'
   }
 
   // צורת עלה - normal או alt (הפוך)

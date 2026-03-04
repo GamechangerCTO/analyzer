@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
     const systemInstruction = 'אתה מומחה בניתוח נתוני ביצועים ומתמחה בסיכום נקודות לשיפור ושימור לנציגי מכירות ושירות.'
     
     const openaiResponse = await openai.responses.create({
-      model: 'gpt-5-mini-2025-08-07',
+      model: 'gpt-5-mini',
       input: systemInstruction + '\n\n' + summaryPrompt,
       reasoning: { effort: "low" } // סיכום בסיסי של נקודות
     })

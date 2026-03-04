@@ -54,9 +54,9 @@ export default function SimulationReport({ report, user, recentReports }: Simula
   }
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-green-600 bg-green-100'
-    if (score >= 6) return 'text-yellow-600 bg-yellow-100'
-    return 'text-red-600 bg-red-100'
+    if (score >= 8) return 'text-brand-success-dark bg-brand-success-light'
+    if (score >= 6) return 'text-brand-warning-dark bg-brand-warning-light'
+    return 'text-red-700 bg-red-50'
   }
 
   const getScoreEmoji = (score: number) => {
@@ -143,7 +143,7 @@ export default function SimulationReport({ report, user, recentReports }: Simula
           </button>
           <Link 
             href="/simulations/create"
-            className="bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700 transition-colors font-bold"
+            className="bg-brand-primary text-white px-4 py-2 rounded-lg hover:bg-brand-primary-dark transition-colors"
           >
             🎯 סימולציה חדשה
           </Link>
@@ -171,7 +171,7 @@ export default function SimulationReport({ report, user, recentReports }: Simula
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`py-4 px-2 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-brand-primary text-brand-primary'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -213,25 +213,25 @@ export default function SimulationReport({ report, user, recentReports }: Simula
 
               {/* חוזקות וחולשות */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6">
-                  <h3 className="text-lg font-bold text-green-900 mb-4">✅ נקודות לשימור</h3>
-                  <ul className="space-y-3">
+                <div className="bg-brand-success-light/50 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-brand-success-dark mb-4">✅ נקודות חוזק</h3>
+                  <ul className="space-y-2">
                     {(report.strengths || []).map((strength: string, index: number) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <span className="text-green-600 text-xl">✓</span>
-                        <span className="text-green-800">{strength}</span>
+                      <li key={index} className="flex items-start space-x-2">
+                        <span className="text-brand-success font-bold">•</span>
+                        <span className="text-neutral-700">{strength}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-6">
-                  <h3 className="text-lg font-bold text-orange-900 mb-4">🎯 נקודות לשיפור</h3>
-                  <ul className="space-y-3">
+                <div className="bg-brand-warning-light/50 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-brand-warning-dark mb-4">🎯 תחומים לשיפור</h3>
+                  <ul className="space-y-2">
                     {(report.improvement_areas || []).map((area: string, index: number) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <span className="text-orange-600 text-xl">•</span>
-                        <span className="text-orange-800">{area}</span>
+                      <li key={index} className="flex items-start space-x-2">
+                        <span className="text-brand-warning font-bold">•</span>
+                        <span className="text-neutral-700">{area}</span>
                       </li>
                     ))}
                   </ul>
@@ -281,7 +281,7 @@ export default function SimulationReport({ report, user, recentReports }: Simula
                     <div key={index} className="border-2 border-gray-200 rounded-lg p-5">
                       <div className="flex items-center gap-2 mb-3">
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          quote.speaker === 'נציג' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                          quote.speaker === 'נציג' ? 'bg-brand-info-light text-brand-primary' : 'bg-brand-success-light text-brand-success-dark'
                         }`}>
                           {quote.speaker === 'נציג' ? '👤 נציג' : '🎭 לקוח'}
                         </span>
@@ -323,9 +323,9 @@ export default function SimulationReport({ report, user, recentReports }: Simula
                           <span className="text-sm text-red-600 font-medium">❌ מה נאמר:</span>
                           <p className="text-red-800 mt-1">"{item.said}"</p>
                         </div>
-                        <div className="bg-green-50 rounded-lg p-4">
-                          <span className="text-sm text-green-600 font-medium">✅ מה היה צריך:</span>
-                          <p className="text-green-800 mt-1">"{item.should_say}"</p>
+                        <div className="bg-brand-success-light/50 rounded-lg p-4">
+                          <span className="text-sm text-brand-success-dark font-medium">✅ מה היה צריך:</span>
+                          <p className="text-brand-success-dark mt-1">"{item.should_say}"</p>
                         </div>
                       </div>
                     </div>
@@ -340,15 +340,15 @@ export default function SimulationReport({ report, user, recentReports }: Simula
 
               {/* המלצות מעשיות */}
               {(report.action_items || []).length > 0 && (
-                <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-6 mt-6">
-                  <h3 className="text-lg font-bold text-indigo-900 mb-4">🚀 המלצות מעשיות</h3>
+                <div className="bg-brand-info-light/50 rounded-lg p-6 mt-6">
+                  <h3 className="text-lg font-bold text-brand-primary-dark mb-4">🚀 המלצות מעשיות</h3>
                   <div className="space-y-3">
                     {report.action_items.map((item: string, index: number) => (
                       <div key={index} className="flex items-start gap-3">
-                        <div className="w-7 h-7 bg-indigo-200 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-indigo-800 text-sm font-bold">{index + 1}</span>
+                        <div className="w-7 h-7 bg-brand-info-light rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-brand-primary-dark text-sm font-bold">{index + 1}</span>
                         </div>
-                        <p className="text-indigo-800">{item}</p>
+                        <p className="text-brand-primary-dark">{item}</p>
                       </div>
                     ))}
                   </div>
@@ -397,27 +397,27 @@ export default function SimulationReport({ report, user, recentReports }: Simula
 
               {/* סטטיסטיקות */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-blue-50 rounded-lg p-6 text-center">
-                  <div className="text-4xl font-bold text-blue-600 mb-2">
+                <div className="bg-brand-info-light/40 rounded-lg p-6 text-center">
+                  <div className="text-3xl font-bold text-brand-primary mb-2">
                     {recentReports.length}
                   </div>
-                  <div className="text-blue-800">סה״כ סימולציות</div>
+                  <div className="text-neutral-700">סה״כ סימולציות</div>
                 </div>
-                
-                <div className="bg-green-50 rounded-lg p-6 text-center">
-                  <div className="text-4xl font-bold text-green-600 mb-2">
-                    {recentReports.length > 0 ? 
-                      (recentReports.reduce((sum, r) => sum + r.overall_score, 0) / recentReports.length).toFixed(1) 
+
+                <div className="bg-brand-success-light/40 rounded-lg p-6 text-center">
+                  <div className="text-3xl font-bold text-brand-success-dark mb-2">
+                    {recentReports.length > 0 ?
+                      (recentReports.reduce((sum, r) => sum + r.overall_score, 0) / recentReports.length).toFixed(1)
                       : '0'}
                   </div>
-                  <div className="text-green-800">ציון ממוצע</div>
+                  <div className="text-neutral-700">ציון ממוצע</div>
                 </div>
-                
-                <div className="bg-purple-50 rounded-lg p-6 text-center">
-                  <div className="text-4xl font-bold text-purple-600 mb-2">
+
+                <div className="bg-brand-accent-light/40 rounded-lg p-6 text-center">
+                  <div className="text-3xl font-bold text-brand-secondary-dark mb-2">
                     {recentReports.length > 0 ? Math.max(...recentReports.map(r => r.overall_score)) : 0}
                   </div>
-                  <div className="text-purple-800">הציון הגבוה ביותר</div>
+                  <div className="text-neutral-700">הציון הגבוה ביותר</div>
                 </div>
               </div>
             </div>
@@ -429,32 +429,41 @@ export default function SimulationReport({ report, user, recentReports }: Simula
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">🚀 מה הלאה?</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button 
+          <button
             onClick={handleRetry}
             disabled={isRetrying}
-            className="block p-5 border-2 border-blue-300 rounded-lg hover:bg-blue-50 transition-colors text-right disabled:opacity-50"
+            className="block p-5 border-2 border-brand-info-light rounded-lg hover:bg-brand-info-light/30 transition-colors text-right disabled:opacity-50"
           >
             <div className="text-2xl mb-2">🔄</div>
             <h4 className="font-bold text-gray-900 mb-1">נסה שוב</h4>
             <p className="text-sm text-gray-600">חזור על הסימולציה עם אותו לקוח</p>
           </button>
-          
-          <Link 
+
+          <Link
             href="/simulations/create"
-            className="block p-5 border-2 border-green-300 rounded-lg hover:bg-green-50 transition-colors"
+            className="block p-4 border border-brand-info-light rounded-lg hover:bg-brand-info-light/30 transition-colors"
           >
             <div className="text-2xl mb-2">🎯</div>
             <h4 className="font-bold text-gray-900 mb-1">סימולציה חדשה</h4>
             <p className="text-sm text-gray-600">צור סימולציה עם לקוח חדש</p>
           </Link>
-          
-          <Link 
+
+          <Link
             href="/simulations"
-            className="block p-5 border-2 border-purple-300 rounded-lg hover:bg-purple-50 transition-colors"
+            className="block p-4 border border-brand-success-light rounded-lg hover:bg-brand-success-light/30 transition-colors"
           >
             <div className="text-2xl mb-2">🏋️</div>
-            <h4 className="font-bold text-gray-900 mb-1">חדר הכושר</h4>
-            <p className="text-sm text-gray-600">חזור לדף הסימולציות</p>
+            <h4 className="font-medium text-gray-900 mb-1">חדר הכושר</h4>
+            <p className="text-sm text-gray-600">חזור לדף הסימולציות הראשי</p>
+          </Link>
+
+          <Link
+            href="/dashboard"
+            className="block p-4 border border-brand-accent-light rounded-lg hover:bg-brand-accent-light/30 transition-colors"
+          >
+            <div className="text-2xl mb-2">📊</div>
+            <h4 className="font-medium text-gray-900 mb-1">דשבורד</h4>
+            <p className="text-sm text-gray-600">צפה בסטטיסטיקות מקיפות</p>
           </Link>
         </div>
       </div>

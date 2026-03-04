@@ -111,7 +111,7 @@ export class SimulationWebSocketServer {
   private async startSimulation(session: SimulationSession) {
     try {
       // Connect to OpenAI Realtime API - ✅ מעודכן למודלים חדשים
-      const openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-realtime-mini-2025-10-06', {
+      const openaiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-realtime-1.5', {
         headers: {
           'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
           'OpenAI-Beta': 'realtime=v1'
