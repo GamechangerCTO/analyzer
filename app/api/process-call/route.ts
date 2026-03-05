@@ -1374,7 +1374,6 @@ export async function POST(request: Request) {
               5. בציטוטים החלף שמות ב-הנציג ו-הלקוח
               6. כתוב דוגמאות לשיפור עם גרש יחיד או מקף במקום מרכאות
               7. החזר את התוצאה בפורמט JSON בלבד ללא markdown`,
-          temperature: 0.3
         });
 
         const deepAnalysisRaw = contentAnalysisResponse.output_text || '{}';
@@ -1550,7 +1549,6 @@ export async function POST(request: Request) {
                 1. ציונים מ-4 עד 10
                 2. כל פרמטר צריך ציון, תובנות, ואיך משפרים
                 3. החזר JSON תקין!`,
-            temperature: 0.3
           });
 
           const fallbackContent = fallbackResponse.output_text || '{}';

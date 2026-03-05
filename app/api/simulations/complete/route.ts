@@ -191,7 +191,6 @@ ${originalCallAnalysis ? `
         const fallbackResponse = await (openai as any).responses.create({
           model: 'gpt-5-nano',
           input: analysisPrompt,
-          temperature: 0.3
         })
 
         const fallbackContent = fallbackResponse.output_text || ''
