@@ -21,6 +21,7 @@ interface CreateSimulationRequest {
   persona_id?: string // ✅ UUID לקישור לטבלת customer_personas_hebrew
   difficulty_level: string
   triggered_by_call_id?: string
+  source_call_id?: string // ✅ מזהה שיחה מקורית להשוואה בדוח
   callAnalysis?: any
   selectedTopics?: string[] // ✅ נושאים שנבחרו לאימון
 }
@@ -104,16 +105,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateSimulationRequest = await request.json()
-    const { simulation_type, customer_persona, persona_id, difficulty_level, triggered_by_call_id, callAnalysis, selectedTopics } = body
+    const { simulation_type, customer_persona, persona_id, difficulty_level, triggered_by_call_id, source_call_id, callAnalysis, selectedTopics } = body
 
-    // ולידציית enum - סוג סימולציה
-    const validSimulationTypes = Object.keys(scenarioPrompts)
+    // ולידציית enum - סוג סימולציה (אנגלית מ-scenarioPrompts + עברית מהטופס)
+    const validSimulationTypes = [
+      ...Object.keys(scenarioPrompts),
+      'אימון מבוסס שיחה', 'אימון לפי נושאים', 'נסיון חוזר', 'סימולציה ידנית'
+    ]
     if (simulation_type && !validSimulationTypes.includes(simulation_type)) {
-      return NextResponse.json({ error: `סוג סימולציה לא תקין. ערכים אפשריים: ${validSimulationTypes.join(', ')}` }, { status: 400 })
+      return NextResponse.json({ error: `סוג סימולציה לא תקין` }, { status: 400 })
     }
 
-    // ולידציית enum - רמת קושי
-    const validDifficultyLevels = ['easy', 'medium', 'hard', 'beginner', 'intermediate', 'advanced']
+    // ולידציית enum - רמת קושי (עברית + אנגלית + אוטומטי)
+    const validDifficultyLevels = ['easy', 'medium', 'hard', 'beginner', 'intermediate', 'advanced', 'קל', 'בינוני', 'קשה', 'מתקדם', 'אוטומטי']
     if (difficulty_level && !validDifficultyLevels.includes(difficulty_level)) {
       return NextResponse.json({ error: `רמת קושי לא תקינה. ערכים אפשריים: ${validDifficultyLevels.join(', ')}` }, { status: 400 })
     }
@@ -208,6 +212,7 @@ ${originalCallContext}
       agent_id: session.user.id,
       company_id: user.company_id,
       triggered_by_call_id: (triggered_by_call_id && triggered_by_call_id.length > 0) ? triggered_by_call_id : null,
+      source_call_id: (source_call_id && source_call_id.length > 0) ? source_call_id : (triggered_by_call_id && triggered_by_call_id.length > 0) ? triggered_by_call_id : null,
       simulation_type,
       customer_persona, // שם הפרסונה כטקסט
       difficulty_level,

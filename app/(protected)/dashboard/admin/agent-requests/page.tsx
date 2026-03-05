@@ -156,11 +156,11 @@ export default function AgentRequestsPage() {
       {/* כותרת */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800">בקשות נציגים ומכסות</h1>
-        <Link 
+        <Link
           href="/dashboard/admin"
           className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors"
         >
-          ← חזרה לדשבורד אדמין
+          חזרה לדשבורד אדמין →
         </Link>
       </div>
 

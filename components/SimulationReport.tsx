@@ -425,23 +425,45 @@ export default function SimulationReport({ report, user, recentReports }: Simula
         </div>
       </div>
 
-      {/* פעולות תחתונות */}
+      {/* המלצה מותאמת */}
       <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className={`rounded-lg p-4 mb-6 ${
+          report.overall_score >= 8 ? 'bg-brand-success-light/50 border border-brand-success-light' :
+          report.overall_score >= 6 ? 'bg-brand-info-light/50 border border-brand-info-light' :
+          'bg-orange-50 border border-orange-200'
+        }`}>
+          <h3 className="font-bold text-gray-900 mb-1">
+            {report.overall_score >= 8 ? '🌟 ביצועים מצוינים!' :
+             report.overall_score >= 6 ? '📈 יש מקום לשיפור' :
+             '💪 תרגול נוסף יעזור'}
+          </h3>
+          <p className="text-sm text-gray-700">
+            {report.overall_score >= 8
+              ? 'השגת ציון גבוה! נסה להתאמן ברמת קושי גבוהה יותר או עם פרסונה מאתגרת.'
+              : report.overall_score >= 6
+              ? 'נקודת השיפור המרכזית שלך: חזור על הסימולציה ומקד את תשומת הלב בנקודות שסומנו למעלה.'
+              : 'ממליצים לחזור על הסימולציה. קרא את ההמלצות המעשיות למעלה ונסה ליישם אותן בשיחה הבאה.'}
+          </p>
+        </div>
+
         <h3 className="text-lg font-bold text-gray-900 mb-4">🚀 מה הלאה?</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <button
             onClick={handleRetry}
             disabled={isRetrying}
-            className="block p-5 border-2 border-brand-info-light rounded-lg hover:bg-brand-info-light/30 transition-colors text-right disabled:opacity-50"
+            className={`block p-5 border-2 rounded-lg hover:bg-brand-info-light/30 transition-colors text-right disabled:opacity-50 ${
+              report.overall_score < 8 ? 'border-brand-primary bg-brand-info-light/20 ring-2 ring-brand-primary/20' : 'border-brand-info-light'
+            }`}
           >
             <div className="text-2xl mb-2">🔄</div>
             <h4 className="font-bold text-gray-900 mb-1">נסה שוב</h4>
             <p className="text-sm text-gray-600">חזור על הסימולציה עם אותו לקוח</p>
+            {report.overall_score < 8 && <span className="text-xs text-brand-primary font-medium mt-1 block">מומלץ</span>}
           </button>
 
           <Link
             href="/simulations/create"
-            className="block p-4 border border-brand-info-light rounded-lg hover:bg-brand-info-light/30 transition-colors"
+            className="block p-5 border-2 border-brand-info-light rounded-lg hover:bg-brand-info-light/30 transition-colors"
           >
             <div className="text-2xl mb-2">🎯</div>
             <h4 className="font-bold text-gray-900 mb-1">סימולציה חדשה</h4>
@@ -450,19 +472,19 @@ export default function SimulationReport({ report, user, recentReports }: Simula
 
           <Link
             href="/simulations"
-            className="block p-4 border border-brand-success-light rounded-lg hover:bg-brand-success-light/30 transition-colors"
+            className="block p-5 border-2 border-brand-success-light rounded-lg hover:bg-brand-success-light/30 transition-colors"
           >
             <div className="text-2xl mb-2">🏋️</div>
-            <h4 className="font-medium text-gray-900 mb-1">חדר הכושר</h4>
+            <h4 className="font-bold text-gray-900 mb-1">חדר הכושר</h4>
             <p className="text-sm text-gray-600">חזור לדף הסימולציות הראשי</p>
           </Link>
 
           <Link
             href="/dashboard"
-            className="block p-4 border border-brand-accent-light rounded-lg hover:bg-brand-accent-light/30 transition-colors"
+            className="block p-5 border-2 border-brand-accent-light rounded-lg hover:bg-brand-accent-light/30 transition-colors"
           >
             <div className="text-2xl mb-2">📊</div>
-            <h4 className="font-medium text-gray-900 mb-1">דשבורד</h4>
+            <h4 className="font-bold text-gray-900 mb-1">דשבורד</h4>
             <p className="text-sm text-gray-600">צפה בסטטיסטיקות מקיפות</p>
           </Link>
         </div>

@@ -362,7 +362,7 @@ export default function PersonaManagementClient({ companyId, companyName }: Pers
             onClick={() => setViewMode('list')}
             className="text-brand-primary hover:text-brand-primary-dark font-medium"
           >
-            ← חזור לרשימה
+            חזור לרשימה →
           </button>
           <PersonaPreview
             persona={selectedPersona}

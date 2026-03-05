@@ -187,7 +187,7 @@ export default function SignupCompletePage() {
                 onClick={() => router.push('/login')}
                 className="text-neutral-500 hover:text-brand-primary text-sm font-medium transition-colors duration-200"
               >
-                ← חזרה לדף ההתחברות
+                חזרה לדף ההתחברות →
               </button>
             </div>
           </div>

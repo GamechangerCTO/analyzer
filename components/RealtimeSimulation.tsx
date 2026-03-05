@@ -30,6 +30,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
   const [elapsedTime, setElapsedTime] = useState(0) // 🔴 חדש: טיימר בשניות
   const [isRecording, setIsRecording] = useState(false) // 🔴 הקלטה
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null) // 🔴 ההקלטה
+  const [micActive, setMicActive] = useState(true) // מצב מיקרופון
   const [simulationMetrics, setSimulationMetrics] = useState({
     startTime: null as Date | null,
     responseTime: 0,
@@ -88,12 +89,11 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
     console.log('🔊 בוחר קול לפרסונה:', personaName)
     
     // 1. בדיקה אם יש מגדר מוגדר בפרסונה (מה-AI)
-    if (persona?.voice_characteristics?.gender) {
-      const gender = persona.voice_characteristics.gender
+    const gender = persona?.voice_characteristics?.gender || persona?.gender
+    if (gender) {
       console.log('🔊 מגדר מה-AI:', gender)
-      // echo = גברי חזק, ash = גברי רך
-      // coral = נשי חם, shimmer = נשי בהיר
-      return gender === 'male' ? 'echo' : 'coral'
+      const isMale = gender === 'male' || gender === 'זכר' || gender === 'גבר'
+      return isMale ? 'echo' : 'coral'
     }
     
     // 2. ניחוש לפי שם (fallback)
@@ -353,6 +353,17 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
       
       await pc.setRemoteDescription(answer)
       
+      // מעקב אחר מצב המיקרופון
+      const audioTrack = mediaStream.getTracks()[0]
+      if (audioTrack) {
+        audioTrack.addEventListener('ended', () => {
+          console.warn('⚠️ מיקרופון התנתק')
+          setMicActive(false)
+        })
+        audioTrack.addEventListener('mute', () => setMicActive(false))
+        audioTrack.addEventListener('unmute', () => setMicActive(true))
+      }
+
       setPeerConnection(pc)
       console.log('✅ WebRTC connection הוקם בהצלחה')
 
@@ -542,32 +553,27 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
     }
   }
 
-  // סיום הסימולציה
-  // עצירה מיידית ללא שמירה
-  const stopSimulation = () => {
+  // ביטול סימולציה — מנתק ומחזיר לרשימה ללא שמירת דוח
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+
+  const cancelSimulation = () => {
     try {
       setStatus('ending')
-      
-      // עצירת הקלטה
       stopRecording()
-      
-      // ניתוק החיבורים
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop())
       }
       if (peerConnection) {
         peerConnection.close()
       }
-      
-      // חזור לעמוד הסימולציות
       router.push('/simulations')
     } catch (error) {
-      console.error('❌ שגיאה בעצירת סימולציה:', error)
+      console.error('❌ שגיאה בביטול סימולציה:', error)
       setStatus('error')
     }
   }
 
-  // עצירה ושליחה לניתוח
+  // סיום סימולציה — שומר ושולח לניתוח
   const endSimulation = async () => {
     try {
       setStatus('ending')
@@ -590,26 +596,33 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
         body: JSON.stringify({
           simulationId: simulation.id,
           transcript: transcript.join('\n'),
+          duration: elapsedTime,
           metrics: simulationMetrics,
           status: 'completed',
-          generateReport: true // דגל לייצור דוח
+          generateReport: true
         })
       })
 
       if (response.ok) {
         const result = await response.json()
         setStatus('completed')
-        
-        // מעבר לעמוד הדוח
-        setTimeout(() => {
-          if (result.reportId) {
+
+        if (result.reportId) {
+          // דוח נוצר — ניווט ישיר
+          setTimeout(() => {
             router.push(`/simulations/report/${result.reportId}`)
-          } else {
+          }, 2000)
+        } else {
+          // דוח לא נוצר — ניסיון חיפוש לפי simulation ID
+          console.warn('⚠️ דוח לא נוצר, מנסה לפי simulation ID')
+          setTimeout(() => {
             router.push(`/simulations/report/${simulation.id}`)
-          }
-        }, 2000)
+          }, 3000)
+        }
       } else {
-        throw new Error('Failed to complete simulation')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('❌ שגיאה מהשרת:', errorData)
+        throw new Error(errorData.error || 'Failed to complete simulation')
       }
 
     } catch (error) {
@@ -660,19 +673,28 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
             {status === 'active' && (
               <div className="mt-3 flex items-center gap-4">
                 <div className={`text-3xl font-mono font-bold px-4 py-2 rounded-lg ${
-                  elapsedTime >= 540 ? 'text-red-600 bg-red-50 animate-pulse' : // אחרי 9 דקות
-                  elapsedTime >= 480 ? 'text-orange-600 bg-orange-50' : // אחרי 8 דקות
+                  elapsedTime >= 540 ? 'text-red-600 bg-red-50 animate-pulse' :
+                  elapsedTime >= 480 ? 'text-orange-600 bg-orange-50' :
+                  elapsedTime >= 420 ? 'text-yellow-700 bg-yellow-50' :
                   'text-brand-primary bg-brand-info-light'
                 }`}>
-                  ⏱️ {formatTime(elapsedTime)} / 10:00
+                  ⏱️ {formatTime(MAX_DURATION_SECONDS - elapsedTime)} נותרו
                 </div>
                 {elapsedTime >= 540 && (
-                  <span className="text-red-600 font-bold animate-pulse">⚠️ פחות מדקה!</span>
+                  <span className="text-red-600 font-bold animate-pulse">⚠️ פחות מדקה! סיים את השיחה</span>
+                )}
+                {elapsedTime >= 420 && elapsedTime < 540 && (
+                  <span className="text-yellow-700 font-medium">⏳ {Math.ceil((MAX_DURATION_SECONDS - elapsedTime) / 60)} דקות נותרו</span>
                 )}
                 {isPaused && (
                   <span className="text-orange-600 font-bold animate-pulse">⏸️ מושהה</span>
                 )}
-                {isRecording && (
+                {!micActive && (
+                  <span className="text-red-600 font-bold animate-pulse flex items-center gap-1">
+                    🎤❌ המיקרופון מנותק!
+                  </span>
+                )}
+                {isRecording && micActive && (
                   <span className="text-red-600 font-bold animate-pulse flex items-center gap-1">
                     <span className="w-2 h-2 bg-red-600 rounded-full" />
                     REC
@@ -739,23 +761,22 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
 
           {status === 'active' && (
             <div className="flex flex-wrap gap-3 justify-center">
-              {/* 🔴 חדש: כפתור השהיה */}
               <button
                 onClick={togglePause}
                 className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                  isPaused 
-                    ? 'bg-green-600 hover:bg-green-700 text-white' 
+                  isPaused
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
                     : 'bg-orange-500 hover:bg-orange-600 text-white'
                 }`}
               >
                 {isPaused ? '▶️ המשך' : '⏸️ השהה'}
               </button>
-              
+
               <button
-                onClick={stopSimulation}
-                className="bg-gray-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-700 transition-colors flex items-center gap-2"
+                onClick={() => setShowCancelConfirm(true)}
+                className="bg-gray-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-600 transition-colors flex items-center gap-2"
               >
-                ⏹️ עצור ללא שמירה
+                ✕ ביטול
               </button>
               <button
                 onClick={endSimulation}
@@ -763,6 +784,30 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
               >
                 🏁 סיים ועבור לניתוח
               </button>
+            </div>
+          )}
+
+          {/* דיאלוג אישור ביטול */}
+          {showCancelConfirm && (
+            <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center">
+              <div className="bg-white rounded-xl p-6 max-w-sm mx-4 shadow-2xl">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">לבטל את הסימולציה?</h3>
+                <p className="text-gray-600 mb-4">הסימולציה לא תישמר ולא יופק דוח ניתוח.</p>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => setShowCancelConfirm(false)}
+                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    חזור לסימולציה
+                  </button>
+                  <button
+                    onClick={cancelSimulation}
+                    className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                  >
+                    כן, בטל
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

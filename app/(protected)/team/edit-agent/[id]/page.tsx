@@ -59,7 +59,7 @@ export default async function EditAgentPage({ params }: EditAgentPageProps) {
           href="/team"
           className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg"
         >
-          ← חזרה לניהול צוות
+          חזרה לניהול צוות →
         </Link>
       </div>
 

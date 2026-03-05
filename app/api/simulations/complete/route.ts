@@ -52,13 +52,14 @@ export async function POST(request: Request) {
     const persona = simulation.customer_personas_hebrew
     const selectedTopics = simulation.selected_topics || ['כללי']
     
-    // שליפת שיחה מקורית אם יש
+    // שליפת שיחה מקורית אם יש (source_call_id או triggered_by_call_id)
     let originalCallAnalysis = null
-    if (simulation.source_call_id) {
+    const originalCallId = simulation.source_call_id || simulation.triggered_by_call_id
+    if (originalCallId) {
       const { data: originalCall } = await supabase
         .from('calls')
         .select('content_analysis, tone_analysis, overall_score')
-        .eq('id', simulation.source_call_id)
+        .eq('id', originalCallId)
         .single()
       originalCallAnalysis = originalCall
     }
@@ -233,9 +234,32 @@ ${originalCallAnalysis ? `
       .single()
     
     if (reportError) {
-      console.error('שגיאה בשמירת דוח:', reportError)
+      console.error('❌ שגיאה בשמירת דוח:', reportError)
+      // נסיון נוסף ללא שדות אופציונליים
+      const { data: retryReport, error: retryError } = await supabase
+        .from('simulation_reports_hebrew')
+        .insert({
+          simulation_id: simulationId,
+          agent_id: user.id,
+          company_id: simulation.company_id,
+          overall_score: reportData.overall_score || 6,
+          summary: reportData.summary || 'הסימולציה הושלמה',
+          strengths: reportData.strengths || [],
+          improvement_areas: reportData.improvement_areas || [],
+          action_items: reportData.action_items || [],
+        })
+        .select()
+        .single()
+
+      if (!retryError && retryReport) {
+        console.log('✅ דוח נשמר בניסיון שני (ללא שדות אופציונליים)')
+        // Use retry report
+        Object.assign(report || {}, retryReport)
+      } else {
+        console.error('❌ גם ניסיון שני נכשל:', retryError)
+      }
     }
-    
+
     // עדכון הסימולציה
     const { error: updateError } = await supabase
       .from('simulations')

@@ -44,14 +44,20 @@ export default function SimulationClient({ simulation, user, company }: Simulati
       })
       
       if (response.ok) {
-        // Redirect to report page
+        const result = await response.json()
         setTimeout(() => {
-          router.push(`/simulations/report/${simulation.id}`)
+          if (result.reportId) {
+            router.push(`/simulations/report/${result.reportId}`)
+          } else {
+            router.push(`/simulations/report/${simulation.id}`)
+          }
         }, 2000)
+      } else {
+        console.error('Report generation failed')
+        setIsGeneratingReport(false)
       }
     } catch (error) {
       console.error('Error completing simulation:', error)
-    } finally {
       setIsGeneratingReport(false)
     }
   }
@@ -83,7 +89,7 @@ export default function SimulationClient({ simulation, user, company }: Simulati
           <div className="flex justify-center gap-4">
             <button
               onClick={() => router.push(`/simulations/report/${simulation.id}`)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-3 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-dark transition-colors"
             >
               צפה בדוח
             </button>
@@ -105,8 +111,8 @@ export default function SimulationClient({ simulation, user, company }: Simulati
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-            <Target className="w-10 h-10 text-blue-600" />
+          <div className="w-20 h-20 bg-brand-info-light rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+            <Target className="w-10 h-10 text-brand-primary" />
           </div>
           
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -118,7 +124,7 @@ export default function SimulationClient({ simulation, user, company }: Simulati
           </p>
           
           <div className="mt-6 flex justify-center">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         </div>
       </div>
@@ -175,8 +181,8 @@ export default function SimulationClient({ simulation, user, company }: Simulati
         {simulation.selected_topics && simulation.selected_topics.length > 0 && (
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Target className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 bg-brand-info-light rounded-full flex items-center justify-center">
+                <Target className="w-5 h-5 text-brand-primary" />
               </div>
               <div>
                 <p className="text-xs text-gray-500">נושאים לאימון</p>
@@ -185,7 +191,7 @@ export default function SimulationClient({ simulation, user, company }: Simulati
             </div>
             <div className="flex flex-wrap gap-1">
               {simulation.selected_topics.slice(0, 3).map((topic: string, i: number) => (
-                <span key={i} className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+                <span key={i} className="text-xs bg-brand-info-light/50 text-brand-primary-dark px-2 py-0.5 rounded">
                   {topic.replace(/_/g, ' ')}
                 </span>
               ))}

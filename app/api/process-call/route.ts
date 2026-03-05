@@ -1400,8 +1400,28 @@ export async function POST(request: Request) {
           console.log('🧹 Cleaned Content:', cleanedContent.substring(0, 500) + '...');
           
           contentAnalysisReport = JSON.parse(cleanedContent);
-          
-          await addCallLog(call_id, '✅ JSON נותח בהצלחה ישירות! (35 פרמטרים מלאים)', { 
+
+          // 🔧 אם overall_score חסר (למשל בגלל JSON חתוך), חשב מממוצע הציונים
+          if (contentAnalysisReport.overall_score === undefined || contentAnalysisReport.overall_score === null) {
+            const scores: number[] = [];
+            const extractScores = (obj: any) => {
+              if (!obj || typeof obj !== 'object') return;
+              if (typeof obj['ציון'] === 'number') {
+                scores.push(obj['ציון']);
+                return;
+              }
+              for (const val of Object.values(obj)) {
+                if (val && typeof val === 'object') extractScores(val);
+              }
+            };
+            extractScores(contentAnalysisReport);
+            if (scores.length > 0) {
+              contentAnalysisReport.overall_score = Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10;
+              console.log(`🔧 overall_score חושב מ-${scores.length} ציונים: ${contentAnalysisReport.overall_score}`);
+            }
+          }
+
+          await addCallLog(call_id, '✅ JSON נותח בהצלחה ישירות! (35 פרמטרים מלאים)', {
             overall_score: contentAnalysisReport.overall_score,
             has_analysis_sections: !!contentAnalysisReport.analysis_sections,
             // בדיקת מבנה הנתונים

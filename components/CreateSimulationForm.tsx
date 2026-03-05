@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 interface CreateSimulationFormProps {
   user: any
@@ -18,6 +19,14 @@ export default function CreateSimulationForm({
 }: CreateSimulationFormProps) {
   const router = useRouter()
   const [isGenerating, setIsGenerating] = useState(false)
+  const [creationStep, setCreationStep] = useState<'idle' | 'quota' | 'persona' | 'scenario' | 'simulation'>('idle')
+
+  const stepLabels: Record<string, string> = {
+    quota: 'בודק מכסה...',
+    persona: 'יוצר פרסונת לקוח...',
+    scenario: 'בונה תרחיש...',
+    simulation: 'מפעיל סימולציה...',
+  }
   
   // שלב נוכחי בתהליך
   const [creationMode, setCreationMode] = useState<'select' | 'call-based' | 'topic-based' | null>(null)
@@ -67,48 +76,64 @@ export default function CreateSimulationForm({
   // יצירת הסימולציה
   const handleSubmit = async () => {
     setIsGenerating(true)
-    
+
     try {
+      // שלב 1: בדיקת מכסה
+      setCreationStep('quota')
+      const supabase = createClient()
+      const { data: quotaData } = await supabase
+        .rpc('get_simulation_minutes_quota', { p_company_id: user.company_id })
+        .single()
+      if (quotaData && (quotaData as any).available_minutes < 1) {
+        alert('אין לך מספיק דקות סימולציה במכסה. שדרג את המנוי שלך כדי להמשיך.')
+        setIsGenerating(false)
+        setCreationStep('idle')
+        return
+      }
+
       // חילוץ נתוני השיחה הנבחרת (אם יש)
-        let selectedCallAnalysis = null
+      let selectedCallAnalysis = null
       if (selectedCallId && creationMode === 'call-based') {
         const selectedCall = recentCalls.find(call => call.id === selectedCallId)
-          if (selectedCall) {
-            selectedCallAnalysis = {
-              call_type: selectedCall.call_type,
-              overall_score: selectedCall.overall_score,
-              content_analysis: selectedCall.content_analysis,
-              tone_analysis: selectedCall.tone_analysis,
-              red_flags: selectedCall.red_flags || [],
-              improvement_areas: selectedCall.improvement_areas || [],
-              duration_seconds: selectedCall.duration_seconds,
-              created_at: selectedCall.created_at
-            }
+        if (selectedCall) {
+          selectedCallAnalysis = {
+            call_type: selectedCall.call_type,
+            overall_score: selectedCall.overall_score,
+            content_analysis: selectedCall.content_analysis,
+            tone_analysis: selectedCall.tone_analysis,
+            red_flags: selectedCall.red_flags || [],
+            improvement_areas: selectedCall.improvement_areas || [],
+            duration_seconds: selectedCall.duration_seconds,
+            created_at: selectedCall.created_at
           }
         }
+      }
 
-      // יצירת פרסונה
-        const personaResponse = await fetch('/api/simulations/generate-persona', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            agentId: user.id,
-            companyId: user.company_id,
-          targetWeaknesses: [], // נקבע אוטומטית מהניתוח
-          difficulty: 'אוטומטי', // נקבע לפי ניתוח השיחות
+      // שלב 2: יצירת פרסונה
+      setCreationStep('persona')
+      const personaResponse = await fetch('/api/simulations/generate-persona', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentId: user.id,
+          companyId: user.company_id,
+          targetWeaknesses: [],
+          difficulty: 'אוטומטי',
           callAnalysis: selectedCallAnalysis,
           selectedTopics: creationMode === 'topic-based' ? selectedTopics : []
-          })
         })
-        
-        if (!personaResponse.ok) {
-          throw new Error('Failed to generate persona')
-        }
-        
-        const personaData = await personaResponse.json()
+      })
+
+      if (!personaResponse.ok) {
+        const err = await personaResponse.json().catch(() => ({}))
+        throw new Error(err.error || 'שגיאה ביצירת פרסונת לקוח')
+      }
+
+      const personaData = await personaResponse.json()
       const personaId = personaData.persona.id
-      
-      // יצירת תרחיש
+
+      // שלב 3: יצירת תרחיש
+      setCreationStep('scenario')
       const scenarioResponse = await fetch('/api/simulations/generate-scenario', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -117,15 +142,19 @@ export default function CreateSimulationForm({
           companyId: user.company_id,
           difficulty: 'אוטומטי',
           focusArea: '',
-          estimatedDuration: 10 // 10 דקות מקסימום
+          estimatedDuration: 10
         })
       })
-      
-      if (!scenarioResponse.ok) {
-        throw new Error('Failed to generate scenario')
+
+      let scenarioId = null
+      if (scenarioResponse.ok) {
+        const scenarioData = await scenarioResponse.json()
+        scenarioId = scenarioData.scenario?.id
       }
-      
-      // יצירת הסימולציה עצמה  
+      // אם יצירת תרחיש נכשלה — ממשיכים בלי (לא קריטי)
+
+      // שלב 4: יצירת הסימולציה
+      setCreationStep('simulation')
       const simulationResponse = await fetch('/api/simulations/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -135,24 +164,26 @@ export default function CreateSimulationForm({
           persona_id: personaId,
           difficulty_level: 'אוטומטי',
           triggered_by_call_id: selectedCallId || null,
-          selectedTopics: creationMode === 'topic-based' ? selectedTopics : [],
           source_call_id: selectedCallId || null,
-          max_duration_seconds: 600 // 10 דקות
+          selectedTopics: creationMode === 'topic-based' ? selectedTopics : [],
+          max_duration_seconds: 600
         })
       })
-      
+
       if (!simulationResponse.ok) {
-        throw new Error('Failed to create simulation')
+        const err = await simulationResponse.json().catch(() => ({}))
+        throw new Error(err.error || 'שגיאה ביצירת הסימולציה')
       }
-      
+
       const simulation = await simulationResponse.json()
       router.push(`/simulations/${simulation.simulation.id}`)
-      
-    } catch (error) {
+
+    } catch (error: any) {
       console.error('Error creating simulation:', error)
-      alert('שגיאה ביצירת הסימולציה. אנא נסה שוב.')
+      alert(error.message || 'שגיאה ביצירת הסימולציה. אנא נסה שוב.')
     } finally {
       setIsGenerating(false)
+      setCreationStep('idle')
     }
   }
 
@@ -237,7 +268,7 @@ export default function CreateSimulationForm({
             onClick={() => setCreationMode('select')}
             className="text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-2"
           >
-            ← חזרה לבחירת אופציה
+            חזרה לבחירת אופציה →
               </button>
           <h2 className="text-2xl font-bold text-gray-900">
             📊 בחר שיחה לבסס עליה את הסימולציה
@@ -344,7 +375,7 @@ export default function CreateSimulationForm({
                           {isGenerating ? (
                             <>
                     <div className="animate-spin w-6 h-6 border-3 border-white border-t-transparent rounded-full" />
-                              יוצר סימולציה...
+                              {stepLabels[creationStep] || 'יוצר סימולציה...'}
                             </>
                           ) : (
                             <>
@@ -369,7 +400,7 @@ export default function CreateSimulationForm({
             onClick={() => setCreationMode('select')}
             className="text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-2"
           >
-            ← חזרה לבחירת אופציה
+            חזרה לבחירת אופציה →
           </button>
           <h2 className="text-2xl font-bold text-gray-900">
             📚 בחר נושאים לאימון
@@ -447,7 +478,7 @@ export default function CreateSimulationForm({
                 {isGenerating ? (
                 <>
                   <div className="animate-spin w-6 h-6 border-3 border-white border-t-transparent rounded-full" />
-                  יוצר סימולציה...
+                  {stepLabels[creationStep] || 'יוצר סימולציה...'}
                 </>
               ) : (
                 <>

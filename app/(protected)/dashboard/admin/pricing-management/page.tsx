@@ -167,11 +167,11 @@ export default function PricingManagementPage() {
           <h1 className="text-3xl font-bold text-gray-800">ניהול מחירים ומכסות</h1>
           <p className="text-gray-600 mt-2">מודל תמחור חדש: מחיר למשתמש לחודש, מינימום 2 יוזרים, תמחור שנתי עם 15% הנחה</p>
         </div>
-        <Link 
+        <Link
           href="/dashboard/admin"
           className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors"
         >
-          ← חזרה לדשבורד אדמין
+          חזרה לדשבורד אדמין →
         </Link>
       </div>
 

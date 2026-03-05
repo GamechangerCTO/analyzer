@@ -265,7 +265,7 @@ export default function AgentRequestsClient({ adminId, adminName }: AgentRequest
           href="/dashboard/admin"
           className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors duration-200"
         >
-          ← חזרה לניהול מערכת
+          חזרה לניהול מערכת →
         </Link>
       </div>
 
