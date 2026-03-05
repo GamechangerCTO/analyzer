@@ -1374,6 +1374,7 @@ export async function POST(request: Request) {
               5. בציטוטים החלף שמות ב-הנציג ו-הלקוח
               6. כתוב דוגמאות לשיפור עם גרש יחיד או מקף במקום מרכאות
               7. החזר את התוצאה בפורמט JSON בלבד ללא markdown`,
+          reasoning: { effort: "medium" },
         });
 
         const deepAnalysisRaw = contentAnalysisResponse.output_text || '{}';
@@ -1529,12 +1530,13 @@ export async function POST(request: Request) {
           };
           
           await addCallLog(call_id, '🔄 Fallback: שולח לניתוח מחדש עם Responses API', {
-            model: 'gpt-5-nano',
+            model: 'gpt-5-mini',
             original_analysis_length: deepAnalysisRaw.length
           });
 
           const fallbackResponse = await (openai as any).responses.create({
-            model: 'gpt-5-nano',
+            model: 'gpt-5-mini',
+            reasoning: { effort: "medium" },
             input: `${systemPrompt}\n\nנתח את השיחה הבאה והחזר JSON מובנה עם כל 35 הפרמטרים:
 
                 סוג שיחה: ${callData.call_type}

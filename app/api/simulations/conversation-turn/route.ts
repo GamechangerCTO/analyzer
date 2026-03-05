@@ -199,6 +199,7 @@ export async function POST(request: Request) {
       const fallbackResponse = await (openai as any).responses.create({
         model: 'gpt-5-nano',
         input: messages.map((m: any) => `${m.role}: ${m.content}`).join('\n'),
+        reasoning: { effort: 'low' },
       })
 
       aiResponse = fallbackResponse.output_text || 'מצטער, לא הצלחתי להבין.'

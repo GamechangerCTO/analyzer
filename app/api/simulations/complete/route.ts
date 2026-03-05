@@ -140,11 +140,11 @@ ${originalCallAnalysis ? `
     }
 
     try {
-      // שימוש ב-GPT-5-nano ליצירת הדוח
+      // שימוש ב-GPT-5-mini ליצירת דוח ניתוח סימולציה
       const response = await (openai as any).responses.create({
-        model: 'gpt-5-nano',
+        model: 'gpt-5-mini',
         input: analysisPrompt,
-        reasoning: { effort: 'low' }
+        reasoning: { effort: 'medium' }
       })
       
       const content = response.output_text || ''
@@ -191,6 +191,7 @@ ${originalCallAnalysis ? `
         const fallbackResponse = await (openai as any).responses.create({
           model: 'gpt-5-nano',
           input: analysisPrompt,
+          reasoning: { effort: 'low' },
         })
 
         const fallbackContent = fallbackResponse.output_text || ''
