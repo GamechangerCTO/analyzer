@@ -1373,22 +1373,20 @@ export async function POST(request: Request) {
               4. ✅ כל תת-פרמטר צריך את המבנה: {"ציון": number, "תובנות": "...", "איך_משפרים": "..."}
               5. בציטוטים החלף שמות ב-הנציג ו-הלקוח
               6. כתוב דוגמאות לשיפור עם גרש יחיד או מקף במקום מרכאות
-              7. החזר את התוצאה בפורמט JSON בלבד ללא markdown`
-            }
-          ],
+              7. החזר את התוצאה בפורמט JSON בלבד ללא markdown`,
           temperature: 0.3
         });
-        
-        const deepAnalysisRaw = deepAnalysisResponse.choices[0]?.message?.content || '{}';
+
+        const deepAnalysisRaw = contentAnalysisResponse.output_text || '{}';
         
         // 📊 לוג דיבאג לניתוח הגולמי מ-GPT-5.2
         console.log('🤖 GPT-5.2 Raw Response:', deepAnalysisRaw.substring(0, 500) + '...');
         
         await addCallLog(call_id, '✅ GPT-5.2 הושלם - מנסה לנתח JSON ישירות', { 
           response_length: deepAnalysisRaw.length,
-          model: deepAnalysisResponse.model,
+          model: contentAnalysisResponse.model,
           raw_preview_start: deepAnalysisRaw.substring(0, 200),
-          token_usage: deepAnalysisResponse.usage
+          token_usage: contentAnalysisResponse.usage
         });
         
         let contentAnalysisReport;
