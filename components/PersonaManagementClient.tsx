@@ -139,7 +139,7 @@ export default function PersonaManagementClient({ companyId, companyName }: Pers
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
         <span className="mr-3 text-gray-600">טוען נתונים...</span>
       </div>
     )
@@ -149,9 +149,9 @@ export default function PersonaManagementClient({ companyId, companyName }: Pers
     <div className="space-y-6">
       {/* סטטיסטיקות כלליות */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-gradient-to-br from-blue-50 to-white border-2 border-blue-200 rounded-xl p-4">
+        <div className="bg-gradient-to-br from-brand-info-light to-white border-2 border-brand-info-light rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <User className="w-5 h-5 text-blue-600" />
+            <User className="w-5 h-5 text-brand-primary" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{totalPersonas}</p>
           <p className="text-xs text-gray-600">סה"כ פרסונות</p>
@@ -173,9 +173,9 @@ export default function PersonaManagementClient({ companyId, companyName }: Pers
           <p className="text-xs text-gray-600">מומלצות</p>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-white border-2 border-purple-200 rounded-xl p-4">
+        <div className="bg-gradient-to-br from-brand-accent-light to-white border-2 border-brand-accent-light rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <Clock className="w-5 h-5 text-purple-600" />
+            <Clock className="w-5 h-5 text-brand-info-dark" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{totalUsage}</p>
           <p className="text-xs text-gray-600">שימושים</p>
@@ -196,7 +196,7 @@ export default function PersonaManagementClient({ companyId, companyName }: Pers
           onClick={() => setViewMode('list')}
           className={`px-4 py-2 font-medium transition-colors ${
             viewMode === 'list'
-              ? 'text-blue-600 border-b-2 border-blue-600'
+              ? 'text-brand-primary border-b-2 border-brand-primary'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -206,7 +206,7 @@ export default function PersonaManagementClient({ companyId, companyName }: Pers
           onClick={() => setViewMode('analytics')}
           className={`px-4 py-2 font-medium transition-colors ${
             viewMode === 'analytics'
-              ? 'text-blue-600 border-b-2 border-blue-600'
+              ? 'text-brand-primary border-b-2 border-brand-primary'
               : 'text-gray-600 hover:text-gray-900'
           }`}
         >
@@ -231,7 +231,7 @@ export default function PersonaManagementClient({ companyId, companyName }: Pers
             </label>
 
             <button
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-dark transition-colors"
             >
               <Plus className="w-4 h-4" />
               צור פרסונה חדשה
@@ -304,7 +304,7 @@ export default function PersonaManagementClient({ companyId, companyName }: Pers
                             setSelectedPersona(persona)
                             setViewMode('preview')
                           }}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                          className="p-1 text-brand-primary hover:bg-brand-info-light rounded"
                           title="תצוגה מקדימה"
                         >
                           <Eye className="w-4 h-4" />
@@ -360,7 +360,7 @@ export default function PersonaManagementClient({ companyId, companyName }: Pers
         <div className="space-y-4">
           <button
             onClick={() => setViewMode('list')}
-            className="text-blue-600 hover:text-blue-800 font-medium"
+            className="text-brand-primary hover:text-brand-primary-dark font-medium"
           >
             ← חזור לרשימה
           </button>
@@ -389,7 +389,7 @@ export default function PersonaManagementClient({ companyId, companyName }: Pers
               </div>
               <div>
                 <p className="text-sm text-gray-600">אחוז הצלחה</p>
-                <p className="text-2xl font-bold text-blue-600">{successRate}%</p>
+                <p className="text-2xl font-bold text-brand-primary">{successRate}%</p>
               </div>
             </div>
           </div>

@@ -147,7 +147,7 @@ export default function SimulationNotificationBell() {
       case 'auto_overdue':
         return <Clock className="w-5 h-5 text-red-500" />
       default:
-        return <Bell className="w-5 h-5 text-blue-500" />
+        return <Bell className="w-5 h-5 text-brand-primary" />
     }
   }
 
@@ -160,7 +160,7 @@ export default function SimulationNotificationBell() {
       case 'auto_overdue':
         return 'bg-red-50 border-r-2 border-red-400'
       default:
-        return 'bg-blue-50 border-r-2 border-blue-400'
+        return 'bg-brand-info-light border-r-2 border-brand-primary'
     }
   }
 
@@ -184,7 +184,7 @@ export default function SimulationNotificationBell() {
       {isOpen && (
         <div className="absolute left-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border z-50 max-h-[600px] flex flex-col">
           {/* כותרת */}
-          <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-blue-50 to-purple-50">
+          <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-brand-info-light to-brand-accent-light">
             <div>
               <h3 className="font-bold text-lg">🔔 נוטיפיקציות סימולציה</h3>
               {unreadCount > 0 && (
@@ -194,7 +194,7 @@ export default function SimulationNotificationBell() {
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                className="text-xs text-brand-primary hover:text-brand-primary-dark font-medium"
               >
                 סמן הכל כנקרא
               </button>
@@ -260,7 +260,7 @@ export default function SimulationNotificationBell() {
                       </div>
                       
                       {!notification.read_at && (
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                        <div className="w-2 h-2 bg-brand-primary rounded-full mt-2"></div>
                       )}
                     </div>
                   </button>
@@ -277,7 +277,7 @@ export default function SimulationNotificationBell() {
                   router.push('/simulations')
                   setIsOpen(false)
                 }}
-                className="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="w-full text-center text-sm text-brand-primary hover:text-brand-primary-dark font-medium"
               >
                 צפה בכל הסימולציות →
               </button>

@@ -116,7 +116,7 @@ export default function AgentSummary({ agentId, agentName, isOwnSummary = true }
       {/* כותרת עם פרטי הסיכום */}
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <User className="w-6 h-6 text-blue-600 ml-3" />
+          <User className="w-6 h-6 text-brand-primary ml-3" />
           <div>
             <h3 className="text-xl font-semibold text-gray-800">
               {isOwnSummary ? 'הסיכום שלי' : `סיכום ${agentName || 'נציג'}`}
@@ -140,9 +140,9 @@ export default function AgentSummary({ agentId, agentName, isOwnSummary = true }
 
       {/* סיכום כללי */}
       {summaryData.summary && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-medium text-blue-800 mb-2">📊 סיכום מגמות</h4>
-          <p className="text-blue-700 text-sm leading-relaxed">{summaryData.summary}</p>
+        <div className="bg-brand-info-light border border-brand-info-light rounded-lg p-4">
+          <h4 className="font-medium text-brand-primary-dark mb-2">📊 סיכום מגמות</h4>
+          <p className="text-brand-primary-dark text-sm leading-relaxed">{summaryData.summary}</p>
         </div>
       )}
 
@@ -183,7 +183,7 @@ export default function AgentSummary({ agentId, agentName, isOwnSummary = true }
           <div className="space-y-3">
             {summaryData.preservation_points && summaryData.preservation_points.length > 0 ? (
               summaryData.preservation_points.map((point, index) => (
-                <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div key={index} className="bg-brand-success-light border border-brand-success-light rounded-lg p-4">
                   <div className="flex items-start">
                     <Star className="w-4 h-4 text-green-600 ml-2 mt-0.5 flex-shrink-0" />
                     <p className="text-sm text-gray-700 leading-relaxed">{point}</p>

@@ -188,13 +188,13 @@ ${originalCallAnalysis ? `
       
       // Fallback ל-Chat Completions
       try {
-        const fallbackResponse = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: analysisPrompt }],
+        const fallbackResponse = await (openai as any).responses.create({
+          model: 'gpt-5-nano',
+          input: analysisPrompt,
           temperature: 0.3
         })
-        
-        const fallbackContent = fallbackResponse.choices[0]?.message?.content || ''
+
+        const fallbackContent = fallbackResponse.output_text || ''
         let fallbackCleaned = fallbackContent.replace(/```(?:json|JSON)?\s*/g, '').replace(/```\s*$/g, '').trim()
         const jsonStart = fallbackCleaned.indexOf('{')
         if (jsonStart !== -1) {

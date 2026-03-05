@@ -142,7 +142,7 @@ export default function AgentRequestsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-primary"></div>
       </div>
     )
   }
@@ -174,13 +174,13 @@ export default function AgentRequestsPage() {
           <h3 className="text-sm font-medium text-yellow-700">ממתינות לטיפול</h3>
           <p className="text-2xl font-bold text-yellow-800">{pendingCount}</p>
         </div>
-        <div className="bg-blue-50 p-4 rounded-lg shadow border border-blue-200">
-          <h3 className="text-sm font-medium text-blue-700">בקשות נציגים</h3>
-          <p className="text-2xl font-bold text-blue-800">{agentRequestsCount}</p>
+        <div className="bg-brand-info-light p-4 rounded-lg shadow border border-brand-info-light">
+          <h3 className="text-sm font-medium text-brand-primary-dark">בקשות נציגים</h3>
+          <p className="text-2xl font-bold text-brand-primary-dark">{agentRequestsCount}</p>
         </div>
-        <div className="bg-purple-50 p-4 rounded-lg shadow border border-purple-200">
-          <h3 className="text-sm font-medium text-purple-700">בקשות מכסות</h3>
-          <p className="text-2xl font-bold text-purple-800">{quotaRequestsCount}</p>
+        <div className="bg-brand-accent-light p-4 rounded-lg shadow border border-brand-accent-light">
+          <h3 className="text-sm font-medium text-brand-info-dark">בקשות מכסות</h3>
+          <p className="text-2xl font-bold text-brand-info-dark">{quotaRequestsCount}</p>
         </div>
       </div>
 
@@ -190,7 +190,7 @@ export default function AgentRequestsPage() {
           <button
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              filter === 'all' ? 'bg-brand-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             הכל ({requests.length})
@@ -206,7 +206,7 @@ export default function AgentRequestsPage() {
           <button
             onClick={() => setFilter('agents')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              filter === 'agents' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              filter === 'agents' ? 'bg-brand-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             בקשות נציגים ({agentRequestsCount})
@@ -214,7 +214,7 @@ export default function AgentRequestsPage() {
           <button
             onClick={() => setFilter('quota')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              filter === 'quota' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              filter === 'quota' ? 'bg-brand-info text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             בקשות מכסות ({quotaRequestsCount})
@@ -249,7 +249,7 @@ export default function AgentRequestsPage() {
                   return (
                     <tr key={request.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-info-light text-brand-primary-dark">
                           👤 נציג
                         </span>
                       </td>

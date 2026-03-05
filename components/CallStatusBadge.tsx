@@ -34,24 +34,24 @@ export default function CallStatusBadge({ status }: CallStatusProps) {
         };
       case 'transcribing':
         return {
-          bg: 'bg-blue-100',
-          text: 'text-blue-800',
+          bg: 'bg-brand-info-light',
+          text: 'text-brand-primary-dark',
           label: '📝 מתמלל',
-          border: 'border-blue-200'
+          border: 'border-brand-info-light'
         };
       case 'analyzing_tone':
         return {
-          bg: 'bg-purple-100',
-          text: 'text-purple-800',
+          bg: 'bg-brand-accent-light',
+          text: 'text-brand-info-dark',
           label: '🎭 מנתח טונציה',
-          border: 'border-purple-200'
+          border: 'border-brand-accent-light'
         };
       case 'analyzing_content':
         return {
-          bg: 'bg-indigo-100',
-          text: 'text-indigo-800',
+          bg: 'bg-brand-info-light',
+          text: 'text-brand-primary-dark',
           label: '📊 מנתח תוכן',
-          border: 'border-indigo-200'
+          border: 'border-brand-info-light'
         };
       default:
         return {

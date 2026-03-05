@@ -331,7 +331,7 @@ export default function AdminDashboardPage() {
             <h2 className="text-3xl font-bold text-neutral-900">
               אנליטיקס OpenAI
             </h2>
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-brand-primary to-brand-info rounded-xl flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
           </div>
@@ -347,8 +347,8 @@ export default function AdminDashboardPage() {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* עלות חודשית */}
-          <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-purple-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-indigo-50"></div>
+          <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-brand-accent-light p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-accent-light to-brand-info-light"></div>
             <div className="relative flex items-center justify-between">
               <div>
                 <p className="text-neutral-600 text-sm font-medium mb-2">עלות חודשית</p>
@@ -361,21 +361,21 @@ export default function AdminDashboardPage() {
                     `$${analytics.totalCosts.toFixed(2)}`
                   )}
                 </p>
-                <p className="text-sm text-purple-600 font-semibold">
-                  {analytics.loading ? 'טוען נתונים...' : 
-                   analytics.error ? 'לא ניתן לטעון' : 
+                <p className="text-sm text-brand-info font-semibold">
+                  {analytics.loading ? 'טוען נתונים...' :
+                   analytics.error ? 'לא ניתן לטעון' :
                    '30 ימים אחרונים'}
                 </p>
               </div>
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <div className="w-14 h-14 bg-gradient-to-br from-brand-info to-brand-primary rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <CreditCard className="w-7 h-7 text-white" />
               </div>
             </div>
           </div>
 
           {/* בקשות API */}
-          <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-blue-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-cyan-50"></div>
+          <div className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-brand-info-light p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-info-light to-cyan-50"></div>
             <div className="relative flex items-center justify-between">
               <div>
                 <p className="text-neutral-600 text-sm font-medium mb-2">בקשות API</p>
@@ -385,18 +385,18 @@ export default function AdminDashboardPage() {
                   ) : analytics.error ? (
                     <span className="text-red-500 text-lg">שגיאה</span>
                   ) : (
-                    analytics.totalRequests >= 1000 ? 
-                      `${(analytics.totalRequests / 1000).toFixed(1)}K` : 
+                    analytics.totalRequests >= 1000 ?
+                      `${(analytics.totalRequests / 1000).toFixed(1)}K` :
                       analytics.totalRequests.toString()
                   )}
                 </p>
-                <p className="text-sm text-blue-600 font-semibold">
-                  {analytics.loading ? 'טוען נתונים...' : 
-                   analytics.error ? 'לא ניתן לטעון' : 
+                <p className="text-sm text-brand-primary font-semibold">
+                  {analytics.loading ? 'טוען נתונים...' :
+                   analytics.error ? 'לא ניתן לטעון' :
                    'בקשות כוללות'}
                 </p>
               </div>
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <div className="w-14 h-14 bg-gradient-to-br from-brand-primary to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <Activity className="w-7 h-7 text-white" />
               </div>
             </div>
@@ -575,15 +575,15 @@ export default function AdminDashboardPage() {
           {/* ניהול תמחור */}
           <Link 
             href="/dashboard/admin/pricing-management" 
-            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-blue-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
+            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-brand-info-light p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-info-light to-brand-info-light"></div>
             <div className="relative space-y-4">
               <div className="flex items-center justify-between">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="w-14 h-14 bg-gradient-to-br from-brand-primary to-brand-primary rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                   <CreditCard className="w-7 h-7 text-white" />
                 </div>
-                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-blue-500 group-hover:translate-x-1 transition-all duration-300" />
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-brand-primary group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
               <div>
@@ -593,7 +593,7 @@ export default function AdminDashboardPage() {
                 <p className="text-neutral-600 text-sm leading-relaxed mb-3">
                   הגדרת מחירים ותוכניות מנוי למוצרי המערכת
                 </p>
-                <p className="text-blue-600 text-sm font-semibold flex items-center gap-2">
+                <p className="text-brand-primary text-sm font-semibold flex items-center gap-2">
                   <Star className="w-4 h-4" />
                   מחירים ותוכניות
                 </p>
@@ -604,15 +604,15 @@ export default function AdminDashboardPage() {
           {/* מחשבון עלויות AI */}
           <Link 
             href="/dashboard/admin/cost-calculator" 
-            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-purple-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
+            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-brand-accent-light p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-pink-50"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-accent-light to-pink-50"></div>
             <div className="relative space-y-4">
               <div className="flex items-center justify-between">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="w-14 h-14 bg-gradient-to-br from-brand-info to-pink-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                   <Calculator className="w-7 h-7 text-white" />
                 </div>
-                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-purple-500 group-hover:translate-x-1 transition-all duration-300" />
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-brand-info group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
               <div>
@@ -622,7 +622,7 @@ export default function AdminDashboardPage() {
                 <p className="text-neutral-600 text-sm leading-relaxed mb-3">
                   ניתוח עלויות OpenAI, המלצות גבולות וחישוב ROI
                 </p>
-                <p className="text-purple-600 text-sm font-semibold flex items-center gap-2">
+                <p className="text-brand-info text-sm font-semibold flex items-center gap-2">
                   <Calculator className="w-4 h-4" />
                   כלי ניהול עלויות מתקדם
                 </p>
@@ -662,15 +662,15 @@ export default function AdminDashboardPage() {
           {/* ניהול API Keys - Partner API */}
           <Link 
             href="/dashboard/admin/partner-api" 
-            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-purple-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
+            className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-brand-accent-light p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-indigo-50"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-accent-light to-brand-info-light"></div>
             <div className="relative space-y-4">
               <div className="flex items-center justify-between">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="w-14 h-14 bg-gradient-to-br from-brand-info to-brand-primary rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                   <Key className="w-7 h-7 text-white" />
                 </div>
-                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-purple-500 group-hover:translate-x-1 transition-all duration-300" />
+                <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-brand-info group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
               <div>
@@ -680,7 +680,7 @@ export default function AdminDashboardPage() {
                 <p className="text-neutral-600 text-sm leading-relaxed mb-3">
                   ניהול מפתחות API לשותפים עסקיים והתממשקויות חיצוניות
                 </p>
-                <p className="text-purple-600 text-sm font-semibold flex items-center gap-2">
+                <p className="text-brand-info text-sm font-semibold flex items-center gap-2">
                   <Key className="w-4 h-4" />
                   יצירת וניהול מפתחות
                 </p>
@@ -693,10 +693,10 @@ export default function AdminDashboardPage() {
             href="/dashboard/admin/companies-list" 
             className="group relative rounded-2xl bg-white/90 backdrop-blur-xl border border-cyan-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] transform-gpu overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-50 to-blue-50"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-50 to-brand-info-light"></div>
             <div className="relative space-y-4">
               <div className="flex items-center justify-between">
-                <div className="w-14 h-14 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="w-14 h-14 bg-gradient-to-br from-cyan-400 to-brand-primary rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                   <Database className="w-7 h-7 text-white" />
                 </div>
                 <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-cyan-500 group-hover:translate-x-1 transition-all duration-300" />

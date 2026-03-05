@@ -136,7 +136,7 @@ export default function CompaniesListPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="חפש לפי שם, תעשייה או ID..."
-            className="w-full pr-10 pl-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pr-10 pl-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
           />
         </div>
         <Button
@@ -151,17 +151,17 @@ export default function CompaniesListPage() {
       
       {/* Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+        <div className="bg-brand-info-light border-2 border-brand-info-light rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-600 font-semibold">סה"כ חברות</p>
-              <p className="text-3xl font-bold text-blue-900">{companies.length}</p>
+              <p className="text-sm text-brand-primary font-semibold">סה"כ חברות</p>
+              <p className="text-3xl font-bold text-brand-primary-dark">{companies.length}</p>
             </div>
-            <Building2 className="w-8 h-8 text-blue-400" />
+            <Building2 className="w-8 h-8 text-brand-primary" />
           </div>
         </div>
         
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+        <div className="bg-brand-success-light border-2 border-green-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-green-600 font-semibold">סה"כ אג'נטים</p>
@@ -173,15 +173,15 @@ export default function CompaniesListPage() {
           </div>
         </div>
         
-        <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
+        <div className="bg-brand-accent-light border-2 border-brand-accent-light rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-purple-600 font-semibold">סה"כ שיחות</p>
-              <p className="text-3xl font-bold text-purple-900">
+              <p className="text-sm text-brand-info font-semibold">סה"כ שיחות</p>
+              <p className="text-3xl font-bold text-brand-info-dark">
                 {companies.reduce((sum, c) => sum + c.total_calls, 0)}
               </p>
             </div>
-            <Phone className="w-8 h-8 text-purple-400" />
+            <Phone className="w-8 h-8 text-brand-info" />
           </div>
         </div>
       </div>
@@ -246,7 +246,7 @@ export default function CompaniesListPage() {
                     </td>
                     <td className="p-4">
                       {company.industry ? (
-                        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800">
+                        <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-brand-info-light text-brand-primary-dark">
                           {company.industry}
                         </span>
                       ) : (
@@ -299,12 +299,12 @@ export default function CompaniesListPage() {
       </div>
       
       {/* Info Box */}
-      <div className="mt-8 p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
-        <h3 className="font-bold mb-2 text-blue-900 flex items-center gap-2">
+      <div className="mt-8 p-6 bg-brand-info-light border-2 border-brand-info-light rounded-xl">
+        <h3 className="font-bold mb-2 text-brand-primary-dark flex items-center gap-2">
           <Building2 className="w-5 h-5" />
           💡 איך להשתמש ב-Company ID
         </h3>
-        <ul className="text-sm text-blue-800 space-y-2">
+        <ul className="text-sm text-brand-primary-dark space-y-2">
           <li>
             <strong>ב-Partner API:</strong> כשאתה יוצר API key לשותף, תוכל לקשר אותו לחברה ספציפית. 
             השתמש ב-Company ID שהעתקת מכאן.

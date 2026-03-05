@@ -314,28 +314,28 @@ export default function StepByStepSimulation({
   }
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 text-white min-h-[600px] flex flex-col">
+    <div className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl p-6 text-white min-h-[600px] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-brand-primary to-brand-info rounded-full flex items-center justify-center">
             <Bot className="w-6 h-6" />
           </div>
           <div>
             <h3 className="font-bold text-lg">{persona.persona_name}</h3>
-            <p className="text-sm text-slate-400">{persona.personality_type}</p>
+            <p className="text-sm text-neutral-400">{persona.personality_type}</p>
           </div>
         </div>
         
         <div className="flex items-center gap-4">
           {/* Timer */}
-          <div className="flex items-center gap-2 bg-slate-700/50 px-3 py-1.5 rounded-full">
-            <Clock className="w-4 h-4 text-slate-400" />
+          <div className="flex items-center gap-2 bg-neutral-700/50 px-3 py-1.5 rounded-full">
+            <Clock className="w-4 h-4 text-neutral-400" />
             <span className="font-mono">{formatDuration(duration)}</span>
           </div>
           
           {/* Turn counter */}
-          <div className="bg-slate-700/50 px-3 py-1.5 rounded-full">
+          <div className="bg-neutral-700/50 px-3 py-1.5 rounded-full">
             <span className="text-sm">תור {currentTurn}</span>
           </div>
         </div>
@@ -343,7 +343,7 @@ export default function StepByStepSimulation({
       
       {/* Status */}
       {statusMessage && (
-        <div className="mb-4 text-center text-sm text-slate-400">
+        <div className="mb-4 text-center text-sm text-neutral-400">
           {statusMessage}
         </div>
       )}
@@ -356,9 +356,9 @@ export default function StepByStepSimulation({
       )}
       
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto mb-6 space-y-4 max-h-[350px] scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto mb-6 space-y-4 max-h-[350px] scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent">
         {messages.length === 0 && !isActive && (
-          <div className="flex items-center justify-center h-full text-slate-500">
+          <div className="flex items-center justify-center h-full text-neutral-500">
             <p>לחץ על "התחל סימולציה" כדי להתחיל</p>
           </div>
         )}
@@ -371,8 +371,8 @@ export default function StepByStepSimulation({
             <div
               className={`max-w-[80%] p-4 rounded-2xl ${
                 message.role === 'user'
-                  ? 'bg-blue-600 text-white rounded-br-sm'
-                  : 'bg-slate-700 text-white rounded-bl-sm'
+                  ? 'bg-brand-primary text-white rounded-br-sm'
+                  : 'bg-neutral-700 text-white rounded-bl-sm'
               }`}
             >
               <div className="flex items-center gap-2 mb-1 text-xs opacity-70">
@@ -395,7 +395,7 @@ export default function StepByStepSimulation({
         
         {isProcessing && (
           <div className="flex justify-start">
-            <div className="bg-slate-700 p-4 rounded-2xl rounded-bl-sm">
+            <div className="bg-neutral-700 p-4 rounded-2xl rounded-bl-sm">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span className="text-sm">מעבד...</span>
@@ -426,7 +426,7 @@ export default function StepByStepSimulation({
               className={`p-3 rounded-full transition-all ${
                 isMuted 
                   ? 'bg-yellow-500/20 text-yellow-400' 
-                  : 'bg-slate-700 hover:bg-slate-600'
+                  : 'bg-neutral-700 hover:bg-neutral-600'
               }`}
               title={isMuted ? 'בטל השתקה' : 'השתק'}
             >
@@ -441,8 +441,8 @@ export default function StepByStepSimulation({
                 isRecording
                   ? 'bg-red-500 hover:bg-red-600 animate-pulse scale-110'
                   : isProcessing
-                  ? 'bg-slate-600 cursor-not-allowed'
-                  : 'bg-blue-500 hover:bg-blue-600 hover:scale-105'
+                  ? 'bg-neutral-600 cursor-not-allowed'
+                  : 'bg-brand-primary hover:bg-brand-primary hover:scale-105'
               }`}
               title={isRecording ? 'עצור הקלטה' : 'התחל לדבר'}
             >
@@ -468,7 +468,7 @@ export default function StepByStepSimulation({
             {messages.length > 0 && (
               <button
                 onClick={downloadTranscript}
-                className="p-3 rounded-full bg-slate-700 hover:bg-slate-600 transition-all"
+                className="p-3 rounded-full bg-neutral-700 hover:bg-neutral-600 transition-all"
                 title="הורד תמלול"
               >
                 <Download className="w-5 h-5" />
@@ -480,7 +480,7 @@ export default function StepByStepSimulation({
       
       {/* Instructions */}
       {isActive && !isRecording && !isProcessing && (
-        <p className="text-center text-sm text-slate-400 mt-4">
+        <p className="text-center text-sm text-neutral-400 mt-4">
           לחץ על כפתור המיקרופון כדי לדבר, ושחרר כשסיימת
         </p>
       )}

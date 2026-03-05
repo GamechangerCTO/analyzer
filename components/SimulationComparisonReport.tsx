@@ -39,9 +39,9 @@ export default function SimulationComparisonReport({
   return (
     <div className="space-y-6">
       {/* כותרת */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border-r-4 border-blue-500">
+      <div className="bg-gradient-to-r from-brand-info-light to-brand-accent-light rounded-xl p-6 border-r-4 border-brand-primary">
         <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center gap-2">
-          <Target className="w-7 h-7 text-blue-600" />
+          <Target className="w-7 h-7 text-brand-primary" />
           דוח השוואה: לפני ואחרי הסימולציה
         </h2>
         <p className="text-gray-700">
@@ -177,21 +177,21 @@ export default function SimulationComparisonReport({
       )}
 
       {/* המלצות לסימולציה הבאה */}
-      <div className="bg-purple-50 rounded-xl p-6 border-r-4 border-purple-500">
-        <h3 className="text-xl font-bold text-purple-900 mb-3 flex items-center gap-2">
+      <div className="bg-brand-accent-light rounded-xl p-6 border-r-4 border-brand-info">
+        <h3 className="text-xl font-bold text-brand-info-dark mb-3 flex items-center gap-2">
           🚀 מה הלאה?
         </h3>
-        <p className="text-purple-800 mb-4 text-lg">
+        <p className="text-brand-info-dark mb-4 text-lg">
           {reportData?.next_training_focus || 'המשך לתרגל את התחומים שזיהינו!'}
         </p>
         
         {reportData?.recommendations && reportData.recommendations.length > 0 && (
           <div className="space-y-2 mb-4">
-            <h4 className="font-semibold text-purple-900">המלצות מעשיות:</h4>
+            <h4 className="font-semibold text-brand-info-dark">המלצות מעשיות:</h4>
             <ul className="space-y-1">
               {reportData.recommendations.slice(0, 3).map((rec: string, i: number) => (
-                <li key={i} className="text-purple-800 flex items-start gap-2">
-                  <span className="text-purple-600">•</span>
+                <li key={i} className="text-brand-info-dark flex items-start gap-2">
+                  <span className="text-brand-info">•</span>
                   <span>{rec}</span>
                 </li>
               ))}
@@ -201,7 +201,7 @@ export default function SimulationComparisonReport({
 
         <button 
           onClick={() => window.location.href = '/simulations'}
-          className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium"
+          className="bg-brand-info text-white px-6 py-3 rounded-lg hover:bg-brand-info-dark transition-colors font-medium"
         >
           🏋️ צור סימולציה נוספת
         </button>
@@ -212,7 +212,7 @@ export default function SimulationComparisonReport({
         <h3 className="text-lg font-bold text-gray-800 mb-3">📝 סיכום</h3>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="text-3xl font-bold text-blue-600">
+            <div className="text-3xl font-bold text-brand-primary">
               {beforeScores.length}
             </div>
             <div className="text-sm text-gray-600 mt-1">תחומים שתרגלת</div>
@@ -227,7 +227,7 @@ export default function SimulationComparisonReport({
             <div className="text-sm text-gray-600 mt-1">תחומים ששיפרת</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="text-3xl font-bold text-purple-600">
+            <div className="text-3xl font-bold text-brand-info">
               {reportData?.overall_score || 0}/10
             </div>
             <div className="text-sm text-gray-600 mt-1">ציון כללי</div>

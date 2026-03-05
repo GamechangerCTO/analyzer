@@ -316,7 +316,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
       ],
       render: (value: string) => (
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-primary to-brand-primary-dark flex items-center justify-center text-white">
             {getRoleIcon(value)}
           </div>
           <span className="font-medium">{getRoleName(value)}</span>
@@ -431,7 +431,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         <div className="flex items-center gap-2">
           <Link 
             href={`/dashboard/agent?user=${value}`}
-            className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-xs font-medium"
+            className="inline-flex items-center gap-1 px-3 py-1 bg-brand-info-light text-brand-primary-dark rounded-lg hover:bg-brand-info-light transition-colors text-xs font-medium"
             title="צפה בדשבורד"
           >
             <Eye className="w-3 h-3" />
@@ -522,7 +522,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
         <div className="flex gap-3">
           <button
             onClick={() => setShowAddAgentModal(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-primary hover:bg-brand-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary"
           >
             <UserPlus className="w-4 h-4 mr-2" />
             הוסף נציג
@@ -536,8 +536,8 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
           <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-brand-info-light rounded-xl">
+              <Users className="w-6 h-6 text-brand-primary" />
             </div>
             <div className="mr-4">
               <p className="text-sm font-medium text-gray-600">סה"כ חברי צוות</p>
@@ -562,8 +562,8 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
 
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
           <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <BarChart3 className="w-6 h-6 text-purple-600" />
+            <div className="p-3 bg-brand-accent-light rounded-xl">
+              <BarChart3 className="w-6 h-6 text-brand-info-dark" />
             </div>
             <div className="mr-4">
               <p className="text-sm font-medium text-gray-600">ציון ממוצע צוות</p>
@@ -629,7 +629,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
                   required
                   value={formData.fullName}
                   onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
                   placeholder="הכנס שם מלא"
                 />
               </div>
@@ -643,7 +643,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
                   required
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
                   placeholder="הכנס כתובת אימייל"
                 />
               </div>
@@ -658,7 +658,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
                   minLength={6}
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
                   placeholder="הכנס סיסמה זמנית (לפחות 6 תווים)"
                 />
                 <p className="mt-1 text-xs text-gray-500">
@@ -674,7 +674,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
                   value={formData.notes}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
                   placeholder="הערות נוספות על הנציג..."
                 />
               </div>
@@ -690,7 +690,7 @@ export default function TeamManagementClient({ userId, companyId, userRole, user
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-4 py-2 bg-brand-primary text-white rounded-md hover:bg-brand-primary-dark disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isSubmitting ? (
                     <>

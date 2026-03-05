@@ -39,7 +39,7 @@ export default async function CompanyQuestionnairePage({
   const isView = searchParams.view === 'true'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-brand-info-light to-brand-accent-light py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
@@ -52,8 +52,8 @@ export default async function CompanyQuestionnairePage({
             }
           </p>
           {isFirstLogin && (
-            <div className="mt-4 p-4 bg-blue-100 border border-blue-300 rounded-lg">
-              <p className="text-blue-800 font-medium">
+            <div className="mt-4 p-4 bg-brand-info-light border border-brand-primary rounded-lg">
+              <p className="text-brand-primary-dark font-medium">
                 💡 זוהי הכניסה הראשונה שלך כמנהל החברה. השלמת השאלון נדרשת לפני שתוכל לגשת לדשבורד
               </p>
             </div>

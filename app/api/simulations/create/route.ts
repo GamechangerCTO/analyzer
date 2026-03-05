@@ -106,6 +106,18 @@ export async function POST(request: NextRequest) {
     const body: CreateSimulationRequest = await request.json()
     const { simulation_type, customer_persona, persona_id, difficulty_level, triggered_by_call_id, callAnalysis, selectedTopics } = body
 
+    // ולידציית enum - סוג סימולציה
+    const validSimulationTypes = Object.keys(scenarioPrompts)
+    if (simulation_type && !validSimulationTypes.includes(simulation_type)) {
+      return NextResponse.json({ error: `סוג סימולציה לא תקין. ערכים אפשריים: ${validSimulationTypes.join(', ')}` }, { status: 400 })
+    }
+
+    // ולידציית enum - רמת קושי
+    const validDifficultyLevels = ['easy', 'medium', 'hard', 'beginner', 'intermediate', 'advanced']
+    if (difficulty_level && !validDifficultyLevels.includes(difficulty_level)) {
+      return NextResponse.json({ error: `רמת קושי לא תקינה. ערכים אפשריים: ${validDifficultyLevels.join(', ')}` }, { status: 400 })
+    }
+
     // בניית תרחיש הסימולציה
     let scenarioDescription = "תרחיש סימולציה כללי"
     let enhancedScenario = ""

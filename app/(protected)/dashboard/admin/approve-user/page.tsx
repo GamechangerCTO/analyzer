@@ -61,7 +61,7 @@ export default function ApproveUserPage() {
     <div className="container mx-auto py-8 px-4">
       <div className="mb-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold">אישור משתמשים</h1>
-        <Link href="/dashboard/admin/users" className="text-blue-500 hover:underline">
+        <Link href="/dashboard/admin/users" className="text-brand-primary hover:underline">
           &larr; חזרה לרשימת המשתמשים
         </Link>
       </div>
@@ -169,7 +169,7 @@ export default function ApproveUserPage() {
                   <p>{result.message || 'הפעולה הושלמה בהצלחה'}</p>
                   <p className="mt-2">
                     המשתמש המאושר יופיע ברשימת המשתמשים. 
-                    <Link href="/dashboard/admin/users?show=not_approved" className="text-blue-600 hover:underline pr-1">
+                    <Link href="/dashboard/admin/users?show=not_approved" className="text-brand-primary hover:underline pr-1">
                       לחץ כאן
                     </Link>
                     כדי לראות משתמשים נוספים הממתינים לאישור.

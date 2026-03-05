@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database.types';
+import { authenticateApiRoute } from '@/lib/api-auth';
 
 // הגדרת max duration לוורסל
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
+    // בדיקת הרשאות - רק מנהלים יכולים לגשת לנתיבי דיבאג
+    const auth = await authenticateApiRoute({ requiredRoles: ['admin'] });
+    if (!auth.success) return auth.error;
     const { call_id } = await request.json();
 
     if (!call_id) {

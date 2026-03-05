@@ -227,8 +227,8 @@ function AdvancedDataTable<T extends Record<string, any>>({
     if (!sortConfig) return <ArrowUpDown className="w-4 h-4 text-gray-400" />
     
     return sortConfig.direction === 'asc' 
-      ? <ChevronUp className="w-4 h-4 text-blue-600" />
-      : <ChevronDown className="w-4 h-4 text-blue-600" />
+      ? <ChevronUp className="w-4 h-4 text-brand-primary" />
+      : <ChevronDown className="w-4 h-4 text-brand-primary" />
   }
 
   // Active filters count
@@ -289,14 +289,14 @@ function AdvancedDataTable<T extends Record<string, any>>({
               onClick={() => setShowFilters(!showFilters)}
               className={`p-2 rounded-lg transition-colors relative ${
                 showFilters || activeFiltersCount > 0
-                  ? 'text-blue-600 bg-blue-50' 
+                  ? 'text-brand-primary bg-brand-info-light'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
               title="פילטרים"
             >
               <Filter className="w-5 h-5" />
               {activeFiltersCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-brand-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {activeFiltersCount}
                 </span>
               )}
@@ -325,7 +325,7 @@ function AdvancedDataTable<T extends Record<string, any>>({
                 setCurrentPage(1)
               }}
               placeholder="חיפוש כללי בכל הנתונים..."
-              className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
             />
             {globalSearchTerm && (
               <button
@@ -346,7 +346,7 @@ function AdvancedDataTable<T extends Record<string, any>>({
             <h3 className="text-sm font-medium text-gray-900">פילטרים מתקדמים</h3>
             <button
               onClick={clearAllFilters}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              className="text-sm text-brand-primary hover:text-brand-primary-dark font-medium"
             >
               נקה הכל
             </button>
@@ -363,7 +363,7 @@ function AdvancedDataTable<T extends Record<string, any>>({
                   <select
                     value={filters[column.key] || ''}
                     onChange={(e) => handleFilterChange(column.key, e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-primary"
                   >
                     <option value="">הכל</option>
                     {column.filterOptions?.map(option => (
@@ -377,7 +377,7 @@ function AdvancedDataTable<T extends Record<string, any>>({
                     type="date"
                     value={filters[column.key] || ''}
                     onChange={(e) => handleFilterChange(column.key, e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-primary"
                   />
                 ) : column.filterType === 'number' ? (
                   <input
@@ -385,7 +385,7 @@ function AdvancedDataTable<T extends Record<string, any>>({
                     value={filters[column.key] || ''}
                     onChange={(e) => handleFilterChange(column.key, e.target.value)}
                     placeholder={`סנן לפי ${column.title}`}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-primary"
                   />
                 ) : (
                   <input
@@ -393,7 +393,7 @@ function AdvancedDataTable<T extends Record<string, any>>({
                     value={filters[column.key] || ''}
                     onChange={(e) => handleFilterChange(column.key, e.target.value)}
                     placeholder={`סנן לפי ${column.title}`}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-primary"
                   />
                 )}
               </div>
@@ -428,7 +428,7 @@ function AdvancedDataTable<T extends Record<string, any>>({
               <tr>
                 <td colSpan={columns.length} className="px-4 py-12 text-center">
                   <div className="flex items-center justify-center">
-                    <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
+                    <RefreshCw className="w-6 h-6 animate-spin text-brand-primary" />
                     <span className="mr-2 text-gray-600">טוען נתונים...</span>
                   </div>
                 </td>
@@ -506,7 +506,7 @@ function AdvancedDataTable<T extends Record<string, any>>({
                     onClick={() => setCurrentPage(pageNum)}
                     className={`px-3 py-1 text-sm rounded ${
                       currentPage === pageNum
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-brand-primary text-white'
                         : 'border border-gray-300 hover:bg-gray-50'
                     }`}
                   >

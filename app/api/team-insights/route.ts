@@ -4,38 +4,34 @@ import { NextRequest, NextResponse } from 'next/server'
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
 
-// פונקציית exponential backoff לקריאות OpenAI
+// פונקציית exponential backoff לקריאות OpenAI (Responses API)
 async function callOpenAIWithBackoff(openai: any, params: any, maxRetries = 5) {
-  let delay = 1000 // התחל עם שנייה אחת
-  
+  let delay = 1000
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // הוסף delay לפני כל קריאה (מלבד הראשונה)
       if (attempt > 1) {
         console.log(`🔄 נסיון ${attempt}/${maxRetries} אחרי delay של ${delay}ms`)
         await new Promise(resolve => setTimeout(resolve, delay))
       }
-      
-      const response = await openai.chat.completions.create(params)
+
+      const response = await openai.responses.create(params)
       console.log(`✅ קריאת OpenAI הצליחה בנסיון ${attempt}`)
       return response
-      
+
     } catch (error: any) {
       console.error(`❌ נסיון ${attempt} נכשל:`, error.message)
-      
-      // אם זה rate limit error, המשך לנסות
+
       if (error.status === 429 && attempt < maxRetries) {
-        // הכפל את הdelay עם jitter (רנדומיות)
-        const jitter = Math.random() * 0.5 + 0.75 // בין 0.75 ל-1.25
-        delay = Math.min(delay * 2 * jitter, 60000) // מקסימום 60 שניות
+        const jitter = Math.random() * 0.5 + 0.75
+        delay = Math.min(delay * 2 * jitter, 60000)
         continue
       }
-      
-      // אם זה לא rate limit או נגמרו הנסיונות - זרוק שגיאה
+
       throw error
     }
   }
-  
+
   throw new Error(`נכשלו כל ${maxRetries} הנסיונות לקריאת OpenAI`)
 }
 

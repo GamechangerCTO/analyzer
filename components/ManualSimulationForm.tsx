@@ -151,7 +151,7 @@ export default function ManualSimulationForm({
         <select 
           value={selectedAgent}
           onChange={(e) => setSelectedAgent(e.target.value)}
-          className="w-full border rounded-lg p-3 text-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full border rounded-lg p-3 text-lg focus:ring-2 focus:ring-brand-primary"
         >
           {agents.map(agent => (
             <option key={agent.id} value={agent.id}>
@@ -172,7 +172,7 @@ export default function ManualSimulationForm({
         
         {loadingCalls ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
           </div>
         ) : recentCalls.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
@@ -185,8 +185,8 @@ export default function ManualSimulationForm({
                 key={call.id} 
                 className={`flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
                   selectedCalls.includes(call.id) 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                    ? 'border-brand-primary bg-brand-info-light'
+                    : 'border-gray-200 hover:border-brand-info-light hover:bg-gray-50'
                 }`}
               >
                 <input
@@ -267,7 +267,7 @@ export default function ManualSimulationForm({
           value={customNotes}
           onChange={(e) => setCustomNotes(e.target.value)}
           placeholder="למשל: תתמקד במיוחד בטיפול בהתנגדויות על מחיר, תהיה לקוח תובעני..."
-          className="w-full border rounded-lg p-3 h-32 focus:ring-2 focus:ring-blue-500"
+          className="w-full border rounded-lg p-3 h-32 focus:ring-2 focus:ring-brand-primary"
         />
       </div>
 
@@ -280,7 +280,7 @@ export default function ManualSimulationForm({
             <select 
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value)}
-              className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-500"
+              className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-brand-primary"
             >
               <option value="קל">קל - לקוח נעים וקל לשכנוע</option>
               <option value="בינוני">בינוני - לקוח עם התנגדויות</option>
@@ -323,7 +323,7 @@ export default function ManualSimulationForm({
       <button
         onClick={handleSubmit}
         disabled={isLoading || selectedCalls.length === 0 || (quota && quota.available_minutes < estimatedDuration)}
-        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-lg font-bold text-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full bg-gradient-to-r from-brand-primary to-brand-primary text-white py-4 rounded-lg font-bold text-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>

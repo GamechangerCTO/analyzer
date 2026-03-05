@@ -478,9 +478,9 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           inline: 'nearest'
         })
         // הוסף הדגשה זמנית
-        element.classList.add('ring-4', 'ring-blue-300', 'ring-opacity-75')
+        element.classList.add('ring-4', 'ring-brand-primary', 'ring-opacity-75')
         setTimeout(() => {
-          element.classList.remove('ring-4', 'ring-blue-300', 'ring-opacity-75')
+          element.classList.remove('ring-4', 'ring-brand-primary', 'ring-opacity-75')
         }, 3000)
       }
     }, 100)
@@ -1180,13 +1180,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           
           {/* תוספת לשדות מיוחדים */}
           {name === 'פתיח אנרגטי' && param.rawData?.שימוש_בשם_פרטי && (
-            <div className="mt-2 inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">
+            <div className="mt-2 inline-flex items-center px-2 py-1 bg-brand-info-light text-brand-primary-dark rounded text-xs">
               {param.rawData.שימוש_בשם_פרטי === 'כן' ? '✅ השתמש בשם פרטי' : '❌ לא השתמש בשם פרטי'}
             </div>
           )}
           
           {name === 'הנעה לפעולה' && param.rawData?.שימוש_בטכניקות_סגירה && (
-            <div className="mt-2 inline-flex items-center px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs">
+            <div className="mt-2 inline-flex items-center px-2 py-1 bg-brand-accent-light text-brand-info-dark rounded text-xs">
               {param.rawData.שימוש_בטכניקות_סגירה === 'כן' ? '✅ השתמש בטכניקות סגירה' : '❌ לא השתמש בטכניקות סגירה'}
             </div>
           )}
@@ -1268,8 +1268,8 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   className="relative group overflow-hidden"
                   title="עריכת שאלון החברה"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-indigo-600/30 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
-                  <div className="relative flex items-center px-6 py-3 bg-gradient-to-r from-purple-500/80 to-indigo-600/80 hover:from-purple-600/90 hover:to-indigo-700/90 text-white rounded-2xl font-bold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 backdrop-blur-xl border border-white/30">
+                  <div className="absolute inset-0 bg-gradient-to-r from-brand-info/30 to-brand-primary/30 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300"></div>
+                  <div className="relative flex items-center px-6 py-3 bg-gradient-to-r from-brand-info/80 to-brand-primary/80 hover:from-brand-info/90 hover:to-brand-primary-dark/90 text-white rounded-2xl font-bold transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 backdrop-blur-xl border border-white/30">
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
@@ -1278,7 +1278,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 </a>
               )}
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-2xl blur-md"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-brand-primary/20 to-brand-primary/20 rounded-2xl blur-md"></div>
                 <div className="relative px-4 py-2 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/40 shadow-xl">
                   <CallStatusBadge status={status} />
                 </div>
@@ -1394,7 +1394,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                          'ביצועים מתחת לסטנדרט 🎯'}
                       </span>
                       {finalOverallScore < 8 && (
-                        <div className="mt-3 text-xs text-slate-600 bg-white/50 rounded-lg p-2 border border-white/30">
+                        <div className="mt-3 text-xs text-neutral-500 bg-white/50 rounded-lg p-2 border border-white/30">
                           💡 <strong>זכור:</strong> הסטנדרטים שלנו גבוהים - רק 8+ נחשב לטוב מאוד
                         </div>
                       )}
@@ -1406,13 +1406,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               {/* נתוני שיחה */}
               <div className="lg:col-span-2">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-500/10 to-blue-500/10 rounded-2xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand-bg/10 to-brand-primary/10 rounded-2xl"></div>
                   <div className="relative backdrop-blur-xl bg-white/80 border border-white/30 rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-all duration-300">
-                    <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-slate-700 to-blue-600 bg-clip-text text-transparent">פרטי השיחה</h3>
+                    <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-neutral-700 to-brand-primary bg-clip-text text-transparent">פרטי השיחה</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="backdrop-blur-sm bg-blue-500/10 border border-blue-300/30 p-4 rounded-xl shadow-inner hover:bg-blue-500/20 transition-all duration-300">
-                        <div className="text-sm text-blue-700 font-medium">סוג ניתוח</div>
-                        <div className="text-lg font-semibold text-blue-800">
+                      <div className="backdrop-blur-sm bg-brand-info-light0/10 border border-brand-info-light/30 p-4 rounded-xl shadow-inner hover:bg-brand-info-light0/20 transition-all duration-300">
+                        <div className="text-sm text-brand-primary-dark font-medium">סוג ניתוח</div>
+                        <div className="text-lg font-semibold text-brand-primary-dark">
                           {call.analysis_type === 'full' ? 'ניתוח מלא 🎯' : 'ניתוח טונציה 🎭'}
                         </div>
                       </div>
@@ -1427,9 +1427,9 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                           </div>
                         )}
                       </div>
-                      <div className="backdrop-blur-sm bg-purple-500/10 border border-purple-300/30 p-4 rounded-xl shadow-inner hover:bg-purple-500/20 transition-all duration-300">
-                        <div className="text-sm text-purple-700 font-medium">תאריך ניתוח</div>
-                        <div className="text-lg font-semibold text-purple-800">
+                      <div className="backdrop-blur-sm bg-brand-accent-light0/10 border border-brand-accent-light/30 p-4 rounded-xl shadow-inner hover:bg-brand-accent-light0/20 transition-all duration-300">
+                        <div className="text-sm text-brand-info-dark font-medium">תאריך ניתוח</div>
+                        <div className="text-lg font-semibold text-brand-info-dark">
                           {call.analyzed_at ? new Date(call.analyzed_at).toLocaleDateString('he-IL') : 'טרם נותח'} 📅
                         </div>
                       </div>
@@ -1447,49 +1447,49 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
             {/* הסבר על הפרמטרים */}
             <div className="relative mb-6">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-2xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/10 to-brand-primary/10 rounded-2xl"></div>
               <div className="relative backdrop-blur-xl bg-white/70 border border-white/30 rounded-2xl shadow-xl p-6">
                 <div className="flex items-center mb-4">
-                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 backdrop-blur-sm border border-blue-300/30 rounded-xl mr-4">
+                  <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-brand-primary/20 to-brand-primary/20 backdrop-blur-sm border border-brand-info-light/30 rounded-xl mr-4">
                     <span className="text-2xl">📊</span>
                   </div>
-                  <h3 className="text-xl font-semibold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">8 קטגוריות ניתוח מקצועיות</h3>
+                  <h3 className="text-xl font-semibold bg-gradient-to-r from-brand-primary-dark to-brand-primary bg-clip-text text-transparent">8 קטגוריות ניתוח מקצועיות</h3>
                 </div>
-                <p className="text-blue-700 mb-6 text-lg">
+                <p className="text-brand-primary-dark mb-6 text-lg">
                   השיחה נותחה לפי 8 קטגוריות מקצועיות המכילות 32 פרמטרים מפורטים:
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                   <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
-                    <div className="font-semibold text-blue-800 mb-1">1. פתיחת שיחה ובניית אמון</div>
-                    <div className="text-blue-600 text-xs font-medium">7 פרמטרים מקצועיים</div>
+                    <div className="font-semibold text-brand-primary-dark mb-1">1. פתיחת שיחה ובניית אמון</div>
+                    <div className="text-brand-primary text-xs font-medium">7 פרמטרים מקצועיים</div>
                   </div>
                   <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
-                    <div className="font-semibold text-blue-800 mb-1">2. איתור צרכים וזיהוי כאב</div>
-                    <div className="text-blue-600 text-xs font-medium">4 פרמטרים מקצועיים</div>
+                    <div className="font-semibold text-brand-primary-dark mb-1">2. איתור צרכים וזיהוי כאב</div>
+                    <div className="text-brand-primary text-xs font-medium">4 פרמטרים מקצועיים</div>
                   </div>
                   <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
-                    <div className="font-semibold text-blue-800 mb-1">3. הקשבה ואינטראקציה</div>
-                    <div className="text-blue-600 text-xs font-medium">4 פרמטרים מקצועיים</div>
+                    <div className="font-semibold text-brand-primary-dark mb-1">3. הקשבה ואינטראקציה</div>
+                    <div className="text-brand-primary text-xs font-medium">4 פרמטרים מקצועיים</div>
                   </div>
                   <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
-                    <div className="font-semibold text-blue-800 mb-1">4. הצגת פתרון והדגשת ערך</div>
-                    <div className="text-blue-600 text-xs font-medium">6 פרמטרים מקצועיים</div>
+                    <div className="font-semibold text-brand-primary-dark mb-1">4. הצגת פתרון והדגשת ערך</div>
+                    <div className="text-brand-primary text-xs font-medium">6 פרמטרים מקצועיים</div>
                   </div>
                   <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
-                    <div className="font-semibold text-blue-800 mb-1">5. טיפול בהתנגדויות</div>
-                    <div className="text-blue-600 text-xs font-medium">3 פרמטרים מקצועיים</div>
+                    <div className="font-semibold text-brand-primary-dark mb-1">5. טיפול בהתנגדויות</div>
+                    <div className="text-brand-primary text-xs font-medium">3 פרמטרים מקצועיים</div>
                   </div>
                   <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
-                    <div className="font-semibold text-blue-800 mb-1">6. הנעה לפעולה וסגירה</div>
-                    <div className="text-blue-600 text-xs font-medium">3 פרמטרים מקצועיים</div>
+                    <div className="font-semibold text-brand-primary-dark mb-1">6. הנעה לפעולה וסגירה</div>
+                    <div className="text-brand-primary text-xs font-medium">3 פרמטרים מקצועיים</div>
                   </div>
                   <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
-                    <div className="font-semibold text-blue-800 mb-1">7. שפת תקשורת ודינמיקה קולית</div>
-                    <div className="text-blue-600 text-xs font-medium">3 פרמטרים מקצועיים</div>
+                    <div className="font-semibold text-brand-primary-dark mb-1">7. שפת תקשורת ודינמיקה קולית</div>
+                    <div className="text-brand-primary text-xs font-medium">3 פרמטרים מקצועיים</div>
                   </div>
                   <div className="backdrop-blur-sm bg-white/60 border border-white/40 p-4 rounded-xl shadow-inner hover:bg-white/80 transition-all duration-300">
-                    <div className="font-semibold text-blue-800 mb-1">8. סיכום שיחה</div>
-                    <div className="text-blue-600 text-xs font-medium">2 פרמטרים מקצועיים</div>
+                    <div className="font-semibold text-brand-primary-dark mb-1">8. סיכום שיחה</div>
+                    <div className="text-brand-primary text-xs font-medium">2 פרמטרים מקצועיים</div>
                   </div>
                 </div>
               </div>
@@ -1497,10 +1497,10 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
 
             {/* הסבר על קליקאביליות הקטגוריות */}
             {detailed_scores && detailed_scores.length > 0 && (
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="bg-gradient-to-r from-brand-info-light to-brand-accent-light border border-brand-info-light rounded-lg p-4 mb-6">
                 <div className="flex items-center">
-                  <span className="text-blue-500 text-lg mr-2">👆</span>
-                  <p className="text-blue-800 text-sm">
+                  <span className="text-brand-primary text-lg mr-2">👆</span>
+                  <p className="text-brand-primary-dark text-sm">
                     <strong>טיפ:</strong> לחץ על כל קטגוריה להעברה ישירה לפירוט המלא שלה בטאב "ניתוח מפורט"
                   </p>
                 </div>
@@ -1527,9 +1527,9 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                       
                       {/* כותרת הפרמטר עם ציון */}
                       <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-xl font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-200 flex items-center">
+                        <h3 className="text-xl font-semibold text-gray-800 group-hover:text-brand-primary transition-colors duration-200 flex items-center">
                           {displayCategory}
-                          <svg className="w-5 h-5 mr-2 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 mr-2 text-gray-400 group-hover:text-brand-primary transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                           </svg>
                         </h3>
@@ -1560,8 +1560,8 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                                 {categoryData.subcategories.length} פרמטרים בקטגוריה זו - 
                                 ציון ממוצע: <span className="font-bold">{scoreValue}/10</span>
                               </p>
-                              <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
-                                <p className="text-blue-700 text-xs flex items-center">
+                              <div className="mt-3 p-2 bg-brand-info-light rounded border border-brand-info-light">
+                                <p className="text-brand-primary-dark text-xs flex items-center">
                                   <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                   </svg>
@@ -1597,7 +1597,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <p className="text-slate-700 leading-relaxed font-medium">
+                        <p className="text-neutral-700 leading-relaxed font-medium">
                           {typeof improvement === 'string' ? improvement : JSON.stringify(improvement)}
                         </p>
                       </div>
@@ -1626,7 +1626,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <p className="text-slate-700 leading-relaxed font-medium">
+                        <p className="text-neutral-700 leading-relaxed font-medium">
                           {typeof strength === 'string' ? strength : JSON.stringify(strength)}
                         </p>
                       </div>
@@ -1643,7 +1643,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   <h3 className="text-lg font-semibold text-gray-800">🎧 הקלטת השיחה</h3>
                   <div className="flex items-center space-x-3 rtl:space-x-reverse">
                     {audioLoading && (
-                      <div className="flex items-center text-blue-600">
+                      <div className="flex items-center text-brand-primary">
                         <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -1665,14 +1665,14 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                       </button>
                     )}
                     {currentPlayingQuote && (
-                      <div className="flex items-center text-blue-600 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                      <div className="flex items-center text-brand-primary bg-brand-info-light px-3 py-2 rounded-lg border border-brand-info-light">
                         <svg className="w-4 h-4 mr-2 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.817L4.906 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.906l3.477-2.817z" clipRule="evenodd"/>
                           <path fillRule="evenodd" d="M12.146 6.146a.5.5 0 01.708 0 4 4 0 010 5.708.5.5 0 01-.708-.708 3 3 0 000-4.292.5.5 0 010-.708z" clipRule="evenodd"/>
                         </svg>
                         <div className="text-sm">
                           <div className="font-medium">מנגן ציטוט:</div>
-                          <div className="text-xs text-blue-700 max-w-xs truncate">
+                          <div className="text-xs text-brand-primary-dark max-w-xs truncate">
                             "{currentPlayingQuote.substring(0, 50)}{currentPlayingQuote.length > 50 ? '...' : ''}"
                           </div>
                         </div>
@@ -1723,14 +1723,14 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 </audio>
                 
                 {currentPlayingQuote && (
-                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="mt-3 p-3 bg-brand-info-light border border-brand-info-light rounded-lg">
                     <div className="flex items-start space-x-2 rtl:space-x-reverse">
-                      <svg className="w-5 h-5 text-blue-600 mt-0.5 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-5 h-5 text-brand-primary mt-0.5 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd"/>
                       </svg>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-blue-800 mb-1">ציטוט שמנגן כעת:</p>
-                        <p className="text-sm text-blue-700 italic">"{currentPlayingQuote}"</p>
+                        <p className="text-sm font-medium text-brand-primary-dark mb-1">ציטוט שמנגן כעת:</p>
+                        <p className="text-sm text-brand-primary-dark italic">"{currentPlayingQuote}"</p>
                       </div>
                     </div>
                   </div>
@@ -1765,7 +1765,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 {getFieldValue(tone_analysis_report, ['ציון_טונציה']) && (
                   <div className="bg-white rounded-xl shadow-lg p-6 text-center">
                     <h3 className="text-xl font-semibold mb-4 text-gray-800">ציון טונציה כללי</h3>
-                    <div className="text-5xl font-bold text-blue-600 mb-2">
+                    <div className="text-5xl font-bold text-brand-primary mb-2">
                       {getFieldValue(tone_analysis_report, ['ציון_טונציה'])}
                     </div>
                     <div className="text-gray-600">מתוך 10</div>
@@ -1775,8 +1775,8 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                 {/* מאפייני טונציה */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {getFieldValue(tone_analysis_report, ['טון_כללי', 'טון', 'overall_tone_assessment']) && (
-                    <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-                      <h4 className="font-semibold text-blue-800 mb-2">🎭 טון כללי</h4>
+                    <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-brand-primary">
+                      <h4 className="font-semibold text-brand-primary-dark mb-2">🎭 טון כללי</h4>
                       <p className="text-gray-700">{String(getFieldValue(tone_analysis_report, ['טון_כללי', 'טון', 'overall_tone_assessment']))}</p>
                     </div>
                   )}
@@ -1789,8 +1789,8 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                   )}
                   
                   {getFieldValue(tone_analysis_report, ['מקצועיות', 'professionalism']) && (
-                    <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
-                      <h4 className="font-semibold text-purple-800 mb-2">💼 מקצועיות</h4>
+                    <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-brand-info">
+                      <h4 className="font-semibold text-brand-info-dark mb-2">💼 מקצועיות</h4>
                       <p className="text-gray-700">{String(getFieldValue(tone_analysis_report, ['מקצועיות', 'professionalism']))}</p>
                     </div>
                   )}
@@ -1856,7 +1856,7 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
           <div className="space-y-6">
             {/* הודעה על קטגוריה שנבחרה */}
             {selectedCategory && (
-              <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-300 rounded-lg p-4 mb-6">
+              <div className="bg-gradient-to-r from-green-50 to-brand-info-light border border-green-300 rounded-lg p-4 mb-6">
                 <div className="flex items-center">
                   <span className="text-green-500 text-lg mr-2">🎯</span>
                   <p className="text-green-800 text-sm">
@@ -1874,10 +1874,10 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
             )}
             
             {/* הערה על הניתוח המקצועי */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-brand-info-light border border-brand-info-light rounded-lg p-4">
               <div className="flex items-center">
-                <span className="text-blue-500 text-lg mr-2">💡</span>
-                <p className="text-blue-800 text-sm">
+                <span className="text-brand-primary text-lg mr-2">💡</span>
+                <p className="text-brand-primary-dark text-sm">
                   <strong>ניתוח מקצועי מפורט:</strong> 32 פרמטרים מקצועיים בסגנון טבלאי עם ציונים, תובנות והמלצות לשיפור
                 </p>
               </div>
@@ -2010,13 +2010,13 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
                               
                               {/* תוספת לשדות מיוחדים */}
                               {param.name === 'פתיח אנרגטי' && param.rawData?.שימוש_בשם_פרטי && (
-                                <div className="mt-2 inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">
+                                <div className="mt-2 inline-flex items-center px-2 py-1 bg-brand-info-light text-brand-primary-dark rounded text-xs">
                                   {param.rawData.שימוש_בשם_פרטי === 'כן' ? '✅ השתמש בשם פרטי' : '❌ לא השתמש בשם פרטי'}
                                 </div>
                               )}
                               
                               {param.name === 'הנעה לפעולה' && param.rawData?.שימוש_בטכניקות_סגירה && (
-                                <div className="mt-2 inline-flex items-center px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs">
+                                <div className="mt-2 inline-flex items-center px-2 py-1 bg-brand-accent-light text-brand-info-dark rounded text-xs">
                                   {param.rawData.שימוש_בטכניקות_סגירה === 'כן' ? '✅ השתמש בטכניקות סגירה' : '❌ לא השתמש בטכניקות סגירה'}
                                 </div>
                               )}
@@ -2154,8 +2154,8 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
             )}
 
             {/* סיכום כללי עם המלצות פרקטיות */}
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl shadow-lg p-6 border border-blue-200">
-              <h3 className="text-xl font-semibold mb-4 text-blue-800 flex items-center">
+            <div className="bg-gradient-to-br from-brand-info-light to-brand-accent-light rounded-xl shadow-lg p-6 border border-brand-info-light">
+              <h3 className="text-xl font-semibold mb-4 text-brand-primary-dark flex items-center">
                 <span className="mr-2">🎯</span>
                 סיכום כללי והמלצות פרקטיות
               </h3>
@@ -2203,14 +2203,14 @@ export default function CallAnalysis({ call, audioUrl, userRole }: CallAnalysisP
               {/* המלצות פרקטיות */}
               {practical_recommendations && practical_recommendations.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-blue-700 mb-3 flex items-center">
+                  <h4 className="font-semibold text-brand-primary-dark mb-3 flex items-center">
                     <span className="mr-2">💡</span>
                     המלצות פרקטיות ליישום מיידי:
                   </h4>
                   <div className="space-y-2">
                     {practical_recommendations.map((rec: any, index: number) => (
-                      <div key={index} className="flex items-start bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <span className="text-blue-500 text-lg mr-2 mt-0.5">💡</span>
+                      <div key={index} className="flex items-start bg-brand-info-light p-4 rounded-lg border border-brand-info-light">
+                        <span className="text-brand-primary text-lg mr-2 mt-0.5">💡</span>
                         <p className="text-gray-700 flex-1 font-medium">
                           {typeof rec === 'string' ? rec : JSON.stringify(rec)}
                         </p>

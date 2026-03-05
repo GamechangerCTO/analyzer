@@ -56,24 +56,24 @@ export default function PersonaPreview({
       )}
 
       {/* כרטיס הפרסונה */}
-      <div className="rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white p-6 shadow-lg">
+      <div className="rounded-xl border-2 border-brand-info-light bg-gradient-to-br from-brand-info-light to-white p-6 shadow-lg">
         {/* כותרת */}
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
             <div className="flex items-center mb-2">
-              <User className="w-6 h-6 text-blue-600 ml-2" />
+              <User className="w-6 h-6 text-brand-primary ml-2" />
               <h3 className="text-xl font-bold text-gray-900">
                 {persona.persona_name || 'לקוח ווירטואלי'}
               </h3>
             </div>
             <div className="flex flex-wrap gap-2">
               {persona.personality_type && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-brand-accent-light text-brand-info-dark">
                   {persona.personality_type}
                 </span>
               )}
               {persona.communication_style && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-brand-info-light text-brand-primary-dark">
                   {persona.communication_style}
                 </span>
               )}
@@ -204,7 +204,7 @@ export default function PersonaPreview({
                 <h4 className="text-sm font-semibold text-gray-700 mb-2">💬 תקשורת מועדפת</h4>
                 <div className="flex flex-wrap gap-2">
                   {persona.preferred_communication.map((pref: string, idx: number) => (
-                    <span key={idx} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                    <span key={idx} className="px-3 py-1 bg-brand-info-light text-brand-primary-dark rounded-full text-xs">
                       {pref}
                     </span>
                   ))}
@@ -213,11 +213,11 @@ export default function PersonaPreview({
             )}
 
             {persona.targets_weaknesses && persona.targets_weaknesses.length > 0 && (
-              <div className="bg-indigo-50 rounded-lg p-4">
+              <div className="bg-brand-info-light rounded-lg p-4">
                 <h4 className="text-sm font-semibold text-gray-700 mb-2">🎯 תחומים לתרגול</h4>
                 <div className="flex flex-wrap gap-2">
                   {persona.targets_weaknesses.map((weakness: string, idx: number) => (
-                    <span key={idx} className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium">
+                    <span key={idx} className="px-3 py-1 bg-brand-info-light text-brand-primary-dark rounded-full text-xs font-medium">
                       {weakness}
                     </span>
                   ))}
@@ -230,7 +230,7 @@ export default function PersonaPreview({
         {/* כפתור הצג/הסתר פרטים */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium mt-2"
+          className="text-sm text-brand-primary hover:text-brand-primary-dark font-medium mt-2"
         >
           {isExpanded ? '▲ הסתר פרטים נוספים' : '▼ הצג פרטים נוספים'}
         </button>
@@ -240,7 +240,7 @@ export default function PersonaPreview({
       <div className="flex gap-3">
         <button
           onClick={onAccept}
-          className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center"
+          className="flex-1 bg-gradient-to-r from-brand-primary to-brand-primary-dark hover:from-brand-primary-dark hover:to-brand-primary-dark text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center"
         >
           <Target className="w-5 h-5 ml-2" />
           התחל סימולציה

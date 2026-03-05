@@ -38,8 +38,8 @@ export default function WelcomeToast({
         subtitle: `החשבון שלכם נוצר בהצלחה${planName ? ` עם חבילת ${planName}` : ''}`,
         details: trialDays ? `יש לכם ${trialDays} ימי ניסיון חינם!` : 'בואו נתחיל לאמן את הצוות!',
         icon: <Star className="w-6 h-6 text-yellow-500" />,
-        bgColor: 'bg-gradient-to-r from-blue-50 to-green-50',
-        borderColor: 'border-blue-500'
+        bgColor: 'bg-gradient-to-r from-brand-info-light to-brand-success-light',
+        borderColor: 'border-brand-primary'
       }
     }
 
@@ -49,27 +49,27 @@ export default function WelcomeToast({
           title: `שלום ${userName}!`,
           subtitle: 'ברוכים הבאים לפלטפורמת האימון',
           details: 'הזמן לשפר את כישורי המכירות! 🎯',
-          icon: <Users className="w-6 h-6 text-blue-500" />,
-          bgColor: 'bg-blue-50',
-          borderColor: 'border-blue-500'
+          icon: <Users className="w-6 h-6 text-brand-primary" />,
+          bgColor: 'bg-brand-info-light',
+          borderColor: 'border-brand-primary'
         }
       case 'manager':
         return {
           title: `שלום ${userName}!`,
           subtitle: 'דשבורד הניהול שלכם מוכן',
           details: 'עקבו אחר ההתקדמות של כל הצוות 📊',
-          icon: <Clock className="w-6 h-6 text-green-500" />,
-          bgColor: 'bg-green-50',
-          borderColor: 'border-green-500'
+          icon: <Clock className="w-6 h-6 text-brand-success" />,
+          bgColor: 'bg-brand-success-light',
+          borderColor: 'border-brand-success'
         }
       case 'owner':
         return {
           title: `שלום ${userName}!`,
           subtitle: 'ברוכים הבאים לדשבורד הניהול',
           details: 'שליטה מלאה על המערכת 👑',
-          icon: <Star className="w-6 h-6 text-purple-500" />,
-          bgColor: 'bg-purple-50',
-          borderColor: 'border-purple-500'
+          icon: <Star className="w-6 h-6 text-brand-info" />,
+          bgColor: 'bg-brand-accent-light',
+          borderColor: 'border-brand-info'
         }
       case 'admin':
         return {
@@ -85,9 +85,9 @@ export default function WelcomeToast({
           title: `שלום ${userName}!`,
           subtitle: 'ברוכים הבאים!',
           details: 'בואו נתחיל! 🎉',
-          icon: <Users className="w-6 h-6 text-blue-500" />,
-          bgColor: 'bg-blue-50',
-          borderColor: 'border-blue-500'
+          icon: <Users className="w-6 h-6 text-brand-primary" />,
+          bgColor: 'bg-brand-info-light',
+          borderColor: 'border-brand-primary'
         }
     }
   }

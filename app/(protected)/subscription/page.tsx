@@ -259,7 +259,7 @@ export default function SubscriptionPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-primary"></div>
       </div>
     )
   }
@@ -272,7 +272,7 @@ export default function SubscriptionPage() {
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-gray-800 mb-2">שגיאה</h2>
             <p className="text-gray-600 mb-4">{error}</p>
-            <Link href="/dashboard" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-brand-primary hover:text-brand-primary-dark">
               <ArrowLeft className="w-4 h-4" />
               חזרה לדשבורד
             </Link>
@@ -287,7 +287,7 @@ export default function SubscriptionPage() {
       <div className="max-w-6xl mx-auto p-6">
         {/* כותרת */}
         <div className="mb-8">
-          <Link href="/dashboard" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-brand-primary hover:text-brand-primary-dark mb-4">
             <ArrowLeft className="w-4 h-4" />
             חזרה לדשבורד
           </Link>
@@ -308,7 +308,7 @@ export default function SubscriptionPage() {
               onClick={() => setActiveTab(id as any)}
               className={`flex-1 min-w-max py-3 px-4 rounded-md font-medium transition-all duration-200 flex items-center gap-2 ${
                 activeTab === id
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-brand-primary shadow-sm'
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
@@ -332,17 +332,17 @@ export default function SubscriptionPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Star className="w-6 h-6 text-blue-600" />
+                    <div className="text-center p-4 bg-brand-info-light rounded-lg">
+                      <div className="w-12 h-12 bg-brand-info-light rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Star className="w-6 h-6 text-brand-primary" />
                       </div>
                       <h3 className="font-medium text-gray-800 mb-1">חבילה נוכחית</h3>
-                      <p className="text-2xl font-bold text-blue-600">{subscriptionInfo.package_display_name}</p>
+                      <p className="text-2xl font-bold text-brand-primary">{subscriptionInfo.package_display_name}</p>
                       <p className="text-sm text-gray-600">{subscriptionInfo.status === 'active' ? 'פעילה' : 'לא פעילה'}</p>
                     </div>
 
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <div className="text-center p-4 bg-brand-success-light rounded-lg">
+                      <div className="w-12 h-12 bg-brand-success-light rounded-full flex items-center justify-center mx-auto mb-3">
                         <Users className="w-6 h-6 text-green-600" />
                       </div>
                       <h3 className="font-medium text-gray-800 mb-1">נציגים פעילים</h3>
@@ -350,12 +350,12 @@ export default function SubscriptionPage() {
                       <p className="text-sm text-gray-600">{subscriptionInfo.current_minutes.toLocaleString()} דקות</p>
                     </div>
 
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <CreditCard className="w-6 h-6 text-purple-600" />
+                    <div className="text-center p-4 bg-brand-accent-light rounded-lg">
+                      <div className="w-12 h-12 bg-brand-accent-light rounded-full flex items-center justify-center mx-auto mb-3">
+                        <CreditCard className="w-6 h-6 text-brand-info" />
                       </div>
                       <h3 className="font-medium text-gray-800 mb-1">חיוב חודשי</h3>
-                      <p className="text-2xl font-bold text-purple-600">{formatCurrency(subscriptionInfo.monthly_price)}</p>
+                      <p className="text-2xl font-bold text-brand-info">{formatCurrency(subscriptionInfo.monthly_price)}</p>
                       <p className="text-sm text-gray-600">
                         חיוב הבא: {formatDate(subscriptionInfo.next_billing_date)}
                       </p>
@@ -383,7 +383,7 @@ export default function SubscriptionPage() {
                       onClick={() => setActiveTab('agents')}
                       className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center"
                     >
-                      <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                      <Users className="w-8 h-8 text-brand-primary mx-auto mb-2" />
                       <h4 className="font-medium text-gray-800">הוספת נציגים</h4>
                       <p className="text-sm text-gray-600">הוסיפו עוד נציגים לצוות</p>
                     </button>
@@ -401,7 +401,7 @@ export default function SubscriptionPage() {
                       onClick={() => setActiveTab('billing')}
                       className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center"
                     >
-                      <Receipt className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                      <Receipt className="w-8 h-8 text-brand-info mx-auto mb-2" />
                       <h4 className="font-medium text-gray-800">היסטוריית חיובים</h4>
                       <p className="text-sm text-gray-600">צפו בחשבוניות וחיובים</p>
                     </button>
@@ -414,7 +414,7 @@ export default function SubscriptionPage() {
             {activeTab === 'agents' && (
               <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <Users className="w-6 h-6 text-blue-600" />
+                  <Users className="w-6 h-6 text-brand-primary" />
                   <h2 className="text-xl font-semibold text-gray-800">ניהול נציגים</h2>
                 </div>
 
@@ -425,7 +425,7 @@ export default function SubscriptionPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="text-center">
                         <p className="text-sm text-gray-600">נציגים פעילים</p>
-                        <p className="text-2xl font-bold text-blue-600">{agentCount}</p>
+                        <p className="text-2xl font-bold text-brand-primary">{agentCount}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-sm text-gray-600">דקות זמינות</p>
@@ -433,7 +433,7 @@ export default function SubscriptionPage() {
                       </div>
                       <div className="text-center">
                         <p className="text-sm text-gray-600">עלות חודשית</p>
-                        <p className="text-2xl font-bold text-purple-600">{formatCurrency(calculateAgentPrice(agentCount))}</p>
+                        <p className="text-2xl font-bold text-brand-info">{formatCurrency(calculateAgentPrice(agentCount))}</p>
                       </div>
                     </div>
                   </div>
@@ -464,8 +464,8 @@ export default function SubscriptionPage() {
                     </div>
 
                     {newAgentCount !== agentCount && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                        <h4 className="font-medium text-blue-800 mb-2">השינוי המוצע</h4>
+                      <div className="bg-brand-info-light border border-brand-info-light rounded-lg p-4 mb-4">
+                        <h4 className="font-medium text-brand-primary-dark mb-2">השינוי המוצע</h4>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-gray-600">נציגים חדשים: <span className="font-medium">{newAgentCount}</span></p>
@@ -484,7 +484,7 @@ export default function SubscriptionPage() {
                     <button
                       onClick={handleAgentCountChange}
                       disabled={upgradeLoading || newAgentCount === agentCount}
-                      className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full py-3 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-dark transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {upgradeLoading ? (
                         <>
@@ -537,8 +537,8 @@ export default function SubscriptionPage() {
                         key={plan.id}
                         className={`border-2 rounded-lg p-6 ${
                           plan.name === subscriptionInfo.package_name
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:border-blue-300'
+                            ? 'border-brand-primary bg-brand-info-light'
+                            : 'border-gray-200 hover:border-brand-primary/30'
                         }`}
                       >
                         {plan.is_popular && (
@@ -548,7 +548,7 @@ export default function SubscriptionPage() {
                         )}
 
                         <h3 className="text-lg font-bold text-gray-800 mb-2">{plan.name}</h3>
-                        <p className="text-3xl font-bold text-blue-600 mb-2">
+                        <p className="text-3xl font-bold text-brand-primary mb-2">
                           {formatCurrency(plan.price_monthly)}
                           <span className="text-sm text-gray-500">/חודש</span>
                         </p>
@@ -556,12 +556,12 @@ export default function SubscriptionPage() {
                         <p className="text-sm text-gray-600 mb-6">{plan.description}</p>
 
                         {plan.name === subscriptionInfo.package_name ? (
-                          <div className="flex items-center gap-2 text-blue-600">
+                          <div className="flex items-center gap-2 text-brand-primary">
                             <CheckCircle className="w-5 h-5" />
                             <span className="font-medium">החבילה הנוכחית שלכם</span>
                           </div>
                         ) : (
-                          <button className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                          <button className="w-full py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-dark transition-colors">
                             שדרוג לחבילה זו
                           </button>
                         )}
@@ -576,7 +576,7 @@ export default function SubscriptionPage() {
             {activeTab === 'billing' && (
               <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <Receipt className="w-6 h-6 text-purple-600" />
+                  <Receipt className="w-6 h-6 text-brand-info" />
                   <h2 className="text-xl font-semibold text-gray-800">היסטוריית חיובים</h2>
                 </div>
 

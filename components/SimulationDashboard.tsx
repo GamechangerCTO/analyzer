@@ -52,7 +52,7 @@ export default function SimulationDashboard({
             <SimulationMinutesWidget companyId={user?.company_id} showDetails={false} />
             <Link 
               href="/simulations/create"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all whitespace-nowrap"
+              className="bg-gradient-to-r from-brand-primary to-brand-info text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all whitespace-nowrap"
             >
               🎯 צור אימון מותאם
             </Link>
@@ -97,7 +97,7 @@ export default function SimulationDashboard({
             <select 
               value={selectedDifficulty}
               onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
             >
               <option value="all">כל הרמות</option>
               <option value="קל">קל</option>
@@ -114,7 +114,7 @@ export default function SimulationDashboard({
             <select 
               value={selectedWeakness}
               onChange={(e) => setSelectedWeakness(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
             >
               <option value="all">כל התחומים</option>
               {allWeaknesses.map((weakness) => (
@@ -172,7 +172,7 @@ export default function SimulationDashboard({
             </button>
             <Link 
               href="/simulations/create-persona"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors"
+              className="bg-brand-primary text-white px-4 py-2 rounded-lg text-sm hover:bg-brand-primary-dark transition-colors"
             >
               צור לקוח חדש
             </Link>
@@ -215,7 +215,7 @@ function PersonaCard({ persona }: { persona: any }) {
         <p className="text-xs font-medium text-gray-500 mb-2">מתאמן על:</p>
         <div className="flex flex-wrap gap-2">
           {persona.targets_weaknesses?.slice(0, 3).map((weakness: string, index: number) => (
-            <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+            <span key={index} className="px-2 py-1 bg-brand-info-light text-brand-primary-dark text-xs rounded">
               {weakness}
             </span>
           )) || <span className="text-xs text-gray-400">לא צוין</span>}
@@ -248,7 +248,7 @@ function PersonaCard({ persona }: { persona: any }) {
         
         <Link 
           href={`/simulations/start?persona=${persona.id}`}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          className="bg-brand-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-brand-primary-dark transition-colors"
         >
           התחל אימון
         </Link>
@@ -262,7 +262,7 @@ function DifficultyBadge({ level }: { level: string }) {
     'קל': 'bg-green-100 text-green-800',
     'בינוני': 'bg-yellow-100 text-yellow-800', 
     'קשה': 'bg-red-100 text-red-800',
-    'מתקדם': 'bg-purple-100 text-purple-800'
+    'מתקדם': 'bg-brand-accent-light text-brand-info-dark'
   }
   
   return (

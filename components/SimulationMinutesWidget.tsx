@@ -164,7 +164,7 @@ export default function SimulationMinutesWidget({
               </div>
             )}
             {!isLowQuota && quota.available_minutes > 60 && (
-              <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700 flex items-center gap-1">
+              <div className="mt-3 p-2 bg-brand-success-light border border-brand-success-light rounded text-xs text-brand-success-dark flex items-center gap-1">
                 <CheckCircle className="w-4 h-4" />
                 <span>מכסה מספקת לסימולציות רבות!</span>
               </div>

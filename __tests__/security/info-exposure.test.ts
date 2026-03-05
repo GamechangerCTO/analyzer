@@ -17,10 +17,11 @@ describe('Information Disclosure', () => {
       expect(content).toContain('Endpoint disabled in production')
     })
 
-    it('still reveals env metadata in development (acceptable)', () => {
-      // In dev mode, this is useful for debugging
-      expect(content).toContain('SUPABASE_URL_LENGTH')
-      expect(content).toContain('SERVICE_KEY_LENGTH')
+    it('reveals env presence booleans in development (acceptable)', () => {
+      // In dev mode, shows boolean presence of keys (not their values or lengths)
+      expect(content).toContain('NEXT_PUBLIC_SUPABASE_URL')
+      expect(content).toContain('SUPABASE_SERVICE_ROLE_KEY')
+      expect(content).toContain('OPENAI_API_KEY')
     })
   })
 

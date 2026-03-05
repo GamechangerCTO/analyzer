@@ -662,7 +662,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
                 <div className={`text-3xl font-mono font-bold px-4 py-2 rounded-lg ${
                   elapsedTime >= 540 ? 'text-red-600 bg-red-50 animate-pulse' : // אחרי 9 דקות
                   elapsedTime >= 480 ? 'text-orange-600 bg-orange-50' : // אחרי 8 דקות
-                  'text-blue-600 bg-blue-50'
+                  'text-brand-primary bg-brand-info-light'
                 }`}>
                   ⏱️ {formatTime(elapsedTime)} / 10:00
                 </div>
@@ -685,14 +685,14 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
           <div className="text-center">
             <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
               status === 'active' ? 'bg-green-100 text-green-800' :
-              status === 'ready' ? 'bg-blue-100 text-blue-800' :
+              status === 'ready' ? 'bg-brand-info-light text-brand-primary-dark' :
               status === 'ending' ? 'bg-orange-100 text-orange-800' :
               status === 'error' ? 'bg-red-100 text-red-800' :
               'bg-gray-100 text-gray-800'
             }`}>
               <div className={`w-2 h-2 rounded-full mr-2 ${
                 status === 'active' ? 'bg-green-500 animate-pulse' :
-                status === 'ready' ? 'bg-blue-500' :
+                status === 'ready' ? 'bg-brand-primary' :
                 status === 'ending' ? 'bg-orange-500 animate-pulse' :
                 status === 'error' ? 'bg-red-500' :
                 'bg-gray-500'
@@ -709,8 +709,8 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
         </div>
 
         {/* פרטי הלקוח */}
-        <div className="bg-blue-50 rounded-lg p-4">
-          <h3 className="font-medium text-blue-900 mb-2">פרופיל הלקוח:</h3>
+        <div className="bg-brand-info-light rounded-lg p-4">
+          <h3 className="font-medium text-brand-primary-dark mb-2">פרופיל הלקוח:</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium">סוג אישיות:</span> {persona?.personality_type}
@@ -719,7 +719,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
               <span className="font-medium">סגנון תקשורת:</span> {persona?.communication_style}
             </div>
           </div>
-          <p className="text-blue-700 text-sm mt-2">
+          <p className="text-brand-primary-dark text-sm mt-2">
             {persona?.current_situation}
           </p>
         </div>
@@ -731,7 +731,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
           {!isAudioEnabled && status === 'preparing' && (
             <button
               onClick={handleStartSimulation}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              className="bg-brand-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-primary-dark transition-colors"
             >
               🎤 התחל סימולציה
             </button>
@@ -778,7 +778,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
 
         {status === 'connecting' && (
           <div className="text-center mt-4">
-            <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+            <div className="animate-spin w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full mx-auto mb-2"></div>
             <p className="text-gray-600">מתחבר ל-OpenAI Realtime API...</p>
           </div>
         )}
@@ -796,7 +796,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
             {currentSpeaker && (
               <div className={`flex items-center gap-2 px-4 py-2 rounded-full animate-pulse ${
                 currentSpeaker === 'user' 
-                  ? 'bg-blue-100 text-blue-800' 
+                  ? 'bg-brand-info-light text-brand-primary-dark'
                   : 'bg-green-100 text-green-800'
               }`}>
                 <div className="w-3 h-3 rounded-full bg-current animate-ping" />
@@ -808,7 +808,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
           <div className="h-64 overflow-y-auto border rounded-lg p-4 bg-gray-50 space-y-2">
             {transcript.map((message, index) => (
               <div key={index} className={`p-2 rounded ${
-                message.startsWith('👤') ? 'bg-blue-100 text-blue-900' : 'bg-green-100 text-green-900'
+                message.startsWith('👤') ? 'bg-brand-info-light text-brand-primary-dark' : 'bg-green-100 text-green-900'
               }`}>
                 {message}
               </div>
@@ -838,7 +838,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600 font-mono">
+              <div className="text-2xl font-bold text-brand-primary font-mono">
                 {formatTime(elapsedTime)}
               </div>
               <div className="text-sm text-gray-600">זמן שיחה</div>
@@ -852,7 +852,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
             </div>
             
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-2xl font-bold text-brand-info">
                 {transcript.filter(t => t.startsWith('🤖')).length}
               </div>
               <div className="text-sm text-gray-600">תגובות לקוח</div>
@@ -882,7 +882,7 @@ export default function RealtimeSimulation({ simulation, customerPersona, user, 
             <div className="space-y-3">
               <button
                 onClick={downloadRecording}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
+                className="bg-brand-primary hover:bg-brand-primary-dark text-white px-6 py-3 rounded-lg font-medium"
               >
                 🎧 הורד הקלטת השיחה
               </button>

@@ -265,7 +265,7 @@ export default function AnalyticsPage() {
 
       {/* סטטיסטיקות עיקריות */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="replayme-card p-6 border-r-4 border-purple-500">
+        <div className="replayme-card p-6 border-r-4 border-brand-info">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-indigo-night/60 text-sm font-medium mb-1">עלות כוללת</p>
@@ -279,13 +279,13 @@ export default function AnalyticsPage() {
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-brand-info/20 rounded-xl flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-brand-info" />
             </div>
           </div>
         </div>
 
-        <div className="replayme-card p-6 border-r-4 border-blue-500">
+        <div className="replayme-card p-6 border-r-4 border-brand-primary">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-indigo-night/60 text-sm font-medium mb-1">בקשות API</p>
@@ -299,8 +299,8 @@ export default function AnalyticsPage() {
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-              <Activity className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-brand-primary/20 rounded-xl flex items-center justify-center">
+              <Activity className="w-6 h-6 text-brand-primary" />
             </div>
           </div>
         </div>
@@ -345,7 +345,7 @@ export default function AnalyticsPage() {
         <div className="replayme-card p-6">
           <h3 className="text-xl font-bold text-indigo-night mb-4">תובנות מרכזיות 🔍</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-brand-info-light rounded-lg">
               <div>
                 <p className="font-medium text-indigo-night">היום הכי פעיל</p>
                 <p className="text-sm text-indigo-night/60">
@@ -353,14 +353,14 @@ export default function AnalyticsPage() {
                 </p>
               </div>
               <div className="text-left">
-                <p className="font-bold text-blue-600">
+                <p className="font-bold text-brand-primary">
                   {formatNumber(analyticsData.insights.mostActiveDay.requests)}
                 </p>
-                <p className="text-sm text-blue-600">בקשות</p>
+                <p className="text-sm text-brand-primary">בקשות</p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-brand-accent-light rounded-lg">
               <div>
                 <p className="font-medium text-indigo-night">היום הכי יקר</p>
                 <p className="text-sm text-indigo-night/60">
@@ -368,14 +368,14 @@ export default function AnalyticsPage() {
                 </p>
               </div>
               <div className="text-left">
-                <p className="font-bold text-purple-600">
+                <p className="font-bold text-brand-info">
                   ${analyticsData.insights.mostExpensiveDay.costs}
                 </p>
-                <p className="text-sm text-purple-600">עלות</p>
+                <p className="text-sm text-brand-info">עלות</p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-brand-success-light rounded-lg">
               <div>
                 <p className="font-medium text-indigo-night">מודל מוביל</p>
                 <p className="text-sm text-indigo-night/60">
@@ -404,7 +404,7 @@ export default function AnalyticsPage() {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
-                  className="bg-blue-600 h-2 rounded-full" 
+                  className="bg-brand-primary h-2 rounded-full" 
                   style={{width: `${analyticsData.insights.efficiency.cachedTokensRatio}%`}}
                 ></div>
               </div>

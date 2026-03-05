@@ -24,18 +24,18 @@ describe('Authentication', () => {
   describe('Middleware Public Paths', () => {
     it('/api is NOT a blanket public path (only specific API routes are public)', () => {
       // Previously /api was in publicPaths, bypassing auth for ALL API routes.
-      // Now only specific public API routes are listed.
-      const publicPathsMatch = middlewareContent.match(/const publicPaths\s*=\s*\[([^\]]+)\]/)
-      expect(publicPathsMatch).toBeTruthy()
-      const publicPathsList = publicPathsMatch![1]
+      // Now publicApiPaths is a separate list with only specific routes.
+      const publicApiPathsMatch = middlewareContent.match(/const publicApiPaths\s*=\s*\[([^\]]+)\]/)
+      expect(publicApiPathsMatch).toBeTruthy()
+      const publicApiPathsList = publicApiPathsMatch![1]
 
       // Should NOT contain bare '/api' (which would match all /api/* routes)
-      expect(publicPathsList).not.toMatch(/['"]\/api['"]/)
+      expect(publicApiPathsList).not.toMatch(/['"]\/api['"]/)
 
       // Should contain only specific public API routes
-      expect(publicPathsList).toContain('/api/auth/callback')
-      expect(publicPathsList).toContain('/api/signup')
-      expect(publicPathsList).toContain('/api/billing/reset-monthly-minutes')
+      expect(publicApiPathsList).toContain('/api/auth/callback')
+      expect(publicApiPathsList).toContain('/api/signup')
+      expect(publicApiPathsList).toContain('/api/legal-terms/accept')
     })
 
     it('Partner API routes have separate bypass', () => {

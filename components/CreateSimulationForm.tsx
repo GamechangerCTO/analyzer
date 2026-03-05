@@ -176,8 +176,8 @@ export default function CreateSimulationForm({
             disabled={recentCalls.length === 0}
             className={`p-8 border-3 rounded-2xl text-right transition-all transform hover:scale-102 ${
               recentCalls.length === 0 
-                ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60' 
-                : 'border-blue-200 bg-blue-50 hover:border-blue-500 hover:shadow-lg'
+                ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                : 'border-brand-info-light bg-brand-info-light hover:border-brand-primary hover:shadow-lg'
             }`}
           >
             <div className="text-5xl mb-4">📊</div>
@@ -186,10 +186,10 @@ export default function CreateSimulationForm({
             </h3>
             <p className="text-gray-600 mb-4">
               הפרסונה והתרחיש ייבנו מניתוח שיחה אמיתית שלך - 
-              <span className="font-medium text-blue-700"> תתרגל בדיוק את מה שצריך לשפר!</span>
+              <span className="font-medium text-brand-primary-dark"> תתרגל בדיוק את מה שצריך לשפר!</span>
             </p>
-            <div className="flex items-center text-sm text-blue-600">
-              <span className="bg-blue-100 px-3 py-1 rounded-full">
+            <div className="flex items-center text-sm text-brand-primary">
+              <span className="bg-brand-info-light px-3 py-1 rounded-full">
                 {recentCalls.length} שיחות זמינות
               </span>
               </div>
@@ -276,7 +276,7 @@ export default function CreateSimulationForm({
                   onClick={() => setSelectedCallId(call.id)}
                   className={`w-full text-right p-5 border-2 rounded-xl transition-all ${
                     selectedCallId === call.id
-                      ? 'border-blue-600 bg-blue-50 shadow-md'
+                      ? 'border-brand-primary bg-brand-info-light shadow-md'
                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   }`}
                 >
@@ -325,12 +325,12 @@ export default function CreateSimulationForm({
                 </div>
 
           {selectedCallId && (
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <div className="mt-6 p-4 bg-brand-info-light border border-brand-info-light rounded-xl">
               <div className="flex items-center gap-3 mb-4">
                 <span className="text-2xl">🎯</span>
                       <div>
-                  <h4 className="font-bold text-blue-900">מוכן לסימולציה!</h4>
-                  <p className="text-blue-700 text-sm">
+                  <h4 className="font-bold text-brand-primary-dark">מוכן לסימולציה!</h4>
+                  <p className="text-brand-primary-dark text-sm">
                     הלקוח הווירטואלי יאתגר אותך בנקודות החולשה שזוהו
                   </p>
                 </div>
@@ -339,7 +339,7 @@ export default function CreateSimulationForm({
                         <button
                           onClick={handleSubmit}
                           disabled={isGenerating}
-                className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-3"
+                className="w-full bg-brand-primary text-white py-4 rounded-xl font-bold text-lg hover:bg-brand-primary-dark disabled:opacity-50 flex items-center justify-center gap-3"
                         >
                           {isGenerating ? (
                             <>
@@ -394,7 +394,7 @@ export default function CreateSimulationForm({
             >
               ✕ נקה בחירה
             </button>
-            <span className="mr-auto px-4 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+            <span className="mr-auto px-4 py-2 bg-brand-info-light text-brand-primary-dark rounded-lg text-sm font-medium">
               נבחרו {selectedTopics.length} מתוך {simulationTopics.length}
             </span>
           </div>

@@ -233,7 +233,7 @@ export default function AgentRequestsClient({ adminId, adminName }: AgentRequest
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-primary"></div>
       </div>
     )
   }
@@ -275,10 +275,10 @@ export default function AgentRequestsClient({ adminId, adminName }: AgentRequest
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-1">סה"כ בקשות</h3>
-              <p className="text-3xl font-bold text-blue-600">{requests.length}</p>
+              <p className="text-3xl font-bold text-brand-primary">{requests.length}</p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <div className="w-12 h-12 bg-brand-info-light rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-brand-primary" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -345,14 +345,14 @@ export default function AgentRequestsClient({ adminId, adminName }: AgentRequest
               placeholder="חיפוש לפי שם נציג, אימייל או שם חברה..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
             />
           </div>
           <div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as 'all' | 'pending' | 'approved' | 'rejected')}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-brand-primary"
             >
               <option value="all">כל הסטטוסים</option>
               <option value="pending">ממתינות לאישור</option>

@@ -200,8 +200,8 @@ export default function Sidebar({ user, userData }: SidebarProps) {
         <div className="px-4 py-2">
           <div className="border-t border-neutral-100 pt-4">
             <div className="flex items-center gap-2 mb-3">
-              <Key className="w-4 h-4 text-purple-400" />
-              <span className="text-xs font-medium text-purple-400 uppercase tracking-wider">Partner API</span>
+              <Key className="w-4 h-4 text-brand-info" />
+              <span className="text-xs font-medium text-brand-info uppercase tracking-wider">Partner API</span>
             </div>
             
             <div className="space-y-1">
@@ -210,7 +210,7 @@ export default function Sidebar({ user, userData }: SidebarProps) {
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50 transition-colors"
                 onClick={() => setIsMobileOpen(false)}
               >
-                <Key className="w-4 h-4 text-purple-500" />
+                <Key className="w-4 h-4 text-brand-info" />
                 <span>ניהול API Keys</span>
               </Link>
               
@@ -219,7 +219,7 @@ export default function Sidebar({ user, userData }: SidebarProps) {
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50 transition-colors"
                 onClick={() => setIsMobileOpen(false)}
               >
-                <Building2 className="w-4 h-4 text-blue-500" />
+                <Building2 className="w-4 h-4 text-brand-primary" />
                 <span>גילוי חברות</span>
               </Link>
             </div>

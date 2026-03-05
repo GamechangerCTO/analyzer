@@ -34,7 +34,7 @@ export default async function SimulationsPage() {
     .reduce((sum, s) => sum + s.score, 0) / (completedCount || 1)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-brand-info-light to-brand-info-light py-8 px-4">
       <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Hero Section - פשוט ונקי */}
@@ -54,7 +54,7 @@ export default async function SimulationsPage() {
             <div className="flex flex-col gap-4 w-full md:w-auto">
               <Link 
                 href="/simulations/create"
-                className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-5 rounded-2xl font-bold text-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                className="flex items-center justify-center gap-3 bg-gradient-to-r from-brand-primary to-brand-primary text-white px-8 py-5 rounded-2xl font-bold text-xl hover:from-brand-primary-dark hover:to-brand-primary-dark transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1"
               >
                 <span className="text-2xl">🎯</span>
                 התחל אימון חדש
@@ -67,7 +67,7 @@ export default async function SimulationsPage() {
 
         {/* סטטיסטיקות מהירות */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-2xl p-6 shadow-md border-r-4 border-blue-500">
+          <div className="bg-white rounded-2xl p-6 shadow-md border-r-4 border-brand-primary">
             <p className="text-3xl font-bold text-gray-900">{recentSimulations?.length || 0}</p>
             <p className="text-sm text-gray-600">סה"כ אימונים</p>
           </div>
@@ -75,7 +75,7 @@ export default async function SimulationsPage() {
             <p className="text-3xl font-bold text-gray-900">{completedCount}</p>
             <p className="text-sm text-gray-600">הושלמו</p>
           </div>
-          <div className="bg-white rounded-2xl p-6 shadow-md border-r-4 border-purple-500">
+          <div className="bg-white rounded-2xl p-6 shadow-md border-r-4 border-brand-info">
             <p className="text-3xl font-bold text-gray-900">{avgScore ? avgScore.toFixed(1) : '—'}</p>
             <p className="text-sm text-gray-600">ציון ממוצע</p>
           </div>
@@ -108,7 +108,7 @@ export default async function SimulationsPage() {
             </div>
           ) : (
             <div className="p-12 text-center">
-              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-brand-info-light rounded-full flex items-center justify-center mx-auto mb-6">
                 <span className="text-4xl">🎯</span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">
@@ -119,7 +119,7 @@ export default async function SimulationsPage() {
               </p>
               <Link 
                 href="/simulations/create"
-                className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 bg-brand-primary text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-primary-dark transition-colors"
               >
                 🚀 התחל עכשיו
               </Link>
@@ -128,7 +128,7 @@ export default async function SimulationsPage() {
         </div>
 
         {/* מה תלמד */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
+        <div className="bg-gradient-to-r from-brand-primary to-brand-primary rounded-2xl p-8 text-white">
           <h3 className="text-2xl font-bold mb-6">מה תתרגל באימונים?</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -153,7 +153,7 @@ export default async function SimulationsPage() {
 function SimulationRow({ simulation }: { simulation: any }) {
   const statusColors: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-700',
-    active: 'bg-blue-100 text-blue-700',
+    active: 'bg-brand-info-light text-brand-primary-dark',
     completed: 'bg-green-100 text-green-700',
     error: 'bg-red-100 text-red-700'
   }
@@ -206,7 +206,7 @@ function SimulationRow({ simulation }: { simulation: any }) {
         {simulation.status === 'pending' && (
           <Link 
             href={`/simulations/${simulation.id}`}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-primary-dark transition-colors"
           >
             התחל
           </Link>

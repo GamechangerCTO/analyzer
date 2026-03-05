@@ -48,7 +48,7 @@ const ANALYSIS_STEPS: AnalysisStep[] = [
     title: 'מתמלל את השיחה',
     description: 'מפענח את הקול לטקסט עם דיוק גבוה',
     duration: 3000,
-    color: 'from-blue-500 to-blue-600'
+    color: 'from-brand-primary to-brand-primary-dark'
   },
   {
     id: 'tone',
@@ -56,7 +56,7 @@ const ANALYSIS_STEPS: AnalysisStep[] = [
     title: 'מנתח טונציה ורגשות',
     description: 'זיהוי רגשות, טון דיבור ואנרגיה',
     duration: 4000,
-    color: 'from-purple-500 to-purple-600'
+    color: 'from-brand-info to-brand-info-dark'
   },
   {
     id: 'content',
@@ -247,7 +247,7 @@ export default function AnimatedAnalysis({ callId, audioFile, onComplete }: Anim
           icon: Clock,
           label: 'זמן השיחה',
           value: duration,
-          color: 'text-blue-600'
+          color: 'text-brand-primary'
         },
         {
           icon: User,
@@ -259,7 +259,7 @@ export default function AnimatedAnalysis({ callId, audioFile, onComplete }: Anim
           icon: MessageSquare,
           label: 'תמלול',
           value: wordsCount,
-          color: 'text-purple-600'
+          color: 'text-brand-info'
         }
       ])
     }
@@ -300,7 +300,7 @@ export default function AnimatedAnalysis({ callId, audioFile, onComplete }: Anim
   const CurrentStepIcon = ANALYSIS_STEPS[currentStep]?.icon || Sparkles
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-brand-info-light p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -308,7 +308,7 @@ export default function AnimatedAnalysis({ callId, audioFile, onComplete }: Anim
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", duration: 0.6 }}
-            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4"
+            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-brand-primary to-brand-info rounded-full mb-4"
           >
             <CurrentStepIcon className="w-10 h-10 text-white" />
           </motion.div>
@@ -341,7 +341,7 @@ export default function AnimatedAnalysis({ callId, audioFile, onComplete }: Anim
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
               <motion.div
-                className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full"
+                className="bg-gradient-to-r from-brand-primary to-brand-info h-3 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.5 }}
@@ -410,7 +410,7 @@ export default function AnimatedAnalysis({ callId, audioFile, onComplete }: Anim
             className="bg-white rounded-2xl shadow-lg p-6"
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-              <Activity className="w-5 h-5 text-blue-600 ml-2" />
+              <Activity className="w-5 h-5 text-brand-primary ml-2" />
               תובנות על השיחה
             </h3>
             
@@ -520,7 +520,7 @@ export default function AnimatedAnalysis({ callId, audioFile, onComplete }: Anim
             className="mt-8 bg-white rounded-2xl shadow-lg p-6"
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Activity className="w-5 h-5 text-blue-600 ml-2" />
+              <Activity className="w-5 h-5 text-brand-primary ml-2" />
               פעילות בזמן אמת
             </h3>
             
@@ -531,9 +531,9 @@ export default function AnimatedAnalysis({ callId, audioFile, onComplete }: Anim
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="flex items-start p-3 bg-gray-50 rounded-lg border-r-4 border-blue-500"
+                  className="flex items-start p-3 bg-gray-50 rounded-lg border-r-4 border-brand-primary"
                 >
-                  <div className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2 ml-3"></div>
+                  <div className="flex-shrink-0 w-2 h-2 bg-brand-primary rounded-full mt-2 ml-3"></div>
                   <div className="flex-1">
                     <p className="text-sm text-gray-800 leading-relaxed">
                       {log.message.replace(/[🚀📝🎭📊✅🔄⬇️📡🏁❌]/g, '').trim()}
@@ -559,7 +559,7 @@ export default function AnimatedAnalysis({ callId, audioFile, onComplete }: Anim
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full ml-2"
+              className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full ml-2"
             />
             <span className="text-gray-600 text-sm">
               {callLogs.length > 0 ? 'מעבד...' : 'מתחיל עיבוד...'}

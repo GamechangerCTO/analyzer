@@ -128,7 +128,7 @@ export default function SimulationReport({ report, user, recentReports }: Simula
           <button 
             onClick={handleRetry}
             disabled={isRetrying}
-            className="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 transition-colors font-bold flex items-center gap-2 disabled:opacity-50"
+            className="bg-brand-primary text-white px-5 py-3 rounded-lg hover:bg-brand-primary-dark transition-colors font-bold flex items-center gap-2 disabled:opacity-50"
           >
             {isRetrying ? (
               <>
@@ -187,9 +187,9 @@ export default function SimulationReport({ report, user, recentReports }: Simula
             <div className="space-y-6">
               {/* סיכום */}
               {report.summary && (
-                <div className="bg-blue-50 rounded-lg p-6">
-                  <h3 className="text-lg font-bold text-blue-900 mb-3">💬 סיכום כללי</h3>
-                  <p className="text-blue-800 leading-relaxed">{report.summary}</p>
+                <div className="bg-brand-info-light rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-brand-primary-dark mb-3">💬 סיכום כללי</h3>
+                  <p className="text-brand-primary-dark leading-relaxed">{report.summary}</p>
                 </div>
               )}
 
@@ -240,28 +240,28 @@ export default function SimulationReport({ report, user, recentReports }: Simula
 
               {/* השוואה לשיחה המקורית */}
               {report.comparison_to_original && (
-                <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
-                  <h3 className="text-lg font-bold text-purple-900 mb-4">📊 השוואה לשיחה המקורית</h3>
+                <div className="bg-brand-accent-light border-2 border-brand-accent-light rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-brand-info-dark mb-4">📊 השוואה לשיחה המקורית</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="font-medium text-purple-800 mb-2">✅ השתפר:</h4>
+                      <h4 className="font-medium text-brand-info-dark mb-2">✅ השתפר:</h4>
                       <ul className="space-y-1">
                         {(report.comparison_to_original.improved || []).map((item: string, i: number) => (
-                          <li key={i} className="text-purple-700">• {item}</li>
+                          <li key={i} className="text-brand-info-dark">• {item}</li>
                         ))}
                       </ul>
                     </div>
                     <div>
-                      <h4 className="font-medium text-purple-800 mb-2">⏳ עדיין דורש עבודה:</h4>
+                      <h4 className="font-medium text-brand-info-dark mb-2">⏳ עדיין דורש עבודה:</h4>
                       <ul className="space-y-1">
                         {(report.comparison_to_original.still_needs_work || []).map((item: string, i: number) => (
-                          <li key={i} className="text-purple-700">• {item}</li>
+                          <li key={i} className="text-brand-info-dark">• {item}</li>
                         ))}
                       </ul>
                     </div>
                   </div>
                   {report.comparison_to_original.score_change && (
-                    <p className="mt-4 text-purple-900 font-medium">
+                    <p className="mt-4 text-brand-info-dark font-medium">
                       📈 {report.comparison_to_original.score_change}
                     </p>
                   )}
@@ -286,7 +286,7 @@ export default function SimulationReport({ report, user, recentReports }: Simula
                           {quote.speaker === 'נציג' ? '👤 נציג' : '🎭 לקוח'}
                         </span>
                       </div>
-                      <blockquote className="text-lg text-gray-800 italic border-r-4 border-blue-300 pr-4 mb-3">
+                      <blockquote className="text-lg text-gray-800 italic border-r-4 border-brand-info-light pr-4 mb-3">
                         "{quote.quote}"
                       </blockquote>
                       <p className="text-gray-600 text-sm">

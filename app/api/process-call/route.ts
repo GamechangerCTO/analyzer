@@ -1529,44 +1529,31 @@ export async function POST(request: Request) {
             }
           };
           
-          await addCallLog(call_id, '🔄 Fallback: שולח לניתוח מחדש עם Structured Outputs (35 פרמטרים)', {
-            model: 'gpt-4o-mini',
+          await addCallLog(call_id, '🔄 Fallback: שולח לניתוח מחדש עם Responses API', {
+            model: 'gpt-5-nano',
             original_analysis_length: deepAnalysisRaw.length
           });
-          
-          const fallbackResponse = await openai.chat.completions.create({
-            model: 'gpt-4o-mini',
-            messages: [
-              {
-                role: 'system',
-                content: systemPrompt
-              },
-              {
-                role: 'user',
-                content: `נתח את השיחה הבאה והחזר JSON מובנה עם כל 35 הפרמטרים:
+
+          const fallbackResponse = await (openai as any).responses.create({
+            model: 'gpt-5-nano',
+            input: `${systemPrompt}\n\nנתח את השיחה הבאה והחזר JSON מובנה עם כל 35 הפרמטרים:
 
                 סוג שיחה: ${callData.call_type}
                 תמליל השיחה: ${transcript || 'אין תמליל זמין'}
-                
+
                 ניתוח קודם לעזרה:
                 ${deepAnalysisRaw}
-                
+
                 ניתוח טונציה: ${JSON.stringify(toneAnalysisReport)}
-                
+
                 הנחיות:
                 1. ציונים מ-4 עד 10
                 2. כל פרמטר צריך ציון, תובנות, ואיך משפרים
-                3. החזר JSON תקין!`
-              }
-            ],
-            response_format: {
-              type: "json_schema",
-              json_schema: fullAnalysisSchema
-            },
+                3. החזר JSON תקין!`,
             temperature: 0.3
           });
-          
-          const fallbackContent = fallbackResponse.choices[0]?.message?.content || '{}';
+
+          const fallbackContent = fallbackResponse.output_text || '{}';
           
           // 📊 לוג דיבאג ל-Fallback
           console.log('🛡️ Fallback Response:', fallbackContent.substring(0, 500) + '...');

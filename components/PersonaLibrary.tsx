@@ -116,7 +116,7 @@ export default function PersonaLibrary({ companyId, onSelectPersona, currentIndu
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
         <span className="mr-3 text-gray-600">טוען פרסונות...</span>
       </div>
     )
@@ -161,7 +161,7 @@ export default function PersonaLibrary({ companyId, onSelectPersona, currentIndu
           placeholder="חפש פרסונה..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full pr-10 pl-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent"
         />
       </div>
 
@@ -198,7 +198,7 @@ export default function PersonaLibrary({ companyId, onSelectPersona, currentIndu
                   )}
                   <div className="flex items-center justify-between text-xs text-gray-500">
                     <span>נוצר {template.usage_count || 0} פעמים</span>
-                    <span className="text-blue-600 font-medium">← לחץ לשימוש</span>
+                    <span className="text-brand-primary font-medium">← לחץ לשימוש</span>
                   </div>
                 </button>
               )
@@ -216,7 +216,7 @@ export default function PersonaLibrary({ companyId, onSelectPersona, currentIndu
               <button
                 key={persona.id}
                 onClick={() => onSelectPersona(persona)}
-                className="text-right bg-white hover:bg-blue-50 border-2 border-gray-200 hover:border-blue-400 rounded-xl p-4 transition-all duration-200"
+                className="text-right bg-white hover:bg-brand-info-light border-2 border-gray-200 hover:border-brand-primary rounded-xl p-4 transition-all duration-200"
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
@@ -225,18 +225,18 @@ export default function PersonaLibrary({ companyId, onSelectPersona, currentIndu
                     </h5>
                     <div className="flex flex-wrap gap-1">
                       {persona.personality_type && (
-                        <span className="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full">
+                        <span className="inline-block px-2 py-0.5 bg-brand-accent-light text-brand-info-dark text-xs rounded-full">
                           {persona.personality_type}
                         </span>
                       )}
                       {persona.industry_context && (
-                        <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                        <span className="inline-block px-2 py-0.5 bg-brand-info-light text-brand-primary-dark text-xs rounded-full">
                           {persona.industry_context}
                         </span>
                       )}
                     </div>
                   </div>
-                  <User className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                  <User className="w-5 h-5 text-brand-primary flex-shrink-0" />
                 </div>
 
                 {/* סטטיסטיקות */}

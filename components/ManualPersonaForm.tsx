@@ -137,7 +137,7 @@ ${formData.current_situation}
     <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-xl border p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-gray-900 flex items-center">
-          <User className="w-5 h-5 ml-2 text-blue-600" />
+          <User className="w-5 h-5 ml-2 text-brand-primary" />
           יצירת פרסונה ידנית
         </h3>
         {onCancel && (
@@ -165,7 +165,7 @@ ${formData.current_situation}
             value={formData.persona_name}
             onChange={(e) => updateField('persona_name', e.target.value)}
             placeholder="לדוגמה: דוד כהן - מנהל רכש"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary"
           />
         </div>
 
@@ -291,7 +291,7 @@ ${formData.current_situation}
         <button
           type="button"
           onClick={() => addArrayItem('pain_points')}
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-sm text-brand-primary hover:text-brand-primary-dark"
         >
           + הוסף נקודת כאב
         </button>
@@ -322,7 +322,7 @@ ${formData.current_situation}
         <button
           type="button"
           onClick={() => addArrayItem('goals_and_objectives')}
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-sm text-brand-primary hover:text-brand-primary-dark"
         >
           + הוסף מטרה
         </button>
@@ -353,7 +353,7 @@ ${formData.current_situation}
         <button
           type="button"
           onClick={() => addArrayItem('common_objections')}
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-sm text-brand-primary hover:text-brand-primary-dark"
         >
           + הוסף התנגדות
         </button>
@@ -438,7 +438,7 @@ ${formData.current_situation}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="flex-1 bg-brand-primary hover:bg-brand-primary-dark text-white font-semibold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
           {isSubmitting ? (
             <>
