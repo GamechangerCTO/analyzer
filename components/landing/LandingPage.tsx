@@ -292,6 +292,8 @@ function FAQItem({ q, a, defaultOpen = false }: { q: string; a: string; defaultO
 }
 
 // ---------- DATA ----------
+const SETUP_FEE = 2000
+
 const PACKAGES = [
   {
     id: 'professional',
@@ -299,16 +301,14 @@ const PACKAGES = [
     pricePerAgent: 249,
     minAgents: 5,
     callMinutes: 150,
-    simMinutes: 60,
     highlight: false,
     tagline: 'מושלם לצוותים מתחילים את המסע',
     features: [
-      '150 דקות ניתוח שיחות / נציג / חודש',
-      '60 דקות סימולציות קוליות / נציג / חודש',
       'כל 6 סוגי השיחות',
-      'דוחות סטנדרטיים + ציונים',
+      'דוחות סטנדרטיים + ציונים אובייקטיביים',
       'הצפנה מתקדמת (AES-256 + Envelope)',
-      'תמיכה באימייל',
+      'תמיכה באימייל (24-48 שעות)',
+      'דאשבורד מנהלים בסיסי',
     ],
     extras: [],
   },
@@ -318,18 +318,16 @@ const PACKAGES = [
     pricePerAgent: 499,
     minAgents: 5,
     callMinutes: 499,
-    simMinutes: 180,
     highlight: true,
-    tagline: 'הצעת הערך הטובה ביותר — 3.3× יותר ניתוח',
+    tagline: 'הצעת הערך הטובה ביותר — 3.3× יותר דקות',
     features: [
-      '499 דקות ניתוח שיחות / נציג / חודש',
-      '180 דקות סימולציות קוליות / נציג / חודש',
-      'כל 6 הסוגים + תרחישים מותאמים',
-      'דוחות מתקדמים + תובנות צוות',
+      'כל 6 הסוגים + תרחישים מותאמים אישית',
+      'דוחות מתקדמים + תובנות צוות AI',
       'הצפנה מתקדמת (AES-256 + Envelope)',
-      'תמיכה בעדיפות + Slack ייעודי',
+      'תמיכה בעדיפות + ערוץ Slack ייעודי',
+      'דאשבורד מנהלים מתקדם + השוואות',
     ],
-    extras: ['גישת API מלאה', 'Onboarding + check-in רבעוני'],
+    extras: ['גישת API מלאה', 'Onboarding מלא + check-in רבעוני'],
   },
 ] as const
 
@@ -339,20 +337,24 @@ const FAQ = [
     a: 'אנחנו לא מחליפים את ההקלטה — אנחנו מנתחים אותה. בעוד שתוכנות אחרות שומרות את ההקלטה, Coachee מבינה מה נאמר, איך זה נאמר (טון, רגש), ונותנת לך דוח עסקי מעשי לשיפור.',
   },
   {
+    q: 'מה כוללת עלות ההקמה (2,000 ₪)?',
+    a: 'תשלום חד-פעמי שכולל הגדרת חשבון מלא, הוספת כל הנציגים, התאמת פרמטרים לארגון שלכם, והדרכה ראשונית. אינטגרציה עם CRM או מערכות חיצוניות מתומחרת בנפרד לפי דרישה.',
+  },
+  {
     q: 'באיזו שפה השיחות?',
-    a: 'המערכת מכוונת לעברית מלאה — כולל ניתוח, דוחות וממשק. תומכת גם באנגלית.',
+    a: 'המערכת מכוונת לעברית מלאה — כל פרומפט, ניתוח, דוח וממשק נכתבו בעברית עסקית מקצועית. תומכת גם באנגלית.',
   },
   {
     q: 'האם הנתונים שלנו מאובטחים?',
     a: 'כן. כל ההקלטות והניתוחים מוצפנים בהצפנת AES-256 עם מפתחות ייחודיים לכל קובץ (Envelope Encryption). הגישה מבוקרת ברמת מסד הנתונים (RLS), כך שכל לקוח רואה רק את הנתונים שלו.',
   },
   {
-    q: 'מה קורה אם נחרגה מכמות הדקות?',
-    a: 'תקבלו התראה ב-80% מהמכסה. אפשר לרכוש דקות נוספות בכל עת, או לשדרג לחבילה גדולה יותר.',
+    q: 'מה קורה אם חרגנו מכמות הדקות?',
+    a: 'תקבלו התראה ב-80% מהמכסה. אפשר לרכוש דקות נוספות בכל עת, או לשדרג לחבילה גדולה יותר. אין חסימה אוטומטית — אנחנו תמיד פותחים מולכם דיון.',
   },
   {
     q: 'האם ניתן לבטל?',
-    a: 'כן, ניתן לבטל בכל חודש בודד. אין התחייבות שנתית.',
+    a: 'כן, ניתן לבטל בכל חודש בודד. אין התחייבות שנתית — רק עלות ההקמה היא חד-פעמית.',
   },
   {
     q: 'כמה זמן לוקח להטמיע במשרד?',
@@ -443,8 +445,8 @@ export default function LandingPage() {
 
               <p className="mt-6 text-xl text-neutral-600 leading-relaxed max-w-xl">
                 Coachee מנתחת את שיחות הצוות בעברית עם שלושה מנועי AI במקביל,
-                מספקת לכל נציג דוח שיפור אישי, ומאפשרת אימון בסימולציה קולית
-                חיה. הכול מאובטח, פשוט, ומדיד.
+                מספקת לכל נציג דוח שיפור אישי עם 32+ פרמטרים, ומאפשרת
+                למנהלים לראות בדיוק איך נשמע הצוות שלהם — מאובטח, מהיר, ומדיד.
               </p>
 
               <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -644,19 +646,19 @@ export default function LandingPage() {
               <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-brand-primary/30 leaf-shape" />
             </div>
 
-            {/* Realtime simulations */}
+            {/* Hebrew-first */}
             <div className="md:col-span-3 bg-white border border-neutral-200/80 leaf-shape-lg p-7">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-brand-info-light leaf-shape-sm flex items-center justify-center flex-shrink-0">
-                  <PlayCircle className="w-6 h-6 text-brand-primary" />
+                  <Sparkles className="w-6 h-6 text-brand-primary" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold font-display text-neutral-900 mb-2">
-                    סימולציות קוליות בזמן אמת
+                    מותאם לעברית מהיסוד
                   </h3>
                   <p className="text-sm text-neutral-600 leading-relaxed">
-                    הנציג מתאמן מול לקוח AI שמדבר, מתנגד ומגיב — בעברית,
-                    עם פרסונות מותאמות, וקבלת דוח השוואתי בסוף האימון.
+                    כל פרומפט, כל ניתוח וכל דוח — נכתבו בעברית עסקית מקצועית.
+                    לא תרגום, לא פאצ׳ים. הבנה אמיתית של ניואנסים בשיחה.
                   </p>
                 </div>
               </div>
@@ -717,8 +719,8 @@ export default function LandingPage() {
               },
               {
                 num: '04',
-                title: 'מתאמנים בסימולציה',
-                desc: 'הנציג מתאמן על נקודות החולשה מול לקוח AI שמדבר, ומקבל דוח השוואתי.',
+                title: 'מתפתחים לאורך זמן',
+                desc: 'מעקב אחרי שיפור של כל נציג, השוואות חודשיות, וזיהוי דפוסים חוזרים בכל הצוות.',
                 color: 'bg-brand-secondary-dark',
               },
             ].map((step, idx) => (
@@ -835,41 +837,35 @@ export default function LandingPage() {
 
                   {/* Quota highlight */}
                   <div
-                    className={`mt-6 grid grid-cols-2 gap-3 p-4 ${
+                    className={`mt-6 p-5 ${
                       pkg.highlight ? 'bg-white/10 backdrop-blur' : 'bg-brand-bg'
                     } leaf-shape-sm`}
                   >
-                    <div>
-                      <div
-                        className={`text-3xl font-bold font-display ${
+                    <div className="flex items-baseline gap-2">
+                      <span
+                        className={`text-4xl font-bold font-display ${
                           pkg.highlight ? 'text-white' : 'text-brand-primary'
                         }`}
                       >
                         {pkg.callMinutes}
-                      </div>
-                      <div
-                        className={`text-xs mt-0.5 ${
-                          pkg.highlight ? 'text-white/70' : 'text-neutral-600'
+                      </span>
+                      <span
+                        className={`text-sm ${
+                          pkg.highlight ? 'text-white/80' : 'text-neutral-600'
                         }`}
                       >
-                        דק׳ ניתוח / נציג
-                      </div>
+                        דקות ניתוח / נציג / חודש
+                      </span>
                     </div>
-                    <div>
-                      <div
-                        className={`text-3xl font-bold font-display ${
-                          pkg.highlight ? 'text-white' : 'text-brand-secondary'
-                        }`}
-                      >
-                        {pkg.simMinutes}
-                      </div>
-                      <div
-                        className={`text-xs mt-0.5 ${
-                          pkg.highlight ? 'text-white/70' : 'text-neutral-600'
-                        }`}
-                      >
-                        דק׳ סימולציה / נציג
-                      </div>
+                    <div
+                      className={`mt-3 pt-3 border-t flex items-center justify-between text-sm ${
+                        pkg.highlight ? 'border-white/20 text-white/90' : 'border-neutral-300 text-neutral-700'
+                      }`}
+                    >
+                      <span>סה״כ במינימום ({pkg.minAgents} נציגים):</span>
+                      <span className={`font-bold ${pkg.highlight ? 'text-white' : 'text-brand-primary'}`}>
+                        {(pkg.callMinutes * pkg.minAgents).toLocaleString('he-IL')} דק׳
+                      </span>
                     </div>
                   </div>
 
@@ -931,8 +927,54 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <p className="text-center mt-12 text-sm text-neutral-500">
-            * מע״מ כדין • ללא דמי התקנה • דקות נוספות זמינות לרכישה בכל עת
+          {/* Setup fee card */}
+          <div className="mt-12 max-w-5xl mx-auto">
+            <div className="bg-brand-bg border-2 border-dashed border-brand-primary/30 leaf-shape p-6 lg:p-8">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+                <div className="flex items-center gap-4 flex-shrink-0">
+                  <div className="w-14 h-14 bg-brand-primary leaf-shape-sm flex items-center justify-center">
+                    <Sparkles className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-brand-primary font-bold">
+                      חד-פעמי
+                    </div>
+                    <div className="text-3xl font-bold font-display text-neutral-900">
+                      2,000 ₪ עלות הקמה
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1 lg:border-r lg:border-neutral-300 lg:pr-6">
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-xs font-bold text-brand-secondary mb-2 uppercase tracking-wider">
+                        ✓ כלול בעלות
+                      </div>
+                      <ul className="space-y-1 text-sm text-neutral-700">
+                        <li>• הגדרת חשבון ונציגים</li>
+                        <li>• התאמת פרמטרים לארגון</li>
+                        <li>• הדרכה ראשונית</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-neutral-500 mb-2 uppercase tracking-wider">
+                        ✗ לא כלול
+                      </div>
+                      <ul className="space-y-1 text-sm text-neutral-500">
+                        <li>• אינטגרציה עם CRM/מערכות</li>
+                        <li>• פיתוחים מותאמים אישית</li>
+                        <li>• מובא בהצעת מחיר נפרדת</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-center mt-8 text-sm text-neutral-500">
+            * מע״מ כדין • דקות נוספות זמינות לרכישה בכל עת • ביטול חודשי גמיש
           </p>
         </div>
       </section>
