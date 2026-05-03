@@ -31,9 +31,12 @@ export async function middleware(request: NextRequest) {
 
   // נתיבים פתוחים (דפים - לא APIs)
   const publicPaths = ['/login', '/signup', '/signup-complete', '/not-approved', '/not-found', '/privacy-policy', '/legal-terms', '/subscription-setup', '/test-auth', '/change-password', '/company-questionnaire']
-  
+
+  // דף הבית (landing) — פתוח לכולם, הניתוב הפנימי מטפל במצב מחובר/לא מחובר
+  const isHomePage = request.nextUrl.pathname === '/'
+
   // בדיקה האם הנתיב הנוכחי מאושר גם ללא התחברות
-  const isPublicPath = publicPaths.some((path) => request.nextUrl.pathname.startsWith(path))
+  const isPublicPath = isHomePage || publicPaths.some((path) => request.nextUrl.pathname.startsWith(path))
   
   // רשימת משאבים סטטיים שתמיד מאושרים
   const isStaticResource = request.nextUrl.pathname.startsWith('/_next') || 

@@ -1,17 +1,18 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import LandingPage from '@/components/landing/LandingPage'
 import React from 'react'
 
 export default async function HomePage() {
-  const cookieStore = cookies()
   const supabase = createClient()
-  
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (!user || error) {
-    redirect('/login')
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (user) {
+    redirect('/dashboard?login=true')
   }
-  
-  redirect('/dashboard?login=true')
-} 
+
+  return <LandingPage />
+}
